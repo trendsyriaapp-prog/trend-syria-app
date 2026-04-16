@@ -1,29 +1,33 @@
 /**
- * أداة التحقق من الفيديو
- * تستخدم للتحقق من حجم ومدة الفيديو قبل الرفع
+ * أداة التحقق من الفيديو ورفعه إلى CDN
+ * الحل الجذري: لا نحول الفيديو إلى Base64
+ * بدلاً من ذلك نستخدم Object URL للعرض ونرفع مباشرة إلى CDN
  */
 
-// الإعدادات
+const API = process.env.REACT_APP_BACKEND_URL;
+
+// الإعدادات - مُحسّنة لسوريا
 export const VIDEO_CONFIG = {
-  maxSizeBytes: 50 * 1024 * 1024, // 50MB
-  maxSizeMB: 50,
+  maxSizeBytes: 15 * 1024 * 1024, // 15MB (مُخفّض من 50MB لسوريا)
+  maxSizeMB: 15,
   maxDurationSeconds: 30,
   minDurationSeconds: 1,
   allowedTypes: ['video/mp4', 'video/quicktime', 'video/x-msvideo', 'video/webm', 'video/3gpp'],
+  allowedExtensions: ['mp4', 'mov', 'avi', 'webm', '3gp', 'mkv'],
 };
 
 /**
  * التحقق من مدة الفيديو
- * @param {File} file - ملف الفيديو
- * @returns {Promise<{valid: boolean, duration: number, error?: string}>}
  */
 export const validateVideoDuration = (file) => {
   return new Promise((resolve) => {
     const video = document.createElement('video');
     video.preload = 'metadata';
     
+    const objectUrl = URL.createObjectURL(file);
+    
     video.onloadedmetadata = () => {
-      window.URL.revokeObjectURL(video.src);
+      URL.revokeObjectURL(objectUrl);
       const duration = Math.round(video.duration);
       
       if (duration < VIDEO_CONFIG.minDurationSeconds) {
@@ -48,6 +52,7 @@ export const validateVideoDuration = (file) => {
     };
     
     video.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
       resolve({
         valid: false,
         duration: 0,
@@ -55,14 +60,12 @@ export const validateVideoDuration = (file) => {
       });
     };
     
-    video.src = URL.createObjectURL(file);
+    video.src = objectUrl;
   });
 };
 
 /**
  * التحقق من حجم الفيديو
- * @param {File} file - ملف الفيديو
- * @returns {{valid: boolean, sizeMB: number, error?: string}}
  */
 export const validateVideoSize = (file) => {
   const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
@@ -84,8 +87,6 @@ export const validateVideoSize = (file) => {
 
 /**
  * التحقق من نوع الفيديو
- * @param {File} file - ملف الفيديو
- * @returns {{valid: boolean, error?: string}}
  */
 export const validateVideoType = (file) => {
   // السماح بأي نوع فيديو إذا بدأ بـ video/
@@ -95,26 +96,22 @@ export const validateVideoType = (file) => {
   
   // التحقق من الامتداد كبديل
   const extension = file.name.split('.').pop().toLowerCase();
-  const validExtensions = ['mp4', 'mov', 'avi', 'webm', '3gp', 'mkv'];
   
-  if (validExtensions.includes(extension)) {
+  if (VIDEO_CONFIG.allowedExtensions.includes(extension)) {
     return { valid: true, error: null };
   }
   
   return {
     valid: false,
-    error: 'صيغة الفيديو غير مدعومة. الصيغ المدعومة: MP4, MOV, AVI, WebM'
+    error: 'صيغة الفيديو غير مدعومة. الصيغ المدعومة: MP4, MOV, AVI, WebM, 3GP'
   };
 };
 
 /**
- * التحقق الشامل من الفيديو (الحجم والمدة والنوع)
- * @param {File} file - ملف الفيديو
- * @param {Function} onProgress - دالة لتتبع التقدم (اختياري)
- * @returns {Promise<{valid: boolean, duration?: number, sizeMB?: number, error?: string}>}
+ * التحقق الشامل من الفيديو
  */
 export const validateVideo = async (file, onProgress = null) => {
-  if (onProgress) onProgress('جاري التحقق من نوع الفيديو...');
+  if (onProgress) onProgress({ stage: 'type', message: 'جاري التحقق من نوع الفيديو...' });
   
   // 1. التحقق من النوع
   const typeResult = validateVideoType(file);
@@ -122,7 +119,7 @@ export const validateVideo = async (file, onProgress = null) => {
     return typeResult;
   }
   
-  if (onProgress) onProgress('جاري التحقق من حجم الفيديو...');
+  if (onProgress) onProgress({ stage: 'size', message: 'جاري التحقق من حجم الفيديو...' });
   
   // 2. التحقق من الحجم
   const sizeResult = validateVideoSize(file);
@@ -130,7 +127,7 @@ export const validateVideo = async (file, onProgress = null) => {
     return sizeResult;
   }
   
-  if (onProgress) onProgress('جاري التحقق من مدة الفيديو...');
+  if (onProgress) onProgress({ stage: 'duration', message: 'جاري التحقق من مدة الفيديو...' });
   
   // 3. التحقق من المدة
   const durationResult = await validateVideoDuration(file);
@@ -147,42 +144,94 @@ export const validateVideo = async (file, onProgress = null) => {
 };
 
 /**
- * تحويل الفيديو إلى Base64
- * @param {File} file - ملف الفيديو
- * @param {Function} onProgress - دالة لتتبع التقدم (اختياري)
- * @returns {Promise<string>}
+ * إنشاء Object URL للعرض المؤقت (لا يستهلك ذاكرة كثيرة)
  */
-export const videoToBase64 = (file, onProgress = null) => {
+export const createVideoPreviewUrl = (file) => {
+  return URL.createObjectURL(file);
+};
+
+/**
+ * تحرير Object URL عند الانتهاء
+ */
+export const revokeVideoPreviewUrl = (url) => {
+  if (url && url.startsWith('blob:')) {
+    URL.revokeObjectURL(url);
+  }
+};
+
+/**
+ * رفع الفيديو إلى CDN مباشرة (بدون Base64)
+ * مع progress callback للإنترنت البطيء
+ */
+export const uploadVideoToCDN = async (file, folder = 'videos', onProgress = null, token = null) => {
+  const formData = new FormData();
+  formData.append('file', file);
+  
   return new Promise((resolve, reject) => {
-    const reader = new FileReader();
+    const xhr = new XMLHttpRequest();
     
-    reader.onprogress = (event) => {
+    // Progress tracking
+    xhr.upload.addEventListener('progress', (event) => {
       if (event.lengthComputable && onProgress) {
         const percent = Math.round((event.loaded / event.total) * 100);
-        onProgress(`جاري رفع الفيديو... ${percent}%`);
+        onProgress({
+          stage: 'uploading',
+          percent,
+          loaded: event.loaded,
+          total: event.total,
+          message: `جاري الرفع... ${percent}%`
+        });
       }
-    };
+    });
     
-    reader.onloadend = () => {
-      resolve(reader.result);
-    };
+    xhr.addEventListener('load', () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        try {
+          const response = JSON.parse(xhr.responseText);
+          resolve({
+            success: true,
+            path: response.path,
+            size: response.size,
+            sizeMB: response.size_mb
+          });
+        } catch (e) {
+          reject(new Error('فشل في قراءة استجابة الخادم'));
+        }
+      } else {
+        try {
+          const error = JSON.parse(xhr.responseText);
+          reject(new Error(error.detail || 'فشل رفع الفيديو'));
+        } catch (e) {
+          reject(new Error(`فشل رفع الفيديو (${xhr.status})`));
+        }
+      }
+    });
     
-    reader.onerror = () => {
-      reject(new Error('فشل في قراءة الفيديو'));
-    };
+    xhr.addEventListener('error', () => {
+      reject(new Error('فشل الاتصال بالخادم. تحقق من الإنترنت'));
+    });
     
-    reader.readAsDataURL(file);
+    xhr.addEventListener('timeout', () => {
+      reject(new Error('انتهت مهلة الرفع. حاول مرة أخرى'));
+    });
+    
+    xhr.open('POST', `${API}/api/storage/upload-video?folder=${folder}`);
+    xhr.timeout = 300000; // 5 minutes timeout for slow internet
+    
+    if (token) {
+      xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+    }
+    
+    xhr.send(formData);
   });
 };
 
 /**
- * التحقق من الفيديو وتحويله إلى Base64 في خطوة واحدة
- * @param {File} file - ملف الفيديو
- * @param {Function} onProgress - دالة لتتبع التقدم (اختياري)
- * @returns {Promise<{success: boolean, data?: string, duration?: number, sizeMB?: number, error?: string}>}
+ * معالجة الفيديو الكاملة: تحقق + إنشاء preview + رفع
+ * هذه هي الدالة الرئيسية التي يجب استخدامها
  */
 export const processVideo = async (file, onProgress = null) => {
-  // التحقق أولاً
+  // 1. التحقق من صحة الفيديو
   const validationResult = await validateVideo(file, onProgress);
   
   if (!validationResult.valid) {
@@ -192,24 +241,40 @@ export const processVideo = async (file, onProgress = null) => {
     };
   }
   
-  // تحويل إلى Base64
-  try {
-    if (onProgress) onProgress('جاري رفع الفيديو...');
-    const base64 = await videoToBase64(file, onProgress);
-    
-    return {
-      success: true,
-      data: base64,
-      duration: validationResult.duration,
-      sizeMB: validationResult.sizeMB,
-      error: null
-    };
-  } catch (error) {
-    return {
-      success: false,
-      error: error.message || 'فشل في معالجة الفيديو'
-    };
-  }
+  // 2. إنشاء preview URL للعرض المؤقت
+  const previewUrl = createVideoPreviewUrl(file);
+  
+  return {
+    success: true,
+    previewUrl,        // URL مؤقت للعرض في الـ UI
+    file,              // الملف الأصلي للرفع لاحقاً
+    duration: validationResult.duration,
+    sizeMB: validationResult.sizeMB,
+    needsUpload: true, // علامة أن الفيديو يحتاج رفع إلى CDN
+    error: null
+  };
+};
+
+/**
+ * التحقق إذا كانت القيمة هي CDN path
+ */
+export const isCDNVideoPath = (value) => {
+  if (!value || typeof value !== 'string') return false;
+  return value.startsWith('trend-syria/videos/') || 
+         value.startsWith('trend-syria/admin_videos/');
+};
+
+/**
+ * الحصول على URL الفيديو من CDN path
+ */
+export const getVideoUrl = (path) => {
+  if (!path) return null;
+  if (path.startsWith('blob:')) return path; // Already a preview URL
+  if (path.startsWith('http')) return path;  // Already a full URL
+  if (path.startsWith('data:')) return path; // Base64 (legacy)
+  
+  // CDN path - convert to URL
+  return `${API}/api/storage/video/${path}`;
 };
 
 export default {
@@ -218,6 +283,10 @@ export default {
   validateVideoDuration,
   validateVideoSize,
   validateVideoType,
-  videoToBase64,
-  processVideo
+  createVideoPreviewUrl,
+  revokeVideoPreviewUrl,
+  uploadVideoToCDN,
+  processVideo,
+  isCDNVideoPath,
+  getVideoUrl
 };

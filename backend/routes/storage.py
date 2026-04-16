@@ -14,8 +14,10 @@ from core.storage import (
     get_object, 
     upload_image_from_base64, 
     upload_image_from_bytes,
+    upload_video_from_bytes,
     is_base64_image,
     is_storage_path,
+    is_video_storage_path,
     init_storage
 )
 
@@ -144,6 +146,111 @@ async def upload_file(
         "content_type": file.content_type,
         "size": len(content)
     }
+
+
+# ============== Video Upload ==============
+
+@router.post("/upload-video")
+async def upload_video(
+    file: UploadFile = File(...),
+    folder: str = Query(default="videos"),
+    user: dict = Depends(get_current_user)
+):
+    """
+    Upload a video file to CDN storage.
+    Supports videos up to 15MB for Syria's slow internet.
+    
+    Args:
+        file: Video file (mp4, webm, mov, avi, 3gp)
+        folder: Storage folder (videos, admin_videos)
+    
+    Returns:
+        path: CDN storage path to store in database
+    """
+    # Validate file type
+    allowed_types = ["video/mp4", "video/webm", "video/quicktime", "video/x-msvideo", "video/3gpp", "video/x-matroska"]
+    
+    # Also check file extension if content_type is generic
+    filename = file.filename or ""
+    ext = filename.split(".")[-1].lower() if "." in filename else ""
+    valid_extensions = ["mp4", "webm", "mov", "avi", "3gp", "mkv"]
+    
+    if file.content_type not in allowed_types and ext not in valid_extensions:
+        raise HTTPException(
+            status_code=400, 
+            detail="نوع الفيديو غير مدعوم. الأنواع المدعومة: MP4, WebM, MOV, AVI, 3GP"
+        )
+    
+    # Read video content
+    content = await file.read()
+    
+    # Validate file size (max 15MB for slow internet)
+    max_size = 15 * 1024 * 1024  # 15MB
+    if len(content) > max_size:
+        size_mb = len(content) / (1024 * 1024)
+        raise HTTPException(
+            status_code=400, 
+            detail=f"حجم الفيديو كبير جداً ({size_mb:.1f}MB). الحد الأقصى 15MB"
+        )
+    
+    # Determine content type
+    content_type = file.content_type
+    if content_type == "application/octet-stream" or not content_type.startswith("video/"):
+        # Guess from extension
+        ext_to_mime = {
+            "mp4": "video/mp4",
+            "webm": "video/webm",
+            "mov": "video/quicktime",
+            "avi": "video/x-msvideo",
+            "3gp": "video/3gpp",
+            "mkv": "video/x-matroska"
+        }
+        content_type = ext_to_mime.get(ext, "video/mp4")
+    
+    # Upload to CDN
+    path = upload_video_from_bytes(content, content_type, folder=folder)
+    
+    if not path:
+        raise HTTPException(status_code=500, detail="فشل رفع الفيديو")
+    
+    logger.info(f"✅ Video uploaded by user {user.get('id')}: {path} ({len(content)} bytes)")
+    
+    return {
+        "success": True,
+        "path": path,
+        "original_filename": file.filename,
+        "content_type": content_type,
+        "size": len(content),
+        "size_mb": round(len(content) / (1024 * 1024), 2)
+    }
+
+
+@router.get("/video/{path:path}")
+async def serve_video(path: str):
+    """
+    Serve a video from CDN storage.
+    """
+    try:
+        # Ensure path starts with app prefix
+        if not path.startswith("trend-syria/"):
+            path = f"trend-syria/{path}"
+        
+        # Get video from storage
+        content, content_type = get_object(path)
+        
+        return Response(
+            content=content,
+            media_type=content_type,
+            headers={
+                "Cache-Control": "public, max-age=86400",  # 1 day cache
+                "Content-Type": content_type,
+                "Accept-Ranges": "bytes"
+            }
+        )
+        
+    except Exception as e:
+        logger.error(f"Failed to serve video {path}: {e}")
+        raise HTTPException(status_code=404, detail="الفيديو غير موجود")
 
 
 # ============== Migration Helper ==============

@@ -242,3 +242,76 @@ def get_image_url(storage_path: str, base_url: str) -> str:
     # Remove any leading slash
     clean_path = storage_path.lstrip("/")
     return f"{base_url}/api/storage/images/{clean_path}"
+
+
+# ============== Video Upload ==============
+
+# MIME types for videos
+VIDEO_MIME_TYPES = {
+    "mp4": "video/mp4",
+    "webm": "video/webm",
+    "mov": "video/quicktime",
+    "avi": "video/x-msvideo",
+    "3gp": "video/3gpp",
+    "mkv": "video/x-matroska"
+}
+
+def upload_video_from_bytes(video_data: bytes, content_type: str, folder: str = "videos") -> Optional[str]:
+    """
+    Upload raw video bytes to storage and return the storage path.
+    
+    Args:
+        video_data: Raw video bytes
+        content_type: MIME type (e.g., "video/mp4")
+        folder: Folder name (e.g., "videos", "admin_videos")
+    
+    Returns:
+        Storage path or None on failure
+    """
+    try:
+        # Determine extension from content type
+        ext_map = {
+            "video/mp4": "mp4",
+            "video/webm": "webm",
+            "video/quicktime": "mov",
+            "video/x-msvideo": "avi",
+            "video/3gpp": "3gp",
+            "video/x-matroska": "mkv"
+        }
+        ext = ext_map.get(content_type, "mp4")
+        
+        # Generate unique path
+        unique_id = str(uuid.uuid4())
+        path = f"{APP_NAME}/{folder}/{unique_id}.{ext}"
+        
+        # Upload to storage
+        result = put_object(path, video_data, content_type)
+        
+        logger.info(f"✅ Video uploaded: {path} ({len(video_data)} bytes)")
+        return result.get("path", path)
+        
+    except Exception as e:
+        logger.error(f"❌ Failed to upload video: {e}")
+        return None
+
+
+def is_video_storage_path(value: str) -> bool:
+    """Check if a string is a CDN video storage path"""
+    if not value or not isinstance(value, str):
+        return False
+    return (value.startswith(f"{APP_NAME}/videos/") or 
+            value.startswith(f"{APP_NAME}/admin_videos/") or
+            value.startswith("trend-syria/videos/") or
+            value.startswith("trend-syria/admin_videos/"))
+
+
+def is_base64_video(value: str) -> bool:
+    """Check if a string is a Base64 encoded video"""
+    if not value or not isinstance(value, str):
+        return False
+    
+    # Check for data URI prefix
+    if value.startswith("data:video/"):
+        return True
+    
+    return False

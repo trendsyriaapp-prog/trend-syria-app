@@ -10,7 +10,7 @@ import { CATEGORIES } from '../../utils/constants';
 import { getErrorMessage } from '../../utils/errorHelpers';
 import { validateAndEnhanceImage } from '../../utils/imageHelpers';
 import { compressProductImage } from '../../utils/imageCompression';
-import { processVideo, VIDEO_CONFIG } from '../../utils/videoValidation';
+import { processVideo, VIDEO_CONFIG, uploadVideoToCDN, revokeVideoPreviewUrl, getVideoUrl, isCDNVideoPath } from '../../utils/videoValidation';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -125,6 +125,14 @@ const AddProductModal = ({
   const [maxImagesPerProduct, setMaxImagesPerProduct] = useState(3);
   const [showTemplateSelector, setShowTemplateSelector] = useState(false);
   const [sellingType, setSellingType] = useState('piece'); // 'piece' أو 'weight'
+  
+  // State للفيديو الجديد (File objects بدلاً من Base64)
+  const [videoFile, setVideoFile] = useState(null);
+  const [adminVideoFile, setAdminVideoFile] = useState(null);
+  const [videoPreviewUrl, setVideoPreviewUrl] = useState(null);
+  const [adminVideoPreviewUrl, setAdminVideoPreviewUrl] = useState(null);
+  const [videoUploadProgress, setVideoUploadProgress] = useState(0);
+  const [adminVideoUploadProgress, setAdminVideoUploadProgress] = useState(0);
   
   // اقتراح تصنيف جديد
   const [showSuggestCategory, setShowSuggestCategory] = useState(false);
@@ -256,9 +264,10 @@ const AddProductModal = ({
     if (!file) return;
     
     setUploadingVideo(true);
+    setVideoUploadProgress(0);
     
     try {
-      // الفيديو العادي للمنتج - بدون تحقق من المدة (اختياري)
+      // التحقق من صحة الفيديو وإنشاء preview URL
       const result = await processVideo(file, (progress) => {
         console.log(progress);
       });
@@ -273,16 +282,28 @@ const AddProductModal = ({
         return;
       }
       
+      // تحرير URL القديم إن وجد
+      if (videoPreviewUrl) {
+        revokeVideoPreviewUrl(videoPreviewUrl);
+      }
+      
+      // حفظ الملف و preview URL
+      setVideoFile(result.file);
+      setVideoPreviewUrl(result.previewUrl);
+      
+      // تحديث state المنتج بـ preview URL مؤقتاً
       setNewProduct(prev => ({
         ...prev,
-        video: result.data
+        video: result.previewUrl,
+        _videoNeedsUpload: true // علامة داخلية
       }));
       
       toast({
-        title: "تم رفع الفيديو ✅",
-        description: `مدة الفيديو: ${result.duration} ثانية`
+        title: "تم تحميل الفيديو ✅",
+        description: `مدة الفيديو: ${result.duration} ثانية | الحجم: ${result.sizeMB}MB`
       });
     } catch (error) {
+      console.error('Video error:', error);
       toast({
         title: "خطأ",
         description: "فشل في معالجة الفيديو",
@@ -299,10 +320,10 @@ const AddProductModal = ({
     if (!file) return;
     
     setUploadingVideo(true);
+    setAdminVideoUploadProgress(0);
     
     try {
       const result = await processVideo(file, (progress) => {
-        // يمكن إضافة شريط تقدم هنا
         console.log(progress);
       });
       
@@ -316,16 +337,28 @@ const AddProductModal = ({
         return;
       }
       
+      // تحرير URL القديم إن وجد
+      if (adminVideoPreviewUrl) {
+        revokeVideoPreviewUrl(adminVideoPreviewUrl);
+      }
+      
+      // حفظ الملف و preview URL
+      setAdminVideoFile(result.file);
+      setAdminVideoPreviewUrl(result.previewUrl);
+      
+      // تحديث state المنتج
       setNewProduct(prev => ({
         ...prev,
-        admin_video: result.data
+        admin_video: result.previewUrl,
+        _adminVideoNeedsUpload: true // علامة داخلية
       }));
       
       toast({
-        title: "تم رفع فيديو التحقق ✅",
+        title: "تم تحميل فيديو التحقق ✅",
         description: `مدة الفيديو: ${result.duration} ثانية | الحجم: ${result.sizeMB}MB`
       });
     } catch (error) {
+      console.error('Admin video error:', error);
       toast({
         title: "خطأ",
         description: "فشل في معالجة الفيديو",
@@ -376,13 +409,81 @@ const AddProductModal = ({
     }
 
     // التحقق من فيديو التحقق للأدمن (إجباري)
-    if (!newProduct.admin_video) {
+    if (!newProduct.admin_video && !adminVideoFile) {
       toast({
         title: "فيديو التحقق مطلوب 📹",
         description: "يرجى رفع فيديو قصير يُظهر المنتج الحقيقي للمراجعة",
         variant: "destructive"
       });
       return;
+    }
+
+    // رفع الفيديوهات إلى CDN إذا كانت موجودة
+    let videoPath = newProduct.video;
+    let adminVideoPath = newProduct.admin_video;
+
+    try {
+      // رفع فيديو المنتج إذا كان جديداً
+      if (videoFile) {
+        toast({
+          title: "جاري رفع فيديو المنتج...",
+          description: "يرجى الانتظار"
+        });
+        
+        const videoResult = await uploadVideoToCDN(
+          videoFile, 
+          'videos', 
+          (progress) => {
+            setVideoUploadProgress(progress.percent || 0);
+          },
+          token
+        );
+        
+        if (videoResult.success) {
+          videoPath = videoResult.path;
+        } else {
+          throw new Error('فشل رفع فيديو المنتج');
+        }
+      }
+
+      // رفع فيديو التحقق إذا كان جديداً
+      if (adminVideoFile) {
+        toast({
+          title: "جاري رفع فيديو التحقق...",
+          description: "يرجى الانتظار"
+        });
+        
+        const adminVideoResult = await uploadVideoToCDN(
+          adminVideoFile, 
+          'admin_videos', 
+          (progress) => {
+            setAdminVideoUploadProgress(progress.percent || 0);
+          },
+          token
+        );
+        
+        if (adminVideoResult.success) {
+          adminVideoPath = adminVideoResult.path;
+        } else {
+          throw new Error('فشل رفع فيديو التحقق');
+        }
+      }
+    } catch (uploadError) {
+      console.error('Video upload error:', uploadError);
+      toast({
+        title: "خطأ في رفع الفيديو",
+        description: uploadError.message || "فشل رفع الفيديو. تحقق من اتصال الإنترنت",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // تنظيف المسارات - إزالة blob URLs
+    if (videoPath && videoPath.startsWith('blob:')) {
+      videoPath = null; // لا نحفظ blob URLs
+    }
+    if (adminVideoPath && adminVideoPath.startsWith('blob:')) {
+      adminVideoPath = null;
     }
 
     const submitData = isFoodSeller ? {
@@ -393,13 +494,13 @@ const AddProductModal = ({
       preparation_time: parseInt(newProduct.preparation_time) || 15,
       is_available: newProduct.is_available,
       images: newProduct.images,
-      admin_video: newProduct.admin_video // فيديو التحقق للأدمن
+      admin_video: adminVideoPath // فيديو التحقق للأدمن (CDN path)
     } : {
       ...newProduct,
       price: parseFloat(newProduct.price),
       stock: parseInt(newProduct.stock),
-      video: newProduct.video || null,
-      admin_video: newProduct.admin_video, // فيديو التحقق للأدمن
+      video: videoPath || null, // CDN path
+      admin_video: adminVideoPath, // CDN path
       length_cm: newProduct.length_cm ? parseFloat(newProduct.length_cm) : null,
       width_cm: newProduct.width_cm ? parseFloat(newProduct.width_cm) : null,
       height_cm: newProduct.height_cm ? parseFloat(newProduct.height_cm) : null,
@@ -409,6 +510,10 @@ const AddProductModal = ({
       max_per_customer: newProduct.max_per_customer ? parseInt(newProduct.max_per_customer) : null,
       weight_variants: newProduct.weight_variants.length > 0 ? newProduct.weight_variants : null
     };
+
+    // إزالة الحقول الداخلية
+    delete submitData._videoNeedsUpload;
+    delete submitData._adminVideoNeedsUpload;
 
     try {
       // حالة التعديل - استخدام API التحديث
@@ -435,7 +540,18 @@ const AddProductModal = ({
       return;
     }
 
-    // Reset form
+    // Reset form and cleanup video resources
+    // تحرير Object URLs
+    if (videoPreviewUrl) revokeVideoPreviewUrl(videoPreviewUrl);
+    if (adminVideoPreviewUrl) revokeVideoPreviewUrl(adminVideoPreviewUrl);
+    
+    setVideoFile(null);
+    setAdminVideoFile(null);
+    setVideoPreviewUrl(null);
+    setAdminVideoPreviewUrl(null);
+    setVideoUploadProgress(0);
+    setAdminVideoUploadProgress(0);
+    
     setNewProduct({
       name: '',
       description: '',
@@ -444,6 +560,7 @@ const AddProductModal = ({
       stock: '',
       images: [],
       video: null,
+      admin_video: null,
       length_cm: '',
       width_cm: '',
       height_cm: '',
