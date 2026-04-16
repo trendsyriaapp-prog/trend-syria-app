@@ -1443,6 +1443,9 @@ const AddProductModal = ({
                   <button
                     type="button"
                     onClick={() => {
+                      // إيقاف الرفع إذا كان جارياً
+                      setUploadingProductVideo(false);
+                      setVideoUploadProgress(0);
                       if (videoPreviewUrl) revokeVideoPreviewUrl(videoPreviewUrl);
                       setVideoFile(null);
                       setVideoPreviewUrl(null);
@@ -1456,9 +1459,9 @@ const AddProductModal = ({
                   </button>
                   {/* علامة حالة الرفع */}
                   <div className={`absolute bottom-1 left-1 text-white text-[8px] px-2 py-0.5 rounded-full font-bold ${
-                    newProduct.video?.startsWith('blob:') ? 'bg-yellow-500' : 'bg-green-500'
+                    uploadingProductVideo || newProduct.video?.startsWith('blob:') ? 'bg-yellow-500' : 'bg-green-500'
                   }`}>
-                    {newProduct.video?.startsWith('blob:') ? '⏳ جاري الرفع...' : '✓ للعملاء'}
+                    {uploadingProductVideo || newProduct.video?.startsWith('blob:') ? '⏳ جاري الرفع...' : '✓ للعملاء'}
                   </div>
                 </div>
               ) : !uploadingProductVideo && (
@@ -1521,6 +1524,9 @@ const AddProductModal = ({
                   <button
                     type="button"
                     onClick={() => {
+                      // إيقاف الرفع إذا كان جارياً
+                      setUploadingAdminVideo(false);
+                      setAdminVideoUploadProgress(0);
                       if (adminVideoPreviewUrl) revokeVideoPreviewUrl(adminVideoPreviewUrl);
                       setAdminVideoFile(null);
                       setAdminVideoPreviewUrl(null);
@@ -1534,9 +1540,9 @@ const AddProductModal = ({
                   </button>
                   {/* علامة حالة الرفع */}
                   <div className={`absolute bottom-1 left-1 text-white text-[8px] px-2 py-0.5 rounded-full font-bold ${
-                    newProduct.admin_video?.startsWith('blob:') ? 'bg-yellow-500' : 'bg-green-500'
+                    uploadingAdminVideo || newProduct.admin_video?.startsWith('blob:') ? 'bg-yellow-500' : 'bg-green-500'
                   }`}>
-                    {newProduct.admin_video?.startsWith('blob:') ? '⏳ جاري الرفع...' : '✓ تم الرفع'}
+                    {uploadingAdminVideo || newProduct.admin_video?.startsWith('blob:') ? '⏳ جاري الرفع...' : '✓ تم الرفع'}
                   </div>
                 </div>
               ) : !uploadingAdminVideo && (

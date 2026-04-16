@@ -167,13 +167,23 @@ export const uploadVideoToCDN = async (file, folder = 'videos', onProgress = nul
   const formData = new FormData();
   formData.append('file', file);
   
+  // إظهار progress أولي
+  if (onProgress) {
+    onProgress({
+      stage: 'starting',
+      percent: 1,
+      message: 'جاري بدء الرفع...'
+    });
+  }
+  
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     
     // Progress tracking
     xhr.upload.addEventListener('progress', (event) => {
       if (event.lengthComputable && onProgress) {
-        const percent = Math.round((event.loaded / event.total) * 100);
+        const percent = Math.max(1, Math.round((event.loaded / event.total) * 100));
+        console.log(`Upload progress: ${percent}%`);
         onProgress({
           stage: 'uploading',
           percent,
@@ -184,7 +194,19 @@ export const uploadVideoToCDN = async (file, folder = 'videos', onProgress = nul
       }
     });
     
+    xhr.upload.addEventListener('loadstart', () => {
+      console.log('Upload started');
+      if (onProgress) {
+        onProgress({
+          stage: 'started',
+          percent: 2,
+          message: 'بدأ الرفع...'
+        });
+      }
+    });
+    
     xhr.addEventListener('load', () => {
+      console.log('Upload completed, status:', xhr.status);
       if (xhr.status >= 200 && xhr.status < 300) {
         try {
           const response = JSON.parse(xhr.responseText);
@@ -207,11 +229,13 @@ export const uploadVideoToCDN = async (file, folder = 'videos', onProgress = nul
       }
     });
     
-    xhr.addEventListener('error', () => {
+    xhr.addEventListener('error', (e) => {
+      console.error('Upload error:', e);
       reject(new Error('فشل الاتصال بالخادم. تحقق من الإنترنت'));
     });
     
     xhr.addEventListener('timeout', () => {
+      console.error('Upload timeout');
       reject(new Error('انتهت مهلة الرفع. حاول مرة أخرى'));
     });
     
@@ -222,6 +246,7 @@ export const uploadVideoToCDN = async (file, folder = 'videos', onProgress = nul
       xhr.setRequestHeader('Authorization', `Bearer ${token}`);
     }
     
+    console.log('Sending upload request to:', `${API}/api/storage/upload-video?folder=${folder}`);
     xhr.send(formData);
   });
 };
