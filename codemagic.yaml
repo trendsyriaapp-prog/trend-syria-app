@@ -10,7 +10,7 @@ workflows:
       - name: Install dependencies
         script: |
           cd frontend
-          npm install
+          npm install --legacy-peer-deps
       - name: Build web app
         script: |
           cd frontend
