@@ -704,21 +704,6 @@ const RegisterPage = () => {
               </select>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium mb-2 text-gray-700">رقم الطوارئ (اختياري)</label>
-              <div className="relative">
-                <input
-                  type="tel"
-                  value={formData.emergency_phone}
-                  onChange={(e) => setFormData({ ...formData, emergency_phone: e.target.value })}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-lg py-3 px-4 pr-12 text-gray-900 placeholder:text-gray-400 focus:border-[#FF6B00] focus:outline-none transition-colors"
-                  placeholder="09xxxxxxxx"
-                  data-testid="emergency-phone-input"
-                />
-                <Phone size={20} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" />
-              </div>
-              <p className="text-xs text-gray-400 mt-1">رقم شخص قريب منك - يُستخدم لاستعادة كلمة المرور</p>
-            </div>
           </div>
 
           {formData.user_type === 'food_seller' && (
