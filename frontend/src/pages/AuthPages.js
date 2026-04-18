@@ -281,7 +281,7 @@ const LoginPage = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50 overflow-hidden">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -291,7 +291,7 @@ const LoginPage = () => {
           <img 
             src="/images/logo.png" 
             alt="ترند سوريا" 
-            className="w-20 h-20 object-contain mx-auto mb-4"
+            className="w-20 h-20 object-contain mx-auto mb-4 rounded-2xl"
           />
           <h1 className="text-2xl font-bold text-gray-900">تسجيل الدخول</h1>
           <p className="text-gray-500 mt-2">مرحباً بعودتك إلى ترند سورية</p>
