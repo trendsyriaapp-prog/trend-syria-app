@@ -487,8 +487,9 @@ class FoodOrderCreate(BaseModel):
     delivery_phone: str
     delivery_latitude: Optional[float] = None
     delivery_longitude: Optional[float] = None
+    detailed_address: str = ""  # العنوان التفصيلي (إجباري)
     notes: Optional[str] = None
-    delivery_note: str = ""  # ملاحظة لموظف التوصيل (إجبارية من الواجهة)
+    delivery_note: str = ""  # ملاحظة لموظف التوصيل
     payment_method: str = "wallet"  # wallet, cash
     batch_id: Optional[str] = None  # معرف الدفعة للطلبات المجمعة
     latitude: Optional[float] = None
@@ -512,7 +513,8 @@ class BatchOrderCreate(BaseModel):
     delivery_address: str
     delivery_city: str
     delivery_phone: str
-    delivery_note: str = ""  # ملاحظة لموظف التوصيل (إجبارية من الواجهة)
+    detailed_address: str = ""  # العنوان التفصيلي (إجباري)
+    delivery_note: str = ""  # ملاحظة لموظف التوصيل
     payment_method: str = "wallet"
     latitude: Optional[float] = None
     longitude: Optional[float] = None
@@ -1027,6 +1029,7 @@ async def create_food_order(order: FoodOrderCreate, user: dict = Depends(get_cur
         "delivery_address": order.delivery_address,
         "delivery_city": order.delivery_city,
         "delivery_phone": order.delivery_phone,
+        "detailed_address": order.detailed_address,  # العنوان التفصيلي
         "latitude": order.delivery_latitude or order.latitude,
         "longitude": order.delivery_longitude or order.longitude,
         "notes": order.notes,

@@ -89,6 +89,7 @@ const FoodCartPage = () => {
     address: '',
     city: '',
     phone: '',
+    detailed_address: '', // العنوان التفصيلي (إجباري)
     notes: '',
     payment_method: 'wallet'
   });
@@ -494,6 +495,11 @@ const FoodCartPage = () => {
         toast({ title: "تنبيه", description: "يرجى تحديد موقعك على الخريطة (إجباري)", variant: "destructive" });
         return;
       }
+      // التحقق من العنوان التفصيلي - إجباري
+      if (!deliveryInfo.detailed_address || !deliveryInfo.detailed_address.trim()) {
+        toast({ title: "تنبيه", description: "يرجى كتابة العنوان التفصيلي (إجباري)", variant: "destructive" });
+        return;
+      }
     } else if (!selectedAddressId) {
       toast({ title: "تنبيه", description: "يرجى اختيار عنوان التوصيل", variant: "destructive" });
       return;
@@ -504,6 +510,11 @@ const FoodCartPage = () => {
         // فتح Modal الخريطة لتحديد الموقع
         setTempLocation({ latitude: null, longitude: null });
         setShowLocationModal(true);
+        return;
+      }
+      // التحقق من العنوان التفصيلي للعنوان المحفوظ أيضاً
+      if (!deliveryInfo.detailed_address || !deliveryInfo.detailed_address.trim()) {
+        toast({ title: "تنبيه", description: "يرجى كتابة العنوان التفصيلي (إجباري)", variant: "destructive" });
         return;
       }
     }
@@ -580,6 +591,7 @@ const FoodCartPage = () => {
         delivery_phone: addressData.phone,
         delivery_latitude: addressData.latitude,
         delivery_longitude: addressData.longitude,
+        detailed_address: deliveryInfo.detailed_address, // العنوان التفصيلي
         notes: deliveryInfo.notes,
         payment_method: paymentMethod,
         // رسوم التوصيل
@@ -913,6 +925,24 @@ const FoodCartPage = () => {
                 <Plus size={18} />
                 إضافة عنوان جديد
               </button>
+
+              {/* العنوان التفصيلي للعنوان المحفوظ - إجباري */}
+              <div className="bg-orange-50 border-2 border-orange-200 rounded-xl p-3">
+                <label className="block text-sm font-bold text-gray-800 mb-2">
+                  📝 العنوان التفصيلي *
+                </label>
+                <textarea
+                  value={deliveryInfo.detailed_address}
+                  onChange={(e) => setDeliveryInfo({ ...deliveryInfo, detailed_address: e.target.value })}
+                  placeholder="مثال: المزة - شارع الفردوس - بناء 5 - بجانب صيدلية النور - الطابق 3"
+                  rows={2}
+                  className="w-full border-2 border-orange-300 rounded-xl px-3 py-2 text-sm focus:border-[#FF6B00] focus:outline-none"
+                  required
+                />
+                <p className="text-xs text-orange-600 mt-1">
+                  ⚠️ اكتب العنوان بالتفصيل ليصل السائق بسهولة
+                </p>
+              </div>
             </div>
           )}
           
@@ -1017,9 +1047,9 @@ const FoodCartPage = () => {
                 onLocationSelect={(location) => {
                   if (location) {
                     setNewAddress({ ...newAddress, latitude: location.latitude, longitude: location.longitude });
-                    // تعبئة ملاحظات التوصيل بالعنوان المُجلب إذا كان فارغاً
-                    if (location.address && !deliveryInfo.notes) {
-                      setDeliveryInfo({ ...deliveryInfo, notes: location.address });
+                    // تعبئة العنوان التفصيلي بالعنوان المُجلب إذا كان فارغاً
+                    if (location.address && !deliveryInfo.detailed_address) {
+                      setDeliveryInfo({ ...deliveryInfo, detailed_address: location.address });
                     }
                   } else {
                     setNewAddress({ ...newAddress, latitude: null, longitude: null });
@@ -1027,6 +1057,24 @@ const FoodCartPage = () => {
                 }}
                 warningMessage="حدد الموقع الذي تريد استلام طلبك فيه بدقة لضمان وصول التوصيل."
               />
+
+              {/* العنوان التفصيلي - إجباري */}
+              <div className="bg-orange-50 border-2 border-orange-200 rounded-xl p-3">
+                <label className="block text-sm font-bold text-gray-800 mb-2">
+                  📝 العنوان التفصيلي *
+                </label>
+                <textarea
+                  value={deliveryInfo.detailed_address}
+                  onChange={(e) => setDeliveryInfo({ ...deliveryInfo, detailed_address: e.target.value })}
+                  placeholder="مثال: المزة - شارع الفردوس - بناء 5 - بجانب صيدلية النور - الطابق 3"
+                  rows={2}
+                  className="w-full border-2 border-orange-300 rounded-xl px-3 py-2 text-sm focus:border-[#FF6B00] focus:outline-none"
+                  required
+                />
+                <p className="text-xs text-orange-600 mt-1">
+                  ⚠️ اكتب العنوان بالتفصيل ليصل السائق بسهولة
+                </p>
+              </div>
               
               <label className="flex items-center gap-2 text-sm text-gray-600">
                 <input
