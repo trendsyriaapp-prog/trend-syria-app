@@ -721,7 +721,7 @@ const RegisterPage = () => {
             </div>
           </div>
 
-          {formData.user_type === 'seller' && (
+          {formData.user_type === 'food_seller' && (
             <p className="text-sm text-gray-600 mt-4 p-3 bg-orange-50 rounded-lg border border-orange-200">
               ملاحظة: ستحتاج لرفع شهادة بائع (سجل تجاري) بعد التسجيل للموافقة على حسابك
             </p>
