@@ -7,6 +7,68 @@ Full-stack e-commerce application for Syria market with Android/Capacitor, React
 - Live Website: https://trendsyria.app
 - Android App: v1.0.20 (versionCode: 21) in Closed Testing (Alpha)
 
+
+### ✅ Payment Methods Cleanup - COMPLETED
+**Date:** 2025-12-19
+**Session Focus:** إزالة Syriatel Cash و MTN Cash بالكامل وإبقاء Sham Cash و Bank Account فقط
+
+**Problem Solved:**
+- Syriatel Cash و MTN Cash هي أرصدة اتصالات وليست محافظ دفع حقيقية
+- طلب المستخدم إزالتها بالكامل من التطبيق
+
+**Solution Implemented:**
+1. **Backend Changes:**
+   - `/app/backend/routes/auth.py`: 
+     - `valid_types` للبائعين = `["shamcash", "bank_account"]`
+     - `valid_types` للتوصيل = `["shamcash", "bank_account"]`
+   - `/app/backend/routes/payment_v2.py`:
+     - إزالة syriatel_cash و mtn_cash من instructions
+     - إضافة bank_account مع تعليمات
+   - `/app/backend/services/payment_providers.py`:
+     - إزالة syriatel و mtn من providers
+     - إضافة bank_account
+
+2. **Frontend Changes (12 files):**
+   - `components/delivery/SecurityDepositCard.js`
+   - `components/delivery/DeliverySettingsTab.js`
+   - `components/seller/StoreSettingsTab.js`
+   - `components/admin/PlatformWalletTab.js`
+   - `components/admin/PaymentSettingsTab.js`
+   - `pages/BuyerWalletPage.js`
+   - `pages/CheckoutPage.js`
+   - `pages/FoodCartPage.js`
+   - `pages/FoodStoreDashboard.js`
+   - `pages/FoodBatchCheckoutPage.js`
+   - `pages/WalletPage.js`
+   - `pages/SettingsPage.js`
+
+**Verification:**
+- ✅ Backend lint passed
+- ✅ Frontend lint passed
+- ✅ API `/api/payment/v2/status` shows only shamcash, bank_account, bank_card
+
+---
+
+### ✅ City Field Logic Fix - COMPLETED
+**Date:** 2025-12-19
+**Session Focus:** تحسين منطق حقل المدينة في التسجيل
+
+**Problem Solved:**
+- المدينة كانت تُسأل مرتين: في التسجيل وعند رفع المستندات
+- طلب المستخدم أن تُسأل مرة واحدة فقط في الخطوة النهائية للبائعين والسائقين
+
+**Solution Implemented:**
+- `/app/frontend/src/pages/AuthPages.js`:
+  - حقل المدينة يُعرض فقط للمشتري (`buyer`)
+  - البائع (`seller`, `food_seller`) والسائق (`delivery`) لا يُسألون عن المدينة
+  - يدخلون المدينة لاحقاً في صفحة رفع المستندات
+
+**Verification:**
+- ✅ Frontend lint passed
+- ✅ City field shows only for buyer type
+
+---
+
 ## Latest Update: 2026-04-16
 
 ### ✅ Syria Internet Optimization - COMPLETED
