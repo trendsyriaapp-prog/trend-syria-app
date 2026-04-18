@@ -185,15 +185,76 @@ const InteractiveMapPicker = ({
     setIsConfirmed(false);
   };
 
+  // جلب العنوان من الإحداثيات (Reverse Geocoding)
+  const fetchAddressFromCoordinates = async (lat, lng) => {
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=ar`,
+        {
+          headers: {
+            'User-Agent': 'TrendSyria-App'
+          }
+        }
+      );
+      
+      if (!response.ok) return null;
+      
+      const data = await response.json();
+      
+      if (data && data.address) {
+        // بناء العنوان بطريقة مفهومة
+        const parts = [];
+        
+        // الحي أو المنطقة
+        if (data.address.neighbourhood) parts.push(data.address.neighbourhood);
+        else if (data.address.suburb) parts.push(data.address.suburb);
+        else if (data.address.quarter) parts.push(data.address.quarter);
+        
+        // الشارع
+        if (data.address.road) parts.push(data.address.road);
+        
+        // المدينة
+        if (data.address.city) parts.push(data.address.city);
+        else if (data.address.town) parts.push(data.address.town);
+        else if (data.address.village) parts.push(data.address.village);
+        
+        // المحافظة
+        if (data.address.state) parts.push(data.address.state);
+        
+        return parts.length > 0 ? parts.join('، ') : data.display_name;
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Error fetching address:', error);
+      return null;
+    }
+  };
+
   // تأكيد الموقع
-  const confirmLocation = () => {
+  const confirmLocation = async () => {
     if (position) {
+      setLoading(true);
+      
+      // جلب العنوان
+      const address = await fetchAddressFromCoordinates(position.lat, position.lng);
+      
+      setLoading(false);
+      
       onLocationSelect({
         latitude: position.lat,
         longitude: position.lng,
+        address: address || '',
         source: 'map_picker'
       });
       setIsConfirmed(true);
+      
+      if (address) {
+        toast({
+          title: "✅ تم تحديد الموقع",
+          description: "تم جلب العنوان تلقائياً، يمكنك تعديله"
+        });
+      }
     }
   };
 

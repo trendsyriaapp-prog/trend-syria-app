@@ -556,7 +556,12 @@ const SettingsPage = () => {
                     currentLocation={newAddress.latitude ? { latitude: newAddress.latitude, longitude: newAddress.longitude } : null}
                     onLocationSelect={(location) => {
                       if (location) {
-                        setNewAddress({ ...newAddress, latitude: location.latitude, longitude: location.longitude });
+                        const updates = { latitude: location.latitude, longitude: location.longitude };
+                        // تعبئة حقل المنطقة بالعنوان المُجلب إذا كان فارغاً
+                        if (location.address && !newAddress.area) {
+                          updates.area = location.address;
+                        }
+                        setNewAddress({ ...newAddress, ...updates });
                       } else {
                         setNewAddress({ ...newAddress, latitude: null, longitude: null });
                       }

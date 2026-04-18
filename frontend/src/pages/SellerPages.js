@@ -803,6 +803,10 @@ const SellerDocumentsPage = () => {
                         if (location) {
                           setStoreLatitude(location.latitude);
                           setStoreLongitude(location.longitude);
+                          // تعبئة العنوان التفصيلي بالعنوان المُجلب إذا كان فارغاً
+                          if (location.address && !storeAddress) {
+                            setStoreAddress(location.address);
+                          }
                         } else {
                           setStoreLatitude(null);
                           setStoreLongitude(null);

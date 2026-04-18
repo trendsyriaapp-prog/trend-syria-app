@@ -1299,11 +1299,15 @@ const StoreSettings = ({ store, token, onUpdate, onSaveSuccess }) => {
               } : null}
               onLocationSelect={(location) => {
                 if (location) {
-                  setFormData({ 
-                    ...formData, 
+                  const updates = { 
                     latitude: location.latitude, 
                     longitude: location.longitude 
-                  });
+                  };
+                  // تعبئة العنوان التفصيلي بالعنوان المُجلب إذا كان فارغاً
+                  if (location.address && !formData.address) {
+                    updates.address = location.address;
+                  }
+                  setFormData({ ...formData, ...updates });
                 } else {
                   setFormData({ 
                     ...formData, 

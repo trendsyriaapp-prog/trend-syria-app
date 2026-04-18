@@ -619,7 +619,12 @@ const JoinAsFoodSellerPage = () => {
                 currentLocation={formData.latitude ? { latitude: formData.latitude, longitude: formData.longitude } : null}
                 onLocationSelect={(location) => {
                   if (location) {
-                    setFormData({ ...formData, latitude: location.latitude, longitude: location.longitude });
+                    const updates = { latitude: location.latitude, longitude: location.longitude };
+                    // تعبئة العنوان التفصيلي بالعنوان المُجلب إذا كان فارغاً
+                    if (location.address && !formData.address) {
+                      updates.address = location.address;
+                    }
+                    setFormData({ ...formData, ...updates });
                   } else {
                     setFormData({ ...formData, latitude: null, longitude: null });
                   }

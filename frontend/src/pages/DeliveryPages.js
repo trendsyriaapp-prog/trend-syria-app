@@ -488,13 +488,22 @@ const DeliveryDocuments = () => {
                 تحديد الموقع على الخريطة *
               </label>
               <GoogleMapsLocationPicker
-                latitude={docs.home_latitude}
-                longitude={docs.home_longitude}
-                onLocationChange={(lat, lng) => setDocs(prev => ({ 
-                  ...prev, 
-                  home_latitude: lat, 
-                  home_longitude: lng 
-                }))}
+                currentLocation={docs.home_latitude ? { latitude: docs.home_latitude, longitude: docs.home_longitude } : null}
+                onLocationSelect={(location) => {
+                  if (location) {
+                    const updates = { 
+                      home_latitude: location.latitude, 
+                      home_longitude: location.longitude 
+                    };
+                    // تعبئة العنوان التفصيلي بالعنوان المُجلب إذا كان فارغاً
+                    if (location.address && !docs.home_address) {
+                      updates.home_address = location.address;
+                    }
+                    setDocs(prev => ({ ...prev, ...updates }));
+                  } else {
+                    setDocs(prev => ({ ...prev, home_latitude: null, home_longitude: null }));
+                  }
+                }}
                 height="200px"
               />
               {docs.home_latitude && docs.home_longitude ? (

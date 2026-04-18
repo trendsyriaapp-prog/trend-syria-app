@@ -503,6 +503,10 @@ const CheckoutPage = () => {
                   onLocationSelect={(location) => {
                     if (location) {
                       setNewAddress({ ...newAddress, latitude: location.latitude, longitude: location.longitude });
+                      // تعبئة ملاحظة التوصيل بالعنوان المُجلب إذا كان فارغاً
+                      if (location.address && !deliveryNote) {
+                        setDeliveryNote(location.address);
+                      }
                     } else {
                       setNewAddress({ ...newAddress, latitude: null, longitude: null });
                     }

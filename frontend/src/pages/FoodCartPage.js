@@ -1017,6 +1017,10 @@ const FoodCartPage = () => {
                 onLocationSelect={(location) => {
                   if (location) {
                     setNewAddress({ ...newAddress, latitude: location.latitude, longitude: location.longitude });
+                    // تعبئة ملاحظات التوصيل بالعنوان المُجلب إذا كان فارغاً
+                    if (location.address && !deliveryInfo.notes) {
+                      setDeliveryInfo({ ...deliveryInfo, notes: location.address });
+                    }
                   } else {
                     setNewAddress({ ...newAddress, latitude: null, longitude: null });
                   }
