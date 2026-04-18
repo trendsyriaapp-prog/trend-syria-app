@@ -455,7 +455,6 @@ class PaymentManager:
     
     def __init__(self):
         self.shamcash = ShamCashProvider()
-        self.syriatel = SyriatelCashProvider()
         self.bank_card = BankCardProvider()
     
     def get_provider(self, payment_method: str):
@@ -463,10 +462,7 @@ class PaymentManager:
         providers = {
             "shamcash": self.shamcash,
             "sham_cash": self.shamcash,
-            "syriatel_cash": self.syriatel,
-            "syriatel": self.syriatel,
-            "mtn_cash": self.shamcash,  # يستخدم نفس shamcash في الاختبار
-            "mtn": self.shamcash,       # يستخدم نفس shamcash في الاختبار
+            "bank_account": self.shamcash,  # يستخدم نفس shamcash للتحقق
             "card": self.bank_card,
             "bank_card": self.bank_card
         }
@@ -505,9 +501,10 @@ class PaymentManager:
                     "enabled": bool(APISYRIA_API_KEY) or PAYMENT_MODE == "sandbox",
                     "configured": bool(APISYRIA_API_KEY and SHAMCASH_ACCOUNT_ADDRESS)
                 },
-                "syriatel_cash": {
-                    "enabled": bool(APISYRIA_API_KEY) or PAYMENT_MODE == "sandbox",
-                    "configured": bool(APISYRIA_API_KEY and os.environ.get("SYRIATEL_MERCHANT_GSM"))
+                "bank_account": {
+                    "enabled": True,
+                    "configured": True,
+                    "note": "تحويل بنكي يدوي - يحتاج تأكيد من الإدارة"
                 },
                 "bank_card": {
                     "enabled": False,  # قيد التطوير

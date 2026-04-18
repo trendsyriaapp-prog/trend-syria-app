@@ -974,7 +974,7 @@ class StoreSettingsUpdate(BaseModel):
     store_longitude: Optional[float] = None
 
 class PaymentAccountUpdate(BaseModel):
-    type: str  # shamcash, syriatel_cash, mtn_cash, bank_account
+    type: str  # shamcash, bank_account
     account_number: str
     holder_name: str
     bank_name: Optional[str] = None
@@ -1056,9 +1056,9 @@ async def add_seller_payment_account(account: PaymentAccountUpdate, user: dict =
         raise HTTPException(status_code=403, detail="للبائعين فقط")
     
     # التحقق من نوع الحساب
-    valid_types = ["shamcash", "syriatel_cash", "mtn_cash", "bank_account"]
+    valid_types = ["shamcash", "bank_account"]
     if account.type not in valid_types:
-        raise HTTPException(status_code=400, detail="نوع الحساب غير صالح")
+        raise HTTPException(status_code=400, detail="نوع الحساب غير صالح. الأنواع المتاحة: شام كاش، حساب بنكي")
     
     # إذا كان هذا الحساب افتراضي، إلغاء الافتراضي من الحسابات الأخرى
     if account.is_default:
@@ -1258,9 +1258,9 @@ async def add_delivery_payment_account(account: PaymentAccountUpdate, user: dict
     if user["user_type"] != "delivery":
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
     
-    valid_types = ["shamcash", "syriatel_cash", "mtn_cash", "bank_account"]
+    valid_types = ["shamcash", "bank_account"]
     if account.type not in valid_types:
-        raise HTTPException(status_code=400, detail="نوع الحساب غير صالح")
+        raise HTTPException(status_code=400, detail="نوع الحساب غير صالح. الأنواع المتاحة: شام كاش، حساب بنكي")
     
     if account.is_default:
         await db.delivery_payment_accounts.update_many(

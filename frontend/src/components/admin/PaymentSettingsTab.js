@@ -20,10 +20,6 @@ const PaymentSettingsTab = () => {
   const [settings, setSettings] = useState({
     shamcash_address: '',
     shamcash_name: '',
-    syriatel_gsm: '',
-    syriatel_name: '',
-    mtn_gsm: '',
-    mtn_name: '',
     bank_account_number: '',
     bank_name: '',
     bank_account_holder: ''
@@ -241,97 +237,6 @@ const PaymentSettingsTab = () => {
                 {' '}واربط حساب شام كاش الخاص بالمتجر
               </span>
             </p>
-          </div>
-        </div>
-      </div>
-
-      {/* سيرياتيل كاش */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        <div className="p-4 border-b border-gray-100 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
-              <Phone className="text-red-600" size={20} />
-            </div>
-            <div>
-              <h3 className="font-bold text-gray-900">سيرياتيل كاش</h3>
-              <p className="text-xs text-gray-500">محفظة سيرياتيل</p>
-            </div>
-          </div>
-          <ProviderStatusBadge provider="syriatel_cash" />
-        </div>
-        
-        <div className="p-4 space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              رقم سيرياتيل كاش
-            </label>
-            <div className="flex gap-2">
-              <input
-                type="tel"
-                value={settings.syriatel_gsm}
-                onChange={(e) => setSettings({...settings, syriatel_gsm: e.target.value})}
-                placeholder="مثال: 0933000000"
-                className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#FF6B00] focus:border-transparent"
-                dir="ltr"
-              />
-            </div>
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              اسم صاحب الحساب
-            </label>
-            <input
-              type="text"
-              value={settings.syriatel_name}
-              onChange={(e) => setSettings({...settings, syriatel_name: e.target.value})}
-              placeholder="مثال: ترند سورية"
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#FF6B00] focus:border-transparent"
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* MTN كاش */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        <div className="p-4 border-b border-gray-100 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
-              <Phone className="text-yellow-600" size={20} />
-            </div>
-            <div>
-              <h3 className="font-bold text-gray-900">MTN كاش</h3>
-              <p className="text-xs text-gray-500">محفظة MTN</p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="p-4 space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              رقم MTN كاش
-            </label>
-            <input
-              type="tel"
-              value={settings.mtn_gsm}
-              onChange={(e) => setSettings({...settings, mtn_gsm: e.target.value})}
-              placeholder="مثال: 0944000000"
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#FF6B00] focus:border-transparent"
-              dir="ltr"
-            />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              اسم صاحب الحساب
-            </label>
-            <input
-              type="text"
-              value={settings.mtn_name}
-              onChange={(e) => setSettings({...settings, mtn_name: e.target.value})}
-              placeholder="مثال: ترند سورية"
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#FF6B00] focus:border-transparent"
-            />
           </div>
         </div>
       </div>

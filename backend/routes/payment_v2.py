@@ -40,13 +40,12 @@ async def get_payment_system_status():
                 "4. أضف APISYRIA_API_KEY و SHAMCASH_ACCOUNT_ADDRESS في .env"
             ]
         },
-        "syriatel_cash": {
-            "description": "سيرياتيل كاش - محفظة سيرياتيل",
+        "bank_account": {
+            "description": "حساب بنكي - تحويل بنكي مباشر",
             "how_to_activate": [
-                "1. سجل في apisyria.com",
-                "2. اربط رقم سيرياتيل كاش الخاص بالمتجر",
-                "3. احصل على API Key",
-                "4. أضف APISYRIA_API_KEY و SYRIATEL_MERCHANT_GSM في .env"
+                "1. افتح حساب بنكي تجاري",
+                "2. أضف بيانات الحساب في إعدادات الدفع",
+                "3. العملاء يحولون مباشرة وترفع صورة الإيصال"
             ]
         },
         "bank_card": {
@@ -76,8 +75,6 @@ async def get_provider_balance(
     try:
         if provider == "shamcash":
             result = await payment_manager.shamcash.get_balance()
-        elif provider == "syriatel_cash":
-            result = await payment_manager.syriatel.get_balance()
         else:
             raise HTTPException(status_code=400, detail="مزود غير مدعوم")
         
@@ -341,33 +338,22 @@ async def get_payment_instructions(
             "merchant_address": payment_settings.get("shamcash_address"),
             "note": "رقم العملية يظهر في تطبيق شام كاش بعد إتمام التحويل"
         },
-        "syriatel_cash": {
-            "method_name": "سيرياتيل كاش",
-            "icon": "📱",
+        "bank_account": {
+            "method_name": "حساب بنكي",
+            "icon": "🏛️",
             "steps": [
-                "1. افتح تطبيق سيرياتيل كاش أو اطلب *117#",
-                "2. اختر 'تحويل رصيد'",
-                f"3. أدخل رقم المستلم: {payment_settings.get('syriatel_gsm', '[سيتم تحديده]')}",
-                f"4. أدخل المبلغ: {order_total:,.0f} ل.س" if order_total else "4. أدخل مبلغ الطلب",
-                "5. أكمل التحويل واحفظ رقم العملية",
-                "6. أدخل رقم العملية في التطبيق لتأكيد الدفع"
-            ],
-            "merchant_phone": payment_settings.get("syriatel_gsm"),
-            "note": "ستصلك رسالة SMS برقم العملية بعد التحويل"
-        },
-        "mtn_cash": {
-            "method_name": "MTN كاش",
-            "icon": "📲",
-            "steps": [
-                "1. افتح تطبيق MTN Cash أو اطلب *555#",
+                "1. ادخل لتطبيق البنك الخاص بك",
                 "2. اختر 'تحويل'",
-                f"3. أدخل رقم المستلم: {payment_settings.get('mtn_gsm', '[سيتم تحديده]')}",
-                f"4. أدخل المبلغ: {order_total:,.0f} ل.س" if order_total else "4. أدخل مبلغ الطلب",
-                "5. أكمل التحويل واحفظ رقم العملية",
-                "6. أدخل رقم العملية في التطبيق لتأكيد الدفع"
+                f"3. أدخل رقم الحساب: {payment_settings.get('bank_account_number', '[سيتم تحديده]')}",
+                f"4. البنك: {payment_settings.get('bank_name', '[سيتم تحديده]')}",
+                f"5. أدخل المبلغ: {order_total:,.0f} ل.س" if order_total else "5. أدخل مبلغ الطلب",
+                f"6. في الملاحظة، اكتب رقم طلبك: {order_id[:8] if order_id else '[رقم الطلب]'}",
+                "7. أكمل التحويل وارفع صورة الإيصال"
             ],
-            "merchant_phone": payment_settings.get("mtn_gsm"),
-            "note": "ستصلك رسالة SMS برقم العملية بعد التحويل"
+            "bank_name": payment_settings.get("bank_name"),
+            "account_number": payment_settings.get("bank_account_number"),
+            "account_holder": payment_settings.get("bank_account_holder"),
+            "note": "احتفظ بإيصال التحويل البنكي لتأكيد الدفع"
         },
         "card": {
             "method_name": "بطاقة بنكية",
@@ -375,7 +361,7 @@ async def get_payment_instructions(
             "status": "قيد التطوير",
             "steps": [
                 "الدفع بالبطاقة البنكية سيكون متاحاً قريباً",
-                "يرجى استخدام شام كاش أو سيرياتيل كاش حالياً"
+                "يرجى استخدام شام كاش أو حساب بنكي حالياً"
             ],
             "note": "Visa و Mastercard بدأتا الشراكة مع سوريا في ديسمبر 2025"
         }
@@ -422,10 +408,6 @@ async def update_payment_settings(
     allowed_fields = [
         "shamcash_address",
         "shamcash_name",
-        "syriatel_gsm",
-        "syriatel_name",
-        "mtn_gsm",
-        "mtn_name",
         "bank_account_number",
         "bank_name",
         "bank_account_holder"

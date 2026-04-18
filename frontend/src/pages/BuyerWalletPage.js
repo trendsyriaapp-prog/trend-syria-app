@@ -54,8 +54,7 @@ const BuyerWalletPage = () => {
   // طرق الدفع
   const paymentMethods = [
     { id: 'shamcash', name: 'شام كاش', icon: '🏦', available: true },
-    { id: 'syriatel_cash', name: 'سيرياتيل كاش', icon: '📱', available: true },
-    { id: 'mtn_cash', name: 'MTN كاش', icon: '📲', available: true },
+    { id: 'bank_account', name: 'حساب بنكي', icon: '🏛️', available: true },
     { id: 'bank_card', name: 'بطاقة بنكية', icon: '💳', available: false, comingSoon: true },
   ];
   

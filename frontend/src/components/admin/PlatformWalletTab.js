@@ -26,8 +26,6 @@ const PlatformWalletTab = () => {
   // طرق السحب المتاحة
   const withdrawMethods = [
     { id: 'shamcash', name: 'شام كاش', icon: '💳', fields: ['shamcash_address', 'shamcash_name'] },
-    { id: 'syriatel', name: 'سيرياتيل كاش', icon: '📱', fields: ['syriatel_gsm', 'syriatel_name'] },
-    { id: 'mtn', name: 'MTN كاش', icon: '📱', fields: ['mtn_gsm', 'mtn_name'] },
     { id: 'bank', name: 'حساب بنكي', icon: '🏦', fields: ['bank_account_number', 'bank_name', 'bank_account_holder'] }
   ];
 
@@ -222,8 +220,6 @@ const PlatformWalletTab = () => {
                         {isConfigured ? (
                           <p className="text-[10px] text-gray-500">
                             {method.id === 'shamcash' && paymentSettings?.shamcash_address}
-                            {method.id === 'syriatel' && paymentSettings?.syriatel_gsm}
-                            {method.id === 'mtn' && paymentSettings?.mtn_gsm}
                             {method.id === 'bank' && paymentSettings?.bank_name}
                           </p>
                         ) : (

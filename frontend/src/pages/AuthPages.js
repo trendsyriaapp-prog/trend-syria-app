@@ -405,6 +405,7 @@ const RegisterPage = () => {
 
   // عند الضغط على "بائع"، نظهر خيارات نوع البيع
   const handleSellerClick = () => {
+    setFormData({ ...formData, user_type: 'seller' }); // تعيين نوع البائع مؤقتاً لإخفاء حقل المدينة
     setShowSellerType(true);
   };
 
@@ -689,20 +690,23 @@ const RegisterPage = () => {
               )}
             </div>
 
-            <div>
-              <label className="block text-sm font-medium mb-2 text-gray-700">المدينة</label>
-              <select
-                value={formData.city}
-                onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                className="w-full bg-gray-50 border border-gray-200 rounded-lg py-3 px-4 text-gray-900 focus:border-[#FF6B00] focus:outline-none transition-colors"
-                required
-                data-testid="city-select"
-              >
-                {CITIES.map(city => (
-                  <option key={city} value={city}>{city}</option>
-                ))}
-              </select>
-            </div>
+            {/* المدينة - تُعرض فقط للمشترين، أما البائعين والسائقين فيُدخلونها لاحقاً */}
+            {formData.user_type === 'buyer' && (
+              <div>
+                <label className="block text-sm font-medium mb-2 text-gray-700">المدينة</label>
+                <select
+                  value={formData.city}
+                  onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                  className="w-full bg-gray-50 border border-gray-200 rounded-lg py-3 px-4 text-gray-900 focus:border-[#FF6B00] focus:outline-none transition-colors"
+                  required
+                  data-testid="city-select"
+                >
+                  {CITIES.map(city => (
+                    <option key={city} value={city}>{city}</option>
+                  ))}
+                </select>
+              </div>
+            )}
 
           </div>
 

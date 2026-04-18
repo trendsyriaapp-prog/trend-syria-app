@@ -19,8 +19,7 @@ const PAYMENT_METHODS = [
   { id: 'wallet', name: 'المحفظة', icon: '👛', description: 'الدفع من رصيد محفظتك', available: true },
   { id: 'bank_card', name: 'بطاقة بنكية', icon: '💳', description: 'Visa / Mastercard', available: false, comingSoon: true },
   { id: 'shamcash', name: 'شام كاش', icon: '🏦', description: 'محفظة إلكترونية', available: true },
-  { id: 'syriatel_cash', name: 'سيرياتيل', icon: '📱', description: 'سيرياتيل كاش', available: true },
-  { id: 'mtn_cash', name: 'MTN', icon: '📲', description: 'MTN كاش', available: true },
+  { id: 'bank_account', name: 'حساب بنكي', icon: '🏛️', description: 'تحويل بنكي', available: true },
 ];
 
 const formatPrice = (price) => {

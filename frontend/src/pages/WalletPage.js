@@ -45,8 +45,6 @@ const WalletPage = () => {
   // طرق السحب المتاحة
   const withdrawalMethods = [
     { id: 'shamcash', name: 'شام كاش', icon: '💳', placeholder: '09XXXXXXXX' },
-    { id: 'syriatel_cash', name: 'سيرياتيل كاش', icon: '📱', placeholder: '09XXXXXXXX' },
-    { id: 'mtn_cash', name: 'MTN Cash', icon: '📲', placeholder: '09XXXXXXXX' },
     { id: 'bank_account', name: 'حساب بنكي', icon: '🏦', placeholder: '' },
   ];
   

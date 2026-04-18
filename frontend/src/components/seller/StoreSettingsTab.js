@@ -22,8 +22,6 @@ const SYRIAN_CITIES = [
 
 const PAYMENT_TYPES = [
   { id: 'shamcash', name: 'شام كاش', icon: '💳' },
-  { id: 'syriatel_cash', name: 'سيرياتيل كاش', icon: '📱' },
-  { id: 'mtn_cash', name: 'MTN كاش', icon: '📱' },
   { id: 'bank_account', name: 'حساب بنكي', icon: '🏦' },
 ];
 

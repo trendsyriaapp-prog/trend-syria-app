@@ -239,8 +239,6 @@ export default function SecurityDepositCard({ token, onDepositComplete }) {
             <div className="grid grid-cols-2 gap-2">
               {[
                 { id: 'shamcash', name: 'Sham Cash', icon: '💳' },
-                { id: 'syriatel', name: 'Syriatel Cash', icon: '📱' },
-                { id: 'mtn', name: 'MTN Cash', icon: '📱' },
                 { id: 'bank', name: 'تحويل بنكي', icon: '🏦' },
                 { id: 'hawala', name: 'حوالة', icon: '💸' },
                 { id: 'cash', name: 'نقداً (للمكتب)', icon: '💵' }

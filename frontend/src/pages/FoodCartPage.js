@@ -1081,8 +1081,7 @@ const FoodCartPage = () => {
                       <p className="font-medium text-gray-900">
                         {pay.type === 'card' ? 'بطاقة بنكية' : 
                          pay.type === 'shamcash' ? 'شام كاش' :
-                         pay.type === 'syriatel_cash' ? 'سيرياتيل' : 
-                         pay.type === 'mtn_cash' ? 'MTN' : pay.type}
+                         pay.type === 'bank_account' ? 'حساب بنكي' : pay.type}
                       </p>
                       {pay.is_default && (
                         <span className="text-xs bg-orange-100 text-[#E65000] px-2 py-0.5 rounded-full">افتراضي</span>
