@@ -6,7 +6,8 @@ import { useState, useEffect, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { MapPin, Crosshair, Loader2, Check, X, Navigation } from 'lucide-react';
+import { MapPin, Crosshair, Loader2, Check, X, Navigation, AlertTriangle } from 'lucide-react';
+import { useToast } from '../hooks/use-toast';
 
 // إصلاح أيقونة Leaflet الافتراضية
 delete L.Icon.Default.prototype._getIconUrl;
@@ -84,6 +85,8 @@ const InteractiveMapPicker = ({
   warningMessage = null,
   height = "300px"
 }) => {
+  const { toast } = useToast();
+  
   // الموقع الافتراضي (دمشق)
   const defaultLocation = { lat: 33.5138, lng: 36.2765 };
   
@@ -113,7 +116,13 @@ const InteractiveMapPicker = ({
   // الحصول على موقع GPS الحالي
   const getCurrentLocation = () => {
     if (!navigator.geolocation) {
-      setGpsError('المتصفح لا يدعم تحديد الموقع');
+      const errorMsg = 'المتصفح لا يدعم تحديد الموقع';
+      setGpsError(errorMsg);
+      toast({
+        title: "⚠️ غير مدعوم",
+        description: errorMsg,
+        variant: "destructive"
+      });
       return;
     }
 
@@ -127,22 +136,40 @@ const InteractiveMapPicker = ({
         setMapCenter([latitude, longitude]);
         setIsConfirmed(false);
         setLoading(false);
+        toast({
+          title: "✅ تم تحديد موقعك",
+          description: "يمكنك تعديل الموقع بسحب الدبوس"
+        });
       },
       (error) => {
         setLoading(false);
+        let errorMsg = '';
+        let toastTitle = '⚠️ تعذر تحديد الموقع';
+        
         switch (error.code) {
           case error.PERMISSION_DENIED:
-            setGpsError('يرجى السماح بالوصول للموقع من إعدادات الهاتف');
+            errorMsg = 'يرجى السماح للتطبيق بالوصول لموقعك من إعدادات الهاتف';
+            toastTitle = '🔒 صلاحية الموقع مرفوضة';
             break;
           case error.POSITION_UNAVAILABLE:
-            setGpsError('تعذر تحديد الموقع. تأكد من تفعيل GPS');
+            errorMsg = 'يرجى تفعيل خدمة الموقع (GPS) من إعدادات الهاتف';
+            toastTitle = '📍 خدمة الموقع غير مفعّلة';
             break;
           case error.TIMEOUT:
-            setGpsError('انتهت مهلة تحديد الموقع. حاول مرة أخرى');
+            errorMsg = 'انتهت مهلة تحديد الموقع. تأكد من تفعيل GPS وحاول مرة أخرى';
+            toastTitle = '⏱️ انتهت المهلة';
             break;
           default:
-            setGpsError('حدث خطأ في تحديد الموقع');
+            errorMsg = 'حدث خطأ غير متوقع في تحديد الموقع. حاول مرة أخرى';
         }
+        
+        setGpsError(errorMsg);
+        toast({
+          title: toastTitle,
+          description: errorMsg,
+          variant: "destructive",
+          duration: 5000
+        });
       },
       {
         enableHighAccuracy: false,
@@ -259,8 +286,19 @@ const InteractiveMapPicker = ({
 
       {/* خطأ GPS */}
       {gpsError && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700">
-          ⚠️ {gpsError}
+        <div className="bg-red-50 border-2 border-red-300 rounded-xl p-4 flex items-start gap-3">
+          <AlertTriangle className="w-6 h-6 text-red-500 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-bold text-red-700 mb-1">تعذر تحديد الموقع</p>
+            <p className="text-sm text-red-600">{gpsError}</p>
+            <button
+              type="button"
+              onClick={getCurrentLocation}
+              className="mt-2 text-xs text-red-700 underline hover:text-red-900"
+            >
+              حاول مرة أخرى
+            </button>
+          </div>
         </div>
       )}
 
