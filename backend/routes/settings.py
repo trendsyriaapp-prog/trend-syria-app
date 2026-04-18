@@ -2409,8 +2409,9 @@ async def update_default_business_categories(user: dict = Depends(get_current_us
         {"id": "toys", "name": "ألعاب وهدايا", "icon": "🎁", "type": "seller", "order": 6, "requires_license": False},
         {"id": "books", "name": "كتب وقرطاسية", "icon": "📚", "type": "seller", "order": 7, "requires_license": False},
         {"id": "sports", "name": "رياضة ولياقة", "icon": "⚽", "type": "seller", "order": 8, "requires_license": False},
-        {"id": "cars", "name": "سيارات وقطع غيار", "icon": "🚗", "type": "seller", "order": 9, "requires_license": False},
-        {"id": "medicine", "name": "أدوية ومستلزمات طبية", "icon": "💊", "type": "seller", "order": 10, "requires_license": True},
+        {"id": "cars", "name": "قطع غيار سيارات", "icon": "🚗", "type": "seller", "order": 9, "requires_license": False},
+        {"id": "hardware", "name": "خردوات", "icon": "🔧", "type": "seller", "order": 10, "requires_license": False},
+        {"id": "medicine", "name": "أدوية ومستلزمات طبية", "icon": "💊", "type": "seller", "order": 11, "requires_license": True},
     ]
     
     # أصناف بائعي الطعام
@@ -2461,8 +2462,9 @@ async def init_default_business_categories(user: dict = Depends(get_current_user
         {"id": "toys", "name": "ألعاب وهدايا", "icon": "🎁", "type": "seller", "order": 6, "requires_license": False},
         {"id": "books", "name": "كتب وقرطاسية", "icon": "📚", "type": "seller", "order": 7, "requires_license": False},
         {"id": "sports", "name": "رياضة ولياقة", "icon": "⚽", "type": "seller", "order": 8, "requires_license": False},
-        {"id": "cars", "name": "سيارات وقطع غيار", "icon": "🚗", "type": "seller", "order": 9, "requires_license": False},
-        {"id": "medicine", "name": "أدوية ومستلزمات طبية", "icon": "💊", "type": "seller", "order": 10, "requires_license": True},
+        {"id": "cars", "name": "قطع غيار سيارات", "icon": "🚗", "type": "seller", "order": 9, "requires_license": False},
+        {"id": "hardware", "name": "خردوات", "icon": "🔧", "type": "seller", "order": 10, "requires_license": False},
+        {"id": "medicine", "name": "أدوية ومستلزمات طبية", "icon": "💊", "type": "seller", "order": 11, "requires_license": True},
     ]
     
     # أصناف بائعي الطعام

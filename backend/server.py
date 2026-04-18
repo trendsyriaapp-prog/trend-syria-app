@@ -228,8 +228,9 @@ async def sync_business_categories():
         {"id": "toys", "name": "ألعاب وهدايا", "icon": "🎁", "type": "seller", "order": 6, "requires_license": False},
         {"id": "books", "name": "كتب وقرطاسية", "icon": "📚", "type": "seller", "order": 7, "requires_license": False},
         {"id": "sports", "name": "رياضة ولياقة", "icon": "⚽", "type": "seller", "order": 8, "requires_license": False},
-        {"id": "cars", "name": "سيارات وقطع غيار", "icon": "🚗", "type": "seller", "order": 9, "requires_license": False},
-        {"id": "medicine", "name": "أدوية ومستلزمات طبية", "icon": "💊", "type": "seller", "order": 10, "requires_license": True},
+        {"id": "cars", "name": "قطع غيار سيارات", "icon": "🚗", "type": "seller", "order": 9, "requires_license": False},
+        {"id": "hardware", "name": "خردوات", "icon": "🔧", "type": "seller", "order": 10, "requires_license": False},
+        {"id": "medicine", "name": "أدوية ومستلزمات طبية", "icon": "💊", "type": "seller", "order": 11, "requires_license": True},
     ]
     
     # أصناف بائعي الطعام
