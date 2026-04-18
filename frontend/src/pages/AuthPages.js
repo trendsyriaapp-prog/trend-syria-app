@@ -495,7 +495,7 @@ const RegisterPage = () => {
           <img 
             src="/images/logo.png" 
             alt="ترند سوريا" 
-            className="w-20 h-20 object-contain mx-auto mb-4"
+            className="w-20 h-20 object-contain mx-auto mb-4 rounded-2xl"
           />
           <h1 className="text-2xl font-bold text-gray-900">إنشاء حساب جديد</h1>
           <p className="text-gray-500 mt-2">انضم إلى ترند سورية الآن</p>
