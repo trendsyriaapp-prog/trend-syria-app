@@ -719,30 +719,27 @@ const SellerDocumentsPage = () => {
                 inputId="national-id-input"
               />
 
-              {/* السجل التجاري / رخصة المحل - يظهر بناءً على الصنف */}
+              {/* السجل التجاري / رخصة المحل - يظهر فقط إذا كان الصنف يتطلب رخصة */}
               {(() => {
                 const selectedCat = businessCategories.find(c => c.id === businessCategory);
                 const requiresLicense = selectedCat?.requires_license;
                 
-                return (
-                  <div>
-                    <ImageUploader
-                      label={requiresLicense ? "السجل التجاري / رخصة المحل *" : "السجل التجاري / رخصة المحل (اختياري)"}
-                      value={commercialReg}
-                      onChange={handleFileChange(setCommercialReg)}
-                      inputId="commercial-reg-input"
-                    />
-                    {requiresLicense ? (
+                if (requiresLicense) {
+                  return (
+                    <div>
+                      <ImageUploader
+                        label="السجل التجاري / رخصة المحل *"
+                        value={commercialReg}
+                        onChange={handleFileChange(setCommercialReg)}
+                        inputId="commercial-reg-input"
+                      />
                       <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
                         ⚠️ هذا الصنف يتطلب رخصة أو سجل تجاري
                       </p>
-                    ) : (
-                      <p className="text-xs text-gray-400 mt-1">
-                        💡 الرخصة اختيارية لهذا الصنف
-                      </p>
-                    )}
-                  </div>
-                );
+                    </div>
+                  );
+                }
+                return null;
               })()}
 
               {/* تعهد المسؤولية - يظهر فقط إذا كان الصنف لا يتطلب رخصة */}
@@ -756,7 +753,7 @@ const SellerDocumentsPage = () => {
                       <label className="flex items-start gap-2 cursor-pointer">
                         <input
                           type="checkbox"
-                          required={!commercialReg}
+                          required
                           className="w-5 h-5 mt-0.5 text-[#FF6B00] rounded border-gray-300 focus:ring-[#FF6B00]"
                         />
                         <span className="text-sm text-amber-800">

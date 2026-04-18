@@ -874,49 +874,45 @@ const JoinAsFoodSellerPage = () => {
                 </label>
               </div>
 
-              {/* رخصة المحل / السجل التجاري */}
-              <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {requiresLicense() ? '📋 رخصة المحل / السجل التجاري *' : '📋 رخصة المحل / السجل التجاري (اختياري)'}
-                </label>
-                <label className="cursor-pointer block">
-                  {formData.commercial_license ? (
-                    <div className="relative">
-                      <img src={formData.commercial_license} alt="License" className="w-full h-40 rounded-xl object-cover" />
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          setFormData({ ...formData, commercial_license: '' });
-                        }}
-                        className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1"
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-[#FF6B00] transition-colors">
-                      <Upload size={32} className="mx-auto text-gray-400 mb-2" />
-                      <span className="text-sm text-gray-600">اضغط لرفع صورة الرخصة</span>
-                    </div>
-                  )}
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => handleImageUpload(e, 'commercial_license')}
-                    className="hidden"
-                  />
-                </label>
-                {requiresLicense() ? (
+              {/* رخصة المحل / السجل التجاري - يظهر فقط إذا كانت الأصناف تتطلب رخصة */}
+              {requiresLicense() && (
+                <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    📋 رخصة المحل / السجل التجاري *
+                  </label>
+                  <label className="cursor-pointer block">
+                    {formData.commercial_license ? (
+                      <div className="relative">
+                        <img src={formData.commercial_license} alt="License" className="w-full h-40 rounded-xl object-cover" />
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            setFormData({ ...formData, commercial_license: '' });
+                          }}
+                          className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-[#FF6B00] transition-colors">
+                        <Upload size={32} className="mx-auto text-gray-400 mb-2" />
+                        <span className="text-sm text-gray-600">اضغط لرفع صورة الرخصة</span>
+                      </div>
+                    )}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleImageUpload(e, 'commercial_license')}
+                      className="hidden"
+                    />
+                  </label>
                   <p className="text-xs text-red-500 mt-2 flex items-center gap-1">
                     ⚠️ الأصناف المختارة تتطلب رخصة أو سجل تجاري
                   </p>
-                ) : (
-                  <p className="text-xs text-gray-400 mt-2">
-                    💡 الرخصة اختيارية للأصناف المختارة
-                  </p>
-                )}
-              </div>
+                </div>
+              )}
 
               {/* تعهد المسؤولية - يظهر فقط إذا لم تكن الرخصة مطلوبة */}
               {!requiresLicense() && (
@@ -924,7 +920,7 @@ const JoinAsFoodSellerPage = () => {
                   <label className="flex items-start gap-2 cursor-pointer">
                     <input
                       type="checkbox"
-                      required={!formData.commercial_license}
+                      required
                       className="w-5 h-5 mt-0.5 text-[#FF6B00] rounded border-gray-300 focus:ring-[#FF6B00]"
                     />
                     <span className="text-sm text-amber-800">
