@@ -273,18 +273,6 @@ const ForgotPasswordPage = () => {
                     <MessageSquare size={14} className="inline ml-1" />
                     كود SMS
                   </button>
-                  {hasEmergencyPhone && (
-                    <button
-                      type="button"
-                      onClick={() => setVerificationType('emergency')}
-                      className={`flex-1 py-2 rounded-full transition-colors text-xs ${
-                        verificationType === 'emergency' ? 'bg-[#FF6B00] text-white font-bold' : 'text-gray-600'
-                      }`}
-                      data-testid="verify-emergency-btn"
-                    >
-                      رقم الطوارئ
-                    </button>
-                  )}
                   <button
                     type="button"
                     onClick={() => setVerificationType('name')}
@@ -374,40 +362,6 @@ const ForgotPasswordPage = () => {
                         </button>
                       </div>
                     )}
-                  </form>
-                )}
-
-                {/* التحقق عبر رقم الطوارئ */}
-                {verificationType === 'emergency' && hasEmergencyPhone && (
-                  <form onSubmit={handleVerifyIdentity} className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium mb-2 text-gray-700">
-                        آخر 4 أرقام من رقم الطوارئ
-                      </label>
-                      <div className="relative">
-                        <input
-                          type="text"
-                          value={emergencyLast4}
-                          onChange={(e) => setEmergencyLast4(e.target.value.replace(/\D/g, '').slice(0, 4))}
-                          className="w-full bg-gray-50 border border-gray-200 rounded-lg py-3 px-4 text-gray-900 text-center text-2xl tracking-widest placeholder:text-gray-400 focus:border-[#FF6B00] focus:outline-none transition-colors"
-                          placeholder="XXXX"
-                          maxLength={4}
-                          required
-                          data-testid="emergency-last4-input"
-                        />
-                      </div>
-                      <p className="text-xs text-gray-400 mt-2 text-center">
-                        أدخل آخر 4 أرقام من رقم الطوارئ الذي سجلته عند إنشاء الحساب
-                      </p>
-                    </div>
-                    <button
-                      type="submit"
-                      disabled={loading}
-                      className="w-full bg-[#FF6B00] text-white font-bold py-3 rounded-full hover:bg-[#E65000] disabled:opacity-50 transition-colors"
-                      data-testid="verify-identity-btn"
-                    >
-                      {loading ? 'جاري التحقق...' : 'تحقق'}
-                    </button>
                   </form>
                 )}
 
