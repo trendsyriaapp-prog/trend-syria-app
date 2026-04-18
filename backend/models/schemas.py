@@ -43,6 +43,12 @@ class DeviceOTPVerify(BaseModel):
     device_id: str
     device_name: Optional[str] = None  # اسم الجهاز (اختياري)
 
+class PaymentAccount(BaseModel):
+    type: str  # shamcash, bank_account
+    account_number: str
+    holder_name: str
+    bank_name: Optional[str] = None
+
 class DeliveryDocuments(BaseModel):
     national_id: str
     personal_photo: str
@@ -55,13 +61,15 @@ class DeliveryDocuments(BaseModel):
     home_latitude: float  # خط العرض
     home_longitude: float  # خط الطول
     home_city: Optional[str] = None  # المدينة
+    # حساب استلام الأرباح
+    payment_account: Optional[PaymentAccount] = None
     
 class SellerDocuments(BaseModel):
     business_name: str
     business_category: Optional[str] = None  # صنف النشاط التجاري
     seller_type: str  # traditional_shop, restaurant
     national_id: str  # صورة الهوية
-    commercial_registration: str  # السجل التجاري
+    commercial_registration: Optional[str] = None  # السجل التجاري (اختياري حسب الصنف)
     shop_photo: Optional[str] = None  # صورة المحل (للمتاجر التقليدية)
     health_certificate: Optional[str] = None  # الشهادة الصحية (للمطاعم)
     # حقول العنوان الإلزامية
@@ -69,6 +77,8 @@ class SellerDocuments(BaseModel):
     store_latitude: float  # خط العرض
     store_longitude: float  # خط الطول
     store_city: Optional[str] = None  # المدينة
+    # حساب استلام الأرباح
+    payment_account: Optional[PaymentAccount] = None
 
 # ============== Product Models ==============
 

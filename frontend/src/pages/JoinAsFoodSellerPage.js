@@ -116,6 +116,11 @@ const JoinAsFoodSellerPage = () => {
     latitude: null,
     longitude: null,
     working_hours: defaultWorkingHours,
+    // حساب استلام الأرباح
+    payment_account_type: 'shamcash',
+    payment_account_number: '',
+    payment_account_holder: '',
+    payment_bank_name: '',
   });
   
   // تحقق إذا كانت الأصناف المختارة تتطلب رخصة
@@ -275,9 +280,37 @@ const JoinAsFoodSellerPage = () => {
       return;
     }
 
+    // التحقق من حساب استلام الأرباح
+    if (!formData.payment_account_number || !formData.payment_account_holder) {
+      toast({ title: "تنبيه", description: "يرجى إدخال بيانات حساب استلام الأرباح", variant: "destructive" });
+      return;
+    }
+
+    if (formData.payment_account_type === 'bank_account' && !formData.payment_bank_name) {
+      toast({ title: "تنبيه", description: "يرجى إدخال اسم البنك", variant: "destructive" });
+      return;
+    }
+
     setLoading(true);
     try {
-      await axios.post(`${API}/api/food/stores`, formData, {
+      // إعداد بيانات حساب الدفع
+      const submitData = {
+        ...formData,
+        payment_account: {
+          type: formData.payment_account_type,
+          account_number: formData.payment_account_number,
+          holder_name: formData.payment_account_holder,
+          bank_name: formData.payment_account_type === 'bank_account' ? formData.payment_bank_name : null
+        }
+      };
+      
+      // حذف الحقول القديمة
+      delete submitData.payment_account_type;
+      delete submitData.payment_account_number;
+      delete submitData.payment_account_holder;
+      delete submitData.payment_bank_name;
+      
+      await axios.post(`${API}/api/food/stores`, submitData, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -930,9 +963,114 @@ const JoinAsFoodSellerPage = () => {
                 </div>
               )}
 
+              {/* حساب استلام الأرباح */}
+              <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-4 border-2 border-green-200">
+                <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
+                  💳 حساب استلام الأرباح *
+                </h3>
+                <p className="text-xs text-gray-500 mb-4">اختر طريقة استلام أرباحك من المبيعات</p>
+
+                {/* اختيار نوع الحساب */}
+                <div className="grid grid-cols-2 gap-3 mb-4">
+                  <button
+                    type="button"
+                    onClick={() => setFormData({...formData, payment_account_type: 'shamcash'})}
+                    className={`p-3 rounded-xl border-2 transition-all text-center ${
+                      formData.payment_account_type === 'shamcash'
+                        ? 'border-green-500 bg-green-100 ring-2 ring-green-200'
+                        : 'border-gray-200 bg-white hover:border-gray-300'
+                    }`}
+                  >
+                    <span className="text-2xl block mb-1">🏦</span>
+                    <span className="text-sm font-bold text-gray-900">شام كاش</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFormData({...formData, payment_account_type: 'bank_account'})}
+                    className={`p-3 rounded-xl border-2 transition-all text-center ${
+                      formData.payment_account_type === 'bank_account'
+                        ? 'border-green-500 bg-green-100 ring-2 ring-green-200'
+                        : 'border-gray-200 bg-white hover:border-gray-300'
+                    }`}
+                  >
+                    <span className="text-2xl block mb-1">🏛️</span>
+                    <span className="text-sm font-bold text-gray-900">حساب بنكي</span>
+                  </button>
+                </div>
+
+                {/* حقول شام كاش */}
+                {formData.payment_account_type === 'shamcash' && (
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">رقم شام كاش *</label>
+                      <input
+                        type="tel"
+                        value={formData.payment_account_number}
+                        onChange={(e) => setFormData({...formData, payment_account_number: e.target.value})}
+                        placeholder="09XXXXXXXX"
+                        className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-green-500 focus:outline-none"
+                        required
+                        dir="ltr"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">اسم صاحب الحساب *</label>
+                      <input
+                        type="text"
+                        value={formData.payment_account_holder}
+                        onChange={(e) => setFormData({...formData, payment_account_holder: e.target.value})}
+                        placeholder="الاسم كما هو مسجل في شام كاش"
+                        className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-green-500 focus:outline-none"
+                        required
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* حقول الحساب البنكي */}
+                {formData.payment_account_type === 'bank_account' && (
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">اسم البنك *</label>
+                      <input
+                        type="text"
+                        value={formData.payment_bank_name}
+                        onChange={(e) => setFormData({...formData, payment_bank_name: e.target.value})}
+                        placeholder="مثال: بنك سورية الدولي الإسلامي"
+                        className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-green-500 focus:outline-none"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">رقم الحساب / IBAN *</label>
+                      <input
+                        type="text"
+                        value={formData.payment_account_number}
+                        onChange={(e) => setFormData({...formData, payment_account_number: e.target.value})}
+                        placeholder="رقم الحساب البنكي"
+                        className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-green-500 focus:outline-none"
+                        required
+                        dir="ltr"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">اسم صاحب الحساب *</label>
+                      <input
+                        type="text"
+                        value={formData.payment_account_holder}
+                        onChange={(e) => setFormData({...formData, payment_account_holder: e.target.value})}
+                        placeholder="الاسم كما هو مسجل في البنك"
+                        className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-green-500 focus:outline-none"
+                        required
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
               <button
                 type="submit"
-                disabled={loading}
+                disabled={loading || !formData.payment_account_number || !formData.payment_account_holder || (formData.payment_account_type === 'bank_account' && !formData.payment_bank_name)}
                 className="w-full bg-[#FF6B00] text-white py-3 rounded-xl font-bold hover:bg-[#E65000] transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {loading ? (

@@ -58,6 +58,12 @@ DEFAULT_PREPARATION_TIMES = {
 }
 
 # Models
+class PaymentAccountInfo(BaseModel):
+    type: str  # shamcash, bank_account
+    account_number: str
+    holder_name: str
+    bank_name: Optional[str] = None
+
 class FoodStoreCreate(BaseModel):
     name: str
     store_type: str  # food or market (النوع الرئيسي)
@@ -69,6 +75,7 @@ class FoodStoreCreate(BaseModel):
     city: str
     logo: Optional[str] = None
     cover_image: Optional[str] = None
+    commercial_license: Optional[str] = None  # رخصة المحل / السجل التجاري
     latitude: Optional[float] = None
     longitude: Optional[float] = None
     delivery_time: Optional[int] = 30  # بالدقائق
@@ -76,6 +83,7 @@ class FoodStoreCreate(BaseModel):
     free_delivery_minimum: Optional[float] = 0  # الحد الأدنى للتوصيل المجاني
     delivery_fee: Optional[float] = 5000  # رسوم التوصيل الافتراضية
     working_hours: Optional[dict] = None
+    payment_account: Optional[PaymentAccountInfo] = None  # حساب استلام الأرباح
 
 class FoodProductCreate(BaseModel):
     store_id: str
@@ -448,6 +456,7 @@ async def create_food_store(store: FoodStoreCreate, user: dict = Depends(get_cur
         "city": store.city,
         "logo": store.logo,
         "cover_image": store.cover_image,
+        "commercial_license": store.commercial_license,  # رخصة المحل
         "delivery_time": store.delivery_time,
         "minimum_order": store.minimum_order,
         "free_delivery_minimum": store.free_delivery_minimum,
@@ -464,6 +473,21 @@ async def create_food_store(store: FoodStoreCreate, user: dict = Depends(get_cur
     }
     
     await db.food_stores.insert_one(store_doc)
+    
+    # حفظ حساب استلام الأرباح
+    if store.payment_account:
+        payment_acc = {
+            "id": str(uuid.uuid4()),
+            "user_id": user["id"],
+            "user_type": user["user_type"],
+            "type": store.payment_account.type,
+            "account_number": store.payment_account.account_number,
+            "holder_name": store.payment_account.holder_name,
+            "bank_name": store.payment_account.bank_name,
+            "is_default": True,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db.seller_payment_accounts.insert_one(payment_acc)
     
     # إرسال إشعار Push للمدراء
     try:

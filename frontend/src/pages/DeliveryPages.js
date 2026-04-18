@@ -56,7 +56,12 @@ const DeliveryDocuments = () => {
     home_address: '',
     home_latitude: null,
     home_longitude: null,
-    home_city: ''
+    home_city: '',
+    // حساب استلام الأرباح
+    payment_account_type: 'shamcash',
+    payment_account_number: '',
+    payment_account_holder: '',
+    payment_bank_name: ''
   });
 
   // قائمة المدن
@@ -162,9 +167,45 @@ const DeliveryDocuments = () => {
       return;
     }
 
+    // التحقق من حساب استلام الأرباح
+    if (!docs.payment_account_number || !docs.payment_account_holder) {
+      toast({
+        title: "خطأ",
+        description: "يرجى إدخال بيانات حساب استلام الأرباح",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (docs.payment_account_type === 'bank_account' && !docs.payment_bank_name) {
+      toast({
+        title: "خطأ",
+        description: "يرجى إدخال اسم البنك",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setLoading(true);
     try {
-      await axios.post(`${API}/api/delivery/documents`, docs);
+      // إعداد بيانات حساب الدفع
+      const submitData = {
+        ...docs,
+        payment_account: {
+          type: docs.payment_account_type,
+          account_number: docs.payment_account_number,
+          holder_name: docs.payment_account_holder,
+          bank_name: docs.payment_account_type === 'bank_account' ? docs.payment_bank_name : null
+        }
+      };
+      
+      // حذف الحقول القديمة
+      delete submitData.payment_account_type;
+      delete submitData.payment_account_number;
+      delete submitData.payment_account_holder;
+      delete submitData.payment_bank_name;
+      
+      await axios.post(`${API}/api/delivery/documents`, submitData);
       toast({
         title: "تم بنجاح",
         description: "تم إرسال الوثائق، في انتظار موافقة الإدارة"
@@ -601,10 +642,115 @@ const DeliveryDocuments = () => {
             </div>
           )}
 
+          {/* حساب استلام الأرباح */}
+          <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-4 border-2 border-green-200">
+            <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
+              💳 حساب استلام الأرباح *
+            </h3>
+            <p className="text-xs text-gray-500 mb-4">اختر طريقة استلام أجورك من التوصيل</p>
+
+            {/* اختيار نوع الحساب */}
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              <button
+                type="button"
+                onClick={() => setDocs(prev => ({...prev, payment_account_type: 'shamcash'}))}
+                className={`p-3 rounded-xl border-2 transition-all text-center ${
+                  docs.payment_account_type === 'shamcash'
+                    ? 'border-green-500 bg-green-100 ring-2 ring-green-200'
+                    : 'border-gray-200 bg-white hover:border-gray-300'
+                }`}
+              >
+                <span className="text-2xl block mb-1">🏦</span>
+                <span className="text-sm font-bold text-gray-900">شام كاش</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setDocs(prev => ({...prev, payment_account_type: 'bank_account'}))}
+                className={`p-3 rounded-xl border-2 transition-all text-center ${
+                  docs.payment_account_type === 'bank_account'
+                    ? 'border-green-500 bg-green-100 ring-2 ring-green-200'
+                    : 'border-gray-200 bg-white hover:border-gray-300'
+                }`}
+              >
+                <span className="text-2xl block mb-1">🏛️</span>
+                <span className="text-sm font-bold text-gray-900">حساب بنكي</span>
+              </button>
+            </div>
+
+            {/* حقول شام كاش */}
+            {docs.payment_account_type === 'shamcash' && (
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">رقم شام كاش *</label>
+                  <input
+                    type="tel"
+                    value={docs.payment_account_number}
+                    onChange={(e) => setDocs(prev => ({...prev, payment_account_number: e.target.value}))}
+                    placeholder="09XXXXXXXX"
+                    className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-green-500 focus:outline-none"
+                    required
+                    dir="ltr"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">اسم صاحب الحساب *</label>
+                  <input
+                    type="text"
+                    value={docs.payment_account_holder}
+                    onChange={(e) => setDocs(prev => ({...prev, payment_account_holder: e.target.value}))}
+                    placeholder="الاسم كما هو مسجل في شام كاش"
+                    className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-green-500 focus:outline-none"
+                    required
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* حقول الحساب البنكي */}
+            {docs.payment_account_type === 'bank_account' && (
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">اسم البنك *</label>
+                  <input
+                    type="text"
+                    value={docs.payment_bank_name}
+                    onChange={(e) => setDocs(prev => ({...prev, payment_bank_name: e.target.value}))}
+                    placeholder="مثال: بنك سورية الدولي الإسلامي"
+                    className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-green-500 focus:outline-none"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">رقم الحساب / IBAN *</label>
+                  <input
+                    type="text"
+                    value={docs.payment_account_number}
+                    onChange={(e) => setDocs(prev => ({...prev, payment_account_number: e.target.value}))}
+                    placeholder="رقم الحساب البنكي"
+                    className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-green-500 focus:outline-none"
+                    required
+                    dir="ltr"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">اسم صاحب الحساب *</label>
+                  <input
+                    type="text"
+                    value={docs.payment_account_holder}
+                    onChange={(e) => setDocs(prev => ({...prev, payment_account_holder: e.target.value}))}
+                    placeholder="الاسم كما هو مسجل في البنك"
+                    className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-green-500 focus:outline-none"
+                    required
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+
           {/* زر الإرسال */}
           <button
             type="submit"
-            disabled={loading || !docs.national_id || !docs.personal_photo || !docs.id_photo || !docs.vehicle_type || (requiresLicense && !docs.motorcycle_license) || !docs.home_address || !docs.home_latitude}
+            disabled={loading || !docs.national_id || !docs.personal_photo || !docs.id_photo || !docs.vehicle_type || (requiresLicense && !docs.motorcycle_license) || !docs.home_address || !docs.home_latitude || !docs.payment_account_number || !docs.payment_account_holder || (docs.payment_account_type === 'bank_account' && !docs.payment_bank_name)}
             className="w-full bg-[#FF6B00] text-white py-3 rounded-xl font-bold disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? 'جاري الإرسال...' : 'إرسال الوثائق'}

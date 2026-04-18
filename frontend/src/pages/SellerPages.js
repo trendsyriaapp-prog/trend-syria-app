@@ -432,6 +432,12 @@ const SellerDocumentsPage = () => {
   const [storeLongitude, setStoreLongitude] = useState(null);
   const [storeCity, setStoreCity] = useState('');
 
+  // حقول حساب استلام الأرباح
+  const [paymentAccountType, setPaymentAccountType] = useState('shamcash'); // shamcash أو bank_account
+  const [paymentAccountNumber, setPaymentAccountNumber] = useState('');
+  const [paymentAccountHolder, setPaymentAccountHolder] = useState('');
+  const [paymentBankName, setPaymentBankName] = useState('');
+
   // قائمة المدن
   const CITIES = [
     'دمشق', 'حلب', 'حمص', 'حماة', 'اللاذقية', 'طرطوس', 
@@ -544,7 +550,14 @@ const SellerDocumentsPage = () => {
         store_address: storeAddress,
         store_latitude: storeLatitude,
         store_longitude: storeLongitude,
-        store_city: storeCity
+        store_city: storeCity,
+        // حساب استلام الأرباح
+        payment_account: {
+          type: paymentAccountType,
+          account_number: paymentAccountNumber,
+          holder_name: paymentAccountHolder,
+          bank_name: paymentAccountType === 'bank_account' ? paymentBankName : null
+        }
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -847,9 +860,118 @@ const SellerDocumentsPage = () => {
                 </div>
               </motion.div>
 
+              {/* حساب استلام الأرباح */}
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-4 border-2 border-green-200"
+              >
+                <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
+                  💳 حساب استلام الأرباح *
+                </h3>
+                <p className="text-xs text-gray-500 mb-4">اختر طريقة استلام أرباحك من المبيعات</p>
+
+                {/* اختيار نوع الحساب */}
+                <div className="grid grid-cols-2 gap-3 mb-4">
+                  <button
+                    type="button"
+                    onClick={() => setPaymentAccountType('shamcash')}
+                    className={`p-3 rounded-xl border-2 transition-all text-center ${
+                      paymentAccountType === 'shamcash'
+                        ? 'border-green-500 bg-green-100 ring-2 ring-green-200'
+                        : 'border-gray-200 bg-white hover:border-gray-300'
+                    }`}
+                  >
+                    <span className="text-2xl block mb-1">🏦</span>
+                    <span className="text-sm font-bold text-gray-900">شام كاش</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPaymentAccountType('bank_account')}
+                    className={`p-3 rounded-xl border-2 transition-all text-center ${
+                      paymentAccountType === 'bank_account'
+                        ? 'border-green-500 bg-green-100 ring-2 ring-green-200'
+                        : 'border-gray-200 bg-white hover:border-gray-300'
+                    }`}
+                  >
+                    <span className="text-2xl block mb-1">🏛️</span>
+                    <span className="text-sm font-bold text-gray-900">حساب بنكي</span>
+                  </button>
+                </div>
+
+                {/* حقول شام كاش */}
+                {paymentAccountType === 'shamcash' && (
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">رقم شام كاش *</label>
+                      <input
+                        type="tel"
+                        value={paymentAccountNumber}
+                        onChange={(e) => setPaymentAccountNumber(e.target.value)}
+                        placeholder="09XXXXXXXX"
+                        className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-green-500 focus:outline-none"
+                        required
+                        dir="ltr"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">اسم صاحب الحساب *</label>
+                      <input
+                        type="text"
+                        value={paymentAccountHolder}
+                        onChange={(e) => setPaymentAccountHolder(e.target.value)}
+                        placeholder="الاسم كما هو مسجل في شام كاش"
+                        className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-green-500 focus:outline-none"
+                        required
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* حقول الحساب البنكي */}
+                {paymentAccountType === 'bank_account' && (
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">اسم البنك *</label>
+                      <input
+                        type="text"
+                        value={paymentBankName}
+                        onChange={(e) => setPaymentBankName(e.target.value)}
+                        placeholder="مثال: بنك سورية الدولي الإسلامي"
+                        className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-green-500 focus:outline-none"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">رقم الحساب / IBAN *</label>
+                      <input
+                        type="text"
+                        value={paymentAccountNumber}
+                        onChange={(e) => setPaymentAccountNumber(e.target.value)}
+                        placeholder="رقم الحساب البنكي"
+                        className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-green-500 focus:outline-none"
+                        required
+                        dir="ltr"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">اسم صاحب الحساب *</label>
+                      <input
+                        type="text"
+                        value={paymentAccountHolder}
+                        onChange={(e) => setPaymentAccountHolder(e.target.value)}
+                        placeholder="الاسم كما هو مسجل في البنك"
+                        className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-green-500 focus:outline-none"
+                        required
+                      />
+                    </div>
+                  </div>
+                )}
+              </motion.div>
+
             <button
               type="submit"
-              disabled={loading || !businessCategory || !storeAddress || !storeLatitude}
+              disabled={loading || !businessCategory || !storeAddress || !storeLatitude || !paymentAccountNumber || !paymentAccountHolder || (paymentAccountType === 'bank_account' && !paymentBankName)}
               className="w-full bg-[#FF6B00] text-white font-bold py-3 rounded-full mt-4 hover:bg-[#E65000] disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
               data-testid="submit-docs-btn"
             >

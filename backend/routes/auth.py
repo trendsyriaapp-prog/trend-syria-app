@@ -704,8 +704,11 @@ async def upload_seller_documents(docs: SellerDocuments, user: dict = Depends(ge
     if not docs.national_id or not docs.national_id.strip():
         raise HTTPException(status_code=400, detail="صورة الهوية مطلوبة")
     
-    if not docs.commercial_registration or not docs.commercial_registration.strip():
-        raise HTTPException(status_code=400, detail="صورة السجل التجاري مطلوبة")
+    # التحقق من الرخصة إذا كان الصنف يتطلبها
+    requires_license_categories = ["medicine"]  # الأصناف التي تتطلب رخصة للمنتجات
+    if docs.business_category in requires_license_categories:
+        if not docs.commercial_registration or not docs.commercial_registration.strip():
+            raise HTTPException(status_code=400, detail="صورة السجل التجاري / الرخصة مطلوبة لهذا الصنف")
     
     # التحقق من العنوان والموقع - إلزامي
     if not docs.store_address or not docs.store_address.strip():
@@ -757,6 +760,21 @@ async def upload_seller_documents(docs: SellerDocuments, user: dict = Depends(ge
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     await db.seller_documents.insert_one(doc)
+    
+    # حفظ حساب استلام الأرباح
+    if docs.payment_account:
+        payment_acc = {
+            "id": str(uuid.uuid4()),
+            "user_id": user["id"],
+            "user_type": user["user_type"],
+            "type": docs.payment_account.type,
+            "account_number": docs.payment_account.account_number,
+            "holder_name": docs.payment_account.holder_name,
+            "bank_name": docs.payment_account.bank_name,
+            "is_default": True,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db.seller_payment_accounts.insert_one(payment_acc)
     
     # إرسال إشعار Push للمدراء
     try:
@@ -884,6 +902,21 @@ async def upload_delivery_documents(docs: DeliveryDocuments, user: dict = Depend
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     await db.delivery_documents.insert_one(doc)
+    
+    # حفظ حساب استلام الأرباح
+    if docs.payment_account:
+        payment_acc = {
+            "id": str(uuid.uuid4()),
+            "user_id": user["id"],
+            "user_type": user["user_type"],
+            "type": docs.payment_account.type,
+            "account_number": docs.payment_account.account_number,
+            "holder_name": docs.payment_account.holder_name,
+            "bank_name": docs.payment_account.bank_name,
+            "is_default": True,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db.delivery_payment_accounts.insert_one(payment_acc)
     
     # إرسال إشعار Push للمدراء
     try:
