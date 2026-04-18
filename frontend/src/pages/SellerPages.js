@@ -701,18 +701,6 @@ const SellerDocumentsPage = () => {
                   ))}
                 </select>
               )}
-              {/* حقل إضافي إذا اختار "أخرى" */}
-              {(businessCategory === 'other' || businessCategory === 'other_food') && (
-                <input
-                  type="text"
-                  value={businessName}
-                  onChange={(e) => setBusinessName(e.target.value)}
-                  className="w-full mt-3 bg-gray-50 border border-gray-300 rounded-lg py-3 px-4 text-gray-900 placeholder:text-gray-400 focus:border-[#FF6B00] focus:outline-none focus:ring-2 focus:ring-[#FF6B00]/20"
-                  placeholder="اكتب اسم نشاطك التجاري"
-                  required
-                  data-testid="business-name-input"
-                />
-              )}
             </div>
 
             {/* الوثائق المطلوبة - بائع المنتجات */}
@@ -731,13 +719,55 @@ const SellerDocumentsPage = () => {
                 inputId="national-id-input"
               />
 
-              {/* السجل التجاري */}
-              <ImageUploader
-                label="السجل التجاري"
-                value={commercialReg}
-                onChange={handleFileChange(setCommercialReg)}
-                inputId="commercial-reg-input"
-              />
+              {/* السجل التجاري / رخصة المحل - يظهر بناءً على الصنف */}
+              {(() => {
+                const selectedCat = businessCategories.find(c => c.id === businessCategory);
+                const requiresLicense = selectedCat?.requires_license;
+                
+                return (
+                  <div>
+                    <ImageUploader
+                      label={requiresLicense ? "السجل التجاري / رخصة المحل *" : "السجل التجاري / رخصة المحل (اختياري)"}
+                      value={commercialReg}
+                      onChange={handleFileChange(setCommercialReg)}
+                      inputId="commercial-reg-input"
+                    />
+                    {requiresLicense ? (
+                      <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
+                        ⚠️ هذا الصنف يتطلب رخصة أو سجل تجاري
+                      </p>
+                    ) : (
+                      <p className="text-xs text-gray-400 mt-1">
+                        💡 الرخصة اختيارية لهذا الصنف
+                      </p>
+                    )}
+                  </div>
+                );
+              })()}
+
+              {/* تعهد المسؤولية - يظهر فقط إذا كان الصنف لا يتطلب رخصة */}
+              {(() => {
+                const selectedCat = businessCategories.find(c => c.id === businessCategory);
+                const requiresLicense = selectedCat?.requires_license;
+                
+                if (!requiresLicense && businessCategory) {
+                  return (
+                    <div className="bg-amber-50 border-2 border-amber-200 rounded-xl p-3">
+                      <label className="flex items-start gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          required={!commercialReg}
+                          className="w-5 h-5 mt-0.5 text-[#FF6B00] rounded border-gray-300 focus:ring-[#FF6B00]"
+                        />
+                        <span className="text-sm text-amber-800">
+                          أتعهد بأنني مسؤول عن جودة المنتجات التي أبيعها وأنها مطابقة للمواصفات والمعايير المطلوبة
+                        </span>
+                      </label>
+                    </div>
+                  );
+                }
+                return null;
+              })()}
 
               {/* صورة المحل */}
               <ImageUploader
