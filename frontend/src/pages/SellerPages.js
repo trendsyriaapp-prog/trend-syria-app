@@ -672,32 +672,34 @@ const SellerDocumentsPage = () => {
           <form onSubmit={handleSubmit} className="bg-white rounded-2xl p-5 border border-gray-200 shadow-sm space-y-4">
             {/* صنف النشاط التجاري - قائمة منسدلة */}
             <div>
-              <label className="block text-sm font-medium mb-2 text-gray-700">صنف النشاط التجاري</label>
+              <label className="block text-sm font-medium mb-2 text-gray-700">صنف النشاط التجاري *</label>
               {loadingCategories ? (
                 <div className="flex items-center justify-center py-4">
                   <Loader2 className="animate-spin text-[#FF6B00]" size={24} />
                 </div>
               ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <select
+                  value={businessCategory}
+                  onChange={(e) => {
+                    const selectedId = e.target.value;
+                    setBusinessCategory(selectedId);
+                    const selectedCat = businessCategories.find(c => c.id === selectedId);
+                    if (selectedCat) {
+                      setBusinessName(selectedCat.name);
+                    }
+                  }}
+                  className="w-full p-3 border-2 border-gray-200 rounded-xl text-sm bg-white focus:border-[#FF6B00] focus:outline-none focus:ring-2 focus:ring-[#FF6B00]/20 appearance-none cursor-pointer"
+                  style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23666'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'left 12px center', backgroundSize: '20px' }}
+                  required
+                  data-testid="business-category-select"
+                >
+                  <option value="">-- اختر صنف النشاط --</option>
                   {businessCategories.map((category) => (
-                    <button
-                      key={category.id}
-                      type="button"
-                      onClick={() => {
-                        setBusinessCategory(category.id);
-                        setBusinessName(category.name);
-                      }}
-                      className={`p-3 rounded-xl border-2 transition-all text-center ${
-                        businessCategory === category.id
-                          ? 'border-[#FF6B00] bg-[#FF6B00]/10'
-                          : 'border-gray-200 hover:border-gray-300 bg-gray-50'
-                      }`}
-                    >
-                      <span className="text-2xl block mb-1">{category.icon}</span>
-                      <span className="text-xs font-medium block text-gray-900">{category.name}</span>
-                    </button>
+                    <option key={category.id} value={category.id}>
+                      {category.icon} {category.name}
+                    </option>
                   ))}
-                </div>
+                </select>
               )}
               {/* حقل إضافي إذا اختار "أخرى" */}
               {(businessCategory === 'other' || businessCategory === 'other_food') && (

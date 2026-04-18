@@ -489,29 +489,34 @@ const JoinAsFoodSellerPage = () => {
                 <Loader2 className="animate-spin text-[#FF6B00]" size={32} />
               </div>
             ) : (
-              <div className="grid grid-cols-2 gap-3">
-                {getSubCategories().map((category) => (
-                  <motion.button
-                    key={category.id}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => handleCategoryToggle(category.id)}
-                    className={`bg-white rounded-xl p-4 border-2 transition-all text-center ${
-                      selectedCategories.includes(category.id)
-                        ? 'border-[#FF6B00] bg-orange-50 ring-2 ring-orange-200'
-                        : 'border-gray-200 hover:border-gray-300'
-                    }`}
-                  >
-                    <div className="text-4xl mb-2">{category.icon}</div>
-                    <h3 className="font-bold text-gray-900 text-sm">{category.name}</h3>
-                    <p className="text-[10px] text-gray-500 mt-1">{category.description}</p>
-                    {selectedCategories.includes(category.id) && (
-                      <div className="mt-2">
-                        <CheckCircle size={20} className="mx-auto text-[#FF6B00]" />
+              <div className="bg-white rounded-xl border-2 border-gray-200 overflow-hidden">
+                <div className="max-h-64 overflow-y-auto">
+                  {getSubCategories().map((category) => (
+                    <label
+                      key={category.id}
+                      className={`flex items-center gap-3 p-3 cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors ${
+                        selectedCategories.includes(category.id)
+                          ? 'bg-orange-50'
+                          : 'hover:bg-gray-50'
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedCategories.includes(category.id)}
+                        onChange={() => handleCategoryToggle(category.id)}
+                        className="w-5 h-5 text-[#FF6B00] rounded border-gray-300 focus:ring-[#FF6B00]"
+                      />
+                      <span className="text-2xl">{category.icon}</span>
+                      <div className="flex-1">
+                        <p className="font-bold text-gray-900 text-sm">{category.name}</p>
+                        <p className="text-[10px] text-gray-500">{category.description}</p>
                       </div>
-                    )}
-                  </motion.button>
-                ))}
+                      {selectedCategories.includes(category.id) && (
+                        <CheckCircle size={18} className="text-[#FF6B00]" />
+                      )}
+                    </label>
+                  ))}
+                </div>
               </div>
             )}
 
