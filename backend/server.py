@@ -203,7 +203,79 @@ async def startup_event():
         logger.info("☁️ Cloud storage initialized")
     except Exception as e:
         logger.warning(f"⚠️ Cloud storage init failed (will retry on first use): {e}")
+    
+    # تحديث أصناف النشاط التجاري تلقائياً
+    try:
+        await sync_business_categories()
+        logger.info("📦 Business categories synced")
+    except Exception as e:
+        logger.warning(f"⚠️ Failed to sync business categories: {e}")
+    
     logger.info("✅ Application startup complete")
+
+
+async def sync_business_categories():
+    """مزامنة أصناف النشاط التجاري مع قاعدة البيانات"""
+    from datetime import datetime, timezone
+    
+    # أصناف البائعين العاديين
+    seller_categories = [
+        {"id": "clothing", "name": "ملابس وأزياء", "icon": "👕", "type": "seller", "order": 1, "requires_license": False},
+        {"id": "electronics", "name": "إلكترونيات", "icon": "📱", "type": "seller", "order": 2, "requires_license": False},
+        {"id": "home", "name": "أجهزة منزلية", "icon": "🏠", "type": "seller", "order": 3, "requires_license": False},
+        {"id": "beauty", "name": "مستحضرات تجميل", "icon": "💄", "type": "seller", "order": 4, "requires_license": False},
+        {"id": "furniture", "name": "أثاث ومفروشات", "icon": "🛋️", "type": "seller", "order": 5, "requires_license": False},
+        {"id": "toys", "name": "ألعاب وهدايا", "icon": "🎁", "type": "seller", "order": 6, "requires_license": False},
+        {"id": "books", "name": "كتب وقرطاسية", "icon": "📚", "type": "seller", "order": 7, "requires_license": False},
+        {"id": "sports", "name": "رياضة ولياقة", "icon": "⚽", "type": "seller", "order": 8, "requires_license": False},
+        {"id": "cars", "name": "سيارات وقطع غيار", "icon": "🚗", "type": "seller", "order": 9, "requires_license": False},
+        {"id": "medicine", "name": "أدوية ومستلزمات طبية", "icon": "💊", "type": "seller", "order": 10, "requires_license": True},
+    ]
+    
+    # أصناف بائعي الطعام
+    food_categories = [
+        {"id": "restaurant", "name": "مطعم", "icon": "🍽️", "type": "food_seller", "order": 1, "requires_license": True},
+        {"id": "cafe", "name": "مقهى ومشروبات", "icon": "☕", "type": "food_seller", "order": 2, "requires_license": True},
+        {"id": "sweets", "name": "حلويات", "icon": "🍰", "type": "food_seller", "order": 3, "requires_license": True},
+        {"id": "bakery", "name": "مخبز", "icon": "🥖", "type": "food_seller", "order": 4, "requires_license": True},
+        {"id": "fast_food", "name": "وجبات سريعة", "icon": "🍔", "type": "food_seller", "order": 5, "requires_license": True},
+        {"id": "grocery", "name": "بقالة", "icon": "🛒", "type": "food_seller", "order": 6, "requires_license": False},
+        {"id": "butcher", "name": "ملحمة", "icon": "🥩", "type": "food_seller", "order": 7, "requires_license": True},
+        {"id": "vegetables", "name": "خضار وفواكه", "icon": "🥬", "type": "food_seller", "order": 8, "requires_license": False},
+        {"id": "dairy", "name": "ألبان وأجبان", "icon": "🧀", "type": "food_seller", "order": 9, "requires_license": True},
+    ]
+    
+    all_categories = seller_categories + food_categories
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # التحقق من كل صنف وتحديثه أو إضافته
+    for cat in all_categories:
+        existing = await db.business_categories.find_one({"id": cat["id"]})
+        
+        if existing:
+            # تحديث الصنف الموجود
+            await db.business_categories.update_one(
+                {"id": cat["id"]},
+                {"$set": {
+                    "name": cat["name"],
+                    "icon": cat["icon"],
+                    "type": cat["type"],
+                    "order": cat["order"],
+                    "requires_license": cat["requires_license"],
+                    "is_active": True,
+                    "updated_at": now
+                }}
+            )
+        else:
+            # إضافة صنف جديد
+            cat["is_active"] = True
+            cat["created_at"] = now
+            cat["created_by"] = "system"
+            await db.business_categories.insert_one(cat)
+    
+    # حذف الأصناف القديمة غير الموجودة في القائمة الجديدة
+    valid_ids = [cat["id"] for cat in all_categories]
+    await db.business_categories.delete_many({"id": {"$nin": valid_ids}})
 
 # Root level health check (for DigitalOcean)
 @app.get("/")
