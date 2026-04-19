@@ -52,7 +52,8 @@ const CategoriesPage = () => {
 
   const fetchCategories = async () => {
     try {
-      const res = await axios.get(`${API}/api/products/categories`);
+      // استخدام نفس مصدر الأصناف الموجود في الصفحة الرئيسية
+      const res = await axios.get(`${API}/api/categories`);
       // التأكد من أن البيانات هي Array
       if (Array.isArray(res.data)) {
         setCategories(res.data);

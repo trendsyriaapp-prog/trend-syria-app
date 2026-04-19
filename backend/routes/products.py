@@ -27,47 +27,55 @@ FOOD_CATEGORIES = ["مطاعم", "مواد غذائية", "خضروات وفوا
 
 @router.get("/categories")
 async def get_categories():
-    """إرجاع الأصناف مع الأيقونات والنوع - مع كاش"""
+    """إرجاع الأصناف من قاعدة البيانات - مع كاش"""
     # التحقق من الكاش
     cached_categories = cache.get("categories_list")
     if cached_categories:
         return cached_categories
     
-    categories_with_icons = [
-        # قسم المنتجات
-        {"id": "electronics", "name": "إلكترونيات", "icon": "Smartphone", "type": "shopping"},
-        {"id": "mobiles", "name": "موبايلات", "icon": "Smartphone", "type": "shopping"},
-        {"id": "computers", "name": "كمبيوتر ولابتوب", "icon": "Laptop", "type": "shopping"},
-        {"id": "clothes", "name": "ملابس", "icon": "Shirt", "type": "shopping"},
-        {"id": "shoes", "name": "أحذية", "icon": "Footprints", "type": "shopping"},
-        {"id": "accessories", "name": "إكسسوارات", "icon": "Watch", "type": "shopping"},
-        {"id": "perfumes", "name": "عطور", "icon": "Sparkles", "type": "shopping"},
-        {"id": "home", "name": "المنزل", "icon": "Home", "type": "shopping"},
-        {"id": "furniture", "name": "أثاث", "icon": "Sofa", "type": "shopping"},
-        {"id": "appliances", "name": "أجهزة منزلية", "icon": "Refrigerator", "type": "shopping"},
-        {"id": "beauty", "name": "تجميل", "icon": "SprayCan", "type": "shopping"},
-        {"id": "sports", "name": "رياضة", "icon": "Dumbbell", "type": "shopping"},
-        {"id": "kids", "name": "أطفال", "icon": "Gamepad2", "type": "shopping"},
-        {"id": "books", "name": "كتب", "icon": "BookOpen", "type": "shopping"},
-        {"id": "gifts", "name": "هدايا", "icon": "Gift", "type": "shopping"},
-        {"id": "medicines", "name": "أدوية", "icon": "Pill", "type": "shopping"},
-        {"id": "cars", "name": "سيارات", "icon": "Car", "type": "shopping"},
-        {"id": "canned_food", "name": "معلبات", "icon": "Package", "type": "shopping"},
-        {"id": "cleaners", "name": "منظفات", "icon": "SprayCan", "type": "shopping"},
-        # قسم الطعام
-        {"id": "restaurants", "name": "مطاعم", "icon": "UtensilsCrossed", "type": "food"},
-        {"id": "cafes", "name": "مقاهي", "icon": "Coffee", "type": "food"},
-        {"id": "sweets", "name": "حلويات", "icon": "Cake", "type": "food"},
-        {"id": "bakery", "name": "مخابز", "icon": "Croissant", "type": "food"},
-        {"id": "drinks", "name": "مشروبات", "icon": "GlassWater", "type": "food"},
-        {"id": "groceries", "name": "مواد غذائية", "icon": "ShoppingBasket", "type": "food"},
-        {"id": "vegetables", "name": "خضروات وفواكه", "icon": "Apple", "type": "food"},
-    ]
+    # جلب الأصناف من قاعدة البيانات
+    categories_from_db = await db.categories.find(
+        {"is_active": True},
+        {"_id": 0, "id": 1, "name": 1, "icon": 1, "type": 1, "color": 1, "order": 1}
+    ).sort("order", 1).to_list(None)
+    
+    # إذا لم توجد أصناف في قاعدة البيانات، استخدم الافتراضية
+    if not categories_from_db:
+        categories_from_db = [
+            # قسم المنتجات
+            {"id": "electronics", "name": "إلكترونيات", "icon": "Smartphone", "type": "shopping"},
+            {"id": "mobiles", "name": "موبايلات", "icon": "Smartphone", "type": "shopping"},
+            {"id": "computers", "name": "كمبيوتر ولابتوب", "icon": "Laptop", "type": "shopping"},
+            {"id": "clothes", "name": "ملابس", "icon": "Shirt", "type": "shopping"},
+            {"id": "shoes", "name": "أحذية", "icon": "Footprints", "type": "shopping"},
+            {"id": "accessories", "name": "إكسسوارات", "icon": "Watch", "type": "shopping"},
+            {"id": "perfumes", "name": "عطور", "icon": "Sparkles", "type": "shopping"},
+            {"id": "home", "name": "المنزل", "icon": "Home", "type": "shopping"},
+            {"id": "furniture", "name": "أثاث", "icon": "Sofa", "type": "shopping"},
+            {"id": "appliances", "name": "أجهزة منزلية", "icon": "Refrigerator", "type": "shopping"},
+            {"id": "beauty", "name": "تجميل", "icon": "SprayCan", "type": "shopping"},
+            {"id": "sports", "name": "رياضة", "icon": "Dumbbell", "type": "shopping"},
+            {"id": "kids", "name": "أطفال", "icon": "Gamepad2", "type": "shopping"},
+            {"id": "books", "name": "كتب", "icon": "BookOpen", "type": "shopping"},
+            {"id": "gifts", "name": "هدايا", "icon": "Gift", "type": "shopping"},
+            {"id": "medicines", "name": "أدوية", "icon": "Pill", "type": "shopping"},
+            {"id": "cars", "name": "سيارات", "icon": "Car", "type": "shopping"},
+            {"id": "canned_food", "name": "معلبات", "icon": "Package", "type": "shopping"},
+            {"id": "cleaners", "name": "منظفات", "icon": "SprayCan", "type": "shopping"},
+            # قسم الطعام
+            {"id": "restaurants", "name": "مطاعم", "icon": "UtensilsCrossed", "type": "food"},
+            {"id": "cafes", "name": "مقاهي", "icon": "Coffee", "type": "food"},
+            {"id": "sweets", "name": "حلويات", "icon": "Cake", "type": "food"},
+            {"id": "bakery", "name": "مخابز", "icon": "Croissant", "type": "food"},
+            {"id": "drinks", "name": "مشروبات", "icon": "GlassWater", "type": "food"},
+            {"id": "groceries", "name": "مواد غذائية", "icon": "ShoppingBasket", "type": "food"},
+            {"id": "vegetables", "name": "خضروات وفواكه", "icon": "Apple", "type": "food"},
+        ]
     
     # حفظ في الكاش لمدة ساعة
-    cache.set("categories_list", categories_with_icons, ttl_seconds=3600)
+    cache.set("categories_list", categories_from_db, ttl_seconds=3600)
     
-    return categories_with_icons
+    return categories_from_db
 
 @router.post("")
 async def create_product(product: ProductCreate, user: dict = Depends(get_current_user)):
