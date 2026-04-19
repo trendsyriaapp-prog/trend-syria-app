@@ -278,3 +278,135 @@ async def send_push_to_user_id(
         )
     
     return result
+
+
+# ==================== إشعارات طلبات الطعام ====================
+
+async def send_new_order_notification_to_food_seller(
+    seller_id: str,
+    order_number: str,
+    total: float,
+    items_count: int = 0
+) -> dict:
+    """
+    إرسال إشعار Push لبائع الطعام عند وصول طلب جديد
+    """
+    from services.firebase_push import send_push_notification
+    
+    try:
+        # جلب tokens البائع
+        tokens = await db.push_tokens.find(
+            {"user_id": seller_id, "is_active": True},
+            {"_id": 0, "token": 1}
+        ).to_list(10)
+        
+        if not tokens:
+            # محاولة من جدول fcm_tokens القديم
+            old_token = await db.fcm_tokens.find_one({"user_id": seller_id})
+            if old_token and old_token.get("fcm_token"):
+                tokens = [{"token": old_token["fcm_token"]}]
+        
+        if not tokens:
+            return {"success": False, "reason": "no_tokens"}
+        
+        title = "🍽️ طلب جديد!"
+        body = f"لديك طلب جديد #{order_number} بقيمة {total:,.0f} ل.س"
+        if items_count > 0:
+            body += f" ({items_count} أصناف)"
+        
+        data = {
+            "type": "new_food_order",
+            "order_number": str(order_number),
+            "click_action": "/food/dashboard?tab=orders"
+        }
+        
+        success_count = 0
+        for t in tokens:
+            result = await send_push_notification(
+                token=t["token"],
+                title=title,
+                body=body,
+                data=data
+            )
+            if result.get("success"):
+                success_count += 1
+        
+        return {"success": success_count > 0, "sent": success_count}
+        
+    except Exception as e:
+        import logging
+        logging.error(f"❌ Error sending food seller notification: {e}")
+        return {"success": False, "error": str(e)}
+
+
+async def send_new_order_notification_to_delivery(
+    order_id: str,
+    order_number: str,
+    store_name: str,
+    delivery_fee: float,
+    pickup_area: str = "",
+    delivery_area: str = ""
+) -> dict:
+    """
+    إرسال إشعار Push للسائقين المتاحين عند وجود طلب جاهز للتوصيل
+    """
+    from services.firebase_push import send_push_to_multiple
+    
+    try:
+        # جلب السائقين المتاحين
+        available_drivers = await db.users.find(
+            {
+                "user_type": "delivery",
+                "is_approved": True,
+                "is_available": True
+            },
+            {"_id": 0, "id": 1}
+        ).to_list(100)
+        
+        if not available_drivers:
+            return {"success": False, "reason": "no_available_drivers"}
+        
+        driver_ids = [d["id"] for d in available_drivers]
+        
+        # جلب tokens السائقين
+        tokens_cursor = db.push_tokens.find(
+            {"user_id": {"$in": driver_ids}, "is_active": True},
+            {"_id": 0, "token": 1}
+        )
+        tokens_list = await tokens_cursor.to_list(500)
+        fcm_tokens = [t["token"] for t in tokens_list if t.get("token")]
+        
+        if not fcm_tokens:
+            return {"success": False, "reason": "no_tokens"}
+        
+        title = "🚗 طلب توصيل جديد!"
+        body = f"💰 {delivery_fee:,.0f} ل.س - {store_name}"
+        if delivery_area:
+            body += f" → {delivery_area}"
+        
+        data = {
+            "type": "new_delivery_order",
+            "order_id": str(order_id),
+            "order_number": str(order_number),
+            "store_name": store_name,
+            "delivery_fee": str(int(delivery_fee)),
+            "click_action": "/delivery/dashboard?tab=available"
+        }
+        
+        result = await send_push_to_multiple(
+            tokens=fcm_tokens,
+            title=title,
+            body=body,
+            data=data
+        )
+        
+        return {
+            "success": result.get("success_count", 0) > 0,
+            "sent": result.get("success_count", 0),
+            "failed": result.get("failure_count", 0)
+        }
+        
+    except Exception as e:
+        import logging
+        logging.error(f"❌ Error sending delivery notification: {e}")
+        return {"success": False, "error": str(e)}
