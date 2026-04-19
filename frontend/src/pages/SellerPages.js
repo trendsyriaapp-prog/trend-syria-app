@@ -518,10 +518,15 @@ const SellerDocumentsPage = () => {
       toast({ title: "خطأ", description: "يرجى رفع صورة الهوية / إخراج القيد", variant: "destructive" });
       return;
     }
-    if (!commercialReg) {
-      toast({ title: "خطأ", description: "يرجى رفع السجل التجاري", variant: "destructive" });
+    
+    // التحقق من السجل التجاري فقط إذا كان الصنف يتطلبه
+    const selectedCat = businessCategories.find(c => c.id === businessCategory);
+    const requiresLicense = selectedCat?.requires_license;
+    if (requiresLicense && !commercialReg) {
+      toast({ title: "خطأ", description: "يرجى رفع السجل التجاري (مطلوب لهذا الصنف)", variant: "destructive" });
       return;
     }
+    
     if (!shopPhoto) {
       toast({ title: "خطأ", description: "يرجى رفع صورة المحل", variant: "destructive" });
       return;

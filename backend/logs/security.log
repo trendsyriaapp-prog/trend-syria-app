@@ -508,3 +508,26 @@
 2026-03-30 20:11:48,834 - WARNING - IP:10.208.130.204 - {'type': 'failed_login', 'details': 'Failed login attempt for 0933333333', 'user_id': None, 'timestamp': '2026-03-30T20:11:48.834680+00:00'}
 2026-03-30 20:12:11,765 - WARNING - IP:10.208.149.2 - {'type': 'failed_login', 'details': 'Failed login attempt for 0944444444', 'user_id': None, 'timestamp': '2026-03-30T20:12:11.765830+00:00'}
 2026-03-30 21:17:32,108 - WARNING - IP:10.208.149.2 - {'type': 'failed_login', 'details': 'Failed login attempt for 0900000000', 'user_id': None, 'timestamp': '2026-03-30T21:17:32.108337+00:00'}
+2026-04-04 12:59:01,573 - WARNING - IP:10.208.130.204 - {'type': 'failed_login', 'details': 'Failed login attempt for 0911111111', 'user_id': None, 'timestamp': '2026-04-04T12:59:01.573152+00:00'}
+2026-04-04 17:01:22,085 - WARNING - IP:10.208.130.204 - {'type': 'failed_login', 'details': 'Failed login attempt for 0933333333', 'user_id': None, 'timestamp': '2026-04-04T17:01:22.085293+00:00'}
+2026-04-06 14:07:57,488 - WARNING - IP:10.208.149.2 - {'type': 'failed_login', 'details': 'Failed login attempt for 0912345678', 'user_id': None, 'timestamp': '2026-04-06T14:07:57.488866+00:00'}
+2026-04-07 13:25:49,805 - WARNING - IP:10.208.149.2 - {'type': 'failed_login', 'details': 'Failed login attempt for 0945570365', 'user_id': None, 'timestamp': '2026-04-07T13:25:49.805868+00:00'}
+2026-04-07 13:25:50,234 - WARNING - IP:10.208.130.204 - {'type': 'failed_login', 'details': 'Failed login attempt for 0999999999', 'user_id': None, 'timestamp': '2026-04-07T13:25:50.234363+00:00'}
+2026-04-07 13:46:37,863 - WARNING - IP:10.208.130.204 - {'type': 'failed_login', 'details': 'Failed login attempt for 0945570365', 'user_id': None, 'timestamp': '2026-04-07T13:46:37.863954+00:00'}
+2026-04-07 13:46:38,226 - WARNING - IP:10.208.149.2 - {'type': 'failed_login', 'details': 'Failed login attempt for 0999999999', 'user_id': None, 'timestamp': '2026-04-07T13:46:38.226049+00:00'}
+2026-04-07 15:38:36,313 - WARNING - IP:10.208.149.2 - {'type': 'failed_login', 'details': 'Failed login attempt for 0933333333', 'user_id': None, 'timestamp': '2026-04-07T15:38:36.313760+00:00'}
+2026-04-07 15:38:36,736 - WARNING - IP:10.208.149.2 - {'type': 'failed_login', 'details': 'Failed login attempt for 0933333333', 'user_id': None, 'timestamp': '2026-04-07T15:38:36.736729+00:00'}
+2026-04-07 15:38:49,213 - WARNING - IP:10.208.130.204 - {'type': 'failed_login', 'details': 'Failed login attempt for 0933333333', 'user_id': None, 'timestamp': '2026-04-07T15:38:49.213318+00:00'}
+2026-04-07 15:42:49,314 - WARNING - IP:10.208.149.2 - {'type': 'failed_login', 'details': 'Failed login attempt for 0922222222', 'user_id': None, 'timestamp': '2026-04-07T15:42:49.314109+00:00'}
+2026-04-07 15:53:53,859 - WARNING - IP:10.208.149.2 - {'type': 'failed_login', 'details': 'Failed login attempt for 0933333333', 'user_id': None, 'timestamp': '2026-04-07T15:53:53.859066+00:00'}
+2026-04-07 15:54:03,464 - WARNING - IP:10.208.149.2 - {'type': 'failed_login', 'details': 'Failed login attempt for 0933333333', 'user_id': None, 'timestamp': '2026-04-07T15:54:03.464691+00:00'}
+2026-04-07 15:54:25,566 - WARNING - IP:10.208.130.204 - {'type': 'failed_login', 'details': 'Failed login attempt for 0922222222', 'user_id': None, 'timestamp': '2026-04-07T15:54:25.566751+00:00'}
+2026-04-09 06:48:53,278 - WARNING - IP:10.208.133.66 - Rate limit exceeded: /api/auth/register
+2026-04-09 06:48:53,380 - WARNING - IP:10.208.149.2 - Rate limit exceeded: /api/auth/register
+2026-04-09 09:36:00,740 - WARNING - IP:10.208.149.2 - {'type': 'failed_login', 'details': 'Failed login attempt for 0912345678', 'user_id': None, 'timestamp': '2026-04-09T09:36:00.740558+00:00'}
+2026-04-09 09:40:17,631 - WARNING - IP:10.208.149.2 - Rate limit exceeded: /api/auth/register
+2026-04-09 09:40:17,822 - WARNING - IP:10.208.149.2 - Rate limit exceeded: /api/auth/register
+2026-04-09 09:40:26,433 - WARNING - IP:10.208.149.2 - Rate limit exceeded: /api/auth/register
+2026-04-09 09:40:41,300 - WARNING - IP:10.208.149.2 - Rate limit exceeded: /api/auth/register
+2026-04-09 14:43:44,533 - WARNING - IP:10.208.149.2 - {'type': 'failed_login', 'details': 'Failed login attempt for 0912345678', 'user_id': None, 'timestamp': '2026-04-09T14:43:44.533193+00:00'}
+2026-04-09 14:44:13,696 - WARNING - IP:10.208.133.66 - {'type': 'failed_login', 'details': 'Failed login attempt for 0977123456', 'user_id': None, 'timestamp': '2026-04-09T14:44:13.696337+00:00'}

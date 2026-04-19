@@ -181,14 +181,31 @@ const LoginPage = () => {
     
     // توجيه حسب نوع المستخدم
     const userType = data.user?.user_type;
+    const isApproved = data.user?.is_approved;
+    
     if (userType === 'admin' || userType === 'sub_admin') {
       navigate('/admin', { replace: true });
     } else if (userType === 'seller') {
-      navigate('/seller/dashboard', { replace: true });
+      // إذا لم يكن معتمداً، وجّه لصفحة رفع الوثائق
+      if (!isApproved) {
+        navigate('/seller/documents', { replace: true });
+      } else {
+        navigate('/seller/dashboard', { replace: true });
+      }
     } else if (userType === 'food_seller') {
-      navigate('/food/dashboard', { replace: true });
+      // إذا لم يكن معتمداً، وجّه لصفحة رفع الوثائق
+      if (!isApproved) {
+        navigate('/seller/documents', { replace: true });
+      } else {
+        navigate('/food/dashboard', { replace: true });
+      }
     } else if (userType === 'delivery') {
-      navigate('/delivery/dashboard', { replace: true });
+      // إذا لم يكن معتمداً، وجّه لصفحة رفع الوثائق
+      if (!isApproved) {
+        navigate('/delivery/documents', { replace: true });
+      } else {
+        navigate('/delivery/dashboard', { replace: true });
+      }
     } else {
       navigate('/', { replace: true });
     }
