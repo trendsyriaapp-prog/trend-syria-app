@@ -6,13 +6,13 @@ importScripts('https://www.gstatic.com/firebasejs/10.13.2/firebase-messaging-com
 
 // Firebase configuration
 firebase.initializeApp({
-  apiKey: "AIzaSyA7ml-NqGBoOjjGGQ7MIt_-EPElvQBiKwY",
-  authDomain: "trend-syria.firebaseapp.com",
-  projectId: "trend-syria",
-  storageBucket: "trend-syria.firebasestorage.app",
-  messagingSenderId: "154439677377",
-  appId: "1:154439677377:web:1aab558c5a5fceaa82ab40",
-  measurementId: "G-9YDVDL56GX"
+  apiKey: "AIzaSyCFQTtfozQ_hQ-XQ5gMI8WoRRvs85poqxU",
+  authDomain: "trend-syria-c0176.firebaseapp.com",
+  projectId: "trend-syria-c0176",
+  storageBucket: "trend-syria-c0176.firebasestorage.app",
+  messagingSenderId: "207729030923",
+  appId: "1:207729030923:web:9eb0fb08f02e43435b140e",
+  measurementId: "G-YTFZ6574V8"
 });
 
 // Get messaging instance

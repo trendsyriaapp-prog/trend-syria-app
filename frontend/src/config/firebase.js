@@ -5,13 +5,13 @@ import { initializeApp } from 'firebase/app';
 import { getMessaging, getToken, onMessage, isSupported } from 'firebase/messaging';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyA7ml-NqGBoOjjGGQ7MIt_-EPElvQBiKwY",
-  authDomain: "trend-syria.firebaseapp.com",
-  projectId: "trend-syria",
-  storageBucket: "trend-syria.firebasestorage.app",
-  messagingSenderId: "154439677377",
-  appId: "1:154439677377:web:1aab558c5a5fceaa82ab40",
-  measurementId: "G-9YDVDL56GX"
+  apiKey: "AIzaSyCFQTtfozQ_hQ-XQ5gMI8WoRRvs85poqxU",
+  authDomain: "trend-syria-c0176.firebaseapp.com",
+  projectId: "trend-syria-c0176",
+  storageBucket: "trend-syria-c0176.firebasestorage.app",
+  messagingSenderId: "207729030923",
+  appId: "1:207729030923:web:9eb0fb08f02e43435b140e",
+  measurementId: "G-YTFZ6574V8"
 };
 
 // تهيئة Firebase
@@ -45,7 +45,7 @@ const initializeFirebase = async () => {
 initializeFirebase();
 
 // VAPID Key للمشروع
-const VAPID_KEY = 'BEj7GLdDT7MElyacxbI23qQnWIgYqVVBGzESmZgyUeehvwPSMXj8a4ntZ7xdBNSM8BGI9WgS_Adncl1aemaK7ZA';
+const VAPID_KEY = 'BCllBqcOB7f26ZQo4FdSrVFgpkdAoTypujdv-qRdGxFLOhMliGrN6HUILDw2-8jjobU5kxdF-y_Fa2CQMvs1VzE';
 
 // طلب إذن الإشعارات والحصول على Token
 export const requestNotificationPermission = async () => {
