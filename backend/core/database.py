@@ -401,6 +401,9 @@ async def get_optional_user(credentials: HTTPAuthorizationCredentials = Depends(
 # ============== Notification Helpers ==============
 
 async def create_notification_for_user(user_id: str, title: str, message: str, notification_type: str = "order", order_id: str = None, product_id: str = None, extra_data: dict = None):
+    """
+    إنشاء إشعار للمستخدم وإرسال Push Notification
+    """
     notification = {
         "id": str(uuid.uuid4()),
         "user_id": user_id,
@@ -416,9 +419,38 @@ async def create_notification_for_user(user_id: str, title: str, message: str, n
     if extra_data:
         notification["data"] = extra_data
     await db.notifications.insert_one(notification)
+    
+    # 🔔 إرسال Push Notification
+    try:
+        from core.firebase_admin import send_push_to_user
+        push_data = {
+            "type": notification_type,
+            "notification_id": notification["id"]
+        }
+        if order_id:
+            push_data["order_id"] = order_id
+        if product_id:
+            push_data["product_id"] = product_id
+        # تحويل القيم إلى strings (مطلوب لـ FCM)
+        push_data = {k: str(v) for k, v in push_data.items() if v}
+        
+        await send_push_to_user(
+            user_id=user_id,
+            title=title,
+            body=message,
+            data=push_data
+        )
+        logger.info(f"✅ Push notification sent to user {user_id[:8]}...")
+    except Exception as e:
+        # لا نوقف العملية إذا فشل Push - الإشعار محفوظ في DB
+        logger.warning(f"⚠️ Push notification failed for user {user_id[:8]}...: {e}")
+    
     return notification
 
 async def create_notification_for_role(role: str, title: str, message: str, notification_type: str = "order", order_id: str = None):
+    """
+    إنشاء إشعار لدور معين وإرسال Push Notifications لجميع المستخدمين بهذا الدور
+    """
     notification = {
         "id": str(uuid.uuid4()),
         "title": title,
@@ -429,4 +461,57 @@ async def create_notification_for_role(role: str, title: str, message: str, noti
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     await db.notifications.insert_one(notification)
+    
+    # 🔔 إرسال Push Notification لجميع المستخدمين بهذا الدور
+    try:
+        from core.firebase_admin import send_push_to_multiple
+        
+        # تحديد نوع المستخدم من الدور
+        role_to_user_type = {
+            "delivery": "delivery",
+            "drivers": "delivery", 
+            "sellers": "seller",
+            "food_sellers": "food_seller",
+            "buyers": "buyer",
+            "admins": "admin"
+        }
+        user_type = role_to_user_type.get(role)
+        
+        if user_type:
+            # جلب FCM tokens لجميع المستخدمين بهذا الدور
+            users = await db.users.find(
+                {"user_type": user_type},
+                {"_id": 0, "id": 1}
+            ).to_list(1000)
+            
+            if users:
+                user_ids = [u["id"] for u in users]
+                
+                # جلب tokens من push_tokens
+                tokens_cursor = db.push_tokens.find(
+                    {"user_id": {"$in": user_ids}, "is_active": True},
+                    {"_id": 0, "token": 1}
+                )
+                tokens_list = await tokens_cursor.to_list(5000)
+                fcm_tokens = [t["token"] for t in tokens_list if t.get("token")]
+                
+                if fcm_tokens:
+                    push_data = {
+                        "type": notification_type,
+                        "notification_id": notification["id"]
+                    }
+                    if order_id:
+                        push_data["order_id"] = order_id
+                    push_data = {k: str(v) for k, v in push_data.items() if v}
+                    
+                    result = await send_push_to_multiple(
+                        fcm_tokens=fcm_tokens,
+                        title=title,
+                        body=message,
+                        data=push_data
+                    )
+                    logger.info(f"✅ Push sent to role '{role}': {result.get('success', 0)} success, {result.get('failed', 0)} failed")
+    except Exception as e:
+        logger.warning(f"⚠️ Push notification failed for role {role}: {e}")
+    
     return notification

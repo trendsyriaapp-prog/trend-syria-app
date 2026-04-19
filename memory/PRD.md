@@ -7,6 +7,55 @@ Full-stack e-commerce application for Syria market with Android/Capacitor, React
 - Live Website: https://trendsyria.app
 - Android App: v1.0.20 (versionCode: 21) in Closed Testing (Alpha)
 
+---
+
+## Latest Update: 2026-04-19
+
+### ✅ Firebase Push Notifications - FIXED & COMPLETED
+**Date:** 2026-04-19
+**Session Focus:** إصلاح إشعارات Push للمستخدمين
+
+**Problem Solved:**
+- الإشعارات كانت تُحفظ في قاعدة البيانات فقط ❌
+- المستخدم لا يتلقى Push Notification على هاتفه ❌
+- يجب فتح التطبيق لرؤية الإشعارات
+
+**Solution Implemented:**
+1. **تعديل `/app/backend/core/database.py`:**
+   - `create_notification_for_user()`: الآن ترسل Push Notification مع حفظها في DB
+   - `create_notification_for_role()`: الآن ترسل Push لجميع المستخدمين بالدور المحدد
+   - معالجة الأخطاء: إذا فشل Push، يُحفظ الإشعار في DB (لا تفشل العملية)
+
+2. **إصلاح `/app/backend/server.py`:**
+   - إزالة تسجيل مزدوج لـ `push_router`
+
+**الإشعارات التي تعمل الآن:**
+| الحدث | المستلم | Push ✅ |
+|-------|---------|--------|
+| تغيير حالة الطلب | المشتري | ✅ |
+| طلب جديد | البائع | ✅ |
+| طلب جاهز للتوصيل | السائقين | ✅ |
+| وصول الطلب | المشتري | ✅ |
+| إلغاء الطلب | المشتري/البائع | ✅ |
+| طلب سحب رصيد | المدراء | ✅ |
+| بائع/سائق جديد | المدراء | ✅ |
+
+**Files Modified:**
+- `/app/backend/core/database.py` - إضافة Push Notifications للدوال
+- `/app/backend/server.py` - إزالة تسجيل مزدوج
+
+**Firebase Configuration (Already Set Up):**
+- ✅ `firebase-service-account.json` - مفاتيح Firebase Admin
+- ✅ `core/firebase_admin.py` - خدمة إرسال Push
+- ✅ `services/firebase_push.py` - خدمة Push إضافية
+- ✅ `routes/push_notifications.py` - APIs لتسجيل tokens
+- ✅ Frontend: firebase.js, NotificationManager.js, usePushNotifications.js
+
+**Verification:**
+- ✅ Backend lint passed
+- ✅ Server started successfully
+
+---
 
 ### ✅ Payment Methods Cleanup - COMPLETED
 **Date:** 2025-12-19
