@@ -141,6 +141,7 @@ try:
     from routes.feedback import router as feedback_router
     from routes.driver_security import router as driver_security_router
     from routes.storage import router as storage_router
+    from routes.rate_limits import router as rate_limits_router
     logger.info("✅ All routers imported successfully")
 except Exception as e:
     logger.error(f"❌ Failed to import routers: {e}")
@@ -159,6 +160,14 @@ app = FastAPI(
 # ⚡ GZip Compression - تقليل حجم البيانات المرسلة بنسبة 70-90%
 # خفض الحد الأدنى إلى 256 bytes لضغط المزيد من الاستجابات
 app.add_middleware(GZipMiddleware, minimum_size=256)
+
+# 🚦 Rate Limiting Middleware - حماية من الطلبات المفرطة
+try:
+    from core.rate_limiter import rate_limit_middleware
+    app.middleware("http")(rate_limit_middleware)
+    logger.info("✅ Rate limiting middleware enabled")
+except Exception as e:
+    logger.warning(f"⚠️ Rate limiting not loaded: {e}")
 
 logger.info("✅ FastAPI app created with GZip compression")
 
@@ -584,6 +593,7 @@ api_router.include_router(payment_v2_router)
 api_router.include_router(feedback_router)
 api_router.include_router(driver_security_router)
 api_router.include_router(storage_router)
+api_router.include_router(rate_limits_router)
 
 # ============== Root Endpoint ==============
 

@@ -70,6 +70,7 @@ import FoodStoreManagementTab from '../components/admin/FoodStoreManagementTab';
 import ResetDatabaseTab from '../components/admin/ResetDatabaseTab';
 import BusinessCategoriesTab from '../components/admin/BusinessCategoriesTab';
 import ImageMigrationTab from '../components/admin/ImageMigrationTab';
+import RateLimitDashboard from '../components/admin/RateLimitDashboard';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -634,7 +635,8 @@ const AdminDashboardPage = () => {
     'all-pending-items': 'جميع العناصر المعلقة',
     'all-withdraw-requests': 'جميع طلبات السحب',
     'reset-database': 'مسح قاعدة البيانات',
-    'image-migration': 'ترحيل الصور إلى CDN'
+    'image-migration': 'ترحيل الصور إلى CDN',
+    'rate-limits': 'مراقبة Rate Limiting'
   };
 
   return (
@@ -884,6 +886,9 @@ const AdminDashboardPage = () => {
             )}
             {activeTab === 'image-migration' && user.user_type === 'admin' && (
               <ImageMigrationTab />
+            )}
+            {activeTab === 'rate-limits' && user.user_type === 'admin' && (
+              <RateLimitDashboard token={token} />
             )}
               </>
             )}
@@ -1226,6 +1231,7 @@ const AdminDashboardPage = () => {
                       { icon: DollarSign, label: 'الدفع', tab: 'payment-settings' },
                       { icon: Wallet, label: 'محفظة المنصة', tab: 'platform-wallet' },
                       { icon: Cloud, label: 'ترحيل الصور', tab: 'image-migration' },
+                      { icon: Shield, label: 'Rate Limiting', tab: 'rate-limits' },
                       { icon: Trash2, label: 'مسح البيانات', tab: 'reset-database', danger: true },
                     ].map((item, i) => (
                       <button key={i} onClick={() => setActiveTab(item.tab)} className={`bg-white p-2 flex flex-col items-center gap-1 hover:bg-gray-50 transition-colors ${item.danger ? 'bg-red-50' : ''}`}>

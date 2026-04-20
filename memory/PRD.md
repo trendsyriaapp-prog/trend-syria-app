@@ -11,6 +11,61 @@ Full-stack e-commerce application for Syria market with Android/Capacitor, React
 
 ## Latest Update: 2026-04-21
 
+### ✅ Rate Limiting System with Dashboard - COMPLETED
+**Date:** 2026-04-21
+**Session Focus:** تنفيذ نظام Rate Limiting متقدم مع لوحة مراقبة
+
+**What was Built:**
+
+**1. Backend - Rate Limiter Core (`/app/backend/core/rate_limiter.py`):**
+   - نظام Rate Limiting متقدم مع تتبع per-IP/per-endpoint
+   - إعدادات مخصصة لكل endpoint:
+     - `/api/auth/login`: 5 طلبات/دقيقة → حظر 5 دقائق
+     - `/api/auth/send-otp`: 3 طلبات/5 دقائق → حظر 10 دقائق
+     - `/api/orders`: 10 طلبات/دقيقة
+     - `/api/products`: 60 طلب/دقيقة
+     - Default: 100 طلب/دقيقة
+   - تتبع الإحصائيات (إجمالي، محظورين، حسب الساعة)
+   - تسجيل عمليات الحظر مع الأسباب
+
+**2. Backend - Admin API (`/app/backend/routes/rate_limits.py`):**
+   - `GET /api/rate-limits/stats` - إحصائيات شاملة
+   - `GET /api/rate-limits/blocked` - قائمة IPs المحظورة
+   - `POST /api/rate-limits/unblock` - إلغاء حظر IP يدوياً
+   - `GET /api/rate-limits/config` - عرض الإعدادات
+   - `POST /api/rate-limits/clear-stats` - مسح الإحصائيات (للمدير)
+
+**3. Frontend - Dashboard (`/app/frontend/src/components/admin/RateLimitDashboard.js`):**
+   - لوحة تحكم تفاعلية مع 4 تبويبات:
+     - نظرة عامة: رسم بياني للطلبات/ساعة، آخر عمليات الحظر
+     - المحظورين: قائمة IPs مع إمكانية إلغاء الحظر
+     - الـ APIs: أكثر endpoints استخداماً
+     - الإعدادات: عرض حدود كل endpoint
+   - تحديث تلقائي كل 30 ثانية
+   - بطاقات إحصائية (إجمالي، محظورين، معدل الحظر)
+
+**4. Integration in AdminPage:**
+   - تبويب جديد "Rate Limiting" في قسم الإعدادات
+   - متاح للمدير الرئيسي فقط
+
+**Testing Results:**
+- ✅ API endpoints working correctly
+- ✅ Rate limiting blocks IPs after exceeding limit
+- ✅ Block duration enforced (5 minutes for auth endpoints)
+- ✅ Stats tracking per endpoint and hour
+- ✅ Unblock functionality working
+
+**Files Created:**
+- `/app/backend/core/rate_limiter.py` - نظام Rate Limiting الأساسي
+- `/app/backend/routes/rate_limits.py` - Admin API endpoints
+- `/app/frontend/src/components/admin/RateLimitDashboard.js` - لوحة المراقبة
+
+**Files Modified:**
+- `/app/backend/server.py` - إضافة middleware و router
+- `/app/frontend/src/pages/AdminPage.js` - إضافة تبويب Rate Limits
+
+---
+
 ### ✅ Code Quality Report Fixes - Phase 2 - COMPLETED
 **Date:** 2026-04-21
 **Session Focus:** إصلاح مشاكل جودة الكود المتبقية من تقرير Code Review
