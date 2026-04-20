@@ -32,10 +32,11 @@ jobs:
             source venv/bin/activate
             pip install -r requirements.txt -q 2>/dev/null || true
             
-            # إعادة تشغيل الخدمة في الخلفية
-            pkill -f uvicorn 2>/dev/null || true
+            # إعادة تشغيل الخدمة
+            pkill -f "uvicorn server:app" || true
+            sleep 3
+            cd ~/trend-syria-app/backend
+            source venv/bin/activate
+            nohup uvicorn server:app --host 0.0.0.0 --port 8001 >> ~/uvicorn.log 2>&1 &
             sleep 2
-            nohup uvicorn server:app --host 0.0.0.0 --port 8001 > /dev/null 2>&1 &
-            disown
-            
             echo "✅ Deployed successfully!"
