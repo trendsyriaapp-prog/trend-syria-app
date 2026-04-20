@@ -41,20 +41,33 @@ const ICON_MAP = {
 // دالة للحصول على الأيقونة
 const getIcon = (iconName) => ICON_MAP[iconName] || Package;
 
-// إعدادات كل قسم - ألوان وأيقونات ووحدات القياس
+// إعدادات كل قسم - ألوان وأيقونات ووحدات القياس - 8 أصناف موحدة
 const CATEGORY_CONFIG = {
-  // قسم الطعام
+  // قسم الطعام - 8 أصناف
   restaurants: {
-    name: 'وجبات سريعة',
+    name: 'مطاعم',
     icon: UtensilsCrossed,
-    color: 'bg-red-500',
-    textColor: 'text-red-500',
-    bgLight: 'bg-red-50',
-    borderColor: 'border-red-500',
-    gradient: 'from-red-500 to-red-600',
+    color: 'bg-orange-500',
+    textColor: 'text-orange-500',
+    bgLight: 'bg-orange-50',
+    borderColor: 'border-orange-500',
+    gradient: 'from-orange-500 to-orange-600',
     unit: 'وجبة',
     unitIcon: Utensils,
     emoji: '🍔',
+    mainCategory: 'food'
+  },
+  cafes: {
+    name: 'مقاهي',
+    icon: Coffee,
+    color: 'bg-amber-700',
+    textColor: 'text-amber-700',
+    bgLight: 'bg-amber-50',
+    borderColor: 'border-amber-700',
+    gradient: 'from-amber-700 to-amber-800',
+    unit: 'كوب',
+    unitIcon: Coffee,
+    emoji: '☕',
     mainCategory: 'food'
   },
   sweets: {
@@ -70,35 +83,47 @@ const CATEGORY_CONFIG = {
     emoji: '🍰',
     mainCategory: 'food'
   },
-  drinks: {
-    name: 'مشروبات',
-    icon: Coffee,
-    color: 'bg-amber-600',
-    textColor: 'text-amber-600',
-    bgLight: 'bg-amber-50',
-    borderColor: 'border-amber-600',
-    gradient: 'from-amber-600 to-amber-700',
-    unit: 'كوب',
-    unitIcon: Coffee,
-    emoji: '☕',
+  bakery: {
+    name: 'مخابز',
+    icon: Croissant,
+    color: 'bg-yellow-600',
+    textColor: 'text-yellow-600',
+    bgLight: 'bg-yellow-50',
+    borderColor: 'border-yellow-600',
+    gradient: 'from-yellow-600 to-yellow-700',
+    unit: 'قطعة',
+    unitIcon: Package,
+    emoji: '🥖',
     mainCategory: 'food'
   },
-  // قسم الماركت
-  supermarket: {
-    name: 'سوبرماركت',
-    icon: ShoppingCart,
-    color: 'bg-blue-500',
-    textColor: 'text-blue-500',
-    bgLight: 'bg-blue-50',
-    borderColor: 'border-blue-500',
-    gradient: 'from-blue-500 to-blue-600',
+  drinks: {
+    name: 'مشروبات',
+    icon: GlassWater,
+    color: 'bg-cyan-500',
+    textColor: 'text-cyan-500',
+    bgLight: 'bg-cyan-50',
+    borderColor: 'border-cyan-500',
+    gradient: 'from-cyan-500 to-cyan-600',
+    unit: 'كوب',
+    unitIcon: GlassWater,
+    emoji: '🥤',
+    mainCategory: 'food'
+  },
+  food_groceries: {
+    name: 'مواد غذائية',
+    icon: ShoppingBasket,
+    color: 'bg-green-600',
+    textColor: 'text-green-600',
+    bgLight: 'bg-green-50',
+    borderColor: 'border-green-600',
+    gradient: 'from-green-600 to-green-700',
     unit: 'قطعة',
     unitIcon: Package,
     emoji: '🛒',
     mainCategory: 'market'
   },
   vegetables: {
-    name: 'خضار وفواكه',
+    name: 'خضروات وفواكه',
     icon: Apple,
     color: 'bg-emerald-500',
     textColor: 'text-emerald-500',
@@ -110,45 +135,18 @@ const CATEGORY_CONFIG = {
     emoji: '🥬',
     mainCategory: 'market'
   },
-  // أصناف التسوق السريع (تظهر في قسم الطعام والصفحة الرئيسية)
-  groceries: {
-    name: 'مواد غذائية',
-    icon: ShoppingBasket,
-    color: 'bg-green-600',
-    textColor: 'text-green-600',
-    bgLight: 'bg-green-50',
-    borderColor: 'border-green-600',
-    gradient: 'from-green-600 to-green-700',
-    unit: 'قطعة',
-    unitIcon: Package,
-    emoji: '🛒',
-    mainCategory: 'quick_shop'
-  },
-  canned_food: {
-    name: 'معلبات',
+  dairy: {
+    name: 'ألبان وأجبان',
     icon: Package,
-    color: 'bg-orange-500',
-    textColor: 'text-orange-500',
-    bgLight: 'bg-orange-50',
-    borderColor: 'border-orange-500',
-    gradient: 'from-orange-500 to-orange-600',
+    color: 'bg-yellow-500',
+    textColor: 'text-yellow-500',
+    bgLight: 'bg-yellow-50',
+    borderColor: 'border-yellow-500',
+    gradient: 'from-yellow-500 to-yellow-600',
     unit: 'قطعة',
     unitIcon: Package,
-    emoji: '🥫',
-    mainCategory: 'quick_shop'
-  },
-  cleaners: {
-    name: 'منظفات',
-    icon: SprayCan,
-    color: 'bg-cyan-500',
-    textColor: 'text-cyan-500',
-    bgLight: 'bg-cyan-50',
-    borderColor: 'border-cyan-500',
-    gradient: 'from-cyan-500 to-cyan-600',
-    unit: 'قطعة',
-    unitIcon: Package,
-    emoji: '🧹',
-    mainCategory: 'quick_shop'
+    emoji: '🧀',
+    mainCategory: 'market'
   }
 };
 

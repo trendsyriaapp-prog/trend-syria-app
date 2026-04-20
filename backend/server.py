@@ -179,7 +179,55 @@ async def reset_categories_now():
             c["is_parent"] = False
             cats.append(c)
         await db.categories.insert_many(cats)
-        return {"success": True, "total": len(cats)}
+        
+        # أيضاً إعادة ضبط business_categories
+        await db.business_categories.delete_many({})
+        seller_categories = [
+            {"id": "electronics", "name": "إلكترونيات", "icon": "📱", "type": "seller", "order": 1, "requires_license": False},
+            {"id": "mobiles", "name": "موبايلات", "icon": "📲", "type": "seller", "order": 2, "requires_license": False},
+            {"id": "clothes", "name": "ملابس", "icon": "👕", "type": "seller", "order": 3, "requires_license": False},
+            {"id": "shoes", "name": "أحذية", "icon": "👟", "type": "seller", "order": 4, "requires_license": False},
+            {"id": "accessories", "name": "إكسسوارات", "icon": "💍", "type": "seller", "order": 5, "requires_license": False},
+            {"id": "perfumes", "name": "عطور", "icon": "🧴", "type": "seller", "order": 6, "requires_license": False},
+            {"id": "furniture", "name": "أثاث", "icon": "🛋️", "type": "seller", "order": 7, "requires_license": False},
+            {"id": "home_tools", "name": "أدوات منزلية", "icon": "🔧", "type": "seller", "order": 8, "requires_license": False},
+            {"id": "decor", "name": "ديكور", "icon": "🖼️", "type": "seller", "order": 9, "requires_license": False},
+            {"id": "beauty", "name": "تجميل وعناية شخصية", "icon": "💄", "type": "seller", "order": 10, "requires_license": False},
+            {"id": "sports", "name": "رياضة", "icon": "⚽", "type": "seller", "order": 11, "requires_license": False},
+            {"id": "kids", "name": "أطفال", "icon": "👶", "type": "seller", "order": 12, "requires_license": False},
+            {"id": "books", "name": "كتب", "icon": "📚", "type": "seller", "order": 13, "requires_license": False},
+            {"id": "stationery", "name": "قرطاسية", "icon": "✏️", "type": "seller", "order": 14, "requires_license": False},
+            {"id": "gifts", "name": "هدايا", "icon": "🎁", "type": "seller", "order": 15, "requires_license": False},
+            {"id": "gaming", "name": "ألعاب", "icon": "🎮", "type": "seller", "order": 16, "requires_license": False},
+            {"id": "watches", "name": "ساعات يد", "icon": "⌚", "type": "seller", "order": 17, "requires_license": False},
+            {"id": "headphones", "name": "سماعات", "icon": "🎧", "type": "seller", "order": 18, "requires_license": False},
+            {"id": "bags", "name": "حقائب", "icon": "👜", "type": "seller", "order": 19, "requires_license": False},
+            {"id": "eyewear", "name": "نظارات", "icon": "👓", "type": "seller", "order": 20, "requires_license": False},
+            {"id": "flowers", "name": "زهور", "icon": "💐", "type": "seller", "order": 21, "requires_license": False},
+            {"id": "medicines", "name": "أدوية", "icon": "💊", "type": "seller", "order": 22, "requires_license": True},
+            {"id": "car_parts", "name": "قطع غيار سيارات", "icon": "🔩", "type": "seller", "order": 23, "requires_license": False},
+            {"id": "hardware", "name": "خردوات", "icon": "🛠️", "type": "seller", "order": 24, "requires_license": False},
+            {"id": "groceries", "name": "مواد غذائية ومعلبات", "icon": "🥫", "type": "seller", "order": 25, "requires_license": False},
+            {"id": "pet_food", "name": "طعام حيوانات", "icon": "🐕", "type": "seller", "order": 26, "requires_license": False},
+        ]
+        food_categories = [
+            {"id": "restaurants", "name": "مطاعم", "icon": "🍽️", "type": "food_seller", "order": 1, "requires_license": True},
+            {"id": "cafes", "name": "مقاهي", "icon": "☕", "type": "food_seller", "order": 2, "requires_license": True},
+            {"id": "sweets", "name": "حلويات", "icon": "🍰", "type": "food_seller", "order": 3, "requires_license": True},
+            {"id": "bakery", "name": "مخابز", "icon": "🥖", "type": "food_seller", "order": 4, "requires_license": True},
+            {"id": "drinks", "name": "مشروبات", "icon": "🥤", "type": "food_seller", "order": 5, "requires_license": False},
+            {"id": "food_groceries", "name": "مواد غذائية", "icon": "🛒", "type": "food_seller", "order": 6, "requires_license": False},
+            {"id": "vegetables", "name": "خضروات وفواكه", "icon": "🥬", "type": "food_seller", "order": 7, "requires_license": False},
+            {"id": "dairy", "name": "ألبان وأجبان", "icon": "🧀", "type": "food_seller", "order": 8, "requires_license": False},
+        ]
+        all_biz = []
+        for cat in seller_categories + food_categories:
+            cat["is_active"] = True
+            cat["created_at"] = now
+            all_biz.append(cat)
+        await db.business_categories.insert_many(all_biz)
+        
+        return {"success": True, "categories": len(cats), "business_categories": len(all_biz)}
     except Exception as e:
         return {"success": False, "error": str(e)}
 

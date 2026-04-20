@@ -70,7 +70,6 @@ const CategoriesPage = () => {
   };
 
   const shoppingCategories = Array.isArray(categories) ? categories.filter(c => c.type === 'shopping') : [];
-  const foodCategories = Array.isArray(categories) ? categories.filter(c => c.type === 'food') : [];
 
   if (loading) {
     return (
@@ -134,26 +133,6 @@ const CategoriesPage = () => {
             ))}
           </div>
         </div>
-
-        {/* قسم الطعام */}
-        {foodCategories.length > 0 && (
-          <div>
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-9 h-9 bg-green-500/10 rounded-full flex items-center justify-center">
-                <UtensilsCrossed className="text-green-500" size={18} />
-              </div>
-              <div>
-                <h2 className="text-base font-bold text-gray-800">أصناف الطعام والمشروبات</h2>
-                <span className="text-xs text-gray-500">{foodCategories.length} فئة</span>
-              </div>
-            </div>
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2.5">
-              {foodCategories.map((cat, i) => (
-                <CategoryCard key={cat.id} cat={cat} index={i} isFood={true} />
-              ))}
-            </div>
-          </div>
-        )}
 
       </div>
     </div>
