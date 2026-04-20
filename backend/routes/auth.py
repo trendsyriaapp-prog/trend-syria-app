@@ -1976,7 +1976,7 @@ async def send_whatsapp_otp(request: Request, data: ForgotPasswordRequest):
                 "user_id": user["id"],
                 "otp": otp_code,
                 "created_at": datetime.now(timezone.utc).isoformat(),
-                "expires_at": (datetime.now(timezone.utc).replace(microsecond=0) + __import__('datetime').timedelta(minutes=10)).isoformat(),
+                "expires_at": (datetime.now(timezone.utc) + timedelta(minutes=10)).isoformat(),
                 "used": False,
                 "attempts": 0
             }
