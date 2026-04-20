@@ -9,11 +9,12 @@ import {
   UtensilsCrossed, ShoppingCart, Apple, Search, MapPin, 
   Star, Clock, ChevronLeft, Filter, Store, Heart, Sparkles, Cake,
   Scale, Package, Utensils, IceCream, Coffee, Croissant, GlassWater, X,
-  ShoppingBasket, Truck, Settings, SprayCan
+  ShoppingBasket, Truck, Settings, SprayCan, Map
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import FreeShippingBanner from '../components/FreeShippingBanner';
 import ApiErrorDisplay from '../components/ApiErrorDisplay';
+import FoodMapView from '../components/FoodMapView';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -247,6 +248,7 @@ const FoodPage = () => {
   const [showOnlyFreeDelivery, setShowOnlyFreeDelivery] = useState(filterParam === 'free_delivery');
   const [foodFavorites, setFoodFavorites] = useState([]);
   const [apiError, setApiError] = useState(null); // لعرض أخطاء API
+  const [showMapView, setShowMapView] = useState(false); // لعرض خريطة المتاجر
 
   // إحداثيات المدن السورية الرئيسية
   const CITY_COORDINATES = {
@@ -664,6 +666,19 @@ const FoodPage = () => {
               فتح إعدادات الموقع
             </button>
             
+            {/* زر التصفح بدون موقع */}
+            <button
+              onClick={() => {
+                setUserCity('دمشق'); // مدينة افتراضية
+                setGpsStatus('success');
+                localStorage.setItem('food_delivery_city', 'دمشق');
+              }}
+              className="w-full bg-[#FF6B00]/10 text-[#FF6B00] py-3 rounded-xl font-bold hover:bg-[#FF6B00]/20 transition-all flex items-center justify-center gap-2 border border-[#FF6B00]/30"
+            >
+              <Map size={20} />
+              تصفح بدون موقع (دمشق)
+            </button>
+            
             <Link
               to="/"
               className="w-full bg-white border border-gray-200 text-gray-600 py-3 rounded-xl font-bold hover:bg-gray-50 transition-all flex items-center justify-center gap-2"
@@ -803,6 +818,17 @@ const FoodPage = () => {
               <Package size={18} className="text-white" />
             </Link>
             <h1 className="text-base font-bold">قسم الطعام</h1>
+            
+            {/* زر عرض الخريطة */}
+            <button
+              onClick={() => setShowMapView(true)}
+              className="flex items-center gap-1.5 bg-white/25 backdrop-blur-sm rounded-full px-3 py-1.5 text-xs font-medium border border-white/40 hover:bg-white/35 transition-colors"
+              data-testid="open-food-map-btn"
+            >
+              <Map size={14} />
+              <span>الخريطة</span>
+            </button>
+            
             {/* عرض المدينة الحالية (من GPS) */}
             <div className="mr-auto flex items-center gap-1 bg-white/20 backdrop-blur-sm rounded-full px-3 py-1 text-xs border border-white/30">
               <MapPin size={12} />
@@ -1089,6 +1115,12 @@ const FoodPage = () => {
           </>
         )}
       </div>
+      
+      {/* خريطة المتاجر */}
+      <FoodMapView 
+        isOpen={showMapView} 
+        onClose={() => setShowMapView(false)} 
+      />
     </div>
   );
 };

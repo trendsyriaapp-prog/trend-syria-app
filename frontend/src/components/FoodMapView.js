@@ -1,0 +1,519 @@
+// /app/frontend/src/components/FoodMapView.js
+// خريطة المطاعم والمتاجر بملء الشاشة
+// يعرض جميع متاجر الطعام على الخريطة مع فلاتر حسب الصنف
+
+import { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from 'react-leaflet';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+import { 
+  X, Navigation, Loader2, Star, Clock, MapPin, 
+  ChevronLeft, Filter, Store as StoreIcon,
+  UtensilsCrossed, Coffee, Cake, Croissant, GlassWater,
+  ShoppingBasket, Apple, Package, Milk
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import axios from 'axios';
+
+const API = process.env.REACT_APP_BACKEND_URL;
+
+// إصلاح أيقونة Leaflet الافتراضية
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+});
+
+// إعدادات الأصناف مع الألوان والأيقونات
+const CATEGORY_CONFIG = {
+  all: {
+    id: 'all',
+    name: 'الكل',
+    color: '#6B7280',
+    emoji: '🏪',
+    Icon: StoreIcon
+  },
+  restaurants: {
+    id: 'restaurants',
+    name: 'مطاعم',
+    color: '#F97316',
+    emoji: '🍔',
+    Icon: UtensilsCrossed
+  },
+  cafes: {
+    id: 'cafes',
+    name: 'مقاهي',
+    color: '#92400E',
+    emoji: '☕',
+    Icon: Coffee
+  },
+  sweets: {
+    id: 'sweets',
+    name: 'حلويات',
+    color: '#EC4899',
+    emoji: '🍰',
+    Icon: Cake
+  },
+  bakery: {
+    id: 'bakery',
+    name: 'مخابز',
+    color: '#CA8A04',
+    emoji: '🥖',
+    Icon: Croissant
+  },
+  drinks: {
+    id: 'drinks',
+    name: 'مشروبات',
+    color: '#06B6D4',
+    emoji: '🥤',
+    Icon: GlassWater
+  },
+  food_groceries: {
+    id: 'food_groceries',
+    name: 'مواد غذائية',
+    color: '#16A34A',
+    emoji: '🛒',
+    Icon: ShoppingBasket
+  },
+  vegetables: {
+    id: 'vegetables',
+    name: 'خضروات',
+    color: '#10B981',
+    emoji: '🥬',
+    Icon: Apple
+  },
+  dairy: {
+    id: 'dairy',
+    name: 'ألبان',
+    color: '#EAB308',
+    emoji: '🧀',
+    Icon: Package
+  }
+};
+
+// إنشاء أيقونة مخصصة للمتجر
+const createStoreIcon = (category, isSelected = false) => {
+  const config = CATEGORY_CONFIG[category] || CATEGORY_CONFIG.restaurants;
+  const size = isSelected ? 48 : 36;
+  const color = config.color;
+  
+  return L.divIcon({
+    className: 'custom-store-marker',
+    html: `
+      <div style="
+        width: ${size}px;
+        height: ${size}px;
+        background: ${color};
+        border-radius: 50% 50% 50% 0;
+        transform: rotate(-45deg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        border: 3px solid white;
+        ${isSelected ? 'animation: pulse 1s infinite;' : ''}
+      ">
+        <span style="
+          transform: rotate(45deg);
+          font-size: ${size * 0.45}px;
+        ">${config.emoji}</span>
+      </div>
+    `,
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size],
+    popupAnchor: [0, -size]
+  });
+};
+
+// أيقونة موقع المستخدم
+const userLocationIcon = L.divIcon({
+  className: 'user-location-marker',
+  html: `
+    <div style="
+      width: 20px;
+      height: 20px;
+      background: #3B82F6;
+      border-radius: 50%;
+      border: 4px solid white;
+      box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.3), 0 4px 8px rgba(0,0,0,0.2);
+    "></div>
+  `,
+  iconSize: [20, 20],
+  iconAnchor: [10, 10]
+});
+
+// مكون لتحديث موقع الخريطة
+const MapController = ({ center, userLocation }) => {
+  const map = useMap();
+  
+  useEffect(() => {
+    if (center) {
+      map.setView(center, map.getZoom());
+    }
+  }, [center, map]);
+  
+  return null;
+};
+
+// مكون بطاقة المتجر
+const StoreCard = ({ store, onClose, onViewStore }) => {
+  const config = CATEGORY_CONFIG[store.category] || CATEGORY_CONFIG.restaurants;
+  
+  return (
+    <motion.div
+      initial={{ y: 100, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      exit={{ y: 100, opacity: 0 }}
+      className="absolute bottom-20 left-4 right-4 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-[1002]"
+    >
+      <div className="p-4">
+        <div className="flex gap-3">
+          {/* صورة المتجر */}
+          <div className="w-20 h-20 rounded-xl overflow-hidden flex-shrink-0">
+            {store.logo ? (
+              <img src={store.logo} alt={store.name} className="w-full h-full object-cover" />
+            ) : (
+              <div 
+                className="w-full h-full flex items-center justify-center text-3xl"
+                style={{ background: `${config.color}20` }}
+              >
+                {config.emoji}
+              </div>
+            )}
+          </div>
+          
+          {/* معلومات المتجر */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-start justify-between">
+              <h3 className="font-bold text-gray-900 text-base truncate">{store.name}</h3>
+              <button
+                onClick={onClose}
+                className="p-1 hover:bg-gray-100 rounded-full"
+              >
+                <X size={18} className="text-gray-400" />
+              </button>
+            </div>
+            
+            <div className="flex items-center gap-3 mt-1 text-sm">
+              {store.rating && (
+                <span className="flex items-center gap-1 text-amber-500">
+                  <Star size={14} fill="currentColor" />
+                  {store.rating.toFixed(1)}
+                </span>
+              )}
+              {store.distance && (
+                <span className="flex items-center gap-1 text-gray-500">
+                  <MapPin size={14} />
+                  {store.distance < 1 ? `${Math.round(store.distance * 1000)}م` : `${store.distance.toFixed(1)}كم`}
+                </span>
+              )}
+              {store.delivery_time && (
+                <span className="flex items-center gap-1 text-gray-500">
+                  <Clock size={14} />
+                  {store.delivery_time}
+                </span>
+              )}
+            </div>
+            
+            <div className="flex items-center gap-2 mt-2">
+              <span 
+                className="text-xs px-2 py-0.5 rounded-full text-white"
+                style={{ background: config.color }}
+              >
+                {config.name}
+              </span>
+              {store.is_open !== false && (
+                <span className="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700">
+                  مفتوح
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+        
+        {/* زر عرض القائمة */}
+        <button
+          onClick={() => onViewStore(store)}
+          className="w-full mt-4 bg-gradient-to-r from-[#FF6B00] to-[#FF8533] text-white py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
+        >
+          عرض القائمة
+          <ChevronLeft size={18} />
+        </button>
+      </div>
+    </motion.div>
+  );
+};
+
+// مكون شريط الفلاتر
+const CategoryFilter = ({ selectedCategory, onSelectCategory }) => {
+  const categories = Object.values(CATEGORY_CONFIG);
+  const scrollRef = useRef(null);
+  
+  return (
+    <div className="absolute top-16 left-0 right-0 z-[1003] px-2 pointer-events-auto">
+      <div 
+        ref={scrollRef}
+        className="flex gap-2 overflow-x-auto py-2 scrollbar-hide"
+        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+      >
+        {categories.map((cat) => {
+          const isSelected = selectedCategory === cat.id;
+          const Icon = cat.Icon;
+          
+          return (
+            <button
+              key={cat.id}
+              onClick={() => onSelectCategory(cat.id)}
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-full whitespace-nowrap text-sm font-medium transition-all flex-shrink-0 ${
+                isSelected 
+                  ? 'text-white shadow-lg' 
+                  : 'bg-white text-gray-700 shadow-md hover:shadow-lg'
+              }`}
+              style={isSelected ? { background: cat.color } : {}}
+            >
+              <span className="text-base">{cat.emoji}</span>
+              <span>{cat.name}</span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
+// المكون الرئيسي
+const FoodMapView = ({ isOpen, onClose }) => {
+  const navigate = useNavigate();
+  const [stores, setStores] = useState([]);
+  const [filteredStores, setFilteredStores] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedStore, setSelectedStore] = useState(null);
+  const [userLocation, setUserLocation] = useState(null);
+  const [mapCenter, setMapCenter] = useState([33.5138, 36.2765]); // دمشق
+  const [gettingLocation, setGettingLocation] = useState(false);
+
+  // جلب المتاجر
+  useEffect(() => {
+    if (isOpen) {
+      fetchStores();
+      getUserLocation();
+    }
+  }, [isOpen]);
+
+  // فلترة المتاجر حسب الصنف
+  useEffect(() => {
+    if (selectedCategory === 'all') {
+      setFilteredStores(stores);
+    } else {
+      setFilteredStores(stores.filter(s => s.category === selectedCategory));
+    }
+    setSelectedStore(null);
+  }, [selectedCategory, stores]);
+
+  const fetchStores = async () => {
+    setLoading(true);
+    try {
+      const res = await axios.get(`${API}/api/food/stores`);
+      // فلترة المتاجر التي لديها إحداثيات
+      const storesWithLocation = (res.data || []).filter(
+        s => s.latitude && s.longitude && s.is_approved !== false
+      );
+      setStores(storesWithLocation);
+      setFilteredStores(storesWithLocation);
+      
+      // إذا كان هناك متاجر، نركز على أول متجر
+      if (storesWithLocation.length > 0 && !userLocation) {
+        setMapCenter([storesWithLocation[0].latitude, storesWithLocation[0].longitude]);
+      }
+    } catch (error) {
+      console.error('Error fetching stores:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getUserLocation = () => {
+    if (!navigator.geolocation) return;
+    
+    setGettingLocation(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const { latitude, longitude } = pos.coords;
+        setUserLocation([latitude, longitude]);
+        setMapCenter([latitude, longitude]);
+        
+        // حساب المسافة لكل متجر
+        setStores(prevStores => 
+          prevStores.map(store => ({
+            ...store,
+            distance: calculateDistance(latitude, longitude, store.latitude, store.longitude)
+          }))
+        );
+        setGettingLocation(false);
+      },
+      (error) => {
+        console.log('Location error:', error);
+        setGettingLocation(false);
+      },
+      { enableHighAccuracy: false, timeout: 10000 }
+    );
+  };
+
+  // حساب المسافة بين نقطتين (بالكيلومتر)
+  const calculateDistance = (lat1, lon1, lat2, lon2) => {
+    const R = 6371;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+      Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+  };
+
+  const handleStoreClick = (store) => {
+    setSelectedStore(store);
+    setMapCenter([store.latitude, store.longitude]);
+  };
+
+  const handleViewStore = (store) => {
+    onClose();
+    navigate(`/food/store/${store.id}`);
+  };
+
+  const handleCenterOnUser = () => {
+    if (userLocation) {
+      setMapCenter(userLocation);
+    } else {
+      getUserLocation();
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-[100] bg-white"
+      >
+        {/* Header */}
+        <div className="absolute top-0 left-0 right-0 z-[1002] bg-white/95 backdrop-blur-sm border-b border-gray-200 px-4 py-3 safe-area-top">
+          <div className="flex items-center justify-between">
+            <button
+              onClick={onClose}
+              className="flex items-center gap-1 text-gray-600 hover:text-gray-800"
+            >
+              <X size={24} />
+            </button>
+            <h2 className="text-base font-bold text-gray-900 flex items-center gap-2">
+              <MapPin size={20} className="text-[#FF6B00]" />
+              خريطة المتاجر
+            </h2>
+            <button
+              onClick={handleCenterOnUser}
+              disabled={gettingLocation}
+              className="p-2 bg-blue-500 text-white rounded-full hover:bg-blue-600 disabled:opacity-50"
+            >
+              {gettingLocation ? (
+                <Loader2 size={20} className="animate-spin" />
+              ) : (
+                <Navigation size={20} />
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* فلتر الأصناف */}
+        <CategoryFilter 
+          selectedCategory={selectedCategory}
+          onSelectCategory={setSelectedCategory}
+        />
+
+        {/* الخريطة - يجب أن تكون أولاً (أسفل كل شيء) */}
+        <div className="absolute inset-0 pt-28 pb-0 z-[1]">
+          {loading ? (
+            <div className="flex items-center justify-center h-full">
+              <div className="text-center">
+                <Loader2 className="w-10 h-10 text-[#FF6B00] animate-spin mx-auto mb-3" />
+                <p className="text-gray-600">جاري تحميل المتاجر...</p>
+              </div>
+            </div>
+          ) : (
+            <MapContainer
+              center={mapCenter}
+              zoom={14}
+              style={{ height: '100%', width: '100%' }}
+              zoomControl={false}
+            >
+              <TileLayer
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              />
+              
+              <MapController center={mapCenter} userLocation={userLocation} />
+              
+              {/* موقع المستخدم */}
+              {userLocation && (
+                <Marker position={userLocation} icon={userLocationIcon}>
+                  <Popup>موقعك الحالي</Popup>
+                </Marker>
+              )}
+              
+              {/* دبابيس المتاجر */}
+              {filteredStores.map((store) => (
+                <Marker
+                  key={store.id}
+                  position={[store.latitude, store.longitude]}
+                  icon={createStoreIcon(store.category, selectedStore?.id === store.id)}
+                  eventHandlers={{
+                    click: () => handleStoreClick(store)
+                  }}
+                />
+              ))}
+            </MapContainer>
+          )}
+        </div>
+
+        {/* عداد المتاجر */}
+        <div className="absolute bottom-24 left-1/2 transform -translate-x-1/2 z-[1004]">
+          <div className="bg-white/95 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg border border-gray-200">
+            <span className="text-sm font-medium text-gray-700">
+              {filteredStores.length} متجر {selectedCategory !== 'all' && `في ${CATEGORY_CONFIG[selectedCategory]?.name}`}
+            </span>
+          </div>
+        </div>
+
+        {/* بطاقة المتجر المحدد */}
+        <AnimatePresence>
+          {selectedStore && (
+            <StoreCard
+              store={selectedStore}
+              onClose={() => setSelectedStore(null)}
+              onViewStore={handleViewStore}
+            />
+          )}
+        </AnimatePresence>
+
+        {/* CSS للأنيميشن */}
+        <style>{`
+          @keyframes pulse {
+            0%, 100% { transform: rotate(-45deg) scale(1); }
+            50% { transform: rotate(-45deg) scale(1.1); }
+          }
+          .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+          }
+        `}</style>
+      </motion.div>
+    </AnimatePresence>
+  );
+};
+
+export default FoodMapView;
