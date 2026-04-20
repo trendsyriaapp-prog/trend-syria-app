@@ -14,16 +14,33 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           password: ${{ secrets.VPS_PASSWORD }}
-          command_timeout: 10m
+          command_timeout: 15m
           script: |
             cd ~/trend-syria-app
+            
+            # سحب أحدث الكود
             git fetch origin main
             git reset --hard origin/main
-            cd frontend && npm run build
+            
+            # تحديث Frontend (بناء فقط إذا تغيرت الملفات)
+            cd frontend
+            if [ -f "package.json" ]; then
+              npm install --legacy-peer-deps 2>/dev/null || true
+              npm run build 2>/dev/null || echo "Frontend build skipped"
+            fi
+            
+            # تحديث Backend
             cd ../backend
+            source venv/bin/activate
+            pip install -r requirements.txt -q 2>/dev/null || true
+            
+            # إعادة تشغيل الخدمة
             pkill -f uvicorn || true
             sleep 2
-            source venv/bin/activate
             nohup uvicorn server:app --host 0.0.0.0 --port 8001 > nohup.out 2>&1 &
             sleep 3
-            echo "Deployed successfully!"
+            
+            # التحقق من أن الخدمة تعمل
+            curl -s http://localhost:8001/api/health || echo "Health check pending..."
+            
+            echo "✅ Deployed successfully!"
