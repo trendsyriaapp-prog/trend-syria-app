@@ -316,7 +316,7 @@ const FoodOrderTracking = () => {
             <h3 className="font-bold text-gray-900">تفاصيل الطلب</h3>
           </div>
           {order.items.map((item, index) => (
-            <div key={index} className="p-4 border-b border-gray-100 last:border-0 flex justify-between items-center">
+            <div key={item.id || item.product_id || `item-${index}`} className="p-4 border-b border-gray-100 last:border-0 flex justify-between items-center">
               <div>
                 <p className="font-medium text-gray-900">{item.name}</p>
                 <p className="text-sm text-gray-500">x{item.quantity}</p>

@@ -2284,7 +2284,7 @@ const ProductModal = ({ store, product, token, commissionInfo, onClose, onSave }
                 {formData.weight_variants.length > 0 && (
                   <div className="space-y-2 mb-3">
                     {formData.weight_variants.map((variant, index) => (
-                      <div key={index} className="flex items-center justify-between bg-gray-50 rounded-lg p-2">
+                      <div key={variant.id || `variant-${variant.weight}-${variant.unit}`} className="flex items-center justify-between bg-gray-50 rounded-lg p-2">
                         <span className="text-sm font-medium">
                           {variant.weight} {variant.unit === 'g' ? 'جرام' : variant.unit === 'kg' ? 'كيلو' : 'قطعة'}
                         </span>
@@ -2407,7 +2407,7 @@ const ProductModal = ({ store, product, token, commissionInfo, onClose, onSave }
             {/* معاينة الصور */}
             <div className="flex gap-2 flex-wrap">
               {formData.images.map((img, i) => (
-                <div key={i} className="relative group">
+                <div key={`img-${img.substring(img.length - 20)}`} className="relative group">
                   <img src={img} alt="" className="w-20 h-20 rounded-lg object-cover border border-gray-200" />
                   <button
                     type="button"

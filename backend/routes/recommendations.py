@@ -3,7 +3,7 @@
 
 from fastapi import APIRouter, Depends
 from datetime import datetime, timezone, timedelta
-import random
+import secrets
 
 from core.database import db, get_current_user
 
@@ -94,7 +94,7 @@ async def get_personalized_recommendations(
                 recommendations.append(p)
     
     # خلط النتائج قليلاً للتنوع
-    random.shuffle(recommendations)
+    secrets.SystemRandom().shuffle(recommendations)
     
     return recommendations[:limit]
 

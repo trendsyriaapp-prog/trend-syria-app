@@ -330,7 +330,7 @@ const Chatbot = () => {
 
               {/* Messages */}
               {messages.map((msg, i) => (
-                <MessageBubble key={i} message={msg} onQuickReply={handleQuickReply} />
+                <MessageBubble key={msg.id || `msg-${msg.timestamp || i}`} message={msg} onQuickReply={handleQuickReply} />
               ))}
 
               {/* Loading */}
