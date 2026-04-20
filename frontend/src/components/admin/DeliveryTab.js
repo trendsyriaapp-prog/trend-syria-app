@@ -217,6 +217,32 @@ const DeliveryTab = ({
                   </div>
                 )}
 
+                {/* Address & Location Section */}
+                <div className="bg-blue-50 border-b border-blue-200 px-4 py-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <MapPin size={18} className="text-blue-600 flex-shrink-0" />
+                      <div>
+                        <p className="text-sm font-medium text-blue-800">
+                          العنوان: {doc.home_address || 'غير محدد'}
+                        </p>
+                        <p className="text-xs text-blue-600 mt-0.5">
+                          المدينة: {doc.home_city || doc.driver_city || doc.driver?.city || 'غير محدد'}
+                        </p>
+                      </div>
+                    </div>
+                    {doc.home_latitude && doc.home_longitude && (
+                      <button
+                        onClick={() => window.open(`https://www.google.com/maps?q=${doc.home_latitude},${doc.home_longitude}`, '_blank')}
+                        className="px-3 py-1.5 bg-blue-500 text-white rounded-lg text-xs font-medium hover:bg-blue-600 flex items-center gap-1"
+                      >
+                        <MapPin size={12} />
+                        الخريطة
+                      </button>
+                    )}
+                  </div>
+                </div>
+
                 {/* Documents Section */}
                 <div className="p-4">
                   <p className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
