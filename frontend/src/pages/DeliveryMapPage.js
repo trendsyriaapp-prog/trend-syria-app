@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import logger from '../lib/logger';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import OrdersMap from '../components/delivery/OrdersMap';
@@ -75,7 +76,7 @@ const DeliveryMapPage = () => {
         
         setMyFoodOrders(myFoodRes.data || []);
       } catch (error) {
-        console.error('Error fetching data:', error);
+        logger.error('Error fetching data:', error);
         // إذا كان الخطأ 401، إعادة التوجيه للدخول
         if (error.response?.status === 401) {
           setShouldRedirect('/login');
@@ -124,7 +125,7 @@ const DeliveryMapPage = () => {
               driverLat = pos.coords.latitude;
               driverLon = pos.coords.longitude;
             } catch (geoErr) {
-              console.log('Using default location for smart route');
+              logger.log('Using default location for smart route');
             }
           }
           
@@ -160,14 +161,14 @@ const DeliveryMapPage = () => {
           }
         } catch (evalError) {
           // إذا فشل التقييم، نكمل بدون تحذير
-          console.log('Smart route evaluation not available:', evalError.message);
+          logger.log('Smart route evaluation not available:', evalError.message);
         }
       }
       
       // قبول الطلب
       await acceptFoodOrder(order);
     } catch (error) {
-      console.error('Error accepting food order:', error);
+      logger.error('Error accepting food order:', error);
       toast({ title: "خطأ", description: "فشل قبول الطلب", variant: "destructive" });
     }
   };
@@ -210,7 +211,7 @@ const DeliveryMapPage = () => {
       
       toast({ title: "✅ تم قبول الطلب" });
     } catch (error) {
-      console.error('Error accepting food order:', error);
+      logger.error('Error accepting food order:', error);
       toast({ title: "خطأ", description: "فشل قبول الطلب", variant: "destructive" });
     }
   };
@@ -227,7 +228,7 @@ const DeliveryMapPage = () => {
       setOrders(availableRes.data);
       setMyOrders(myRes.data);
     } catch (error) {
-      console.error('Error accepting order:', error);
+      logger.error('Error accepting order:', error);
     }
   };
 

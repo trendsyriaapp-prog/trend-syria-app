@@ -2,6 +2,7 @@
 // Hook لإدارة إشعارات Push - متوافق مع جميع المكونات
 
 import { useState, useEffect, useCallback } from 'react';
+import logger from '../lib/logger';
 import { getFCMToken, setupForegroundHandler } from '../firebase';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
@@ -96,10 +97,10 @@ const usePushNotifications = (userType = null) => {
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/firebase-messaging-sw.js')
         .then((registration) => {
-          console.log('Firebase SW registered:', registration.scope);
+          logger.log('Firebase SW registered:', registration.scope);
         })
         .catch((err) => {
-          console.error('Firebase SW registration failed:', err);
+          logger.error('Firebase SW registration failed:', err);
         });
     }
   }, []);
@@ -147,9 +148,9 @@ const usePushNotifications = (userType = null) => {
             }, {
               headers: { Authorization: `Bearer ${authToken}` }
             });
-            console.log('FCM Token registered with server');
+            logger.log('FCM Token registered with server');
           } catch (err) {
-            console.error('Failed to register token with server:', err);
+            logger.error('Failed to register token with server:', err);
           }
         }
       }
@@ -158,7 +159,7 @@ const usePushNotifications = (userType = null) => {
       setIsLoading(false);
       return token;
     } catch (err) {
-      console.error('Error requesting notification permission:', err);
+      logger.error('Error requesting notification permission:', err);
       setError(err.message);
       setLoading(false);
       setIsLoading(false);
@@ -183,7 +184,7 @@ const usePushNotifications = (userType = null) => {
     if (permission !== 'granted') return;
 
     const handleForegroundMessage = (payload) => {
-      console.log('Foreground notification:', payload);
+      logger.log('Foreground notification:', payload);
     };
 
     setupForegroundHandler(handleForegroundMessage);
@@ -200,9 +201,9 @@ const usePushNotifications = (userType = null) => {
       });
       setFcmToken(null);
       setIsSubscribed(false);
-      console.log('FCM Token unregistered');
+      logger.log('FCM Token unregistered');
     } catch (err) {
-      console.error('Failed to unregister token:', err);
+      logger.error('Failed to unregister token:', err);
     }
   }, [fcmToken, authToken]);
 

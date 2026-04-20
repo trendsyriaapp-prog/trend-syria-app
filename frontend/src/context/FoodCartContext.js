@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
+import logger from '../lib/logger';
 
 const FoodCartContext = createContext();
 
@@ -43,7 +44,7 @@ export const FoodCartProvider = ({ children }) => {
             });
           }
         } catch (e) {
-          console.error('Error parsing food cart:', e);
+          logger.error('Error parsing food cart:', e);
         }
       }
     }

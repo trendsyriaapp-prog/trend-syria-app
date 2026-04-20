@@ -3,6 +3,7 @@
 // يدير قائمة انتظار الطلبات ويزامنها عند توفر الإنترنت
 
 import { syncQueueDB, cartDB, cacheMetaDB } from './offlineDB';
+import logger from './logger';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -35,7 +36,7 @@ const notifyListeners = (event, data) => {
     try {
       callback(event, data);
     } catch (e) {
-      console.error('Sync listener error:', e);
+      logger.error('Sync listener error:', e);
     }
   });
 };
@@ -94,7 +95,7 @@ const executeRequest = async (operation) => {
  */
 const processOperation = async (operation) => {
   try {
-    console.log(`🔄 Processing: ${operation.type}`, operation.data);
+    logger.log(`🔄 Processing: ${operation.type}`, operation.data);
     
     const result = await executeRequest(operation);
     
@@ -104,11 +105,11 @@ const processOperation = async (operation) => {
     // إخطار المستمعين
     notifyListeners('operation_completed', { operation, result });
     
-    console.log(`✅ Completed: ${operation.type}`);
+    logger.log(`✅ Completed: ${operation.type}`);
     return { success: true, result };
     
   } catch (error) {
-    console.error(`❌ Failed: ${operation.type}`, error.message);
+    logger.error(`❌ Failed: ${operation.type}`, error.message);
     
     // تحديث الحالة
     if (operation.retries >= operation.maxRetries) {
@@ -140,11 +141,11 @@ export const syncPendingOperations = async () => {
     const pending = await syncQueueDB.getPending();
     
     if (pending.length === 0) {
-      console.log('📭 No pending operations');
+      logger.log('📭 No pending operations');
       return { synced: 0, failed: 0 };
     }
 
-    console.log(`📤 Syncing ${pending.length} operations...`);
+    logger.log(`📤 Syncing ${pending.length} operations...`);
 
     // معالجة بالترتيب (FIFO)
     for (const operation of pending.slice(0, SYNC_CONFIG.batchSize)) {
@@ -163,11 +164,11 @@ export const syncPendingOperations = async () => {
     // تنظيف المكتملة
     await syncQueueDB.clearCompleted();
 
-    console.log(`📊 Sync complete: ${synced} synced, ${failed} failed`);
+    logger.log(`📊 Sync complete: ${synced} synced, ${failed} failed`);
     notifyListeners('sync_completed', { synced, failed });
 
   } catch (error) {
-    console.error('❌ Sync error:', error);
+    logger.error('❌ Sync error:', error);
     notifyListeners('sync_error', { error: error.message });
   } finally {
     isSyncing = false;
@@ -188,7 +189,7 @@ export const queueCartOperation = async (type, data) => {
 
   const config = endpoints[type];
   if (!config) {
-    console.error('Unknown cart operation type:', type);
+    logger.error('Unknown cart operation type:', type);
     return;
   }
 
@@ -232,7 +233,7 @@ export const syncCartFromServer = async () => {
       return serverCart;
     }
   } catch (error) {
-    console.error('Failed to sync cart from server:', error);
+    logger.error('Failed to sync cart from server:', error);
   }
 
   return null;
@@ -244,7 +245,7 @@ export const syncCartFromServer = async () => {
 export const startPeriodicSync = () => {
   if (syncInterval) return;
 
-  console.log('🔄 Starting periodic sync...');
+  logger.log('🔄 Starting periodic sync...');
 
   // مزامنة فورية عند البدء
   syncPendingOperations();
@@ -273,14 +274,14 @@ export const stopPeriodicSync = () => {
   window.removeEventListener('online', handleOnline);
   window.removeEventListener('offline', handleOffline);
   
-  console.log('⏹️ Periodic sync stopped');
+  logger.log('⏹️ Periodic sync stopped');
 };
 
 /**
  * معالج عودة الاتصال
  */
 const handleOnline = () => {
-  console.log('🌐 Back online - starting sync...');
+  logger.log('🌐 Back online - starting sync...');
   notifyListeners('online', {});
   
   // مزامنة بعد ثانيتين للتأكد من استقرار الاتصال
@@ -293,7 +294,7 @@ const handleOnline = () => {
  * معالج انقطاع الاتصال
  */
 const handleOffline = () => {
-  console.log('📴 Offline mode');
+  logger.log('📴 Offline mode');
   notifyListeners('offline', {});
 };
 

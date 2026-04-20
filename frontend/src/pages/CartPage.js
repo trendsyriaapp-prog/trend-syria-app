@@ -8,6 +8,7 @@ import { useCart } from '../context/CartContext';
 import { useSettings } from '../context/SettingsContext';
 import { useToast } from '../hooks/use-toast';
 import GoogleMapsLocationPicker from '../components/GoogleMapsLocationPicker';
+import logger from '../lib/logger';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -115,13 +116,13 @@ const CartPage = () => {
                 });
                 if (isMounted) setDistanceDeliveryFee(distanceRes.data);
               } catch (err) {
-                console.error('Error calculating distance fee:', err);
+                logger.error('Error calculating distance fee:', err);
               }
             }
           }
         }
       } catch (error) {
-        console.error('Error fetching shipping:', error);
+        logger.error('Error fetching shipping:', error);
       } finally {
         if (isMounted) setShippingLoading(false);
       }
@@ -238,7 +239,7 @@ const CartPage = () => {
         toast({ title: "تم", description: "تم حفظ الموقع بنجاح" });
       }
     } catch (error) {
-      console.error('Error saving location:', error);
+      logger.error('Error saving location:', error);
       toast({ title: "خطأ", description: "فشل في حفظ الموقع", variant: "destructive" });
     }
   };

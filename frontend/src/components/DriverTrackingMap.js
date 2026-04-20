@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import logger from '../lib/logger';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import { Icon } from 'leaflet';
 import axios from 'axios';
@@ -79,7 +80,7 @@ const DriverTrackingMap = ({ orderId, orderStatus }) => {
         );
       }
     } catch (err) {
-      console.error('Error fetching driver location:', err);
+      logger.error('Error fetching driver location:', err);
       setError('فشل في جلب موقع السائق');
     } finally {
       setLoading(false);
@@ -103,7 +104,7 @@ const DriverTrackingMap = ({ orderId, orderStatus }) => {
         });
       }
     } catch (err) {
-      console.error('Error fetching route:', err);
+      logger.error('Error fetching route:', err);
       // في حالة الفشل، نستخدم الحساب البسيط
     }
   };
@@ -143,9 +144,9 @@ const DriverTrackingMap = ({ orderId, orderStatus }) => {
       if (!audioRef.current) {
         audioRef.current = new Audio('/notification.mp3');
       }
-      audioRef.current.play().catch(e => console.log('Audio play failed:', e));
+      audioRef.current.play().catch(e => logger.log('Audio play failed:', e));
     } catch (e) {
-      console.log('Audio error:', e);
+      logger.log('Audio error:', e);
     }
   };
 

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import logger from '../lib/logger';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import { motion } from 'framer-motion';
@@ -99,7 +100,7 @@ const DeliveryDocuments = () => {
       setStatus(res.data.status);
       setRejectionReason(res.data.rejection_reason);
     } catch (error) {
-      console.error(error);
+      logger.error(error);
     }
   };
 
@@ -116,7 +117,7 @@ const DeliveryDocuments = () => {
         const compressedImage = await compressDocumentImage(file);
         setDocs(prev => ({ ...prev, [field]: compressedImage }));
       } catch (error) {
-        console.error('Error compressing image:', error);
+        logger.error('Error compressing image:', error);
         toast({
           title: "خطأ",
           description: "فشل في معالجة الصورة، يرجى المحاولة مرة أخرى",
@@ -962,7 +963,7 @@ const DeliveryDashboard = () => {
       const res = await axios.get(`${API}/api/delivery/availability`);
       setIsAvailable(res.data.is_available);
     } catch (error) {
-      console.error('Error fetching availability:', error);
+      logger.error('Error fetching availability:', error);
     }
   };
 
@@ -1057,7 +1058,7 @@ const DeliveryDashboard = () => {
       const res = await axios.get(`${API}/api/delivery/my-ratings`);
       setMyRatings(res.data);
     } catch (error) {
-      console.error('Error fetching ratings:', error);
+      logger.error('Error fetching ratings:', error);
     }
   };
 
@@ -1070,7 +1071,7 @@ const DeliveryDashboard = () => {
       setWalletBalance(balanceRes.data.balance || 0);
       setWalletTransactions(transRes.data || []);
     } catch (error) {
-      console.error('Error fetching wallet:', error);
+      logger.error('Error fetching wallet:', error);
     }
   };
   
@@ -1129,7 +1130,7 @@ const DeliveryDashboard = () => {
         navigate('/delivery/documents', { replace: true });
         return;
       }
-      console.error('Error checking status:', error);
+      logger.error('Error checking status:', error);
     } finally {
       setLoading(false);
     }
@@ -1200,7 +1201,7 @@ const DeliveryDashboard = () => {
         });
       }
     } catch (error) {
-      console.error(error);
+      logger.error(error);
     }
   };
 
@@ -2141,7 +2142,7 @@ const DeliveryDashboard = () => {
         <ReturnChecklist
           order={showReturnChecklist}
           onComplete={(reason) => {
-            console.log('Return reason:', reason);
+            logger.log('Return reason:', reason);
             setShowReturnChecklist(null);
             toast({
               title: "تم تسجيل الإرجاع",

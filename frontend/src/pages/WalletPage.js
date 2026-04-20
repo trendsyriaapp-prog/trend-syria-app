@@ -10,6 +10,7 @@ import {
   CheckCircle, XCircle, ChevronRight, Banknote, Trash2, Loader2
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import logger from '../lib/logger';
 import { useToast } from '../hooks/use-toast';
 import { useSettings } from '../context/SettingsContext';
 
@@ -78,7 +79,7 @@ const WalletPage = () => {
       setTransactions(transactionsRes.data);
       setWithdrawals(withdrawalsRes.data);
     } catch (error) {
-      console.error('Error fetching wallet data:', error);
+      logger.error('Error fetching wallet data:', error);
     } finally {
       setLoading(false);
     }

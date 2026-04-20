@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
+import logger from '../lib/logger';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -49,7 +50,7 @@ export const SettingsProvider = ({ children }) => {
         setPlatformSettings(prev => ({ ...prev, ...platformRes.data }));
       }
     } catch (error) {
-      console.error('Error fetching settings:', error);
+      logger.error('Error fetching settings:', error);
     } finally {
       setLoading(false);
     }

@@ -2,6 +2,7 @@
 // إعدادات المنصة - تفعيل/إيقاف الأقسام مع إشعارات قابلة للتخصيص
 
 import { useState, useEffect } from 'react';
+import logger from '../../lib/logger';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -40,7 +41,7 @@ const GlobalFreeShippingPromo = () => {
         message: res.data.message || ''
       });
     } catch (error) {
-      console.error('Error fetching promo:', error);
+      logger.error('Error fetching promo:', error);
     } finally {
       setLoading(false);
     }
@@ -403,7 +404,7 @@ const PlatformClosureSettings = () => {
         platform_closed_message_sellers: res.data.platform_closed_message_sellers || 'المنصة مغلقة للبائعين مؤقتاً للصيانة'
       });
     } catch (error) {
-      console.error('Error fetching platform status:', error);
+      logger.error('Error fetching platform status:', error);
     } finally {
       setLoading(false);
     }
@@ -546,7 +547,7 @@ const ReferralProgramSettings = () => {
         min_order_for_reward: res.data.min_order_for_reward || 30000
       });
     } catch (error) {
-      console.error('Error fetching referral settings:', error);
+      logger.error('Error fetching referral settings:', error);
     } finally {
       setLoading(false);
     }
@@ -752,7 +753,7 @@ const SurgePricingSettings = () => {
         max_surge_amount: res.data.max_surge_amount || 0
       });
     } catch (error) {
-      console.error('Error fetching surge pricing settings:', error);
+      logger.error('Error fetching surge pricing settings:', error);
     } finally {
       setLoading(false);
     }
@@ -942,7 +943,7 @@ const SurgePricingSettings = () => {
 // 🚫 مكون إعدادات إلغاء الطلب للسائق
 const DriverCancelSettings = () => {
   const { toast } = useToast();
-  console.log('DriverCancelSettings: Component mounted');
+  logger.log('DriverCancelSettings: Component mounted');
   const [settings, setSettings] = useState({
     enabled: true,
     cancel_window_seconds: 120,
@@ -973,7 +974,7 @@ const DriverCancelSettings = () => {
         setSettings(res.data);
         setError(null);
       } catch (err) {
-        console.error('Error fetching driver cancel settings:', err);
+        logger.error('Error fetching driver cancel settings:', err);
         setError('فشل تحميل الإعدادات: ' + (err.response?.data?.detail || err.message));
       } finally {
         setLoading(false);
@@ -986,7 +987,7 @@ const DriverCancelSettings = () => {
         });
         setStats(statsRes.data);
       } catch (err) {
-        console.error('Error fetching stats:', err);
+        logger.error('Error fetching stats:', err);
       }
     };
     
@@ -1248,7 +1249,7 @@ const PlatformSettingsTab = () => {
       });
       setSettings(response.data);
     } catch (error) {
-      console.error('Error fetching settings:', error);
+      logger.error('Error fetching settings:', error);
       const errorMsg = error.response?.data?.detail || "فشل تحميل الإعدادات";
       toast({ title: "خطأ", description: errorMsg, variant: "destructive" });
     } finally {

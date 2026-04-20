@@ -5,6 +5,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import axios from 'axios';
 import { productsDB, categoriesDB, cacheMetaDB, settingsDB } from '../lib/offlineDB';
+import logger from '../lib/logger';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -89,7 +90,7 @@ export const DataProvider = ({ children }) => {
           categories: localCategories,
           settings: localSettings
         }));
-        console.log('📦 Loaded from IndexedDB:', localCategories.length, 'categories');
+        logger.log('📦 Loaded from IndexedDB:', localCategories.length, 'categories');
       }
 
       // ========== 2. تحميل من localStorage كـ fallback ==========
@@ -99,7 +100,7 @@ export const DataProvider = ({ children }) => {
           const data = JSON.parse(cachedHomepage);
           if (data && (data.categories?.length > 0 || data.best_sellers?.length > 0)) {
             applyHomepageData(data);
-            console.log('📦 Loaded from localStorage cache');
+            logger.log('📦 Loaded from localStorage cache');
           }
         } catch (e) {}
       }
@@ -108,11 +109,11 @@ export const DataProvider = ({ children }) => {
       if (navigator.onLine) {
         await fetchFromServer();
       } else {
-        console.log('📴 Offline - using cached data');
+        logger.log('📴 Offline - using cached data');
       }
 
     } catch (error) {
-      console.error('Error loading initial data:', error);
+      logger.error('Error loading initial data:', error);
     } finally {
       setIsLoading(false);
       loadingRef.current = false;
@@ -168,11 +169,11 @@ export const DataProvider = ({ children }) => {
         await cacheMetaDB.setLastSync('homepage');
         setLastRefresh(Date.now());
 
-        console.log('✅ Fetched and cached homepage data');
+        logger.log('✅ Fetched and cached homepage data');
       }
 
     } catch (error) {
-      console.error('Error fetching from server:', error);
+      logger.error('Error fetching from server:', error);
     } finally {
       setIsRefreshing(false);
     }
@@ -206,7 +207,7 @@ export const DataProvider = ({ children }) => {
     if (!force) {
       const isStale = await cacheMetaDB.isStale('homepage', CACHE_DURATIONS.homepage);
       if (!isStale) {
-        console.log('📦 Cache is fresh, skipping refresh');
+        logger.log('📦 Cache is fresh, skipping refresh');
         return;
       }
     }
@@ -238,7 +239,7 @@ export const DataProvider = ({ children }) => {
         
         return product;
       } catch (error) {
-        console.error('Error fetching product:', error);
+        logger.error('Error fetching product:', error);
       }
     }
 
@@ -274,7 +275,7 @@ export const DataProvider = ({ children }) => {
         
         return serverResults;
       } catch (error) {
-        console.error('Search error:', error);
+        logger.error('Search error:', error);
       }
     }
 
@@ -307,7 +308,7 @@ export const DataProvider = ({ children }) => {
           hasMore: res.data.has_more || false
         };
       } catch (error) {
-        console.error('Error fetching category products:', error);
+        logger.error('Error fetching category products:', error);
       }
     }
 
@@ -332,7 +333,7 @@ export const DataProvider = ({ children }) => {
     localStorage.removeItem('homepage_cache');
     sessionStorage.removeItem('homepage_cache');
     
-    console.log('🗑️ Cache cleared');
+    logger.log('🗑️ Cache cleared');
     
     // إعادة التحميل
     await loadInitialData();

@@ -2,6 +2,7 @@
 // صفحة توصيل الطعام - وجبات سريعة، ماركت، خضار، حلويات، مقاهي، مخابز، مشروبات
 
 import { useState, useEffect, useRef } from 'react';
+import logger from '../lib/logger';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
@@ -333,7 +334,7 @@ const FoodPage = () => {
       },
       (error) => {
         clearTimeout(timeoutId);
-        console.error('GPS Error:', error);
+        logger.error('GPS Error:', error);
         if (error.code === error.PERMISSION_DENIED) {
           setGpsStatus('denied');
         } else if (error.code === error.TIMEOUT) {
@@ -362,7 +363,7 @@ const FoodPage = () => {
         const res = await axios.get(`${API}/api/categories/food`);
         setDynamicCategories(res.data);
       } catch (err) {
-        console.log('Using default categories');
+        logger.log('Using default categories');
         // استخدام الفئات الافتراضية في حالة الخطأ
         setDynamicCategories(Object.entries(CATEGORY_CONFIG).map(([id, config]) => ({
           id,
@@ -405,7 +406,7 @@ const FoodPage = () => {
         const favIds = res.data.map(f => f.product_id);
         setFoodFavorites(favIds);
       } catch (error) {
-        console.error('Error fetching favorites:', error);
+        logger.error('Error fetching favorites:', error);
       }
     };
     fetchFoodFavorites();
@@ -437,7 +438,7 @@ const FoodPage = () => {
         setFoodFavorites(prev => [...prev, productId]);
       }
     } catch (error) {
-      console.error('Error toggling favorite:', error);
+      logger.error('Error toggling favorite:', error);
     }
   };
 
@@ -528,11 +529,11 @@ const FoodPage = () => {
         const freeDeliveryItems = allProducts.filter(p => p.price >= foodThreshold);
         setFreeDeliveryProducts(freeDeliveryItems.slice(0, 10));
       } catch (err) {
-        console.error('Error filtering free delivery products:', err);
+        logger.error('Error filtering free delivery products:', err);
         setFreeDeliveryProducts([]);
       }
     } catch (error) {
-      console.error('Error fetching food data:', error);
+      logger.error('Error fetching food data:', error);
       // حفظ الخطأ لعرضه
       setApiError({
         error: error,

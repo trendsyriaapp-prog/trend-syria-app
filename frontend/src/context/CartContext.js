@@ -7,6 +7,7 @@ import axios from 'axios';
 import { useAuth } from './AuthContext';
 import { cartDB, productsDB, syncQueueDB } from '../lib/offlineDB';
 import syncManager from '../lib/syncManager';
+import logger from '../lib/logger';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -74,7 +75,7 @@ export const CartProvider = ({ children }) => {
       }
 
     } catch (error) {
-      console.error('Error loading cart:', error);
+      logger.error('Error loading cart:', error);
     } finally {
       setLoading(false);
     }
@@ -127,7 +128,7 @@ export const CartProvider = ({ children }) => {
             
             await cartDB.markSynced(item.product_id);
           } catch (e) {
-            console.error('Failed to sync cart item:', e);
+            logger.error('Failed to sync cart item:', e);
           }
         }
 
@@ -154,7 +155,7 @@ export const CartProvider = ({ children }) => {
       lastSyncRef.current = Date.now();
 
     } catch (error) {
-      console.error('Error syncing cart:', error);
+      logger.error('Error syncing cart:', error);
     } finally {
       setIsSyncing(false);
     }
@@ -174,7 +175,7 @@ export const CartProvider = ({ children }) => {
           product = res.data;
           await productsDB.saveMany([product]);
         } catch (e) {
-          console.error('Failed to fetch product:', e);
+          logger.error('Failed to fetch product:', e);
         }
       }
 
@@ -235,7 +236,7 @@ export const CartProvider = ({ children }) => {
           await cartDB.markSynced(productId);
           
         } catch (error) {
-          console.error('Failed to sync add to cart:', error);
+          logger.error('Failed to sync add to cart:', error);
           // إضافة للقائمة للمزامنة لاحقاً
           await syncQueueDB.add({
             type: 'cart_add',
@@ -262,7 +263,7 @@ export const CartProvider = ({ children }) => {
       return cart;
 
     } catch (error) {
-      console.error('Error adding to cart:', error);
+      logger.error('Error adding to cart:', error);
       throw error;
     }
   }, [token, cart]);
@@ -306,7 +307,7 @@ export const CartProvider = ({ children }) => {
             headers: { Authorization: `Bearer ${token}` }
           });
         } catch (error) {
-          console.error('Failed to sync update:', error);
+          logger.error('Failed to sync update:', error);
           await syncQueueDB.add({
             type: 'cart_update',
             data: { product_id: productId, quantity, selected_size: selectedSize, selected_weight: selectedWeight },
@@ -326,7 +327,7 @@ export const CartProvider = ({ children }) => {
       return { success: true };
 
     } catch (error) {
-      console.error('Error updating cart:', error);
+      logger.error('Error updating cart:', error);
       return { success: false, error: error.message };
     }
   }, [token]);
@@ -368,7 +369,7 @@ export const CartProvider = ({ children }) => {
             headers: { Authorization: `Bearer ${token}` }
           });
         } catch (error) {
-          console.error('Failed to sync remove:', error);
+          logger.error('Failed to sync remove:', error);
           await syncQueueDB.add({
             type: 'cart_remove',
             data: { product_id: productId, selected_size: selectedSize, selected_weight: selectedWeight },
@@ -391,7 +392,7 @@ export const CartProvider = ({ children }) => {
       }));
 
     } catch (error) {
-      console.error('Error removing from cart:', error);
+      logger.error('Error removing from cart:', error);
     }
   }, [token]);
 

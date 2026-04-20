@@ -1,4 +1,5 @@
 import { useRef, useCallback, useMemo } from 'react';
+import logger from '../lib/logger';
 
 /**
  * Hook لتشغيل أصوات التنبيه المختلفة حسب نوع الطلب
@@ -146,7 +147,7 @@ export const saveTonePreference = (type, toneId) => {
   try {
     localStorage.setItem(`notificationTone_${type}`, toneId);
   } catch (e) {
-    console.error('Error saving tone preference:', e);
+    logger.error('Error saving tone preference:', e);
   }
 };
 
@@ -160,19 +161,19 @@ export const useNotificationSound = () => {
       if (!audioContextRef.current) {
         const AudioContextClass = window.AudioContext || window.webkitAudioContext;
         if (!AudioContextClass) {
-          console.warn('AudioContext غير مدعوم في هذا المتصفح');
+          logger.warn('AudioContext غير مدعوم في هذا المتصفح');
           return null;
         }
         audioContextRef.current = new AudioContextClass();
       }
       if (audioContextRef.current.state === 'suspended') {
         audioContextRef.current.resume().catch(() => {
-          console.log('تعذر استئناف AudioContext');
+          logger.log('تعذر استئناف AudioContext');
         });
       }
       return audioContextRef.current;
     } catch (error) {
-      console.warn('خطأ في إنشاء AudioContext:', error);
+      logger.warn('خطأ في إنشاء AudioContext:', error);
       return null;
     }
   }, []);
@@ -186,10 +187,10 @@ export const useNotificationSound = () => {
       }
       audioRef.current.currentTime = 0;
       audioRef.current.play().catch(err => {
-        console.log('تعذر تشغيل الصوت:', err.message);
+        logger.log('تعذر تشغيل الصوت:', err.message);
       });
     } catch (error) {
-      console.log('خطأ في تشغيل الصوت:', error);
+      logger.log('خطأ في تشغيل الصوت:', error);
     }
   }, []);
 
@@ -208,7 +209,7 @@ export const useNotificationSound = () => {
         playDefaultSound();
       }
     } catch (error) {
-      console.log('خطأ في تشغيل النغمة:', error);
+      logger.log('خطأ في تشغيل النغمة:', error);
       playDefaultSound();
     }
   }, [getAudioContext, playDefaultSound]);
@@ -240,7 +241,7 @@ export const useNotificationSound = () => {
         playDefaultSound();
       }
     } catch (error) {
-      console.log('خطأ في تشغيل الصوت:', error);
+      logger.log('خطأ في تشغيل الصوت:', error);
       playDefaultSound();
     }
   }, [getAudioContext, playDefaultSound]);

@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { Store, Users, Package, Heart, ArrowRight, Loader2 } from 'lucide-react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+import logger from '../lib/logger';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -26,7 +27,7 @@ const StorePage = () => {
       setStore(res.data);
       setFollowing(res.data.is_following);
     } catch (error) {
-      console.error('Error fetching store:', error);
+      logger.error('Error fetching store:', error);
     } finally {
       setLoading(false);
     }

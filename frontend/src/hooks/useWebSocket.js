@@ -2,6 +2,7 @@
 // Hook للاتصال بـ WebSocket والتحديثات الفورية
 
 import { useEffect, useRef, useState, useCallback } from 'react';
+import logger from '../lib/logger';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -34,7 +35,7 @@ export const useWebSocket = (options = {}) => {
   const connect = useCallback(() => {
     const token = localStorage.getItem('token');
     if (!token) {
-      console.log('WebSocket: No token, skipping connection');
+      logger.log('WebSocket: No token, skipping connection');
       return;
     }
 
@@ -44,7 +45,7 @@ export const useWebSocket = (options = {}) => {
     }
 
     const wsUrl = `${getWsUrl()}/api/ws?token=${token}`;
-    console.log('WebSocket: Connecting to', wsUrl.split('?')[0]);
+    logger.log('WebSocket: Connecting to', wsUrl.split('?')[0]);
 
     try {
       const ws = new WebSocket(wsUrl);
@@ -52,7 +53,7 @@ export const useWebSocket = (options = {}) => {
       setConnectionStatus('connecting');
 
       ws.onopen = () => {
-        console.log('WebSocket: Connected');
+        logger.log('WebSocket: Connected');
         setIsConnected(true);
         setConnectionStatus('connected');
         reconnectAttemptsRef.current = 0;
@@ -73,12 +74,12 @@ export const useWebSocket = (options = {}) => {
           setLastMessage(data);
           onMessage?.(data);
         } catch (e) {
-          console.error('WebSocket: Error parsing message', e);
+          logger.error('WebSocket: Error parsing message', e);
         }
       };
 
       ws.onclose = (event) => {
-        console.log('WebSocket: Disconnected', event.code, event.reason);
+        logger.log('WebSocket: Disconnected', event.code, event.reason);
         setIsConnected(false);
         setConnectionStatus('disconnected');
         onDisconnect?.(event);
@@ -86,7 +87,7 @@ export const useWebSocket = (options = {}) => {
         // إعادة الاتصال تلقائياً
         if (shouldReconnectRef.current && reconnectAttemptsRef.current < maxReconnectAttempts) {
           reconnectAttemptsRef.current++;
-          console.log(`WebSocket: Reconnecting (attempt ${reconnectAttemptsRef.current}/${maxReconnectAttempts})`);
+          logger.log(`WebSocket: Reconnecting (attempt ${reconnectAttemptsRef.current}/${maxReconnectAttempts})`);
           setConnectionStatus('reconnecting');
           
           reconnectTimeoutRef.current = setTimeout(() => {
@@ -96,12 +97,12 @@ export const useWebSocket = (options = {}) => {
       };
 
       ws.onerror = (error) => {
-        console.error('WebSocket: Error', error);
+        logger.error('WebSocket: Error', error);
         onError?.(error);
       };
 
     } catch (error) {
-      console.error('WebSocket: Failed to create connection', error);
+      logger.error('WebSocket: Failed to create connection', error);
       setConnectionStatus('error');
     }
   }, [onMessage, onConnect, onDisconnect, onError, reconnectInterval, maxReconnectAttempts]);
@@ -127,7 +128,7 @@ export const useWebSocket = (options = {}) => {
       wsRef.current.send(JSON.stringify(data));
       return true;
     }
-    console.warn('WebSocket: Cannot send, not connected');
+    logger.warn('WebSocket: Cannot send, not connected');
     return false;
   }, []);
 

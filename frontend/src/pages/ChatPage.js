@@ -6,6 +6,7 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowRight, Send, Phone, MapPin, Package, Clock, User } from 'lucide-react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+import logger from '../lib/logger';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -52,7 +53,7 @@ const ChatPage = () => {
         // جلب الرسائل
         await fetchMessages();
       } catch (error) {
-        console.error('Error fetching order:', error);
+        logger.error('Error fetching order:', error);
         // إنشاء طلب وهمي للعرض
         setOrder({
           id: orderId,
@@ -111,7 +112,7 @@ const ChatPage = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
     } catch (error) {
-      console.error('Error sending message:', error);
+      logger.error('Error sending message:', error);
       // الرسالة تبقى معروضة حتى لو فشل الإرسال
     } finally {
       setSending(false);

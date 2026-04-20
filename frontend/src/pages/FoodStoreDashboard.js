@@ -2,6 +2,7 @@
 // لوحة تحكم متجر الطعام
 
 import { useState, useEffect, useRef } from 'react';
+import logger from '../lib/logger';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
@@ -256,9 +257,9 @@ const FoodStoreDashboard = () => {
       if (!audioRef.current) {
         audioRef.current = new Audio('/notification.mp3');
       }
-      audioRef.current.play().catch(e => console.log('Audio play failed:', e));
+      audioRef.current.play().catch(e => logger.log('Audio play failed:', e));
     } catch (e) {
-      console.log('Audio error:', e);
+      logger.log('Audio error:', e);
     }
   };
 
@@ -345,7 +346,7 @@ const FoodStoreDashboard = () => {
         transactions: transRes.data || []
       });
     } catch (error) {
-      console.error('Error fetching wallet:', error);
+      logger.error('Error fetching wallet:', error);
     }
   };
   
@@ -422,7 +423,7 @@ const FoodStoreDashboard = () => {
         // No store found
         setStore(null);
       }
-      console.error('Error fetching store:', error);
+      logger.error('Error fetching store:', error);
     } finally {
       setLoading(false);
       setDataFetched(true);
@@ -1114,7 +1115,7 @@ const StoreSettings = ({ store, token, onUpdate, onSaveSuccess }) => {
       toast({ title: "تم", description: "تم تحديث الصورة" });
       onUpdate();
     } catch (error) {
-      console.error('Error uploading logo:', error);
+      logger.error('Error uploading logo:', error);
       toast({ title: "خطأ", description: "فشل تحديث الصورة", variant: "destructive" });
     } finally {
       setUploadingLogo(false);
@@ -1985,7 +1986,7 @@ const ProductModal = ({ store, product, token, commissionInfo, onClose, onSave }
     
     try {
       const result = await processVideo(file, (progress) => {
-        console.log(progress);
+        logger.log(progress);
       });
       
       if (!result.success) {
@@ -2572,7 +2573,7 @@ const StoreOrdersTab = ({ token, onNewOrder }) => {
       });
       setOrders(res.data || []);
     } catch (error) {
-      console.error('Error fetching orders:', error);
+      logger.error('Error fetching orders:', error);
     } finally {
       setLoading(false);
     }
@@ -3378,7 +3379,7 @@ const PromoteFoodTab = ({ store, products, token, walletBalance = 0, onPromotion
       } || { cost_per_product: 1000, duration_hours: 24 });
       setMyPromotions(promotionsRes.data || { active: [], expired: [] });
     } catch (error) {
-      console.error('Error fetching promotion data:', error);
+      logger.error('Error fetching promotion data:', error);
     } finally {
       setLoading(false);
     }
@@ -3713,7 +3714,7 @@ const FlashSalesTab = ({ store, products, token }) => {
       setMyRequests(requestsRes.data || []);
       setSettings(settingsRes.data || { join_fee: 5000 });
     } catch (error) {
-      console.error('Error fetching flash data:', error);
+      logger.error('Error fetching flash data:', error);
     } finally {
       setLoading(false);
     }
@@ -4236,7 +4237,7 @@ const DriverAvailabilityCheck = ({ orderId, token }) => {
         });
         setData(res.data);
       } catch (error) {
-        console.error('Error checking driver availability:', error);
+        logger.error('Error checking driver availability:', error);
         setData(null);
       } finally {
         setLoading(false);

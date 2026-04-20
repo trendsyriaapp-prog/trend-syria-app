@@ -2,6 +2,8 @@
 // نظام IndexedDB للتخزين المحلي - Offline First Architecture
 // يعمل كمصدر رئيسي للبيانات مع مزامنة خلفية
 
+import logger from './logger';
+
 const DB_NAME = 'TrendSyriaDB';
 const DB_VERSION = 1;
 
@@ -32,19 +34,19 @@ const openDB = () => {
     const request = indexedDB.open(DB_NAME, DB_VERSION);
 
     request.onerror = () => {
-      console.error('❌ Failed to open IndexedDB:', request.error);
+      logger.error('❌ Failed to open IndexedDB:', request.error);
       reject(request.error);
     };
 
     request.onsuccess = () => {
       dbInstance = request.result;
-      console.log('✅ IndexedDB opened successfully');
+      logger.log('✅ IndexedDB opened successfully');
       resolve(dbInstance);
     };
 
     request.onupgradeneeded = (event) => {
       const db = event.target.result;
-      console.log('🔧 Upgrading IndexedDB...');
+      logger.log('🔧 Upgrading IndexedDB...');
 
       // Products Store - للمنتجات مع فهارس للبحث
       if (!db.objectStoreNames.contains(STORES.PRODUCTS)) {
@@ -146,7 +148,7 @@ export const productsDB = {
     
     return new Promise((resolve, reject) => {
       transaction.oncomplete = () => {
-        console.log(`✅ Saved ${products.length} products to IndexedDB`);
+        logger.log(`✅ Saved ${products.length} products to IndexedDB`);
         resolve();
       };
       transaction.onerror = () => reject(transaction.error);
@@ -622,10 +624,10 @@ export const favoritesDB = {
 export const initDB = async () => {
   try {
     await openDB();
-    console.log('✅ Offline database initialized');
+    logger.log('✅ Offline database initialized');
     return true;
   } catch (error) {
-    console.error('❌ Failed to initialize offline database:', error);
+    logger.error('❌ Failed to initialize offline database:', error);
     return false;
   }
 };
@@ -644,7 +646,7 @@ export const clearAllData = async () => {
   
   return new Promise((resolve, reject) => {
     transaction.oncomplete = () => {
-      console.log('🗑️ All offline data cleared');
+      logger.log('🗑️ All offline data cleared');
       resolve();
     };
     transaction.onerror = () => reject(transaction.error);

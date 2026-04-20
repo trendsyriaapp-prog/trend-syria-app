@@ -2,6 +2,7 @@
 // مدير إشعارات Firebase
 
 import { useEffect, useState, useCallback, useRef } from 'react';
+import logger from '../lib/logger';
 import axios from 'axios';
 import { requestNotificationPermission, onMessageListener } from '../config/firebase';
 import { useAuth } from '../context/AuthContext';
@@ -27,7 +28,7 @@ const NotificationManager = () => {
         { token: fcmTokenValue, device_type: 'web' },
         { headers: { Authorization: `Bearer ${authToken}` } }
       );
-      console.log('✅ FCM Token saved to server');
+      logger.log('✅ FCM Token saved to server');
     } catch (error) {
       // محاولة API القديم كـ fallback
       try {
@@ -36,9 +37,9 @@ const NotificationManager = () => {
           { fcm_token: fcmTokenValue },
           { headers: { Authorization: `Bearer ${authToken}` } }
         );
-        console.log('✅ FCM Token saved to server (fallback)');
+        logger.log('✅ FCM Token saved to server (fallback)');
       } catch (fallbackError) {
-        console.error('Error saving FCM token:', fallbackError);
+        logger.error('Error saving FCM token:', fallbackError);
       }
     }
   }, [authToken]);
@@ -50,7 +51,7 @@ const NotificationManager = () => {
     try {
       // التحقق من دعم الإشعارات
       if (!('Notification' in window)) {
-        console.log('Notifications not supported');
+        logger.log('Notifications not supported');
         return;
       }
 
@@ -79,7 +80,7 @@ const NotificationManager = () => {
         initialized.current = true;
       }
     } catch (error) {
-      console.error('Error initializing notifications:', error);
+      logger.error('Error initializing notifications:', error);
     }
   }, [user, authToken, saveFcmToken]);
 
@@ -121,7 +122,7 @@ const NotificationManager = () => {
         }
       } catch (err) {
         if (isSubscribed) {
-          console.log('Message listener error:', err);
+          logger.log('Message listener error:', err);
         }
       }
     };

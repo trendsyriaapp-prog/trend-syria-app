@@ -4,6 +4,7 @@
 import { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { useWebSocket } from '../hooks/useWebSocket';
 import { useToast } from '../hooks/use-toast';
+import logger from '../lib/logger';
 
 const WebSocketContext = createContext(null);
 
@@ -12,11 +13,11 @@ export const WebSocketProvider = ({ children }) => {
   const [notifications, setNotifications] = useState([]);
   
   const handleMessage = useCallback((message) => {
-    console.log('WebSocket message:', message.type);
+    logger.log('WebSocket message:', message.type);
     
     switch (message.type) {
       case 'connected':
-        console.log('WebSocket: Connected with rooms:', message.rooms);
+        logger.log('WebSocket: Connected with rooms:', message.rooms);
         break;
         
       case 'notification':
@@ -57,11 +58,11 @@ export const WebSocketProvider = ({ children }) => {
         break;
         
       case 'room_joined':
-        console.log('Joined room:', message.room);
+        logger.log('Joined room:', message.room);
         break;
         
       case 'room_left':
-        console.log('Left room:', message.room);
+        logger.log('Left room:', message.room);
         break;
         
       default:
@@ -73,11 +74,11 @@ export const WebSocketProvider = ({ children }) => {
   }, [toast]);
 
   const handleConnect = useCallback(() => {
-    console.log('WebSocket Provider: Connected');
+    logger.log('WebSocket Provider: Connected');
   }, []);
 
   const handleDisconnect = useCallback((event) => {
-    console.log('WebSocket Provider: Disconnected', event?.code);
+    logger.log('WebSocket Provider: Disconnected', event?.code);
     // لا نُظهر الإشعار إلا في حالات الانقطاع الحقيقية (ليس عند إغلاق الصفحة)
     // ونتجاهل الانقطاعات المؤقتة التي يتم إعادة الاتصال فيها تلقائياً
   }, []);
@@ -117,7 +118,7 @@ export const WebSocketProvider = ({ children }) => {
 export const useWebSocketContext = () => {
   const context = useContext(WebSocketContext);
   if (!context) {
-    console.warn('useWebSocketContext must be used within WebSocketProvider');
+    logger.warn('useWebSocketContext must be used within WebSocketProvider');
     return {
       isConnected: false,
       connectionStatus: 'disconnected',

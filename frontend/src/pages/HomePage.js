@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 import { 
+import logger from '../lib/logger';
   ArrowLeft, Smartphone, Shirt, 
   Home as HomeIcon, Dumbbell, BookOpen, Gamepad2, 
   UtensilsCrossed, SprayCan, ChevronLeft, TrendingUp,
@@ -20,6 +21,7 @@ import LazySection from '../components/LazySection';
 import HomePageSkeleton from '../components/HomePageSkeleton';
 import { useSettings } from '../context/SettingsContext';
 import { useScroll } from '../context/ScrollContext';
+import logger from '../lib/logger';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -157,7 +159,7 @@ const HomePage = () => {
           // لا نوقف loading لأننا سنجلب بيانات جديدة
         }
       } catch (e) {
-        console.log('No cached data available');
+        logger.log('No cached data available');
       }
     };
     
@@ -182,7 +184,7 @@ const HomePage = () => {
         const response = await axios.get(url, { timeout: 15000 });
         return response;
       } catch (error) {
-        console.log(`Attempt ${attempt}/${maxRetries} failed for ${url}`);
+        logger.log(`Attempt ${attempt}/${maxRetries} failed for ${url}`);
         if (attempt === maxRetries) {
           throw error;
         }
@@ -242,7 +244,7 @@ const HomePage = () => {
           setTickerEnabled(tickerRes.data.is_enabled !== false);
         }
       } catch (e) {
-        console.log('Progressive load - basic data failed:', e);
+        logger.log('Progressive load - basic data failed:', e);
       }
       
       // ========== جلب باقي البيانات مع Retry ==========
@@ -262,13 +264,13 @@ const HomePage = () => {
         try {
           localStorage.setItem('homepage_persistent_cache', JSON.stringify(data));
         } catch (e) {
-          console.log('Failed to save persistent cache:', e);
+          logger.log('Failed to save persistent cache:', e);
         }
         
         applyHomepageData(data);
       } else {
         // البيانات فارغة، جرب الطريقة القديمة
-        console.log('Homepage data is empty, trying legacy method');
+        logger.log('Homepage data is empty, trying legacy method');
         await fetchDataLegacy();
       }
       
@@ -276,7 +278,7 @@ const HomePage = () => {
       setFlashStatus(flashStatusRes.data);
       
     } catch (error) {
-      console.error('Error fetching homepage data:', error);
+      logger.error('Error fetching homepage data:', error);
       // في حالة الخطأ، جرب الطريقة القديمة
       await fetchDataLegacy();
     } finally {
@@ -558,7 +560,7 @@ const HomePage = () => {
         setGlobalFreeShipping(null);
       }
     } catch (error) {
-      console.error('Error in legacy fetch:', error);
+      logger.error('Error in legacy fetch:', error);
     }
   };
 

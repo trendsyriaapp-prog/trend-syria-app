@@ -5,6 +5,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import axios from 'axios';
+import logger from '../lib/logger';
 import { 
   Users, Package, ShoppingBag, Clock, AlertTriangle, Bell, 
   ChevronRight, Truck, DollarSign, ShieldCheck, Megaphone, Shield,
@@ -242,7 +243,7 @@ const AdminDashboardPage = () => {
       setTabData(prev => ({ ...prev, [tab]: data || true }));
       
     } catch (error) {
-      console.error(`Error fetching ${tab} data:`, error);
+      logger.error(`Error fetching ${tab} data:`, error);
     } finally {
       setLoadingTab(null);
     }
@@ -282,7 +283,7 @@ const AdminDashboardPage = () => {
       setPendingWithdrawals(withdrawalsRes.data || []);
       
     } catch (error) {
-      console.error('Error fetching overview data:', error);
+      logger.error('Error fetching overview data:', error);
     } finally {
       setLoading(false);
     }

@@ -7,6 +7,7 @@ import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import RateDriverModal from '../components/delivery/RateDriverModal';
 import { useToast } from '../hooks/use-toast';
+import logger from '../lib/logger';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -127,11 +128,11 @@ const OrdersPage = () => {
             setRatedOrders(prev => ({ ...prev, [order.id]: ratingRes.data.rating }));
           }
         } catch (e) {
-          console.error('Error checking rating:', e);
+          logger.error('Error checking rating:', e);
         }
       }
     } catch (error) {
-      console.error('Error fetching orders:', error);
+      logger.error('Error fetching orders:', error);
       setOrders([]);
       setFoodOrders([]);
     } finally {
@@ -170,7 +171,7 @@ const OrdersPage = () => {
         );
         addedCount++;
       } catch (error) {
-        console.error('Error adding item:', error);
+        logger.error('Error adding item:', error);
         failedCount++;
       }
     }
@@ -221,7 +222,7 @@ const OrdersPage = () => {
       
       // التأكد من وجود جميع الحقول المطلوبة
       if (!productId || !item.name || !item.price) {
-        console.warn('Skipping item with missing data:', item);
+        logger.warn('Skipping item with missing data:', item);
         continue;
       }
       

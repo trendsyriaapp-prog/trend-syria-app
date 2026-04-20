@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
 import { 
+import logger from '../lib/logger';
   Star, ShoppingCart, Minus, Plus, Truck, Shield, 
   MessageCircle, ChevronLeft, Camera, X, Send, Loader2, Store, Play, Zap, Share2, Clock, Ruler, Check, ShoppingBag, Gift, MessageSquare, Trash2, AlertTriangle, Flag
 } from 'lucide-react';
@@ -14,6 +15,7 @@ import { useSettings } from '../context/SettingsContext';
 import GiftModal from '../components/GiftModal';
 import ProductCard from '../components/ProductCard';
 import AddToCartModal from '../components/AddToCartModal';
+import logger from '../lib/logger';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -840,7 +842,7 @@ const ProductDetailPage = () => {
       const defaultAddr = addresses.find(a => a.is_default) || addresses[0];
       setCustomerAddress(defaultAddr || null);
     } catch (error) {
-      console.error('Error fetching address:', error);
+      logger.error('Error fetching address:', error);
     } finally {
       setLoadingAddress(false);
     }
@@ -854,7 +856,7 @@ const ProductDetailPage = () => {
       const res = await axios.get(`${API}/api/shipping/calculate?product_id=${product.id}&customer_city=${encodeURIComponent(customerAddress.city)}&order_total=${cartTotal}`);
       setShippingInfo({ ...res.data, _timestamp: Date.now() });
     } catch (error) {
-      console.error('Error calculating shipping:', error);
+      logger.error('Error calculating shipping:', error);
     }
   };
 
@@ -894,7 +896,7 @@ const ProductDetailPage = () => {
       const res = await axios.get(`${API}/api/products/${id}/questions`);
       setQuestions(res.data);
     } catch (error) {
-      console.error('Error fetching questions:', error);
+      logger.error('Error fetching questions:', error);
     }
   };
 
@@ -903,7 +905,7 @@ const ProductDetailPage = () => {
       const res = await axios.get(`${API}/api/products/${id}/similar`);
       setSimilarProducts(res.data);
     } catch (error) {
-      console.error('Error fetching similar products:', error);
+      logger.error('Error fetching similar products:', error);
     }
   };
 
@@ -1004,7 +1006,7 @@ const ProductDetailPage = () => {
           const res = await axios.get(`${API}/api/shipping/calculate?product_id=${product.id}&customer_city=${encodeURIComponent(customerAddress.city)}&order_total=${newCart.total}`);
           setShippingInfo({ ...res.data, _timestamp: Date.now() });
         } catch (err) {
-          console.error('Error updating shipping:', err);
+          logger.error('Error updating shipping:', err);
         }
       }
     } catch (error) {

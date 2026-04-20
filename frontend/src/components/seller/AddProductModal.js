@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, X, Loader2, Upload, Camera, Info, AlertTriangle, Edit3, Eye, Copy, Sparkles, Lightbulb } from 'lucide-react';
 import axios from 'axios';
+import logger from '../../lib/logger';
 import PhotoGuideModal from './PhotoGuideModal';
 import SimpleImageCapture from './SimpleImageCapture';
 import TemplateSelector from './TemplateSelector';
@@ -191,7 +192,7 @@ const AddProductModal = ({
           setMaxImagesPerProduct(data.max_images_per_product);
         }
       } catch (error) {
-        console.error('Error fetching image settings:', error);
+        logger.error('Error fetching image settings:', error);
       }
     };
     fetchImageSettings();
@@ -249,7 +250,7 @@ const AddProductModal = ({
         setImageWarnings(prev => [...prev, ...result.warnings]);
       }
     } catch (error) {
-      console.error('Error uploading image:', error);
+      logger.error('Error uploading image:', error);
       toast?.({
         title: "خطأ",
         description: "حدث خطأ في رفع الصورة",
@@ -270,7 +271,7 @@ const AddProductModal = ({
     try {
       // 1. التحقق من صحة الفيديو
       const result = await processVideo(file, (progress) => {
-        console.log('Validation:', progress);
+        logger.log('Validation:', progress);
       });
       
       if (!result.success) {
@@ -318,7 +319,7 @@ const AddProductModal = ({
         });
       }
     } catch (error) {
-      console.error('Video upload error:', error);
+      logger.error('Video upload error:', error);
       // إذا فشل الرفع، نحتفظ بـ preview للمحاولة لاحقاً
       toast({
         title: "فشل رفع الفيديو",
@@ -346,7 +347,7 @@ const AddProductModal = ({
     try {
       // 1. التحقق من صحة الفيديو
       const result = await processVideo(file, (progress) => {
-        console.log('Validation:', progress);
+        logger.log('Validation:', progress);
       });
       
       if (!result.success) {
@@ -394,7 +395,7 @@ const AddProductModal = ({
         });
       }
     } catch (error) {
-      console.error('Admin video upload error:', error);
+      logger.error('Admin video upload error:', error);
       toast({
         title: "فشل رفع فيديو التحقق",
         description: error.message || "تحقق من الإنترنت وحاول مرة أخرى",
@@ -1318,7 +1319,7 @@ const AddProductModal = ({
                             toast?.({ title: "تم بنجاح", description: "تم رفع الصورة" });
                           }
                         } catch (error) {
-                          console.error('Error compressing image:', error);
+                          logger.error('Error compressing image:', error);
                           toast?.({ title: "خطأ", description: "فشل في معالجة الصورة", variant: "destructive" });
                         }
                         e.target.value = '';

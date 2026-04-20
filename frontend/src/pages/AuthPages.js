@@ -5,6 +5,7 @@ import { Eye, EyeOff, Phone, User, AlertCircle, CheckCircle, KeyRound, Smartphon
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
 import axios from 'axios';
+import logger from '../lib/logger';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 const CITIES = ['دمشق', 'حلب', 'حمص', 'اللاذقية', 'طرطوس', 'حماة', 'دير الزور', 'الرقة', 'الحسكة', 'درعا', 'السويداء', 'إدلب', 'القنيطرة'];
@@ -18,7 +19,7 @@ const getDeviceId = async () => {
       return info.identifier || info.uuid || `app-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     }
   } catch (error) {
-    console.log('Capacitor Device not available, using fallback');
+    logger.log('Capacitor Device not available, using fallback');
   }
   
   // Fallback للويب

@@ -3,6 +3,7 @@
 // يستخدم الشات بوت الذكي (AI) افتراضياً
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import logger from '../lib/logger';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -100,7 +101,7 @@ const Chatbot = () => {
         setMessageCount(res.data.total_count);
       }
     } catch (error) {
-      console.error('Error checking for new replies:', error);
+      logger.error('Error checking for new replies:', error);
     }
   }, [sessionId, messageCount, token, useAI]);
 
@@ -113,7 +114,7 @@ const Chatbot = () => {
       const res = await axios.get(`${API}${chatbotAPI}/quick-questions`);
       setQuickQuestions(res.data.questions);
     } catch (error) {
-      console.error('Error fetching quick questions:', error);
+      logger.error('Error fetching quick questions:', error);
     }
   };
 
@@ -146,7 +147,7 @@ const Chatbot = () => {
 
       setMessages(prev => [...prev, botMessage]);
     } catch (error) {
-      console.error('Error sending message:', error);
+      logger.error('Error sending message:', error);
       setMessages(prev => [...prev, {
         sender: useAI ? 'ai' : 'bot',
         message: 'عذراً، حدث خطأ. يرجى المحاولة مرة أخرى.',
@@ -177,7 +178,7 @@ const Chatbot = () => {
       setHasSupportRequest(true);
       setMessageCount(prev => prev + 1);
     } catch (error) {
-      console.error('Error requesting support:', error);
+      logger.error('Error requesting support:', error);
     }
   };
 
@@ -196,7 +197,7 @@ const Chatbot = () => {
         setShowRatingModal(true);
       }
     } catch (error) {
-      console.error('Error checking pending rating:', error);
+      logger.error('Error checking pending rating:', error);
     }
   };
 
@@ -511,7 +512,7 @@ const RatingModal = ({ ticket, token, onClose }) => {
       setSubmitted(true);
       setTimeout(onClose, 2000);
     } catch (error) {
-      console.error('Error submitting rating:', error);
+      logger.error('Error submitting rating:', error);
       alert(error.response?.data?.detail || 'حدث خطأ في إرسال التقييم');
     } finally {
       setSubmitting(false);

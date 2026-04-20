@@ -6,6 +6,7 @@ import { Filter, X, ChevronDown, MapPin, DollarSign, ArrowUpDown, Loader2, Spark
 import ProductCard from '../components/ProductCard';
 import FreeShippingBanner from '../components/FreeShippingBanner';
 import { useScroll } from '../context/ScrollContext';
+import logger from '../lib/logger';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -109,7 +110,7 @@ const ProductsPage = () => {
         setBadgeSettings(badgeRes.data);
         setBannerSettings(settingsRes.data || {});
       } catch (error) {
-        console.error('Error fetching extras:', error);
+        logger.error('Error fetching extras:', error);
       }
     };
     fetchExtras();
@@ -187,7 +188,7 @@ const ProductsPage = () => {
       
       setHasMore(res.data.has_more);
     } catch (error) {
-      console.error('Error fetching products:', error);
+      logger.error('Error fetching products:', error);
       setHasMore(false);
     } finally {
       setLoading(false);
@@ -239,7 +240,7 @@ const ProductsPage = () => {
       const res = await axios.get(`${API}/api/categories`);
       setCategories(Array.isArray(res.data) ? res.data : []);
     } catch (error) {
-      console.error('Error fetching categories:', error);
+      logger.error('Error fetching categories:', error);
       setCategories([]);
     }
   };
@@ -249,7 +250,7 @@ const ProductsPage = () => {
       const res = await axios.get(`${API}/api/shipping/cities`);
       setCities(Array.isArray(res.data) ? res.data : []);
     } catch (error) {
-      console.error('Error fetching cities:', error);
+      logger.error('Error fetching cities:', error);
       setCities([]);
     }
   };

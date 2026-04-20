@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import logger from '../../lib/logger';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Map, X, Navigation, Phone, PhoneOff, Package, UtensilsCrossed, Locate, Layers, Route } from 'lucide-react';
@@ -243,7 +244,7 @@ const OrdersMap = ({
         return validEntries.map(e => e.id);
       }
     } catch (e) {
-      console.log('Error loading rejected orders:', e);
+      logger.log('Error loading rejected orders:', e);
     }
     return [];
   });
@@ -282,7 +283,7 @@ const OrdersMap = ({
       // مسح قائمة الطلبات المؤجلة بسبب الحد الأقصى
       setMaxLimitOrderIds([]);
       maxLimitOrderIdsRef.current = [];
-      console.log('تم مسح الطلبات المؤجلة - أصبح لديك مجال لطلبات جديدة');
+      logger.log('تم مسح الطلبات المؤجلة - أصبح لديك مجال لطلبات جديدة');
     }
     
     // فقط تحديث إذا تغير العدد فعلاً
@@ -308,14 +309,14 @@ const OrdersMap = ({
         
         // لا تعرض popup جديد إذا كان هناك popup مفتوح
         if (showPriorityPopupRef.current) {
-          console.log('🔒 Popup مفتوح بالفعل، تجاهل الطلبات الجديدة');
+          logger.log('🔒 Popup مفتوح بالفعل، تجاهل الطلبات الجديدة');
           return;
         }
         
         // ⭐ التحقق من الحد الأقصى - لا تعرض popup إذا السائق وصل للحد
         const currentOrdersCount = activeOrdersCount;
         if (currentOrdersCount >= MAX_ORDERS_SAME_STORE) {
-          console.log('🚫 السائق وصل للحد الأقصى، لن يظهر popup الأولوية:', currentOrdersCount);
+          logger.log('🚫 السائق وصل للحد الأقصى، لن يظهر popup الأولوية:', currentOrdersCount);
           return;
         }
         
@@ -337,7 +338,7 @@ const OrdersMap = ({
             localStorage.setItem('rejectedStores', JSON.stringify(validStores));
             rejectedStoreNames = validStores.map(s => s.name);
           } catch (e) {
-            console.log('Error loading rejected stores:', e);
+            logger.log('Error loading rejected stores:', e);
           }
           
           // تصفية الطلبات: استبعاد IDs المرفوضة + المطاعم المرفوضة
@@ -350,7 +351,7 @@ const OrdersMap = ({
             return true;
           });
           
-          console.log('Priority check:', { 
+          logger.log('Priority check:', { 
             total: priorityOrders.length, 
             rejected: rejectedOrderIdsRef.current.length,
             maxLimit: maxLimitOrderIdsRef.current.length,
@@ -373,7 +374,7 @@ const OrdersMap = ({
             announcePriorityOrder(newPriorityOrder.store_name);
           }
         } catch (error) {
-          console.error('Error checking priority orders:', error);
+          logger.error('Error checking priority orders:', error);
         }
       };
       
@@ -430,7 +431,7 @@ const OrdersMap = ({
                 }
               } catch (e) {}
               
-              console.log('⏰ انتهى الوقت - الطلب سيذهب لسائق آخر:', orderId, 'من المطعم:', storeName);
+              logger.log('⏰ انتهى الوقت - الطلب سيذهب لسائق آخر:', orderId, 'من المطعم:', storeName);
             }
             
             // إخفاء الـ popup
@@ -481,8 +482,8 @@ const OrdersMap = ({
         if (!maxLimitOrderIdsRef.current.includes(orderId)) {
           maxLimitOrderIdsRef.current = [...maxLimitOrderIdsRef.current, orderId];
         }
-        console.log('🚫 تم تأجيل الطلب بسبب الحد الأقصى:', orderId);
-        console.log('📋 قائمة المؤجلة الآن:', maxLimitOrderIdsRef.current);
+        logger.log('🚫 تم تأجيل الطلب بسبب الحد الأقصى:', orderId);
+        logger.log('📋 قائمة المؤجلة الآن:', maxLimitOrderIdsRef.current);
         
         // إيقاف الإشعارات لمدة 60 ثانية لمنع الظهور المتكرر (زيادة من 30 إلى 60)
         setDismissedPriorityUntil(Date.now() + 60000);
@@ -537,11 +538,11 @@ const OrdersMap = ({
           }
         }
       } catch (e) {
-        console.log('Error saving rejected order:', e);
+        logger.log('Error saving rejected order:', e);
       }
       
-      console.log('❌ تم رفض الطلب:', orderId, 'من المطعم:', storeName);
-      console.log('📋 قائمة المرفوضة الآن:', rejectedOrderIdsRef.current);
+      logger.log('❌ تم رفض الطلب:', orderId, 'من المطعم:', storeName);
+      logger.log('📋 قائمة المرفوضة الآن:', rejectedOrderIdsRef.current);
     }
     
     // إيقاف الإشعارات لمدة 60 ثانية
@@ -594,7 +595,7 @@ const OrdersMap = ({
               
               // إعادة حساب المسار إذا ابتعد أكثر من 100 متر
               if (distFromRoute > 0.1 && selectedOrderForRoute) {
-                console.log('🔄 إعادة حساب المسار - ابتعدت عن المسار');
+                logger.log('🔄 إعادة حساب المسار - ابتعدت عن المسار');
                 showRouteForOrder(selectedOrderForRoute);
               }
             }
@@ -616,7 +617,7 @@ const OrdersMap = ({
                                          'الوجهة';
                   announceArrival(destinationName);
                   setArrivalAnnouncedFor(selectedOrderForRoute.id);
-                  console.log('🎯 تم الإعلان عن الوصول إلى:', destinationName);
+                  logger.log('🎯 تم الإعلان عن الوصول إلى:', destinationName);
                 }
               }
             }
@@ -629,7 +630,7 @@ const OrdersMap = ({
             }
           },
           (error) => {
-            console.error('خطأ GPS:', error);
+            logger.error('خطأ GPS:', error);
           },
           {
             enableHighAccuracy: false,
@@ -991,7 +992,7 @@ const OrdersMap = ({
             });
             driverEarnings = earningsResponse.data.earnings || 0;
           } catch (err) {
-            console.error('Error fetching driver earnings:', err);
+            logger.error('Error fetching driver earnings:', err);
           }
           
           // معلومات المسار مع التفاصيل
@@ -1011,7 +1012,7 @@ const OrdersMap = ({
         setRouteInfo(null);
       }
     } catch (error) {
-      console.error('Error fetching route:', error);
+      logger.error('Error fetching route:', error);
       // خط مستقيم كبديل
       setRouteCoordinates([start, waypoint, end]);
       setRouteInfo(null);
@@ -1037,7 +1038,7 @@ const OrdersMap = ({
         }
       }
     } catch (error) {
-      console.error('Error fetching route segment:', error);
+      logger.error('Error fetching route segment:', error);
     }
     // خط مستقيم كبديل
     return { coordinates: points, distance: 0, duration: 0 };
@@ -1069,7 +1070,7 @@ const OrdersMap = ({
         }
       }
     } catch (error) {
-      console.error('Error fetching optimized route:', error);
+      logger.error('Error fetching optimized route:', error);
     }
     return null;
   };
@@ -1081,7 +1082,7 @@ const OrdersMap = ({
     
     // إذا لم يتوفر موقع السائق، استخدم موقع افتراضي (دمشق)
     if (!driverPos || !driverPos.latitude) {
-      console.log('استخدام موقع افتراضي - دمشق');
+      logger.log('استخدام موقع افتراضي - دمشق');
       driverPos = { latitude: 33.5138, longitude: 36.2765 };
       setCurrentDriverLocation(driverPos);
     }
@@ -1116,7 +1117,7 @@ const OrdersMap = ({
         
         // إذا لم تتوفر إحداثيات المتجر، استخدم موقع افتراضي قريب
         if (!storeLat || !storeLng) {
-          console.log('⚠️ طلب بدون إحداثيات متجر:', order.id?.substring(0, 8));
+          logger.log('⚠️ طلب بدون إحداثيات متجر:', order.id?.substring(0, 8));
           storeLat = 33.5138 + (Math.random() * 0.01 - 0.005);
           storeLng = 36.2765 + (Math.random() * 0.01 - 0.005);
         }
@@ -1137,7 +1138,7 @@ const OrdersMap = ({
         
         // إذا لم تتوفر إحداثيات العميل، استخدم موقع افتراضي قريب
         if (!custLat || !custLng) {
-          console.log('⚠️ طلب بدون إحداثيات عميل:', order.id?.substring(0, 8));
+          logger.log('⚠️ طلب بدون إحداثيات عميل:', order.id?.substring(0, 8));
           custLat = 33.5000 + (Math.random() * 0.01 - 0.005);
           custLng = 36.2900 + (Math.random() * 0.01 - 0.005);
         }
@@ -1214,7 +1215,7 @@ const OrdersMap = ({
       };
       
       const orderedPoints = optimizeOrdersRoute();
-      console.log('✅ ترتيب المسار المُحسَّن:', orderedPoints.map((p, i) => `${i+1}. ${p.label} (${p.type})`));
+      logger.log('✅ ترتيب المسار المُحسَّن:', orderedPoints.map((p, i) => `${i+1}. ${p.label} (${p.type})`));
 
       // جلب جميع المسارات بشكل متوازي للسرعة
       const routePromises = [];
@@ -1283,7 +1284,7 @@ const OrdersMap = ({
         stopsCount: orderedPoints.length
       });
     } catch (error) {
-      console.error('خطأ في تحميل المسارات:', error);
+      logger.error('خطأ في تحميل المسارات:', error);
       alert('حدث خطأ أثناء تحميل المسارات');
     } finally {
       setLoadingRoute(false);
@@ -1312,7 +1313,7 @@ const OrdersMap = ({
     
     // إذا لم يتوفر موقع السائق، استخدم موقع افتراضي (دمشق)
     if (!driverPos || !driverPos.latitude) {
-      console.log('استخدام موقع افتراضي - دمشق');
+      logger.log('استخدام موقع افتراضي - دمشق');
       driverPos = { latitude: 33.5138, longitude: 36.2765 };
       setCurrentDriverLocation(driverPos);
     }
@@ -1431,7 +1432,7 @@ const OrdersMap = ({
         setMapCenter(steps[0].to.position);
       }
     } catch (error) {
-      console.error('خطأ في بدء التنقل:', error);
+      logger.error('خطأ في بدء التنقل:', error);
       alert('حدث خطأ أثناء تحميل المسارات');
     } finally {
       setLoadingRoute(false);
@@ -1492,7 +1493,7 @@ const OrdersMap = ({
           },
           (error) => {
             // إذا فشل الحصول على الموقع، استخدم موقع المتجر كبداية
-            console.log('استخدام موقع المتجر كنقطة بداية');
+            logger.log('استخدام موقع المتجر كنقطة بداية');
             const storeCoords = [order.store_latitude, order.store_longitude];
             const customerCoords = [order.latitude, order.longitude];
             if (storeCoords[0] && customerCoords[0]) {
@@ -1551,7 +1552,7 @@ const OrdersMap = ({
             });
             driverEarnings = earningsResponse.data.earnings || 0;
           } catch (err) {
-            console.error('Error fetching driver earnings:', err);
+            logger.error('Error fetching driver earnings:', err);
           }
           
           setRouteInfo({
@@ -1566,7 +1567,7 @@ const OrdersMap = ({
         }
       }
     } catch (error) {
-      console.error('Error fetching route:', error);
+      logger.error('Error fetching route:', error);
     }
     setLoadingRoute(false);
   };
@@ -1593,7 +1594,7 @@ const OrdersMap = ({
           setGpsError(null);
         },
         (error) => {
-          console.log('Error getting location:', error);
+          logger.log('Error getting location:', error);
           let errorMessage = 'تعذر الحصول على موقعك';
           if (error.code === error.PERMISSION_DENIED) {
             errorMessage = 'يجب السماح بالوصول للموقع لعرض الطلبات على الخريطة';
@@ -1640,7 +1641,7 @@ const OrdersMap = ({
             setCurrentDriverLocation({ latitude, longitude });
           },
           (error) => {
-            console.log('Watch position error:', error);
+            logger.log('Watch position error:', error);
           },
           { enableHighAccuracy: false, maximumAge: 1000 }
         );

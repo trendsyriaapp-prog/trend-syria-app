@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import logger from '../lib/logger';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
@@ -453,7 +454,7 @@ const SellerDocumentsPage = () => {
         const res = await axios.get(`${API}/api/settings/business-categories/public?seller_type=${sellerTypeParam}`);
         setBusinessCategories(res.data.categories || []);
       } catch (error) {
-        console.error('Error fetching business categories:', error);
+        logger.error('Error fetching business categories:', error);
         // استخدام الأصناف الافتراضية في حالة الخطأ
         setBusinessCategories([
           { id: 'other', name: 'أخرى', icon: '📦' }
@@ -477,7 +478,7 @@ const SellerDocumentsPage = () => {
         setBusinessName(res.data.business_name);
       }
     } catch (error) {
-      console.error('Error checking status:', error);
+      logger.error('Error checking status:', error);
     }
   }, [token]);
 
@@ -495,7 +496,7 @@ const SellerDocumentsPage = () => {
         const compressedImage = await compressDocumentImage(file);
         setter(compressedImage);
       } catch (error) {
-        console.error('Error compressing image:', error);
+        logger.error('Error compressing image:', error);
         toast({
           title: "خطأ",
           description: "فشل في معالجة الصورة، يرجى المحاولة مرة أخرى",
@@ -1160,7 +1161,7 @@ const SellerDashboardPage = () => {
       });
       setCommissionInfo(res.data);
     } catch (error) {
-      console.log('Commission info not available');
+      logger.log('Commission info not available');
     }
   };
 
@@ -1179,7 +1180,7 @@ const SellerDashboardPage = () => {
       setTotalEarned(balanceRes.data.total_earned || 0);
       setWalletTransactions(transRes.data || []);
     } catch (error) {
-      console.error('Error fetching wallet:', error);
+      logger.error('Error fetching wallet:', error);
     }
   };
   
@@ -1243,7 +1244,7 @@ const SellerDashboardPage = () => {
         setOrders(paidOrders);
       }
     } catch (error) {
-      console.error('Error fetching data:', error);
+      logger.error('Error fetching data:', error);
     } finally {
       setLoading(false);
     }

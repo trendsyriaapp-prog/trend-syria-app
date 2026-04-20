@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, memo, useCallback } from 'react';
+import logger from '../lib/logger';
 import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
@@ -71,7 +72,7 @@ const Header = memo(() => {
       const res = await axios.get(`${API}/api/products/search-history`);
       setSearchHistory(res.data.searches || []);
     } catch (error) {
-      console.error('Error fetching search history:', error);
+      logger.error('Error fetching search history:', error);
     }
   };
 
@@ -98,7 +99,7 @@ const Header = memo(() => {
       await axios.delete(`${API}/api/products/search-history/${searchId}`);
       setSearchHistory(prev => prev.filter(s => s.id !== searchId));
     } catch (error) {
-      console.error('Error deleting search:', error);
+      logger.error('Error deleting search:', error);
     }
   };
 
@@ -111,7 +112,7 @@ const Header = memo(() => {
         description: "تم مسح سجل البحث"
       });
     } catch (error) {
-      console.error('Error clearing history:', error);
+      logger.error('Error clearing history:', error);
     }
   };
 

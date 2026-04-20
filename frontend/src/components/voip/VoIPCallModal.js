@@ -2,6 +2,7 @@
 // مكون مكالمات VoIP - للاتصال بين السائق والعميل
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import logger from '../../lib/logger';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Phone, PhoneOff, PhoneIncoming, PhoneMissed, 
@@ -89,7 +90,7 @@ export const OutgoingCallModal = ({
       mediaRecorderRef.current = mediaRecorder;
       setIsRecording(true);
     } catch (err) {
-      console.error('Error starting recording:', err);
+      logger.error('Error starting recording:', err);
     }
   }, []);
 
@@ -111,9 +112,9 @@ export const OutgoingCallModal = ({
           await axios.post(`${API}/api/voip/call/${cId}/upload-recording`, formData, {
             headers: { 'Content-Type': 'multipart/form-data' }
           });
-          console.log('Recording uploaded successfully');
+          logger.log('Recording uploaded successfully');
         } catch (err) {
-          console.error('Error uploading recording:', err);
+          logger.error('Error uploading recording:', err);
         }
       }
     }
@@ -182,7 +183,7 @@ export const OutgoingCallModal = ({
       startSignalPolling(response.data.call_id);
 
     } catch (err) {
-      console.error('Error initiating call:', err);
+      logger.error('Error initiating call:', err);
       setError(err.response?.data?.detail || 'فشل في بدء المكالمة');
       setCallStatus(CALL_STATUS.ERROR);
     }
@@ -214,7 +215,7 @@ export const OutgoingCallModal = ({
           await handleSignal(signal);
         }
       } catch (err) {
-        console.error('Signal polling error:', err);
+        logger.error('Signal polling error:', err);
       }
     }, 1000);
   };
@@ -231,7 +232,7 @@ export const OutgoingCallModal = ({
         await pc.addIceCandidate(new RTCIceCandidate(signal.signal_data));
       }
     } catch (err) {
-      console.error('Error handling signal:', err);
+      logger.error('Error handling signal:', err);
     }
   };
 
@@ -280,7 +281,7 @@ export const OutgoingCallModal = ({
         });
       }
     } catch (err) {
-      console.error('Error ending call:', err);
+      logger.error('Error ending call:', err);
     }
     cleanup();
     onClose();
@@ -546,7 +547,7 @@ export const ActiveCallModal = ({
       mediaRecorderRef.current = mediaRecorder;
       setIsRecording(true);
     } catch (err) {
-      console.error('Error starting recording:', err);
+      logger.error('Error starting recording:', err);
     }
   }, []);
 
@@ -568,7 +569,7 @@ export const ActiveCallModal = ({
             headers: { 'Content-Type': 'multipart/form-data' }
           });
         } catch (err) {
-          console.error('Error uploading recording:', err);
+          logger.error('Error uploading recording:', err);
         }
       }
     }
@@ -618,7 +619,7 @@ export const ActiveCallModal = ({
       startRecording(stream);
 
     } catch (err) {
-      console.error('Error setting up call:', err);
+      logger.error('Error setting up call:', err);
     }
   }, [callId, playRecordingNotice, startRecording]);
 
@@ -640,7 +641,7 @@ export const ActiveCallModal = ({
           await handleSignal(signal);
         }
       } catch (err) {
-        console.error('Signal polling error:', err);
+        logger.error('Signal polling error:', err);
       }
     }, 1000);
   };
@@ -665,7 +666,7 @@ export const ActiveCallModal = ({
         await pc.addIceCandidate(new RTCIceCandidate(signal.signal_data));
       }
     } catch (err) {
-      console.error('Error handling signal:', err);
+      logger.error('Error handling signal:', err);
     }
   };
 
@@ -712,7 +713,7 @@ export const ActiveCallModal = ({
         action: 'end'
       });
     } catch (err) {
-      console.error('Error ending call:', err);
+      logger.error('Error ending call:', err);
     }
     cleanup();
     onClose();

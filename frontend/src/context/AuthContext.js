@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import axios from 'axios';
+import logger from '../lib/logger';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -33,7 +34,7 @@ export const AuthProvider = ({ children }) => {
         // إذا كان الخطأ 401 (رمز غير صالح أو منتهي الصلاحية)
         // تجاهل خطأ 401 أثناء عملية تسجيل الدخول
         if (status === 401 && token && !skipFetchUserRef.current) {
-          console.log('Token expired or invalid, logging out...');
+          logger.log('Token expired or invalid, logging out...');
           logout();
           window.location.href = '/login';
         }
@@ -79,7 +80,7 @@ export const AuthProvider = ({ children }) => {
       const res = await axios.get(`${API}/api/auth/me`);
       setUser(res.data);
     } catch (error) {
-      console.error('fetchUser error:', error);
+      logger.error('fetchUser error:', error);
       
       // التحقق من نوع الخطأ
       const status = error.response?.status;
@@ -89,7 +90,7 @@ export const AuthProvider = ({ children }) => {
       
       // إذا كان خطأ مؤقت (شبكة، سيرفر، timeout) - نحاول مرة أخرى
       if ((isNetworkError || isServerError || isTimeoutError) && retryCount < maxRetries) {
-        console.log(`Retrying fetchUser (attempt ${retryCount + 2}/${maxRetries + 1})...`);
+        logger.log(`Retrying fetchUser (attempt ${retryCount + 2}/${maxRetries + 1})...`);
         // انتظار قبل إعادة المحاولة
         await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));
         return fetchUser(retryCount + 1);
@@ -104,7 +105,7 @@ export const AuthProvider = ({ children }) => {
       // إذا كان خطأ آخر بعد استنفاد المحاولات - نبقي المستخدم
       // لكن نُظهر له الصفحة الرئيسية بدون بيانات المستخدم
       if (isNetworkError || isServerError || isTimeoutError) {
-        console.log('Server temporarily unavailable, keeping user session');
+        logger.log('Server temporarily unavailable, keeping user session');
         // لا نُخرج المستخدم - ربما الخادم مؤقتاً غير متاح
         // المستخدم سيرى الصفحة وعند التفاعل سيتم إعادة المحاولة
         return;

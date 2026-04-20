@@ -2,6 +2,7 @@
 // تبويب إعدادات التوصيل (مستويات الأداء وساعات العمل وجوائز الصدارة)
 
 import { useState, useEffect } from 'react';
+import logger from '../../lib/logger';
 import axios from 'axios';
 import { 
   Award, Clock, Save, RefreshCw, CheckCircle, AlertCircle,
@@ -154,7 +155,7 @@ const DeliverySettingsTab = () => {
         setCustomerProtection(prev => ({ ...prev, ...res.data }));
       }
     } catch (error) {
-      console.error('Error fetching customer protection settings:', error);
+      logger.error('Error fetching customer protection settings:', error);
     }
   };
   
@@ -181,7 +182,7 @@ const DeliverySettingsTab = () => {
         food_orders_max_distance_km: res.data.food_orders_max_distance_km || 5
       });
     } catch (error) {
-      console.error('Error fetching settings:', error);
+      logger.error('Error fetching settings:', error);
     } finally {
       setLoading(false);
     }
@@ -192,7 +193,7 @@ const DeliverySettingsTab = () => {
       const res = await axios.get(`${API}/api/settings/distance-delivery`);
       setDistanceSettings(res.data);
     } catch (error) {
-      console.error('Error fetching distance settings:', error);
+      logger.error('Error fetching distance settings:', error);
     }
   };
 
@@ -201,7 +202,7 @@ const DeliverySettingsTab = () => {
       const res = await axios.get(`${API}/api/settings/driver-earnings`);
       setDriverEarningsSettings(res.data);
     } catch (error) {
-      console.error('Error fetching driver earnings settings:', error);
+      logger.error('Error fetching driver earnings settings:', error);
     }
   };
 
@@ -210,7 +211,7 @@ const DeliverySettingsTab = () => {
       const res = await axios.get(`${API}/api/settings/delivery-wait-time`);
       setWaitTimeMinutes(res.data.delivery_wait_time_minutes || 10);
     } catch (error) {
-      console.error('Error fetching wait time:', error);
+      logger.error('Error fetching wait time:', error);
     }
   };
 
@@ -255,7 +256,7 @@ const DeliverySettingsTab = () => {
       const res = await axios.get(`${API}/api/settings/smart-order-limits`);
       setSmartOrderLimits(res.data);
     } catch (error) {
-      console.error('Error fetching smart order limits:', error);
+      logger.error('Error fetching smart order limits:', error);
     }
   };
 
@@ -266,7 +267,7 @@ const DeliverySettingsTab = () => {
         setWaitCompensationSettings(prev => ({...prev, ...res.data.settings}));
       }
     } catch (error) {
-      console.error('Error fetching wait compensation settings:', error);
+      logger.error('Error fetching wait compensation settings:', error);
     }
   };
 
@@ -275,7 +276,7 @@ const DeliverySettingsTab = () => {
       const res = await axios.get(`${API}/api/admin/dispatch/status`);
       setDispatchStatus(res.data.status);
     } catch (error) {
-      console.error('Error fetching dispatch status:', error);
+      logger.error('Error fetching dispatch status:', error);
     }
   };
 
@@ -284,7 +285,7 @@ const DeliverySettingsTab = () => {
       const res = await axios.get(`${API}/api/admin/violations/report?days=30`);
       setViolationsReport(res.data.report);
     } catch (error) {
-      console.error('Error fetching violations report:', error);
+      logger.error('Error fetching violations report:', error);
     }
   };
 
@@ -295,7 +296,7 @@ const DeliverySettingsTab = () => {
         setDeliveryTimeSettings(prev => ({...prev, ...res.data.settings}));
       }
     } catch (error) {
-      console.error('Error fetching delivery time settings:', error);
+      logger.error('Error fetching delivery time settings:', error);
     }
   };
 
@@ -305,7 +306,7 @@ const DeliverySettingsTab = () => {
       await axios.put(`${API}/api/admin/delivery-time-settings`, deliveryTimeSettings);
       toast({ title: 'نجاح', description: 'تم حفظ إعدادات وقت التوصيل بنجاح' });
     } catch (error) {
-      console.error('Error saving delivery time settings:', error);
+      logger.error('Error saving delivery time settings:', error);
       toast({ title: 'خطأ', description: 'حدث خطأ أثناء حفظ الإعدادات', variant: 'destructive' });
     } finally {
       setSaving(false);
@@ -342,7 +343,7 @@ const DeliverySettingsTab = () => {
       const res = await axios.get(`${API}/api/admin/settings/earnings-hold`);
       setHoldSettings(res.data.settings || holdSettings);
     } catch (error) {
-      console.error('Error fetching hold settings:', error);
+      logger.error('Error fetching hold settings:', error);
     }
   };
 
@@ -351,7 +352,7 @@ const DeliverySettingsTab = () => {
       const res = await axios.get(`${API}/api/admin/held-earnings/summary`);
       setHoldSummary(res.data.summary);
     } catch (error) {
-      console.error('Error fetching hold summary:', error);
+      logger.error('Error fetching hold summary:', error);
     }
   };
 
@@ -463,7 +464,7 @@ const DeliverySettingsTab = () => {
         });
       }
     } catch (error) {
-      console.error('Error fetching product delivery hours:', error);
+      logger.error('Error fetching product delivery hours:', error);
     }
   };
 
@@ -492,7 +493,7 @@ const DeliverySettingsTab = () => {
       });
       setUndeliveredReport(res.data.report);
     } catch (error) {
-      console.error('Error fetching undelivered report:', error);
+      logger.error('Error fetching undelivered report:', error);
     }
   };
 

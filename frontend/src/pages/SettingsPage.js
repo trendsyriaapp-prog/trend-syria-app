@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import logger from '../lib/logger';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
@@ -106,11 +107,11 @@ const SettingsPage = () => {
           setWalletBalance(walletRes.data?.balance || 0);
           setMyRatings(ratingsRes.data || { average_rating: 0, total_ratings: 0 });
         } catch (err) {
-          console.error('Error fetching driver data:', err);
+          logger.error('Error fetching driver data:', err);
         }
       }
     } catch (error) {
-      console.error('Error fetching data:', error);
+      logger.error('Error fetching data:', error);
     } finally {
       setLoading(false);
     }
@@ -151,7 +152,7 @@ const SettingsPage = () => {
         toast({ title: "تم", description: "تم تحديث صورتك بنجاح" });
       }
     } catch (error) {
-      console.error('Error uploading image:', error);
+      logger.error('Error uploading image:', error);
       toast({ title: "خطأ", description: error.response?.data?.detail || "فشل في رفع الصورة", variant: "destructive" });
     } finally {
       setUploadingImage(false);
