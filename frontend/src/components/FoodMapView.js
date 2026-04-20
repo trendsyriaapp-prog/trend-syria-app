@@ -11,7 +11,7 @@ import {
   X, Navigation, Loader2, Star, Clock, MapPin, 
   ChevronLeft, Filter, Store as StoreIcon,
   UtensilsCrossed, Coffee, Cake, Croissant, GlassWater,
-  ShoppingBasket, Apple, Package, Milk
+  ShoppingBasket, Apple, Package, Milk, Search
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
@@ -235,7 +235,6 @@ const StoreCard = ({ store, onClose, onViewStore }) => {
                   مغلق
                 </span>
               )}
-              )}
             </div>
           </div>
         </div>
@@ -332,6 +331,9 @@ const FoodMapView = ({ isOpen, onClose }) => {
   const [gettingLocation, setGettingLocation] = useState(false);
   const [showOpenOnly, setShowOpenOnly] = useState(false); // فلتر مفتوح الآن
   const [sortByDistance, setSortByDistance] = useState(true); // ترتيب حسب المسافة
+  const [searchQuery, setSearchQuery] = useState(''); // البحث عن متجر
+  const [searchResults, setSearchResults] = useState([]); // نتائج البحث
+  const [showSearchResults, setShowSearchResults] = useState(false); // عرض نتائج البحث
 
   // جلب المتاجر
   useEffect(() => {
@@ -429,6 +431,8 @@ const FoodMapView = ({ isOpen, onClose }) => {
   const handleStoreClick = (store) => {
     setSelectedStore(store);
     setMapCenter([store.latitude, store.longitude]);
+    setShowSearchResults(false);
+    setSearchQuery('');
   };
 
   const handleViewStore = (store) => {
@@ -444,6 +448,30 @@ const FoodMapView = ({ isOpen, onClose }) => {
     }
   };
 
+  // البحث عن متجر
+  const handleSearch = (query) => {
+    setSearchQuery(query);
+    if (query.trim().length > 0) {
+      const results = stores.filter(store => 
+        store.name?.toLowerCase().includes(query.toLowerCase()) ||
+        store.description?.toLowerCase().includes(query.toLowerCase())
+      );
+      setSearchResults(results);
+      setShowSearchResults(true);
+    } else {
+      setSearchResults([]);
+      setShowSearchResults(false);
+    }
+  };
+
+  // اختيار متجر من نتائج البحث
+  const handleSelectSearchResult = (store) => {
+    setSelectedStore(store);
+    setMapCenter([store.latitude, store.longitude]);
+    setSearchQuery('');
+    setShowSearchResults(false);
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -455,27 +483,109 @@ const FoodMapView = ({ isOpen, onClose }) => {
         className="fixed inset-0 z-[100] bg-white"
       >
         {/* Header */}
-        <div className="absolute top-0 left-0 right-0 z-[1002] bg-white/95 backdrop-blur-sm border-b border-gray-200 px-4 py-3 safe-area-top">
-          <div className="flex items-center justify-between">
+        <div className="absolute top-0 left-0 right-0 z-[1002] bg-white/95 backdrop-blur-sm border-b border-gray-200 px-4 py-2 safe-area-top">
+          <div className="flex items-center justify-between gap-2">
             <button
               onClick={onClose}
-              className="flex items-center gap-1 text-gray-600 hover:text-gray-800"
+              className="flex items-center gap-1 text-gray-600 hover:text-gray-800 flex-shrink-0"
             >
-              <X size={24} />
+              <X size={22} />
             </button>
-            <h2 className="text-base font-bold text-gray-900 flex items-center gap-2">
-              <MapPin size={20} className="text-[#FF6B00]" />
-              خريطة المتاجر
-            </h2>
+            
+            {/* حقل البحث */}
+            <div className="flex-1 relative">
+              <div className="relative">
+                <Search size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="ابحث عن متجر..."
+                  value={searchQuery}
+                  onChange={(e) => handleSearch(e.target.value)}
+                  onFocus={() => searchQuery && setShowSearchResults(true)}
+                  className="w-full pr-9 pl-3 py-2 text-sm bg-gray-100 border-0 rounded-full focus:outline-none focus:ring-2 focus:ring-[#FF6B00]/50 placeholder-gray-400"
+                  data-testid="search-store-input"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => {
+                      setSearchQuery('');
+                      setShowSearchResults(false);
+                    }}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    <X size={14} />
+                  </button>
+                )}
+              </div>
+              
+              {/* نتائج البحث */}
+              <AnimatePresence>
+                {showSearchResults && searchResults.length > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-xl border border-gray-200 max-h-64 overflow-y-auto z-[2000]"
+                  >
+                    {searchResults.map((store) => {
+                      const config = CATEGORY_CONFIG[store.category] || CATEGORY_CONFIG.restaurants;
+                      return (
+                        <button
+                          key={store.id}
+                          onClick={() => handleSelectSearchResult(store)}
+                          className="w-full px-3 py-2 flex items-center gap-3 hover:bg-gray-50 border-b border-gray-100 last:border-0 text-right"
+                        >
+                          <span 
+                            className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-sm"
+                            style={{ background: `${config.color}20` }}
+                          >
+                            {config.emoji}
+                          </span>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-gray-900 text-sm truncate">{store.name}</p>
+                            <p className="text-xs text-gray-500 flex items-center gap-2">
+                              <span>{config.name}</span>
+                              {store.rating && (
+                                <span className="flex items-center gap-0.5">
+                                  <Star size={10} className="text-amber-500" fill="currentColor" />
+                                  {store.rating}
+                                </span>
+                              )}
+                              {store.is_open === false && (
+                                <span className="text-red-500">مغلق</span>
+                              )}
+                            </p>
+                          </div>
+                          <MapPin size={14} className="text-gray-400 flex-shrink-0" />
+                        </button>
+                      );
+                    })}
+                  </motion.div>
+                )}
+                
+                {/* رسالة عدم وجود نتائج */}
+                {showSearchResults && searchQuery && searchResults.length === 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-xl border border-gray-200 p-4 text-center z-[2000]"
+                  >
+                    <p className="text-gray-500 text-sm">لا توجد نتائج لـ "{searchQuery}"</p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+            
             <button
               onClick={handleCenterOnUser}
               disabled={gettingLocation}
-              className="p-2 bg-blue-500 text-white rounded-full hover:bg-blue-600 disabled:opacity-50"
+              className="p-2 bg-blue-500 text-white rounded-full hover:bg-blue-600 disabled:opacity-50 flex-shrink-0"
             >
               {gettingLocation ? (
-                <Loader2 size={20} className="animate-spin" />
+                <Loader2 size={18} className="animate-spin" />
               ) : (
-                <Navigation size={20} />
+                <Navigation size={18} />
               )}
             </button>
           </div>
