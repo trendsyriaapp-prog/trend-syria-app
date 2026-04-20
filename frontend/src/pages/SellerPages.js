@@ -14,6 +14,7 @@ import { useToast } from '../hooks/use-toast';
 import { formatPrice } from '../utils/imageHelpers';
 import { compressDocumentImage } from '../utils/imageCompression';
 import GoogleMapsLocationPicker from '../components/GoogleMapsLocationPicker';
+import AddressPickerModal from '../components/AddressPickerModal';
 import NotificationsDropdown from '../components/NotificationsDropdown';
 import useNotificationSound from '../hooks/useNotificationSound';
 import PushNotificationButton from '../components/PushNotificationButton';
@@ -431,18 +432,17 @@ const SellerDocumentsPage = () => {
   const [storeLatitude, setStoreLatitude] = useState(null);
   const [storeLongitude, setStoreLongitude] = useState(null);
   const [storeCity, setStoreCity] = useState('');
+  const [storeArea, setStoreArea] = useState('');
+  const [storeStreet, setStoreStreet] = useState('');
+  const [storeStreetNumber, setStoreStreetNumber] = useState('');
+  const [storeBuildingNumber, setStoreBuildingNumber] = useState('');
+  const [showAddressModal, setShowAddressModal] = useState(false);
 
   // حقول حساب استلام الأرباح
   const [paymentAccountType, setPaymentAccountType] = useState('shamcash'); // shamcash أو bank_account
   const [paymentAccountNumber, setPaymentAccountNumber] = useState('');
   const [paymentAccountHolder, setPaymentAccountHolder] = useState('');
   const [paymentBankName, setPaymentBankName] = useState('');
-
-  // قائمة المدن
-  const CITIES = [
-    'دمشق', 'حلب', 'حمص', 'حماة', 'اللاذقية', 'طرطوس', 
-    'دير الزور', 'الرقة', 'الحسكة', 'درعا', 'السويداء', 'القنيطرة', 'إدلب'
-  ];
 
   // جلب أصناف الأنشطة التجارية
   useEffect(() => {
@@ -820,32 +820,30 @@ const SellerDocumentsPage = () => {
                     </div>
                   </div>
                   
-                  {/* المدينة */}
-                  <div className="mb-3">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">المدينة</label>
-                    <select
-                      value={storeCity}
-                      onChange={(e) => setStoreCity(e.target.value)}
-                      className="w-full p-3 border border-gray-300 rounded-lg text-sm"
+                  {/* زر إضافة العنوان */}
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">العنوان *</label>
+                    <button
+                      type="button"
+                      onClick={() => setShowAddressModal(true)}
+                      className={`w-full border rounded-xl px-4 py-3 text-right flex items-center justify-between transition-colors ${
+                        storeAddress 
+                          ? 'border-green-300 bg-green-50' 
+                          : 'border-gray-200 bg-white hover:border-[#FF6B00]'
+                      }`}
                     >
-                      <option value="">اختر المدينة</option>
-                      {CITIES.map((city) => (
-                        <option key={city} value={city}>{city}</option>
-                      ))}
-                    </select>
-                  </div>
-                  
-                  {/* العنوان النصي */}
-                  <div className="mb-3">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">العنوان التفصيلي *</label>
-                    <input
-                      type="text"
-                      value={storeAddress}
-                      onChange={(e) => setStoreAddress(e.target.value)}
-                      className="w-full p-3 border border-gray-300 rounded-lg text-sm"
-                      placeholder="مثال: شارع بغداد، بناء رقم 5، الطابق الأرضي"
-                      required
-                    />
+                      <div className="flex items-center gap-2">
+                        <MapPin size={18} className={storeAddress ? 'text-green-600' : 'text-gray-400'} />
+                        {storeAddress ? (
+                          <span className="text-gray-800">{storeAddress}</span>
+                        ) : (
+                          <span className="text-gray-400">اضغط لإضافة العنوان</span>
+                        )}
+                      </div>
+                      {storeAddress && (
+                        <CheckCircle size={18} className="text-green-600" />
+                      )}
+                    </button>
                   </div>
                   
                   {/* خريطة تحديد الموقع */}
@@ -858,10 +856,6 @@ const SellerDocumentsPage = () => {
                         if (location) {
                           setStoreLatitude(location.latitude);
                           setStoreLongitude(location.longitude);
-                          // تعبئة العنوان التفصيلي بالعنوان المُجلب إذا كان فارغاً
-                          if (location.address && !storeAddress) {
-                            setStoreAddress(location.address);
-                          }
                         } else {
                           setStoreLatitude(null);
                           setStoreLongitude(null);
@@ -1000,6 +994,28 @@ const SellerDocumentsPage = () => {
           </form>
         )}
       </motion.div>
+      
+      {/* نافذة إضافة العنوان */}
+      <AddressPickerModal
+        isOpen={showAddressModal}
+        onClose={() => setShowAddressModal(false)}
+        onSave={(addressData) => {
+          setStoreCity(addressData.city);
+          setStoreArea(addressData.area);
+          setStoreStreet(addressData.street);
+          setStoreStreetNumber(addressData.street_number);
+          setStoreBuildingNumber(addressData.building_number);
+          setStoreAddress(addressData.full_address);
+        }}
+        initialAddress={{
+          city: storeCity,
+          area: storeArea,
+          street: storeStreet,
+          street_number: storeStreetNumber,
+          building_number: storeBuildingNumber
+        }}
+        title="إضافة عنوان المتجر"
+      />
     </div>
   );
 };

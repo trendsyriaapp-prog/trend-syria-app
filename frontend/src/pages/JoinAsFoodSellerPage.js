@@ -14,6 +14,7 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
 import { compressDocumentImage } from '../utils/imageCompression';
 import GoogleMapsLocationPicker from '../components/GoogleMapsLocationPicker';
+import AddressPickerModal from '../components/AddressPickerModal';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -71,11 +72,6 @@ const DEFAULT_SETTINGS = {
   }
 };
 
-const CITIES = [
-  'دمشق', 'حلب', 'حمص', 'حماة', 'اللاذقية', 'طرطوس', 
-  'دير الزور', 'الرقة', 'الحسكة', 'درعا', 'السويداء', 'القنيطرة', 'إدلب'
-];
-
 const JoinAsFoodSellerPage = () => {
   const navigate = useNavigate();
   const { user, token } = useAuth();
@@ -110,6 +106,10 @@ const JoinAsFoodSellerPage = () => {
     phone: user?.phone || '',
     address: '',
     city: '',
+    area: '',
+    street: '',
+    street_number: '',
+    building_number: '',
     logo: '',
     cover_image: '',
     commercial_license: '', // رخصة المحل / السجل التجاري
@@ -126,6 +126,8 @@ const JoinAsFoodSellerPage = () => {
     payment_account_holder: '',
     payment_bank_name: '',
   });
+  
+  const [showAddressModal, setShowAddressModal] = useState(false);
   
   // تحقق إذا كانت الأصناف المختارة تتطلب رخصة
   const requiresLicense = () => {
@@ -634,33 +636,30 @@ const JoinAsFoodSellerPage = () => {
                 />
               </div>
 
+              {/* زر إضافة العنوان */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">المدينة *</label>
-                <select
-                  name="city"
-                  value={formData.city}
-                  onChange={handleInputChange}
-                  className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00]"
-                  required
+                <label className="block text-sm font-medium text-gray-700 mb-1">العنوان *</label>
+                <button
+                  type="button"
+                  onClick={() => setShowAddressModal(true)}
+                  className={`w-full border rounded-xl px-4 py-3 text-right flex items-center justify-between transition-colors ${
+                    formData.address 
+                      ? 'border-green-300 bg-green-50' 
+                      : 'border-gray-200 bg-white hover:border-[#FF6B00]'
+                  }`}
                 >
-                  <option value="">اختر المدينة</option>
-                  {CITIES.map((city) => (
-                    <option key={city} value={city}>{city}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">العنوان التفصيلي *</label>
-                <input
-                  type="text"
-                  name="address"
-                  value={formData.address}
-                  onChange={handleInputChange}
-                  placeholder="الحي، الشارع، بالقرب من..."
-                  className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00]"
-                  required
-                />
+                  <div className="flex items-center gap-2">
+                    <MapPin size={18} className={formData.address ? 'text-green-600' : 'text-gray-400'} />
+                    {formData.address ? (
+                      <span className="text-gray-800">{formData.address}</span>
+                    ) : (
+                      <span className="text-gray-400">اضغط لإضافة العنوان</span>
+                    )}
+                  </div>
+                  {formData.address && (
+                    <CheckCircle size={18} className="text-green-600" />
+                  )}
+                </button>
               </div>
 
               {/* تحديد موقع المتجر - إجباري */}
@@ -670,12 +669,7 @@ const JoinAsFoodSellerPage = () => {
                 currentLocation={formData.latitude ? { latitude: formData.latitude, longitude: formData.longitude } : null}
                 onLocationSelect={(location) => {
                   if (location) {
-                    const updates = { latitude: location.latitude, longitude: location.longitude };
-                    // تعبئة العنوان التفصيلي بالعنوان المُجلب إذا كان فارغاً
-                    if (location.address && !formData.address) {
-                      updates.address = location.address;
-                    }
-                    setFormData({ ...formData, ...updates });
+                    setFormData({ ...formData, latitude: location.latitude, longitude: location.longitude });
                   } else {
                     setFormData({ ...formData, latitude: null, longitude: null });
                   }
@@ -686,10 +680,12 @@ const JoinAsFoodSellerPage = () => {
               <button
                 type="button"
                 onClick={() => {
-                  if (formData.name && formData.phone && formData.city && formData.address && formData.latitude && formData.longitude) {
+                  if (formData.name && formData.phone && formData.address && formData.latitude && formData.longitude) {
                     setStep(5);
                   } else if (!formData.latitude || !formData.longitude) {
                     toast({ title: "تنبيه", description: "يرجى تحديد موقع المتجر على الخريطة", variant: "destructive" });
+                  } else if (!formData.address) {
+                    toast({ title: "تنبيه", description: "يرجى إضافة العنوان", variant: "destructive" });
                   } else {
                     toast({ title: "تنبيه", description: "يرجى ملء جميع الحقول المطلوبة", variant: "destructive" });
                   }
@@ -1138,6 +1134,31 @@ const JoinAsFoodSellerPage = () => {
           </motion.div>
         )}
       </div>
+      
+      {/* نافذة إضافة العنوان */}
+      <AddressPickerModal
+        isOpen={showAddressModal}
+        onClose={() => setShowAddressModal(false)}
+        onSave={(addressData) => {
+          setFormData({
+            ...formData,
+            city: addressData.city,
+            area: addressData.area,
+            street: addressData.street,
+            street_number: addressData.street_number,
+            building_number: addressData.building_number,
+            address: addressData.full_address
+          });
+        }}
+        initialAddress={{
+          city: formData.city,
+          area: formData.area,
+          street: formData.street,
+          street_number: formData.street_number,
+          building_number: formData.building_number
+        }}
+        title="إضافة عنوان المتجر"
+      />
     </div>
   );
 };

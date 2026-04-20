@@ -7,6 +7,7 @@ import { useToast } from '../hooks/use-toast';
 import { useModalBackHandler } from '../hooks/useBackButton';
 import { compressDocumentImage } from '../utils/imageCompression';
 import GoogleMapsLocationPicker from '../components/GoogleMapsLocationPicker';
+import AddressPickerModal from '../components/AddressPickerModal';
 import { 
   Truck, Clock, Upload, Camera, CreditCard, AlertTriangle, Navigation, Home, Volume2, VolumeX, LogOut, Wallet, Star, Settings,
   Car, Bike, Check, MapPin, X, Trash2
@@ -57,18 +58,18 @@ const DeliveryDocuments = () => {
     home_latitude: null,
     home_longitude: null,
     home_city: '',
+    home_area: '',
+    home_street: '',
+    home_street_number: '',
+    home_building_number: '',
     // حساب استلام الأرباح
     payment_account_type: 'shamcash',
     payment_account_number: '',
     payment_account_holder: '',
     payment_bank_name: ''
   });
-
-  // قائمة المدن
-  const CITIES = [
-    'دمشق', 'حلب', 'حمص', 'حماة', 'اللاذقية', 'طرطوس', 
-    'دير الزور', 'الرقة', 'الحسكة', 'درعا', 'السويداء', 'القنيطرة', 'إدلب'
-  ];
+  
+  const [showAddressModal, setShowAddressModal] = useState(false);
 
   // أنواع المركبات
   const defaultVehicleTypes = [
@@ -495,32 +496,30 @@ const DeliveryDocuments = () => {
               </div>
             </div>
             
-            {/* المدينة */}
-            <div className="mb-3">
-              <label className="block text-sm font-medium text-gray-700 mb-1">المدينة</label>
-              <select
-                value={docs.home_city}
-                onChange={(e) => setDocs(prev => ({ ...prev, home_city: e.target.value }))}
-                className="w-full p-3 border border-gray-300 rounded-lg text-sm"
+            {/* زر إضافة العنوان */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">العنوان *</label>
+              <button
+                type="button"
+                onClick={() => setShowAddressModal(true)}
+                className={`w-full border rounded-xl px-4 py-3 text-right flex items-center justify-between transition-colors ${
+                  docs.home_address 
+                    ? 'border-green-300 bg-green-50' 
+                    : 'border-gray-200 bg-white hover:border-[#FF6B00]'
+                }`}
               >
-                <option value="">اختر المدينة</option>
-                {CITIES.map((city) => (
-                  <option key={city} value={city}>{city}</option>
-                ))}
-              </select>
-            </div>
-            
-            {/* العنوان النصي */}
-            <div className="mb-3">
-              <label className="block text-sm font-medium text-gray-700 mb-1">العنوان التفصيلي *</label>
-              <input
-                type="text"
-                value={docs.home_address}
-                onChange={(e) => setDocs(prev => ({ ...prev, home_address: e.target.value }))}
-                className="w-full p-3 border border-gray-300 rounded-lg text-sm"
-                placeholder="مثال: شارع بغداد، بناء رقم 5، الطابق الثاني"
-                required
-              />
+                <div className="flex items-center gap-2">
+                  <MapPin size={18} className={docs.home_address ? 'text-green-600' : 'text-gray-400'} />
+                  {docs.home_address ? (
+                    <span className="text-gray-800 text-sm">{docs.home_address}</span>
+                  ) : (
+                    <span className="text-gray-400">اضغط لإضافة العنوان</span>
+                  )}
+                </div>
+                {docs.home_address && (
+                  <Check size={18} className="text-green-600" />
+                )}
+              </button>
             </div>
             
             {/* خريطة تحديد الموقع */}
@@ -532,15 +531,11 @@ const DeliveryDocuments = () => {
                 currentLocation={docs.home_latitude ? { latitude: docs.home_latitude, longitude: docs.home_longitude } : null}
                 onLocationSelect={(location) => {
                   if (location) {
-                    const updates = { 
+                    setDocs(prev => ({ 
+                      ...prev, 
                       home_latitude: location.latitude, 
                       home_longitude: location.longitude 
-                    };
-                    // تعبئة العنوان التفصيلي بالعنوان المُجلب إذا كان فارغاً
-                    if (location.address && !docs.home_address) {
-                      updates.home_address = location.address;
-                    }
-                    setDocs(prev => ({ ...prev, ...updates }));
+                    }));
                   } else {
                     setDocs(prev => ({ ...prev, home_latitude: null, home_longitude: null }));
                   }
@@ -757,6 +752,31 @@ const DeliveryDocuments = () => {
           </button>
         </form>
       </div>
+      
+      {/* نافذة إضافة العنوان */}
+      <AddressPickerModal
+        isOpen={showAddressModal}
+        onClose={() => setShowAddressModal(false)}
+        onSave={(addressData) => {
+          setDocs(prev => ({
+            ...prev,
+            home_city: addressData.city,
+            home_area: addressData.area,
+            home_street: addressData.street,
+            home_street_number: addressData.street_number,
+            home_building_number: addressData.building_number,
+            home_address: addressData.full_address
+          }));
+        }}
+        initialAddress={{
+          city: docs.home_city,
+          area: docs.home_area,
+          street: docs.home_street,
+          street_number: docs.home_street_number,
+          building_number: docs.home_building_number
+        }}
+        title="إضافة عنوان السكن"
+      />
     </div>
   );
 };
