@@ -33,10 +33,24 @@ jobs:
             pip install -r requirements.txt -q 2>/dev/null || true
             
             # إعادة تشغيل الخدمة
-            pkill -f "uvicorn server:app" || true
-            sleep 3
             cd ~/trend-syria-app/backend
             source venv/bin/activate
-            nohup uvicorn server:app --host 0.0.0.0 --port 8001 >> ~/uvicorn.log 2>&1 &
+            
+            # إيقاف الخدمة القديمة
+            pkill -9 -f "uvicorn server:app" 2>/dev/null || true
             sleep 2
+            
+            # تشغيل الخدمة الجديدة
+            setsid uvicorn server:app --host 0.0.0.0 --port 8001 > ~/uvicorn.log 2>&1 &
+            
+            # انتظار بدء الخدمة
+            sleep 5
+            
+            # التحقق من أن الخدمة تعمل
+            if curl -s http://localhost:8001/api/health > /dev/null 2>&1; then
+              echo "✅ Backend is running!"
+            else
+              echo "⚠️ Backend may need manual restart"
+            fi
+            
             echo "✅ Deployed successfully!"
