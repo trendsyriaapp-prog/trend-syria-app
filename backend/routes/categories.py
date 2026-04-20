@@ -433,6 +433,44 @@ async def approve_suggestion(suggestion_id: str, user: dict = Depends(get_curren
         "category": {k: v for k, v in new_category.items() if k != "_id"}
     }
 
+# ========== Force Reset للأدمن فقط ==========
+
+@router.post("/force-reset")
+async def force_reset_categories():
+    """
+    إعادة ضبط جميع الفئات - للاستخدام مرة واحدة فقط
+    يحذف جميع الفئات القديمة ويدرج الـ 36 فئة الجديدة
+    """
+    try:
+        # حذف جميع الفئات القديمة
+        delete_result = await db.categories.delete_many({})
+        deleted_count = delete_result.deleted_count
+        
+        # إدراج الفئات الجديدة
+        now = datetime.now(timezone.utc).isoformat()
+        categories_to_insert = []
+        for cat in DEFAULT_CATEGORIES:
+            new_cat = cat.copy()
+            new_cat["created_at"] = now
+            new_cat["is_active"] = True
+            new_cat["parent_id"] = None
+            new_cat["is_parent"] = False
+            categories_to_insert.append(new_cat)
+        
+        await db.categories.insert_many(categories_to_insert)
+        
+        return {
+            "success": True,
+            "message": f"تم حذف {deleted_count} فئة قديمة وإدراج {len(categories_to_insert)} فئة جديدة",
+            "total_categories": len(categories_to_insert)
+        }
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
+
 @router.post("/suggestions/{suggestion_id}/reject")
 async def reject_suggestion(suggestion_id: str, reason: Optional[str] = None, user: dict = Depends(get_current_user)):
     """رفض اقتراح تصنيف"""
