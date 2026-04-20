@@ -447,3 +447,24 @@ img:not([loading="lazy"]) {
 .isolate {
   isolation: isolate;
 }
+
+
+/* =====================================================
+   تصغير نص Leaflet/OpenStreetMap Attribution
+   ===================================================== */
+.leaflet-control-attribution {
+  font-size: 8px !important;
+  padding: 2px 5px !important;
+  background: rgba(255, 255, 255, 0.6) !important;
+  opacity: 0.7;
+}
+
+.leaflet-control-attribution a {
+  color: #666 !important;
+  text-decoration: none !important;
+}
+
+.leaflet-control-attribution svg,
+.leaflet-control-attribution img {
+  display: none !important;
+}
