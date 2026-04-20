@@ -197,9 +197,9 @@ const ChatPage = () => {
             <p className="text-xs text-gray-400 mt-1">ابدأ المحادثة مع العميل</p>
           </div>
         ) : (
-          messages.map((msg, index) => (
+          messages.map((msg) => (
             <div
-              key={msg.id || index}
+              key={msg.id || msg._id || `msg-${msg.created_at}`}
               className={`flex ${msg.is_mine || msg.sender_id === user?.id ? 'justify-start' : 'justify-end'}`}
             >
               <div
@@ -228,9 +228,9 @@ const ChatPage = () => {
       {/* الرسائل السريعة */}
       <div className="bg-white border-t px-2 py-1.5 overflow-x-auto flex-shrink-0">
         <div className="flex gap-1.5">
-          {quickMessages.slice(0, 4).map((msg, index) => (
+          {quickMessages.slice(0, 4).map((msg) => (
             <button
-              key={index}
+              key={`quick-${msg.substring(0, 10)}`}
               onClick={() => sendMessage(msg)}
               className="flex-shrink-0 px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded-full text-xs text-gray-700 transition-colors whitespace-nowrap"
             >

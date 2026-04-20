@@ -13,7 +13,7 @@ export const openLocationSettings = () => {
         window.Capacitor.Plugins.App.openUrl({ url: 'app-settings:' });
       }
     } catch (e) {
-      console.log('Could not open settings:', e);
+      // Silent fail - settings couldn't open
     }
   }
 };

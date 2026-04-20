@@ -188,8 +188,8 @@ const NotificationGuide = ({ userType }) => {
           <h3 className="font-bold">{userBenefits.title}</h3>
         </div>
         <div className="grid grid-cols-2 gap-2">
-          {userBenefits.benefits.map((benefit, index) => (
-            <div key={index} className="flex items-center gap-2 bg-white/20 rounded-lg p-2">
+          {userBenefits.benefits.map((benefit) => (
+            <div key={`benefit-${benefit.text}`} className="flex items-center gap-2 bg-white/20 rounded-lg p-2">
               <span className="text-lg">{benefit.icon}</span>
               <span className="text-xs font-medium">{benefit.text}</span>
             </div>
@@ -248,10 +248,10 @@ const NotificationGuide = ({ userType }) => {
                   >
                     <div className="px-4 pb-4 bg-gray-50">
                       <ol className="space-y-2">
-                        {guide.steps.map((step, index) => (
-                          <li key={index} className="flex items-start gap-2 text-sm">
+                        {guide.steps.map((step, stepIndex) => (
+                          <li key={`step-${guide.device}-${stepIndex}`} className="flex items-start gap-2 text-sm">
                             <span className="flex-shrink-0 w-5 h-5 bg-[#FF6B00] text-white rounded-full flex items-center justify-center text-xs font-bold">
-                              {index + 1}
+                              {stepIndex + 1}
                             </span>
                             <span className="text-gray-700">{step}</span>
                           </li>

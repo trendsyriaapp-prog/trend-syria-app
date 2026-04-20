@@ -96,8 +96,8 @@ const AboutPage = () => {
           className="bg-white rounded-xl shadow-lg p-3 mb-4"
         >
           <div className="grid grid-cols-4 gap-1">
-            {stats.map((stat, index) => (
-              <div key={index} className="text-center p-1.5">
+            {stats.map((stat) => (
+              <div key={`stat-${stat.label}`} className="text-center p-1.5">
                 <div className="w-8 h-8 bg-orange-100 rounded-full mx-auto mb-1 flex items-center justify-center">
                   <stat.icon size={16} className="text-orange-600" />
                 </div>
@@ -189,8 +189,8 @@ const AboutPage = () => {
             قيمنا
           </h3>
           <div className="grid grid-cols-4 gap-2">
-            {values.map((value, index) => (
-              <div key={index} className="text-center p-2 bg-gray-50 rounded-lg">
+            {values.map((value) => (
+              <div key={`value-${value.title}`} className="text-center p-2 bg-gray-50 rounded-lg">
                 <div className={`w-8 h-8 ${value.color} rounded-lg mx-auto mb-1.5 flex items-center justify-center`}>
                   <value.icon size={16} className="text-white" />
                 </div>
@@ -213,8 +213,8 @@ const AboutPage = () => {
             لماذا ترند سورية؟
           </h3>
           <div className="grid grid-cols-2 gap-2">
-            {whyUs.map((item, index) => (
-              <div key={index} className="flex items-center gap-2 p-2 bg-green-50 rounded-lg">
+            {whyUs.map((item) => (
+              <div key={`why-${item.substring(0, 15)}`} className="flex items-center gap-2 p-2 bg-green-50 rounded-lg">
                 <CheckCircle size={14} className="text-green-600 flex-shrink-0" />
                 <span className="text-gray-700 text-xs">{item}</span>
               </div>

@@ -99,8 +99,8 @@ const OrderLabelPrint = ({ order, onClose }) => {
                   📦 المنتجات ({order.items?.length || 0} قطعة)
                 </h3>
                 <div style={{ fontSize: '11px' }}>
-                  {order.items?.map((item, index) => (
-                    <div key={index} style={{ display: 'flex', justifyContent: 'space-between', padding: '3px 0', borderBottom: '1px dotted #ddd' }}>
+                  {order.items?.map((item) => (
+                    <div key={item.product_id || item._id || `item-${item.product_name}`} style={{ display: 'flex', justifyContent: 'space-between', padding: '3px 0', borderBottom: '1px dotted #ddd' }}>
                       <span style={{ flex: 1 }}>{item.product_name?.slice(0, 25)}{item.product_name?.length > 25 ? '...' : ''}</span>
                       <span style={{ marginRight: '10px', fontWeight: 'bold' }}>×{item.quantity}</span>
                     </div>

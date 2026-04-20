@@ -29,7 +29,7 @@ const WhatsAppButton = () => {
           support_message: res.data.support_message || prev.support_message
         }));
       } catch (err) {
-        console.log('Using default WhatsApp settings');
+        // Use default settings silently
       }
     };
     fetchSettings();

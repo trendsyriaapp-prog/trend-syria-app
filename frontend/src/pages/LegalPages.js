@@ -511,8 +511,8 @@ export const ReturnPolicyPage = () => {
               'المقاس أو اللون خاطئ',
               'نقص في الكمية المطلوبة',
               'المنتج منتهي الصلاحية (للمنتجات الغذائية)'
-            ].map((condition, index) => (
-              <div key={index} className="flex items-center gap-1.5 text-[11px] text-gray-700">
+            ].map((condition) => (
+              <div key={`return-${condition.substring(0, 15)}`} className="flex items-center gap-1.5 text-[11px] text-gray-700">
                 <div className="w-4 h-4 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
                   <span className="text-green-600 text-[10px]">✓</span>
                 </div>
@@ -537,8 +537,8 @@ export const ReturnPolicyPage = () => {
               'المنتجات المستخدمة أو المفتوحة',
               'الملابس الداخلية ومنتجات العناية الشخصية',
               'المنتجات المصنوعة حسب الطلب'
-            ].map((item, index) => (
-              <div key={index} className="flex items-center gap-1.5 text-[11px] text-red-700">
+            ].map((item) => (
+              <div key={`no-return-${item.substring(0, 15)}`} className="flex items-center gap-1.5 text-[11px] text-red-700">
                 <span className="text-red-500 text-xs">✕</span>
                 {item}
               </div>

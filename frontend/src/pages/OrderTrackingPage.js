@@ -497,8 +497,8 @@ const OrderTrackingPage = () => {
                   <Gift size={16} className="text-pink-500" />
                   <span className="text-sm text-pink-600 font-medium">هدية من {order.gift_sender_name || 'صديق'}</span>
                 </div>
-                {order.items?.map((item, index) => (
-                  <div key={index} className="flex gap-3 p-2 bg-gray-50 rounded-xl">
+                {order.items?.map((item) => (
+                  <div key={item.product_id || item._id || `gift-item-${item.product_name}`} className="flex gap-3 p-2 bg-gray-50 rounded-xl">
                     <div className="w-14 h-14 rounded-lg bg-white overflow-hidden flex-shrink-0">
                       {item.image || item.product_image ? (
                         <img src={item.image || item.product_image} alt={item.product_name} className="w-full h-full object-cover" />
@@ -521,8 +521,8 @@ const OrderTrackingPage = () => {
               </>
             ) : (
               // طلب عادي
-              order.items?.map((item, index) => (
-                <div key={index} className="flex gap-3 p-2 bg-gray-50 rounded-xl">
+              order.items?.map((item) => (
+                <div key={item.product_id || item._id || `order-item-${item.product_name}`} className="flex gap-3 p-2 bg-gray-50 rounded-xl">
                   <div className="w-14 h-14 rounded-lg bg-white overflow-hidden flex-shrink-0">
                     {item.image || item.product_image ? (
                       <img src={item.image || item.product_image} alt={item.product_name} className="w-full h-full object-cover" />
@@ -584,8 +584,8 @@ const OrderTrackingPage = () => {
               معلومات البائع
             </h2>
             
-            {tracking.sellers.map((seller, index) => (
-              <div key={index} className="flex items-center gap-4 p-3 bg-gray-50 rounded-xl mb-2 last:mb-0">
+            {tracking.sellers.map((seller) => (
+              <div key={seller.id || seller._id || `seller-${seller.phone}`} className="flex items-center gap-4 p-3 bg-gray-50 rounded-xl mb-2 last:mb-0">
                 <div className="flex-1">
                   <p className="font-bold text-gray-900">{seller.store_name || seller.name}</p>
                   <p className="text-sm text-gray-500">{typeof seller.store_address === 'object' 

@@ -292,7 +292,7 @@ export default function EarningsStats({ token, theme = 'dark' }) {
                 const percentage = (item.earnings / maxValue) * 100;
                 
                 return (
-                  <div key={index} className="space-y-1">
+                  <div key={`earnings-${item.label}`} className="space-y-1">
                     <div className="flex justify-between text-sm">
                       <span className={isDark ? 'text-gray-400' : 'text-gray-500'}>{item.label}</span>
                       <span className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{formatNumber(item.earnings)} ل.س</span>
@@ -354,8 +354,8 @@ export default function EarningsStats({ token, theme = 'dark' }) {
               </div>
             ) : (
               <div className={`divide-y ${isDark ? 'divide-[#333]' : 'divide-gray-100'}`}>
-                {history.map((order, index) => (
-                  <div key={index} className="p-4 flex items-center justify-between">
+                {history.map((order) => (
+                  <div key={order._id || order.id || `order-${order.delivered_at}`} className="p-4 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
                         order.type === 'food' 

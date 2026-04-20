@@ -2025,8 +2025,8 @@ const SellerDashboardPage = () => {
                   { icon: '3️⃣', title: 'املأ الفراغات', desc: 'لا تترك فراغات داخل الصندوق - املأها بورق أو فوم' },
                   { icon: '4️⃣', title: 'أغلق بإحكام', desc: 'استخدم شريط لاصق قوي وأغلق جميع الجوانب' },
                   { icon: '5️⃣', title: 'ألصق ملصق الطلب', desc: 'ألصق ملصق الطلب في مكان واضح على الصندوق' }
-                ].map((item, index) => (
-                  <div key={`packaging-step-${index}`} className="flex gap-3 p-3 bg-gray-50 rounded-lg">
+                ].map((item) => (
+                  <div key={`packaging-step-${item.icon}`} className="flex gap-3 p-3 bg-gray-50 rounded-lg">
                     <span className="text-xl">{item.icon}</span>
                     <div>
                       <p className="font-bold text-gray-900 text-sm">{item.title}</p>
@@ -2128,8 +2128,8 @@ const SellerDashboardPage = () => {
                   'عدم وضع ملصق الطلب أو وضعه في مكان مخفي',
                   'استخدام شريط لاصق ضعيف',
                   'إرسال منتج مختلف عن المطلوب'
-                ].map((item, index) => (
-                  <div key={`packaging-mistake-${index}`} className="flex items-center gap-2 text-sm text-red-700">
+                ].map((item) => (
+                  <div key={`packaging-mistake-${item.substring(0, 15)}`} className="flex items-center gap-2 text-sm text-red-700">
                     <span className="text-red-500">✕</span>
                     {item}
                   </div>
@@ -2165,8 +2165,8 @@ const SellerDashboardPage = () => {
                   'أرفق فاتورة مطبوعة داخل الصندوق',
                   'صوّر المنتج قبل التغليف كدليل',
                   'تأكد من نظافة الصندوق من الخارج'
-                ].map((item, index) => (
-                  <div key={`packaging-tip-${index}`} className="flex items-center gap-2 text-sm text-[#FF6B00]">
+                ].map((item) => (
+                  <div key={`packaging-tip-${item.substring(0, 15)}`} className="flex items-center gap-2 text-sm text-[#FF6B00]">
                     <span className="text-[#FF6B00]">✓</span>
                     {item}
                   </div>
@@ -2188,8 +2188,8 @@ const SellerDashboardPage = () => {
                   'ملصق الطلب واضح ومقروء',
                   'الصندوق نظيف ومرتب',
                   'جميع الملحقات موجودة'
-                ].map((item, index) => (
-                  <div key={`checklist-item-${index}`} className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg">
+                ].map((item) => (
+                  <div key={`checklist-item-${item.substring(0, 15)}`} className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg">
                     <div className="w-5 h-5 border-2 border-gray-300 rounded flex-shrink-0"></div>
                     <span className="text-sm text-gray-700">{item}</span>
                   </div>

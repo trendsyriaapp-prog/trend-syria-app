@@ -476,10 +476,10 @@ const BuyerWalletPage = () => {
                   <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4">
                     <p className="font-bold text-blue-800 mb-2">خطوات الدفع:</p>
                     <ol className="text-sm text-blue-700 space-y-2">
-                      {Array.isArray(paymentSettings?.steps) && paymentSettings.steps.map((step, index) => (
-                        <li key={index} className="flex items-start gap-2">
+                      {Array.isArray(paymentSettings?.steps) && paymentSettings.steps.map((step, stepIndex) => (
+                        <li key={`payment-step-${stepIndex}-${String(step).substring(0, 10)}`} className="flex items-start gap-2">
                           <span className="w-5 h-5 bg-blue-200 text-blue-800 rounded-full flex items-center justify-center text-xs flex-shrink-0">
-                            {index + 1}
+                            {stepIndex + 1}
                           </span>
                           <span>{typeof step === 'string' ? step.replace(/^\d+\.\s*/, '') : ''}</span>
                         </li>

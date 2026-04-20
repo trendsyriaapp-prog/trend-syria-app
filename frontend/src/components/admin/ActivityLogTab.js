@@ -299,7 +299,7 @@ const ActivityLogTab = () => {
               const percentage = (day.count / maxCount) * 100;
               
               return (
-                <div key={index} className="flex items-center gap-3">
+                <div key={`day-${day.date}`} className="flex items-center gap-3">
                   <span className="w-20 text-xs text-gray-500 text-left">{day.date}</span>
                   <div className="flex-1 h-4 bg-gray-100 rounded-full overflow-hidden">
                     <div

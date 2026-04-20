@@ -102,13 +102,11 @@ export const useSubmitGuard = (cooldown = 1000) => {
     
     // منع التكرار خلال فترة cooldown
     if (now - lastSubmitTime < cooldown) {
-      console.log('Submit blocked - too soon');
       return;
     }
     
     // منع التكرار إذا كانت عملية سابقة جارية
     if (isSubmitting) {
-      console.log('Submit blocked - already submitting');
       return;
     }
 

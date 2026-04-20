@@ -276,7 +276,7 @@ const DriverPerformance = () => {
                               label={({ stars, count }) => count > 0 ? `${stars}` : ''}
                             >
                               {charts.ratings.map((entry, index) => (
-                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                <Cell key={`cell-${entry.stars}-${entry.count}`} fill={COLORS[index % COLORS.length]} />
                               ))}
                             </Pie>
                             <Tooltip 

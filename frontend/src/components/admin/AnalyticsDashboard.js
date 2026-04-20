@@ -260,7 +260,7 @@ const AnalyticsDashboard = () => {
                   label={({ category_name, percent }) => `${category_name} ${(percent * 100).toFixed(0)}%`}
                 >
                   {categoriesStats.slice(0, 6).map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    <Cell key={`cell-${entry.category_name || entry.category_id}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
                 <Tooltip formatter={(value) => [`${value} منتج`, 'العدد']} />

@@ -2070,17 +2070,17 @@ const DeliveryDashboard = () => {
               
               {/* Code Input */}
               <div className="flex justify-center gap-2 mb-4">
-                {[0, 1, 2, 3].map((index) => (
+                {[0, 1, 2, 3].map((position) => (
                   <input
-                    key={index}
+                    key={`code-input-${position}`}
                     type="text"
                     inputMode="numeric"
                     maxLength={1}
-                    value={deliveryCodeInput[index] || ''}
+                    value={deliveryCodeInput[position] || ''}
                     onChange={(e) => {
                       const val = e.target.value.replace(/\D/g, '');
                       const newCode = deliveryCodeInput.split('');
-                      newCode[index] = val;
+                      newCode[position] = val;
                       setDeliveryCodeInput(newCode.join('').slice(0, 4));
                       setDeliveryCodeError('');
                       // الانتقال للحقل التالي

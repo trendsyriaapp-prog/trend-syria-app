@@ -235,16 +235,16 @@ const LoginPage = () => {
           <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
             {/* حقول OTP */}
             <div className="flex justify-center gap-2 mb-6" dir="ltr">
-              {otp.map((digit, index) => (
+              {otp.map((digit, otpIndex) => (
                 <input
-                  key={index}
-                  ref={(el) => (otpInputsRef.current[index] = el)}
+                  key={`otp-input-${otpIndex}`}
+                  ref={(el) => (otpInputsRef.current[otpIndex] = el)}
                   type="text"
                   inputMode="numeric"
                   maxLength={1}
                   value={digit}
-                  onChange={(e) => handleOtpChange(index, e.target.value.replace(/\D/g, ''))}
-                  onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                  onChange={(e) => handleOtpChange(otpIndex, e.target.value.replace(/\D/g, ''))}
+                  onKeyDown={(e) => handleOtpKeyDown(otpIndex, e)}
                   className="w-12 h-14 text-center text-2xl font-bold border-2 border-gray-200 rounded-xl focus:border-[#FF6B00] focus:outline-none focus:ring-2 focus:ring-[#FF6B00]/20 transition-colors"
                 />
               ))}

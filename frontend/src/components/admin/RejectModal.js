@@ -104,7 +104,7 @@ const RejectModal = ({
               >
                 {PRESET_REASONS.map((preset, index) => (
                   <button
-                    key={index}
+                    key={`preset-${preset.substring(0, 15)}`}
                     onClick={() => selectPreset(preset)}
                     className="w-full text-right px-4 py-2.5 text-sm text-gray-700 hover:bg-red-50 hover:text-red-700 transition-colors border-b border-gray-50 last:border-0"
                     data-testid={`preset-reason-${index}`}

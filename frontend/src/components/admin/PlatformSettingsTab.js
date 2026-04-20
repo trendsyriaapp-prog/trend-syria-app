@@ -1796,7 +1796,7 @@ const PlatformSettingsTab = () => {
                       <div className="space-y-2">
                         {currentTemplates.map((template, index) => (
                           <label
-                            key={index}
+                            key={`template-${template.substring(0, 20)}-${index}`}
                             className={`block p-3 rounded-lg border-2 cursor-pointer transition-all ${
                               !useCustom && selectedTemplate === index
                                 ? 'border-green-500 bg-green-50'

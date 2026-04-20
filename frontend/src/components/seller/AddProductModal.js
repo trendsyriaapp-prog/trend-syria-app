@@ -831,7 +831,7 @@ const AddProductModal = ({
                     <div className="flex flex-wrap gap-1 mb-2">
                       {newProduct.weight_variants.map((variant, index) => (
                         <div 
-                          key={index}
+                          key={`weight-${variant.weight}-${variant.unit}-${variant.price}`}
                           className="flex items-center gap-1 bg-orange-50 border border-orange-200 rounded-lg px-2 py-1"
                         >
                           <span className="text-[10px] font-medium text-orange-700">
