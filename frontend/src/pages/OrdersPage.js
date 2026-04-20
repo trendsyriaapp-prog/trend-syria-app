@@ -462,7 +462,7 @@ const OrdersPage = () => {
                               <span className="text-[10px] text-pink-600 font-medium">هدية</span>
                             </div>
                             {(order.items || []).slice(0, 3).map((item, i) => (
-                              <div key={i} className="flex-shrink-0 relative">
+                              <div key={item.product_id || item.id || `item-${i}`} className="flex-shrink-0 relative">
                                 <img
                                   src={item.image || item.product_image || '/placeholder.svg'}
                                   alt={item.product_name}
@@ -479,7 +479,7 @@ const OrdersPage = () => {
                         ) : (
                           <>
                             {(order.items || []).slice(0, 3).map((item, i) => (
-                              <div key={i} className="flex-shrink-0 relative">
+                              <div key={item.product_id || item.id || `item-${i}`} className="flex-shrink-0 relative">
                                 <img
                                   src={item.image || item.product_image || '/placeholder.svg'}
                                   alt={item.product_name}

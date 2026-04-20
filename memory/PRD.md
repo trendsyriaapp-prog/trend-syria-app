@@ -46,6 +46,18 @@ Full-stack e-commerce application for Syria market with Android/Capacitor, React
    - routes/food_orders.py - استبدال random.randint بـ secrets.randbelow
    - routes/admin.py - استبدال random.choice بـ secrets.choice
 
+**7. Function Complexity Reduction - COMPLETED:**
+   - `_send_security_alert()` في rate_limiter.py: تقسيمها إلى 3 دوال:
+     - `_build_alert_notification()` - بناء كائن الإشعار
+     - `_get_alert_severity()` - تحديد مستوى الخطورة
+     - `_send_security_alert()` - الدالة الرئيسية (أصبحت أصغر)
+
+**8. Array Index Keys - PARTIALLY FIXED:**
+   - OrdersPage.js - استبدال `key={i}` بـ `key={item.product_id || item.id || `item-${i}`}`
+
+**9. Test Environment Config - CREATED:**
+   - `/app/backend/tests/.env.test` - ملف إعدادات الاختبارات
+
 **Files Modified:**
 - `/app/backend/routes/auth.py` - إزالة dynamic import
 - `/app/backend/models/__init__.py` - explicit imports

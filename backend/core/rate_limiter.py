@@ -115,6 +115,31 @@ class RateLimiter:
                 del self._blocked[ip]
         return False, 0
     
+    def _build_alert_notification(self, ip: str, endpoint: str, block_count: int, reason: str, severity: str, title: str, body: str) -> dict:
+        """بناء كائن الإشعار الأمني"""
+        return {
+            "id": f"security_alert_{int(time.time())}",
+            "type": "security_alert",
+            "title": title,
+            "body": body,
+            "data": {
+                "ip": ip,
+                "endpoint": endpoint,
+                "block_count": block_count,
+                "reason": reason,
+                "severity": severity,
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            },
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "is_read": False
+        }
+    
+    def _get_alert_severity(self, block_count: int, endpoint: str) -> tuple[str, str]:
+        """تحديد مستوى خطورة التنبيه"""
+        if block_count >= 5 or endpoint in SECURITY_ALERT_CONFIG["critical_endpoints"]:
+            return "🔴 حرج", "⚠️ تنبيه أمني عاجل!"
+        return "🟡 تحذير", "🛡️ تنبيه أمني"
+    
     async def _send_security_alert(self, ip: str, reason: str, endpoint: str, block_count: int):
         """إرسال تنبيه أمني للمدراء"""
         if not SECURITY_ALERT_CONFIG["enabled"]:
@@ -128,75 +153,37 @@ class RateLimiter:
         
         # التحقق من عتبة التنبيه
         if block_count < SECURITY_ALERT_CONFIG["alert_threshold"]:
-            # إرسال تنبيه فوري للـ endpoints الحرجة
             if endpoint not in SECURITY_ALERT_CONFIG["critical_endpoints"]:
                 return
         
         try:
-            # Lazy import لتجنب circular imports
             from core.database import db
             from core.firebase_admin import send_push_to_user
             
-            # تحديث آخر تنبيه
             self._last_alert[ip] = now
             self._stats["security_alerts_sent"] += 1
             
-            # جلب جميع المدراء
             admins = await db.users.find(
                 {"user_type": "admin"},
                 {"_id": 0, "id": 1, "name": 1}
             ).to_list(100)
             
-            # تحديد مستوى الخطورة
-            if block_count >= 5 or endpoint in SECURITY_ALERT_CONFIG["critical_endpoints"]:
-                severity = "🔴 حرج"
-                title = "⚠️ تنبيه أمني عاجل!"
-            else:
-                severity = "🟡 تحذير"
-                title = "🛡️ تنبيه أمني"
-            
+            severity, title = self._get_alert_severity(block_count, endpoint)
             body = f"{severity}\nIP: {ip}\nمحاولات: {block_count}\nالسبب: {reason[:50]}"
             
-            # إنشاء إشعار في قاعدة البيانات
-            alert_notification = {
-                "id": f"security_alert_{int(now)}",
-                "type": "security_alert",
-                "title": title,
-                "body": body,
-                "data": {
-                    "ip": ip,
-                    "endpoint": endpoint,
-                    "block_count": block_count,
-                    "reason": reason,
-                    "severity": severity,
-                    "timestamp": datetime.now(timezone.utc).isoformat()
-                },
-                "created_at": datetime.now(timezone.utc).isoformat(),
-                "is_read": False
-            }
+            alert = self._build_alert_notification(ip, endpoint, block_count, reason, severity, title, body)
             
-            # إرسال لكل مدير
             for admin in admins:
-                # حفظ الإشعار
-                await db.notifications.insert_one({
-                    **alert_notification,
-                    "user_id": admin["id"]
-                })
-                
-                # إرسال Push Notification
+                await db.notifications.insert_one({**alert, "user_id": admin["id"]})
                 try:
                     await send_push_to_user(
                         user_id=admin["id"],
                         title=title,
                         body=body,
-                        data={
-                            "type": "security_alert",
-                            "ip": ip,
-                            "click_action": "/admin?tab=rate-limits"
-                        }
+                        data={"type": "security_alert", "ip": ip, "click_action": "/admin?tab=rate-limits"}
                     )
                 except Exception as push_err:
-                    logger.warning(f"Push notification failed for admin {admin['id']}: {push_err}")
+                    logger.warning(f"Push failed for admin {admin['id']}: {push_err}")
             
             logger.warning(f"🚨 Security alert sent: IP {ip} blocked {block_count} times on {endpoint}")
             
