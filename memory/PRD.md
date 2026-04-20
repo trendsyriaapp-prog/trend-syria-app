@@ -56,11 +56,11 @@
 ### P2 - Medium Priority
 - [ ] Secure localStorage → httpOnly cookies (High-risk refactor, deferred)
 
-### P3 - Low Priority
-- [ ] Refactor oversized React components:
-  - MobileNav.js (598 lines)
-  - AdminPage.js
-  - AllPendingJoinRequests.js (774 lines)
+### P3 - Low Priority (COMPLETED)
+- [x] Refactor oversized React components (December 2024):
+  - MobileNav.js: 617 → 214 lines ✅
+  - AllPendingJoinRequests.js: 896 → 386 lines ✅
+  - Extracted to: `/components/navigation/` and `/components/admin/join-requests/`
 - [ ] Reactivate ACCESS_BACKGROUND_LOCATION for Capacitor
 
 ### P5 - Future
