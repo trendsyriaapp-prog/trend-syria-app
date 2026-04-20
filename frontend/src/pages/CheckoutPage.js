@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
-import { 
 import logger from '../lib/logger';
+import { 
   MapPin, CreditCard, Check, Loader2, Plus, FileText,
   ShoppingBag, Truck, X, ChevronLeft, Clock, Wallet
 } from 'lucide-react';
@@ -11,7 +11,6 @@ import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useToast } from '../hooks/use-toast';
 import GoogleMapsLocationPicker from '../components/GoogleMapsLocationPicker';
-import logger from '../lib/logger';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 

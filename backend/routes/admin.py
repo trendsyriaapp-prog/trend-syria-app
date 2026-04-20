@@ -3744,8 +3744,8 @@ async def admin_reassign_driver(
             raise HTTPException(status_code=400, detail="لا يوجد سائقين متاحين حالياً")
         
         # اختيار سائق عشوائي (يمكن تحسينه لاحقاً)
-        import random
-        new_driver = random.choice(available_drivers)
+        import secrets
+        new_driver = secrets.choice(available_drivers)
         new_driver_id = new_driver["id"]
         new_driver_name = new_driver.get("full_name") or new_driver.get("name")
     else:

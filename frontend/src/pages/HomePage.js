@@ -2,8 +2,8 @@ import { useState, useEffect, useLayoutEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
-import { 
 import logger from '../lib/logger';
+import { 
   ArrowLeft, Smartphone, Shirt, 
   Home as HomeIcon, Dumbbell, BookOpen, Gamepad2, 
   UtensilsCrossed, SprayCan, ChevronLeft, TrendingUp,
@@ -21,7 +21,6 @@ import LazySection from '../components/LazySection';
 import HomePageSkeleton from '../components/HomePageSkeleton';
 import { useSettings } from '../context/SettingsContext';
 import { useScroll } from '../context/ScrollContext';
-import logger from '../lib/logger';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 

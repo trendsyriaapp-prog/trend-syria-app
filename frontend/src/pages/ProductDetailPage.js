@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
-import { 
 import logger from '../lib/logger';
+import { 
   Star, ShoppingCart, Minus, Plus, Truck, Shield, 
   MessageCircle, ChevronLeft, Camera, X, Send, Loader2, Store, Play, Zap, Share2, Clock, Ruler, Check, ShoppingBag, Gift, MessageSquare, Trash2, AlertTriangle, Flag
 } from 'lucide-react';
@@ -15,7 +15,6 @@ import { useSettings } from '../context/SettingsContext';
 import GiftModal from '../components/GiftModal';
 import ProductCard from '../components/ProductCard';
 import AddToCartModal from '../components/AddToCartModal';
-import logger from '../lib/logger';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 

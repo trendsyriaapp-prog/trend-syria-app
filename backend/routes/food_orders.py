@@ -8,7 +8,8 @@ from pydantic import BaseModel
 import uuid
 import math
 import logging
-import random
+import secrets
+import random  # للعمليات غير الأمنية مثل shuffle
 
 from core.database import db, get_current_user, create_notification_for_user
 
@@ -969,16 +970,14 @@ async def create_food_order(order: FoodOrderCreate, user: dict = Depends(get_cur
     # إنشاء الطلب
     order_id = str(uuid.uuid4())
     # توليد رقم طلب بسيط (6 أرقام) للعميل
-    import random
-    order_number = str(random.randint(100000, 999999))
+    order_number = str(secrets.randbelow(900000) + 100000)
     now = datetime.now(timezone.utc)
     # مهلة الإلغاء لطلبات الطعام: 3 دقائق
     CANCEL_WINDOW_MINUTES = 3
     can_process_after = now + timedelta(minutes=CANCEL_WINDOW_MINUTES)
     
     # توليد كود التسليم (4 أرقام)
-    import random
-    delivery_code = str(random.randint(1000, 9999))
+    delivery_code = str(secrets.randbelow(9000) + 1000)
     
     order_doc = {
         "id": order_id,
@@ -1489,7 +1488,7 @@ async def create_batch_food_orders(batch: BatchOrderCreate, user: dict = Depends
         
         order_id = str(uuid.uuid4())
         # توليد رقم طلب بسيط (6 أرقام) للعميل
-        order_number = str(random.randint(100000, 999999))
+        order_number = str(secrets.randbelow(900000) + 100000)
         
         order_doc = {
             "id": order_id,
@@ -1871,8 +1870,7 @@ async def start_order_preparation(
     }
     
     # توليد كود الاستلام مسبقاً
-    import random
-    pickup_code = str(random.randint(1000, 9999))
+    pickup_code = str(secrets.randbelow(9000) + 1000)
     update_data["pickup_code"] = pickup_code
     update_data["pickup_code_verified"] = False
     
@@ -1972,9 +1970,8 @@ async def update_order_status(
     }
     
     # إذا كان الطلب جاهز للاستلام، نولد كود استلام ونحفظ وقت الجهوزية
-    import random
     if new_status == "ready":
-        pickup_code = str(random.randint(1000, 9999))
+        pickup_code = str(secrets.randbelow(9000) + 1000)
         update_data["pickup_code"] = pickup_code
         update_data["pickup_code_verified"] = False
         update_data["ready_at"] = datetime.now(timezone.utc).isoformat()
@@ -4968,8 +4965,7 @@ async def set_order_preparation_time(
     expected_ready_at = now + timedelta(minutes=prep_time)
     
     # توليد كود الاستلام
-    import random
-    pickup_code = str(random.randint(1000, 9999))
+    pickup_code = str(secrets.randbelow(9000) + 1000)
     
     # تحديث الطلب
     await db.food_orders.update_one(
