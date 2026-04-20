@@ -13,7 +13,7 @@ Full-stack e-commerce application for Syria market with Android/Capacitor, React
 
 ### ✅ Rate Limiting System with Dashboard - COMPLETED
 **Date:** 2026-04-21
-**Session Focus:** تنفيذ نظام Rate Limiting متقدم مع لوحة مراقبة
+**Session Focus:** تنفيذ نظام Rate Limiting متقدم مع لوحة مراقبة وتنبيهات أمنية
 
 **What was Built:**
 
@@ -27,26 +27,32 @@ Full-stack e-commerce application for Syria market with Android/Capacitor, React
      - Default: 100 طلب/دقيقة
    - تتبع الإحصائيات (إجمالي، محظورين، حسب الساعة)
    - تسجيل عمليات الحظر مع الأسباب
+   - **نظام التنبيهات الأمنية الفورية:**
+     - إرسال Push Notification للمدراء عند حظر IP
+     - تنبيه فوري للنقاط الحرجة (login, send-otp, register)
+     - عتبة قابلة للتخصيص (افتراضي: 3 مرات حظر)
+     - فترة تهدئة بين التنبيهات (افتراضي: 5 دقائق)
 
 **2. Backend - Admin API (`/app/backend/routes/rate_limits.py`):**
    - `GET /api/rate-limits/stats` - إحصائيات شاملة
    - `GET /api/rate-limits/blocked` - قائمة IPs المحظورة
    - `POST /api/rate-limits/unblock` - إلغاء حظر IP يدوياً
    - `GET /api/rate-limits/config` - عرض الإعدادات
-   - `POST /api/rate-limits/clear-stats` - مسح الإحصائيات (للمدير)
+   - `POST /api/rate-limits/clear-stats` - مسح الإحصائيات
+   - **جديد:**
+     - `GET /api/rate-limits/alerts/config` - إعدادات التنبيهات
+     - `POST /api/rate-limits/alerts/config` - تحديث إعدادات التنبيهات
+     - `POST /api/rate-limits/test-alert` - إرسال تنبيه تجريبي
 
 **3. Frontend - Dashboard (`/app/frontend/src/components/admin/RateLimitDashboard.js`):**
-   - لوحة تحكم تفاعلية مع 4 تبويبات:
+   - لوحة تحكم تفاعلية مع 5 تبويبات:
      - نظرة عامة: رسم بياني للطلبات/ساعة، آخر عمليات الحظر
      - المحظورين: قائمة IPs مع إمكانية إلغاء الحظر
      - الـ APIs: أكثر endpoints استخداماً
+     - **التنبيهات:** إعدادات التنبيهات الأمنية + تنبيه تجريبي
      - الإعدادات: عرض حدود كل endpoint
    - تحديث تلقائي كل 30 ثانية
-   - بطاقات إحصائية (إجمالي، محظورين، معدل الحظر)
-
-**4. Integration in AdminPage:**
-   - تبويب جديد "Rate Limiting" في قسم الإعدادات
-   - متاح للمدير الرئيسي فقط
+   - 5 بطاقات إحصائية (+ تنبيهات مرسلة)
 
 **Testing Results:**
 - ✅ API endpoints working correctly
@@ -54,6 +60,8 @@ Full-stack e-commerce application for Syria market with Android/Capacitor, React
 - ✅ Block duration enforced (5 minutes for auth endpoints)
 - ✅ Stats tracking per endpoint and hour
 - ✅ Unblock functionality working
+- ✅ Test alert sent successfully with Push Notification
+- ✅ Alert config update working
 
 **Files Created:**
 - `/app/backend/core/rate_limiter.py` - نظام Rate Limiting الأساسي

@@ -1,8 +1,9 @@
 # /app/backend/core/rate_limiter.py
-# نظام Rate Limiting متقدم مع تتبع وإحصائيات
+# نظام Rate Limiting متقدم مع تتبع وإحصائيات وتنبيهات أمنية
 
 import time
 import logging
+import asyncio
 from collections import defaultdict
 from datetime import datetime, timezone, timedelta
 from typing import Optional
@@ -37,15 +38,25 @@ RATE_LIMITS = {
     "default": {"requests": 100, "window": 60, "block_duration": 60}
 }
 
+# إعدادات التنبيهات الأمنية
+SECURITY_ALERT_CONFIG = {
+    "enabled": True,
+    "alert_threshold": 3,  # عدد مرات الحظر قبل إرسال تنبيه
+    "critical_endpoints": ["/api/auth/login", "/api/auth/send-otp", "/api/auth/register"],
+    "alert_cooldown": 300,  # 5 دقائق بين التنبيهات لنفس IP
+}
+
 
 class RateLimiter:
-    """نظام Rate Limiting مع تتبع وإحصائيات"""
+    """نظام Rate Limiting مع تتبع وإحصائيات وتنبيهات أمنية"""
     
     def __init__(self):
         # تخزين عدد الطلبات لكل IP/endpoint
         self._requests = defaultdict(list)
         # تخزين IPs المحظورة مؤقتاً
         self._blocked = {}
+        # تتبع آخر تنبيه لكل IP (لمنع التكرار)
+        self._last_alert = {}
         # إحصائيات
         self._stats = {
             "total_requests": 0,
@@ -53,7 +64,8 @@ class RateLimiter:
             "requests_by_endpoint": defaultdict(int),
             "requests_by_hour": defaultdict(int),
             "blocked_ips": defaultdict(int),
-            "blocked_log": []
+            "blocked_log": [],
+            "security_alerts_sent": 0
         }
         # بدء التشغيل
         self._start_time = datetime.now(timezone.utc)
@@ -103,17 +115,108 @@ class RateLimiter:
                 del self._blocked[ip]
         return False, 0
     
-    def _block_ip(self, ip: str, duration: int, reason: str):
+    async def _send_security_alert(self, ip: str, reason: str, endpoint: str, block_count: int):
+        """إرسال تنبيه أمني للمدراء"""
+        if not SECURITY_ALERT_CONFIG["enabled"]:
+            return
+        
+        # التحقق من cooldown
+        now = time.time()
+        if ip in self._last_alert:
+            if now - self._last_alert[ip] < SECURITY_ALERT_CONFIG["alert_cooldown"]:
+                return
+        
+        # التحقق من عتبة التنبيه
+        if block_count < SECURITY_ALERT_CONFIG["alert_threshold"]:
+            # إرسال تنبيه فوري للـ endpoints الحرجة
+            if endpoint not in SECURITY_ALERT_CONFIG["critical_endpoints"]:
+                return
+        
+        try:
+            # Lazy import لتجنب circular imports
+            from core.database import db
+            from core.firebase_admin import send_push_to_user
+            
+            # تحديث آخر تنبيه
+            self._last_alert[ip] = now
+            self._stats["security_alerts_sent"] += 1
+            
+            # جلب جميع المدراء
+            admins = await db.users.find(
+                {"user_type": "admin"},
+                {"_id": 0, "id": 1, "name": 1}
+            ).to_list(100)
+            
+            # تحديد مستوى الخطورة
+            if block_count >= 5 or endpoint in SECURITY_ALERT_CONFIG["critical_endpoints"]:
+                severity = "🔴 حرج"
+                title = "⚠️ تنبيه أمني عاجل!"
+            else:
+                severity = "🟡 تحذير"
+                title = "🛡️ تنبيه أمني"
+            
+            body = f"{severity}\nIP: {ip}\nمحاولات: {block_count}\nالسبب: {reason[:50]}"
+            
+            # إنشاء إشعار في قاعدة البيانات
+            alert_notification = {
+                "id": f"security_alert_{int(now)}",
+                "type": "security_alert",
+                "title": title,
+                "body": body,
+                "data": {
+                    "ip": ip,
+                    "endpoint": endpoint,
+                    "block_count": block_count,
+                    "reason": reason,
+                    "severity": severity,
+                    "timestamp": datetime.now(timezone.utc).isoformat()
+                },
+                "created_at": datetime.now(timezone.utc).isoformat(),
+                "is_read": False
+            }
+            
+            # إرسال لكل مدير
+            for admin in admins:
+                # حفظ الإشعار
+                await db.notifications.insert_one({
+                    **alert_notification,
+                    "user_id": admin["id"]
+                })
+                
+                # إرسال Push Notification
+                try:
+                    await send_push_to_user(
+                        user_id=admin["id"],
+                        title=title,
+                        body=body,
+                        data={
+                            "type": "security_alert",
+                            "ip": ip,
+                            "click_action": "/admin?tab=rate-limits"
+                        }
+                    )
+                except Exception as push_err:
+                    logger.warning(f"Push notification failed for admin {admin['id']}: {push_err}")
+            
+            logger.warning(f"🚨 Security alert sent: IP {ip} blocked {block_count} times on {endpoint}")
+            
+        except Exception as e:
+            logger.error(f"Failed to send security alert: {e}")
+    
+    def _block_ip(self, ip: str, duration: int, reason: str, endpoint: str = "unknown"):
         """حظر IP مؤقتاً"""
         self._blocked[ip] = time.time() + duration
         self._stats["blocked_ips"][ip] += 1
+        block_count = self._stats["blocked_ips"][ip]
         
         # تسجيل في السجل
         log_entry = {
             "ip": ip,
             "reason": reason,
+            "endpoint": endpoint,
             "blocked_at": datetime.now(timezone.utc).isoformat(),
-            "duration_seconds": duration
+            "duration_seconds": duration,
+            "block_count": block_count
         }
         self._stats["blocked_log"].append(log_entry)
         
@@ -121,7 +224,14 @@ class RateLimiter:
         if len(self._stats["blocked_log"]) > 1000:
             self._stats["blocked_log"] = self._stats["blocked_log"][-1000:]
         
-        logger.warning(f"🚫 IP blocked: {ip} for {duration}s - {reason}")
+        logger.warning(f"🚫 IP blocked: {ip} for {duration}s - {reason} (count: {block_count})")
+        
+        # إرسال تنبيه أمني (بشكل غير متزامن)
+        try:
+            asyncio.create_task(self._send_security_alert(ip, reason, endpoint, block_count))
+        except RuntimeError:
+            # إذا لم يكن هناك event loop نشط
+            pass
     
     def check_rate_limit(self, request: Request) -> tuple[bool, Optional[str]]:
         """
@@ -155,11 +265,8 @@ class RateLimiter:
         
         if request_count >= limits["requests"]:
             # تجاوز الحد - حظر مؤقت
-            self._block_ip(
-                ip, 
-                limits["block_duration"],
-                f"تجاوز الحد في {endpoint_key}: {request_count}/{limits['requests']} طلب"
-            )
+            reason = f"تجاوز الحد في {endpoint_key}: {request_count}/{limits['requests']} طلب"
+            self._block_ip(ip, limits["block_duration"], reason, endpoint_key)
             self._stats["blocked_requests"] += 1
             return False, f"تجاوزت الحد المسموح ({limits['requests']} طلب/{limits['window']} ثانية)"
         
@@ -201,6 +308,8 @@ class RateLimiter:
                 (self._stats["blocked_requests"] / max(1, self._stats["total_requests"])) * 100, 2
             ),
             "currently_blocked_ips": len(self._blocked),
+            "security_alerts_sent": self._stats.get("security_alerts_sent", 0),
+            "alert_config": SECURITY_ALERT_CONFIG,
             "requests_by_hour": dict(sorted(last_24h.items())),
             "top_endpoints": [{"endpoint": e, "count": c} for e, c in top_endpoints],
             "top_blocked_ips": [{"ip": ip, "count": c} for ip, c in top_blocked_ips],
@@ -257,8 +366,10 @@ class RateLimiter:
             "requests_by_endpoint": defaultdict(int),
             "requests_by_hour": defaultdict(int),
             "blocked_ips": defaultdict(int),
-            "blocked_log": []
+            "blocked_log": [],
+            "security_alerts_sent": 0
         }
+        self._last_alert = {}
         logger.info("📊 Rate limiter stats cleared")
 
 

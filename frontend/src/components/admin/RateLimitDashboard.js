@@ -12,7 +12,12 @@ import {
   Unlock,
   AlertTriangle,
   Server,
-  BarChart3
+  BarChart3,
+  Bell,
+  BellRing,
+  Settings,
+  TestTube,
+  Check
 } from 'lucide-react';
 import axios from 'axios';
 
@@ -25,19 +30,23 @@ export default function RateLimitDashboard({ token }) {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('overview');
+  const [alertConfig, setAlertConfig] = useState(null);
+  const [testingAlert, setTestingAlert] = useState(false);
 
   const fetchData = useCallback(async (showRefreshing = false) => {
     if (showRefreshing) setRefreshing(true);
     try {
       const headers = { Authorization: `Bearer ${token}` };
       
-      const [statsRes, blockedRes] = await Promise.all([
+      const [statsRes, blockedRes, alertRes] = await Promise.all([
         axios.get(`${API}/api/rate-limits/stats`, { headers }),
-        axios.get(`${API}/api/rate-limits/blocked`, { headers })
+        axios.get(`${API}/api/rate-limits/blocked`, { headers }),
+        axios.get(`${API}/api/rate-limits/alerts/config`, { headers })
       ]);
       
       setStats(statsRes.data);
       setBlockedIps(blockedRes.data.blocked_ips || []);
+      setAlertConfig(alertRes.data.config);
       setError(null);
     } catch (err) {
       setError(err.response?.data?.detail || 'فشل في جلب البيانات');
@@ -66,6 +75,48 @@ export default function RateLimitDashboard({ token }) {
       fetchData(true);
     } catch (err) {
       alert(err.response?.data?.detail || 'فشل في إلغاء الحظر');
+    }
+  };
+
+  const handleToggleAlerts = async () => {
+    try {
+      await axios.post(
+        `${API}/api/rate-limits/alerts/config`,
+        { enabled: !alertConfig?.enabled },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      fetchData(true);
+    } catch (err) {
+      alert(err.response?.data?.detail || 'فشل في تحديث الإعدادات');
+    }
+  };
+
+  const handleTestAlert = async () => {
+    setTestingAlert(true);
+    try {
+      const res = await axios.post(
+        `${API}/api/rate-limits/test-alert`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      alert(`✅ ${res.data.message}\n${res.data.push_status}`);
+    } catch (err) {
+      alert(err.response?.data?.detail || 'فشل في إرسال التنبيه التجريبي');
+    } finally {
+      setTestingAlert(false);
+    }
+  };
+
+  const handleUpdateAlertConfig = async (field, value) => {
+    try {
+      await axios.post(
+        `${API}/api/rate-limits/alerts/config`,
+        { [field]: value },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      fetchData(true);
+    } catch (err) {
+      alert(err.response?.data?.detail || 'فشل في تحديث الإعدادات');
     }
   };
 
@@ -116,7 +167,7 @@ export default function RateLimitDashboard({ token }) {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <StatCard
           icon={<Activity className="w-5 h-5" />}
           label="إجمالي الطلبات"
@@ -137,20 +188,27 @@ export default function RateLimitDashboard({ token }) {
           color="orange"
         />
         <StatCard
+          icon={<BellRing className="w-5 h-5" />}
+          label="تنبيهات مرسلة"
+          value={stats?.security_alerts_sent || 0}
+          color="purple"
+        />
+        <StatCard
           icon={<Server className="w-5 h-5" />}
           label="معدل الحظر"
           value={`${stats?.block_rate}%`}
-          color="purple"
+          color="green"
         />
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 border-b">
+      <div className="flex gap-2 border-b overflow-x-auto">
         {[
           { id: 'overview', label: 'نظرة عامة', icon: <BarChart3 className="w-4 h-4" /> },
           { id: 'blocked', label: 'المحظورين', icon: <Ban className="w-4 h-4" /> },
           { id: 'endpoints', label: 'الـ APIs', icon: <Activity className="w-4 h-4" /> },
-          { id: 'config', label: 'الإعدادات', icon: <Shield className="w-4 h-4" /> },
+          { id: 'alerts', label: 'التنبيهات', icon: <Bell className="w-4 h-4" /> },
+          { id: 'config', label: 'الإعدادات', icon: <Settings className="w-4 h-4" /> },
         ].map(tab => (
           <button
             key={tab.id}
@@ -318,6 +376,122 @@ export default function RateLimitDashboard({ token }) {
                 </div>
               );
             })}
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'alerts' && (
+        <div className="space-y-4">
+          {/* Alert Status Card */}
+          <div className="bg-white rounded-xl p-4 shadow-sm border">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold text-gray-800 flex items-center gap-2">
+                <Bell className="w-5 h-5 text-purple-500" />
+                إعدادات التنبيهات الأمنية
+              </h3>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleTestAlert}
+                  disabled={testingAlert}
+                  className="flex items-center gap-1 px-3 py-1.5 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors text-sm"
+                >
+                  <TestTube className={`w-4 h-4 ${testingAlert ? 'animate-spin' : ''}`} />
+                  {testingAlert ? 'جاري الإرسال...' : 'تنبيه تجريبي'}
+                </button>
+                <button
+                  onClick={handleToggleAlerts}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors text-sm font-medium ${
+                    alertConfig?.enabled 
+                      ? 'bg-green-100 text-green-700 hover:bg-green-200' 
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  {alertConfig?.enabled ? (
+                    <>
+                      <Check className="w-4 h-4" />
+                      مفعّل
+                    </>
+                  ) : (
+                    <>
+                      <Bell className="w-4 h-4" />
+                      معطّل
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Alert Settings */}
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="p-4 bg-gray-50 rounded-lg">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  عتبة التنبيه (عدد مرات الحظر)
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    min="1"
+                    max="10"
+                    value={alertConfig?.alert_threshold || 3}
+                    onChange={(e) => handleUpdateAlertConfig('alert_threshold', parseInt(e.target.value))}
+                    className="w-20 px-3 py-2 border rounded-lg text-center"
+                  />
+                  <span className="text-sm text-gray-500">مرات حظر قبل إرسال تنبيه</span>
+                </div>
+              </div>
+
+              <div className="p-4 bg-gray-50 rounded-lg">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  فترة التهدئة (بالثواني)
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    min="60"
+                    max="3600"
+                    step="60"
+                    value={alertConfig?.alert_cooldown || 300}
+                    onChange={(e) => handleUpdateAlertConfig('alert_cooldown', parseInt(e.target.value))}
+                    className="w-24 px-3 py-2 border rounded-lg text-center"
+                  />
+                  <span className="text-sm text-gray-500">ثانية بين التنبيهات لنفس IP</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Critical Endpoints */}
+          <div className="bg-white rounded-xl p-4 shadow-sm border">
+            <h3 className="font-semibold text-gray-800 mb-4 flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-red-500" />
+              النقاط الحرجة (تنبيه فوري)
+            </h3>
+            <p className="text-sm text-gray-500 mb-3">
+              هذه النقاط ترسل تنبيه فوري عند أول حظر (بدون انتظار العتبة):
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {alertConfig?.critical_endpoints?.map((endpoint, idx) => (
+                <span key={idx} className="px-3 py-1.5 bg-red-100 text-red-700 rounded-full text-sm font-mono">
+                  {endpoint}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          {/* Alert Stats */}
+          <div className="bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl p-6 text-white">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-purple-100 text-sm">إجمالي التنبيهات المرسلة</p>
+                <p className="text-4xl font-bold mt-1">{stats?.security_alerts_sent || 0}</p>
+              </div>
+              <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
+                <BellRing className="w-8 h-8" />
+              </div>
+            </div>
+            <p className="text-purple-100 text-xs mt-4">
+              يتم إرسال التنبيهات عبر Push Notification وحفظها في الإشعارات
+            </p>
           </div>
         </div>
       )}
