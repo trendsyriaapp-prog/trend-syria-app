@@ -67,7 +67,7 @@ class TestAdminBrowseAsCustomer:
         assert response.status_code == 200, f"Failed to request topup: {response.text}"
         
         data = response.json()
-        assert data.get("success") == True, "Topup request not successful"
+        assert data.get("success"), "Topup request not successful"
         assert "topup_id" in data, "No topup_id"
         assert "topup_code" in data, "No topup_code"
         print(f"✅ Admin topup request created: {data.get('topup_code')}")

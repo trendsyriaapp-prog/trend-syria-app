@@ -63,7 +63,7 @@ class TestWalletAccessAllUsers:
         assert response.status_code == 200, f"Admin cannot request topup: {response.text}"
         
         data = response.json()
-        assert data.get("success") == True, "Topup request not successful"
+        assert data.get("success"), "Topup request not successful"
         assert "topup_id" in data, "No topup_id in response"
         assert "topup_code" in data, "No topup_code in response"
         print(f"✅ Admin topup request created: {data.get('topup_code')}")
@@ -160,7 +160,7 @@ class TestWalletAPIStructure:
         assert response.status_code == 200, f"Topup request failed: {response.text}"
         
         data = response.json()
-        assert data.get("success") == True
+        assert data.get("success")
         assert "topup_id" in data
         assert "topup_code" in data
         assert data.get("amount") == 1000

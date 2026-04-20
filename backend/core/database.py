@@ -143,6 +143,145 @@ async def warm_up_connection():
 
 
 # ============== MongoDB Indexes للسرعة ==============
+# تم تقسيم الدالة لتقليل التعقيد وتحسين القابلية للصيانة
+
+async def _create_product_indexes():
+    """إنشاء فهارس جدول المنتجات"""
+    await db.products.create_index("id", unique=True)
+    await db.products.create_index("is_active")
+    await db.products.create_index("is_approved")
+    await db.products.create_index("category")
+    await db.products.create_index("seller_id")
+    await db.products.create_index("created_at")
+    await db.products.create_index("sales_count")
+    await db.products.create_index("is_sponsored")
+    await db.products.create_index("free_shipping")
+    await db.products.create_index([("is_active", 1), ("is_approved", 1), ("created_at", -1)])
+    await db.products.create_index([("is_active", 1), ("is_approved", 1), ("sales_count", -1)])
+    await db.products.create_index([("seller_id", 1), ("is_active", 1), ("approval_status", 1)])
+    try:
+        await db.products.create_index([("name", "text"), ("description", "text")])
+    except Exception:
+        pass  # قد يكون موجوداً مسبقاً
+
+
+async def _create_user_indexes():
+    """إنشاء فهارس جدول المستخدمين"""
+    await db.users.create_index("id", unique=True)
+    await db.users.create_index("phone", unique=True)
+    await db.users.create_index("user_type")
+    await db.users.create_index("is_approved")
+    await db.users.create_index("device_ids")
+
+
+async def _create_order_indexes():
+    """إنشاء فهارس جدول الطلبات"""
+    await db.orders.create_index("id", unique=True)
+    await db.orders.create_index("buyer_id")
+    await db.orders.create_index("seller_id")
+    await db.orders.create_index("status")
+    await db.orders.create_index("created_at")
+    await db.orders.create_index([("buyer_id", 1), ("created_at", -1)])
+    await db.orders.create_index("delivery_driver_id")
+    await db.orders.create_index("delivery_status")
+    await db.orders.create_index("city")
+    await db.orders.create_index([("delivery_status", 1), ("delivery_driver_id", 1), ("city", 1)])
+
+
+async def _create_food_indexes():
+    """إنشاء فهارس جداول الطعام"""
+    # طلبات الطعام
+    await db.food_orders.create_index("id", unique=True)
+    await db.food_orders.create_index("buyer_id")
+    await db.food_orders.create_index("store_id")
+    await db.food_orders.create_index("driver_id")
+    await db.food_orders.create_index("status")
+    await db.food_orders.create_index("created_at")
+    await db.food_orders.create_index("delivery_city")
+    await db.food_orders.create_index([("status", 1), ("driver_id", 1), ("delivery_city", 1)])
+    await db.food_orders.create_index("batch_id")
+    await db.food_orders.create_index("driver_requested")
+    await db.food_orders.create_index("driver_status")
+    await db.food_orders.create_index([("store_id", 1), ("status", 1), ("created_at", -1)])
+    
+    # متاجر الطعام
+    await db.food_stores.create_index("id", unique=True)
+    await db.food_stores.create_index("owner_id")
+    await db.food_stores.create_index("is_approved")
+    await db.food_stores.create_index("is_active")
+    await db.food_stores.create_index("store_type")
+    await db.food_stores.create_index("city")
+    try:
+        await db.food_stores.create_index([("name", "text"), ("description", "text")])
+    except Exception:
+        pass
+    
+    # أطباق ومنتجات الطعام
+    await db.food_items.create_index("id", unique=True)
+    await db.food_items.create_index("store_id")
+    await db.food_items.create_index("is_approved")
+    await db.food_items.create_index("category")
+    await db.food_products.create_index("id", unique=True)
+    await db.food_products.create_index("store_id")
+    await db.food_products.create_index("approval_status")
+    await db.food_products.create_index("category")
+
+
+async def _create_auxiliary_indexes():
+    """إنشاء فهارس الجداول المساعدة"""
+    # الإعلانات والإعدادات
+    await db.ads.create_index("is_active")
+    await db.ads.create_index("created_at")
+    await db.settings.create_index("key", unique=True)
+    await db.ticker_messages.create_index("id", unique=True)
+    
+    # وثائق البائعين والسائقين
+    await db.seller_documents.create_index("seller_id")
+    await db.seller_documents.create_index("status")
+    await db.delivery_documents.create_index("driver_id")
+    await db.delivery_documents.create_index("delivery_id")
+    await db.delivery_documents.create_index("status")
+    
+    # المحافظ
+    await db.wallets.create_index("user_id", unique=True)
+    await db.wallet_transactions.create_index("user_id")
+    await db.wallet_transactions.create_index("created_at")
+    
+    # عروض الفلاش
+    await db.flash_sales.create_index("id", unique=True)
+    await db.flash_sales.create_index("is_active")
+    await db.flash_sale_requests.create_index("store_id")
+    await db.flash_sale_requests.create_index("seller_id")
+    await db.flash_sale_requests.create_index("status")
+    
+    # الإشعارات
+    await db.notifications.create_index("user_id")
+    await db.notifications.create_index("is_read")
+    await db.notifications.create_index([("user_id", 1), ("created_at", -1)])
+    
+    # تقييمات وإنجازات السائقين
+    await db.driver_ratings.create_index("driver_id")
+    await db.driver_achievements.create_index("driver_id")
+    await db.driver_violations.create_index("driver_id")
+    await db.driver_violations.create_index("status")
+    
+    # المحادثات والمكالمات
+    await db.chat_messages.create_index("order_id")
+    await db.chat_messages.create_index("sender_id")
+    await db.chat_messages.create_index([("order_id", 1), ("created_at", 1)])
+    await db.call_requests.create_index("order_id")
+    await db.call_requests.create_index("driver_id")
+    await db.call_requests.create_index("status")
+    await db.call_requests.create_index([("driver_id", 1), ("status", 1)])
+    
+    # أصناف وعناوين
+    await db.business_categories.create_index("id", unique=True)
+    await db.business_categories.create_index("type")
+    await db.business_categories.create_index("is_active")
+    await db.saved_addresses.create_index("user_id")
+    await db.saved_addresses.create_index([("user_id", 1), ("is_default", 1)])
+    await db.payment_methods.create_index("user_id")
+
 
 async def create_indexes():
     """
@@ -152,180 +291,20 @@ async def create_indexes():
     try:
         logger.info("🔧 Creating MongoDB indexes...")
         
-        # فهارس جدول المنتجات (الأهم)
-        await db.products.create_index("id", unique=True)
-        await db.products.create_index("is_active")
-        await db.products.create_index("is_approved")
-        await db.products.create_index("category")
-        await db.products.create_index("seller_id")
-        await db.products.create_index("created_at")
-        await db.products.create_index("sales_count")
-        await db.products.create_index("is_sponsored")
-        await db.products.create_index("free_shipping")
-        # فهرس مركب للبحث الشائع
-        await db.products.create_index([
-            ("is_active", 1),
-            ("is_approved", 1),
-            ("created_at", -1)
-        ])
-        await db.products.create_index([
-            ("is_active", 1),
-            ("is_approved", 1),
-            ("sales_count", -1)
-        ])
+        await _create_product_indexes()
+        logger.info("✅ Product indexes created")
         
-        # فهارس جدول المستخدمين
-        await db.users.create_index("id", unique=True)
-        await db.users.create_index("phone", unique=True)
-        await db.users.create_index("user_type")
-        await db.users.create_index("is_approved")
+        await _create_user_indexes()
+        logger.info("✅ User indexes created")
         
-        # فهارس جدول الطلبات
-        await db.orders.create_index("id", unique=True)
-        await db.orders.create_index("buyer_id")
-        await db.orders.create_index("seller_id")
-        await db.orders.create_index("status")
-        await db.orders.create_index("created_at")
-        await db.orders.create_index([("buyer_id", 1), ("created_at", -1)])
+        await _create_order_indexes()
+        logger.info("✅ Order indexes created")
         
-        # فهارس طلبات الطعام
-        await db.food_orders.create_index("id", unique=True)
-        await db.food_orders.create_index("buyer_id")
-        await db.food_orders.create_index("store_id")
-        await db.food_orders.create_index("driver_id")
-        await db.food_orders.create_index("status")
-        await db.food_orders.create_index("created_at")
+        await _create_food_indexes()
+        logger.info("✅ Food indexes created")
         
-        # فهارس الإعلانات
-        await db.ads.create_index("is_active")
-        await db.ads.create_index("created_at")
-        
-        # فهارس الإعدادات
-        await db.settings.create_index("key", unique=True)
-        await db.ticker_messages.create_index("id", unique=True)
-        
-        # فهارس وثائق البائعين والسائقين
-        await db.seller_documents.create_index("seller_id")
-        await db.seller_documents.create_index("status")
-        await db.delivery_documents.create_index("driver_id")
-        await db.delivery_documents.create_index("delivery_id")
-        await db.delivery_documents.create_index("status")
-        
-        # فهارس المحافظ
-        await db.wallets.create_index("user_id", unique=True)
-        await db.wallet_transactions.create_index("user_id")
-        await db.wallet_transactions.create_index("created_at")
-        
-        # ============================================
-        # 🚀 فهارس إضافية لتسريع الاستعلامات المعقدة
-        # ============================================
-        
-        # فهارس طلبات المنتجات (للسائقين)
-        await db.orders.create_index("delivery_driver_id")
-        await db.orders.create_index("delivery_status")
-        await db.orders.create_index("city")
-        await db.orders.create_index([
-            ("delivery_status", 1),
-            ("delivery_driver_id", 1),
-            ("city", 1)
-        ])
-        
-        # فهارس طلبات الطعام (للسائقين)
-        await db.food_orders.create_index("delivery_city")
-        await db.food_orders.create_index([
-            ("status", 1),
-            ("driver_id", 1),
-            ("delivery_city", 1)
-        ])
-        await db.food_orders.create_index("batch_id")
-        await db.food_orders.create_index("driver_requested")
-        await db.food_orders.create_index("driver_status")
-        
-        # فهارس متاجر الطعام
-        await db.food_stores.create_index("id", unique=True)
-        await db.food_stores.create_index("owner_id")
-        await db.food_stores.create_index("is_approved")
-        await db.food_stores.create_index("is_active")
-        await db.food_stores.create_index("store_type")
-        await db.food_stores.create_index("city")
-        
-        # فهارس أطباق الطعام
-        await db.food_items.create_index("id", unique=True)
-        await db.food_items.create_index("store_id")
-        await db.food_items.create_index("is_approved")
-        await db.food_items.create_index("category")
-        
-        # فهارس منتجات الطعام
-        await db.food_products.create_index("id", unique=True)
-        await db.food_products.create_index("store_id")
-        await db.food_products.create_index("approval_status")
-        await db.food_products.create_index("category")
-        
-        # فهارس عروض الفلاش
-        await db.flash_sales.create_index("id", unique=True)
-        await db.flash_sales.create_index("is_active")
-        await db.flash_sale_requests.create_index("store_id")
-        await db.flash_sale_requests.create_index("seller_id")
-        await db.flash_sale_requests.create_index("status")
-        
-        # فهارس الإشعارات
-        await db.notifications.create_index("user_id")
-        await db.notifications.create_index("is_read")
-        await db.notifications.create_index([("user_id", 1), ("created_at", -1)])
-        
-        # فهارس التقييمات
-        await db.driver_ratings.create_index("driver_id")
-        await db.driver_achievements.create_index("driver_id")
-        await db.driver_violations.create_index("driver_id")
-        await db.driver_violations.create_index("status")
-        
-        # فهارس مركبة للأداء الأمثل
-        await db.products.create_index([
-            ("seller_id", 1),
-            ("is_active", 1),
-            ("approval_status", 1)
-        ])
-        await db.food_orders.create_index([
-            ("store_id", 1),
-            ("status", 1),
-            ("created_at", -1)
-        ])
-        
-        # ============================================
-        # 🆕 فهارس إضافية - المحادثات والمكالمات
-        # ============================================
-        
-        # فهارس المحادثات
-        await db.chat_messages.create_index("order_id")
-        await db.chat_messages.create_index("sender_id")
-        await db.chat_messages.create_index([("order_id", 1), ("created_at", 1)])
-        
-        # فهارس طلبات الاتصال
-        await db.call_requests.create_index("order_id")
-        await db.call_requests.create_index("driver_id")
-        await db.call_requests.create_index("status")
-        await db.call_requests.create_index([("driver_id", 1), ("status", 1)])
-        
-        # فهارس الأصناف التجارية
-        await db.business_categories.create_index("id", unique=True)
-        await db.business_categories.create_index("type")
-        await db.business_categories.create_index("is_active")
-        
-        # فهارس العناوين المحفوظة
-        await db.saved_addresses.create_index("user_id")
-        await db.saved_addresses.create_index([("user_id", 1), ("is_default", 1)])
-        
-        # فهارس طرق الدفع
-        await db.payment_methods.create_index("user_id")
-        
-        # فهارس الأجهزة (للتحقق من OTP)
-        await db.users.create_index("device_ids")
-        
-        # فهرس نصي للبحث في المنتجات
-        await db.products.create_index([("name", "text"), ("description", "text")])
-        
-        # فهرس نصي للبحث في متاجر الطعام
-        await db.food_stores.create_index([("name", "text"), ("description", "text")])
+        await _create_auxiliary_indexes()
+        logger.info("✅ Auxiliary indexes created")
         
         logger.info("✅ MongoDB indexes created successfully")
         return True

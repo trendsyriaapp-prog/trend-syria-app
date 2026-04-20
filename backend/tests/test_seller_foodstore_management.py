@@ -146,7 +146,7 @@ class TestSellerManagement:
         sellers_after_suspend = verify_response.json()
         suspended_seller = next((s for s in sellers_after_suspend if s["id"] == seller_id), None)
         assert suspended_seller is not None, "Seller not found after suspension"
-        assert suspended_seller.get("is_suspended") == True, "Seller should be suspended"
+        assert suspended_seller.get("is_suspended"), "Seller should be suspended"
         print(f"✅ Verified seller is suspended")
         
         # Test activate
@@ -165,7 +165,7 @@ class TestSellerManagement:
         sellers_after_activate = verify_response2.json()
         activated_seller = next((s for s in sellers_after_activate if s["id"] == seller_id), None)
         assert activated_seller is not None, "Seller not found after activation"
-        assert activated_seller.get("is_suspended") == False, "Seller should be active"
+        assert not activated_seller.get("is_suspended"), "Seller should be active"
         print(f"✅ Verified seller is active")
 
 
@@ -274,7 +274,7 @@ class TestFoodStoreManagement:
         stores_after_suspend = verify_response.json()
         suspended_store = next((s for s in stores_after_suspend if s["id"] == store_id), None)
         assert suspended_store is not None, "Store not found after suspension"
-        assert suspended_store.get("is_suspended") == True, "Store should be suspended"
+        assert suspended_store.get("is_suspended"), "Store should be suspended"
         print(f"✅ Verified food store is suspended")
         
         # Test activate
@@ -293,7 +293,7 @@ class TestFoodStoreManagement:
         stores_after_activate = verify_response2.json()
         activated_store = next((s for s in stores_after_activate if s["id"] == store_id), None)
         assert activated_store is not None, "Store not found after activation"
-        assert activated_store.get("is_suspended") == False, "Store should be active"
+        assert not activated_store.get("is_suspended"), "Store should be active"
         print(f"✅ Verified food store is active")
 
 

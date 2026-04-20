@@ -63,7 +63,7 @@ class TestPaymentMethodsRemoval:
         data = response.json()
         shamcash = data.get("providers", {}).get("shamcash", {})
         
-        assert shamcash.get("enabled") == True, "shamcash should be enabled"
+        assert shamcash.get("enabled"), "shamcash should be enabled"
         print(f"✅ Shamcash enabled: {shamcash.get('enabled')}")
     
     def test_bank_account_provider_enabled(self):
@@ -74,7 +74,7 @@ class TestPaymentMethodsRemoval:
         data = response.json()
         bank_account = data.get("providers", {}).get("bank_account", {})
         
-        assert bank_account.get("enabled") == True, "bank_account should be enabled"
+        assert bank_account.get("enabled"), "bank_account should be enabled"
         print(f"✅ Bank account enabled: {bank_account.get('enabled')}")
 
 

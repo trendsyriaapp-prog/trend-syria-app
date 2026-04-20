@@ -61,7 +61,7 @@ class TestWalletTransactionsClear:
         
         data = response.json()
         assert "success" in data, "Response should contain 'success' field"
-        assert data["success"] == True, "success should be True"
+        assert data["success"], "success should be True"
         assert "message" in data, "Response should contain 'message' field"
         assert "deleted_count" in data, "Response should contain 'deleted_count' field"
         

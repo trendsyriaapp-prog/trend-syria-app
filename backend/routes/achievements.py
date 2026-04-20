@@ -334,12 +334,9 @@ async def check_and_unlock_achievements(user: dict = Depends(get_current_user)):
         "count": len(new_unlocked)
     }
 
-async def calculate_progress(driver_id: str) -> dict:
-    """حساب التقدم لجميع الإنجازات"""
-    progress = {}
-    now = datetime.now(timezone.utc)
-    
-    # إحصائيات أساسية
+async def _fetch_driver_stats(driver_id: str, now: datetime) -> dict:
+    """جلب إحصائيات السائق الأساسية"""
+    # إجمالي الطلبات المُسلّمة
     total_orders = await db.orders.count_documents({
         "delivery_driver_id": driver_id,
         "delivery_status": "delivered"
@@ -362,15 +359,24 @@ async def calculate_progress(driver_id: str) -> dict:
         else:
             break
     
-    # طلبات اليوم
+    return {
+        "total_orders": total_orders,
+        "avg_rating": avg_rating,
+        "total_ratings": total_ratings,
+        "consecutive_5_star": consecutive_5_star
+    }
+
+
+async def _fetch_time_based_orders(driver_id: str, now: datetime) -> dict:
+    """جلب عدد الطلبات حسب الفترة الزمنية"""
     today_start = datetime(now.year, now.month, now.day, tzinfo=timezone.utc)
+    
     daily_orders = await db.orders.count_documents({
         "delivery_driver_id": driver_id,
         "delivery_status": "delivered",
         "delivered_at": {"$gte": today_start.isoformat()}
     })
     
-    # طلبات الأسبوع
     week_start = today_start - timedelta(days=now.weekday())
     weekly_orders = await db.orders.count_documents({
         "delivery_driver_id": driver_id,
@@ -378,7 +384,6 @@ async def calculate_progress(driver_id: str) -> dict:
         "delivered_at": {"$gte": week_start.isoformat()}
     })
     
-    # طلبات الشهر
     month_start = datetime(now.year, now.month, 1, tzinfo=timezone.utc)
     monthly_orders = await db.orders.count_documents({
         "delivery_driver_id": driver_id,
@@ -386,7 +391,15 @@ async def calculate_progress(driver_id: str) -> dict:
         "delivered_at": {"$gte": month_start.isoformat()}
     })
     
-    # أيام النشاط
+    return {
+        "daily_orders": daily_orders,
+        "weekly_orders": weekly_orders,
+        "monthly_orders": monthly_orders
+    }
+
+
+async def _fetch_driver_activity(driver_id: str, now: datetime) -> dict:
+    """جلب بيانات نشاط السائق"""
     driver = await db.users.find_one({"id": driver_id}, {"_id": 0, "created_at": 1})
     days_active = 0
     if driver and driver.get("created_at"):
@@ -396,46 +409,59 @@ async def calculate_progress(driver_id: str) -> dict:
         except Exception:
             pass
     
-    # المدن الفريدة
-    unique_cities_cursor = await db.orders.distinct("city", {
+    unique_cities_list = await db.orders.distinct("city", {
         "delivery_driver_id": driver_id,
         "delivery_status": "delivered"
     })
-    unique_cities = len(unique_cities_cursor) if unique_cities_cursor else 0
+    unique_cities = len(unique_cities_list) if unique_cities_list else 0
+    
+    return {
+        "days_active": days_active,
+        "unique_cities": unique_cities
+    }
+
+
+def _get_current_value(req_type: str, req: dict, stats: dict) -> int:
+    """حساب القيمة الحالية لنوع المتطلب"""
+    value_map = {
+        "total_orders": stats.get("total_orders", 0),
+        "consecutive_5_star": stats.get("consecutive_5_star", 0),
+        "daily_orders": stats.get("daily_orders", 0),
+        "weekly_orders": stats.get("weekly_orders", 0),
+        "monthly_orders": stats.get("monthly_orders", 0),
+        "days_active": stats.get("days_active", 0),
+        "unique_cities": stats.get("unique_cities", 0),
+        "early_deliveries": 0,  # TODO: Implement
+        "late_deliveries": 0,   # TODO: Implement
+    }
+    
+    if req_type == "avg_rating":
+        min_ratings = req.get("min_ratings", 0)
+        if stats.get("total_ratings", 0) >= min_ratings:
+            return stats.get("avg_rating", 0)
+        return 0
+    
+    return value_map.get(req_type, 0)
+
+
+async def calculate_progress(driver_id: str) -> dict:
+    """حساب التقدم لجميع الإنجازات"""
+    now = datetime.now(timezone.utc)
+    
+    # جلب جميع الإحصائيات
+    basic_stats = await _fetch_driver_stats(driver_id, now)
+    time_stats = await _fetch_time_based_orders(driver_id, now)
+    activity_stats = await _fetch_driver_activity(driver_id, now)
+    
+    # دمج الإحصائيات
+    all_stats = {**basic_stats, **time_stats, **activity_stats}
     
     # حساب التقدم لكل إنجاز
+    progress = {}
     for ach_id, ach_data in ACHIEVEMENTS.items():
         req = ach_data["requirement"]
-        req_type = req["type"]
         target = req["value"]
-        current = 0
-        
-        if req_type == "total_orders":
-            current = total_orders
-        elif req_type == "consecutive_5_star":
-            current = consecutive_5_star
-        elif req_type == "avg_rating":
-            if total_ratings >= req.get("min_ratings", 0):
-                current = avg_rating
-            else:
-                current = 0
-        elif req_type == "daily_orders":
-            current = daily_orders
-        elif req_type == "weekly_orders":
-            current = weekly_orders
-        elif req_type == "monthly_orders":
-            current = monthly_orders
-        elif req_type == "days_active":
-            current = days_active
-        elif req_type == "unique_cities":
-            current = unique_cities
-        elif req_type == "early_deliveries":
-            # TODO: Implement early deliveries count
-            current = 0
-        elif req_type == "late_deliveries":
-            # TODO: Implement late deliveries count
-            current = 0
-        
+        current = _get_current_value(req["type"], req, all_stats)
         percent = min(100, round((current / target) * 100, 1)) if target > 0 else 0
         
         progress[ach_id] = {
