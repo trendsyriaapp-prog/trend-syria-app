@@ -29,72 +29,47 @@ class CategoryUpdate(BaseModel):
     order: Optional[int] = None
     is_active: Optional[bool] = None
 
-# الفئات الافتراضية - نظام رئيسية وفرعية
+# الفئات الافتراضية - القائمة النهائية المعتمدة
 DEFAULT_CATEGORIES = [
-    # ===== قسم المنتجات (shopping) =====
-    
-    # 📱 إلكترونيات (فئة رئيسية)
-    {"id": "electronics", "name": "إلكترونيات", "name_en": "Electronics", "icon": "Smartphone", "type": "shopping", "color": "#3B82F6", "order": 1, "parent_id": None, "is_parent": True},
-    {"id": "mobiles", "name": "موبايلات", "name_en": "Mobiles", "icon": "Smartphone", "type": "shopping", "color": "#8B5CF6", "order": 1, "parent_id": "electronics", "is_parent": False},
-    {"id": "computers", "name": "كمبيوتر ولابتوب", "name_en": "Computers", "icon": "Laptop", "type": "shopping", "color": "#6366F1", "order": 2, "parent_id": "electronics", "is_parent": False},
-    {"id": "watches", "name": "ساعات يد", "name_en": "Watches", "icon": "Watch", "type": "shopping", "color": "#4F46E5", "order": 3, "parent_id": "electronics", "is_parent": False},
-    {"id": "gaming", "name": "ألعاب فيديو وبلايستيشن", "name_en": "Gaming", "icon": "Gamepad2", "type": "shopping", "color": "#7C3AED", "order": 4, "parent_id": "electronics", "is_parent": False},
-    {"id": "headphones", "name": "سماعات وإكسسوارات", "name_en": "Headphones", "icon": "Headphones", "type": "shopping", "color": "#9333EA", "order": 5, "parent_id": "electronics", "is_parent": False},
-    
-    # 👕 أزياء (فئة رئيسية)
-    {"id": "fashion", "name": "أزياء", "name_en": "Fashion", "icon": "Shirt", "type": "shopping", "color": "#EC4899", "order": 2, "parent_id": None, "is_parent": True},
-    {"id": "clothes", "name": "ملابس", "name_en": "Clothes", "icon": "Shirt", "type": "shopping", "color": "#F472B6", "order": 1, "parent_id": "fashion", "is_parent": False},
-    {"id": "shoes", "name": "أحذية", "name_en": "Shoes", "icon": "Footprints", "type": "shopping", "color": "#F59E0B", "order": 2, "parent_id": "fashion", "is_parent": False},
-    {"id": "accessories", "name": "إكسسوارات", "name_en": "Accessories", "icon": "Gem", "type": "shopping", "color": "#10B981", "order": 3, "parent_id": "fashion", "is_parent": False},
-    {"id": "perfumes", "name": "عطور", "name_en": "Perfumes", "icon": "Sparkles", "type": "shopping", "color": "#A855F7", "order": 4, "parent_id": "fashion", "is_parent": False},
-    {"id": "bags", "name": "حقائب", "name_en": "Bags", "icon": "Briefcase", "type": "shopping", "color": "#D946EF", "order": 5, "parent_id": "fashion", "is_parent": False},
-    {"id": "eyewear", "name": "نظارات", "name_en": "Eyewear", "icon": "Glasses", "type": "shopping", "color": "#0EA5E9", "order": 6, "parent_id": "fashion", "is_parent": False},
-    {"id": "jewelry", "name": "مجوهرات", "name_en": "Jewelry", "icon": "Crown", "type": "shopping", "color": "#EAB308", "order": 7, "parent_id": "fashion", "is_parent": False},
-    
-    # 🏠 المنزل (فئة رئيسية)
-    {"id": "home", "name": "المنزل", "name_en": "Home", "icon": "Home", "type": "shopping", "color": "#14B8A6", "order": 3, "parent_id": None, "is_parent": True},
-    {"id": "furniture", "name": "أثاث", "name_en": "Furniture", "icon": "Sofa", "type": "shopping", "color": "#84CC16", "order": 1, "parent_id": "home", "is_parent": False},
-    {"id": "appliances", "name": "أجهزة منزلية", "name_en": "Appliances", "icon": "Refrigerator", "type": "shopping", "color": "#06B6D4", "order": 2, "parent_id": "home", "is_parent": False},
-    {"id": "home_tools", "name": "أدوات منزلية", "name_en": "Home Tools", "icon": "Wrench", "type": "shopping", "color": "#64748B", "order": 3, "parent_id": "home", "is_parent": False},
-    {"id": "decor", "name": "ديكور", "name_en": "Decor", "icon": "Lamp", "type": "shopping", "color": "#F97316", "order": 4, "parent_id": "home", "is_parent": False},
-    
-    # 💄 جمال وصحة (فئة رئيسية)
-    {"id": "beauty_health", "name": "جمال وصحة", "name_en": "Beauty & Health", "icon": "Heart", "type": "shopping", "color": "#D946EF", "order": 4, "parent_id": None, "is_parent": True},
-    {"id": "beauty", "name": "تجميل", "name_en": "Beauty", "icon": "SprayCan", "type": "shopping", "color": "#EC4899", "order": 1, "parent_id": "beauty_health", "is_parent": False},
-    {"id": "medicines", "name": "أدوية", "name_en": "Medicines", "icon": "Pill", "type": "shopping", "color": "#22C55E", "order": 2, "parent_id": "beauty_health", "is_parent": False},
-    {"id": "personal_care", "name": "عناية شخصية", "name_en": "Personal Care", "icon": "Sparkle", "type": "shopping", "color": "#F472B6", "order": 3, "parent_id": "beauty_health", "is_parent": False},
-    
-    # 🎁 أخرى (فئة رئيسية)
-    {"id": "other", "name": "أخرى", "name_en": "Other", "icon": "Package", "type": "shopping", "color": "#9CA3AF", "order": 5, "parent_id": None, "is_parent": True},
-    {"id": "gifts", "name": "هدايا", "name_en": "Gifts", "icon": "Gift", "type": "shopping", "color": "#E11D48", "order": 1, "parent_id": "other", "is_parent": False},
-    {"id": "books", "name": "كتب", "name_en": "Books", "icon": "BookOpen", "type": "shopping", "color": "#78716C", "order": 2, "parent_id": "other", "is_parent": False},
-    {"id": "kids", "name": "أطفال", "name_en": "Kids", "icon": "Baby", "type": "shopping", "color": "#F97316", "order": 3, "parent_id": "other", "is_parent": False},
-    {"id": "sports", "name": "رياضة", "name_en": "Sports", "icon": "Dumbbell", "type": "shopping", "color": "#EF4444", "order": 4, "parent_id": "other", "is_parent": False},
-    {"id": "cars", "name": "سيارات", "name_en": "Cars", "icon": "Car", "type": "shopping", "color": "#64748B", "order": 5, "parent_id": "other", "is_parent": False},
-    {"id": "flowers", "name": "زهور", "name_en": "Flowers", "icon": "Flower2", "type": "shopping", "color": "#F43F5E", "order": 6, "parent_id": "other", "is_parent": False},
-    {"id": "stationery", "name": "قرطاسية", "name_en": "Stationery", "icon": "Pencil", "type": "shopping", "color": "#0284C7", "order": 7, "parent_id": "other", "is_parent": False},
-    {"id": "pets", "name": "حيوانات أليفة", "name_en": "Pets", "icon": "PawPrint", "type": "shopping", "color": "#A3E635", "order": 8, "parent_id": "other", "is_parent": False},
-    {"id": "services", "name": "خدمات", "name_en": "Services", "icon": "Wrench", "type": "shopping", "color": "#6366F1", "order": 9, "parent_id": "other", "is_parent": False},
+    # ===== قسم المنتجات (shopping) - 29 صنف =====
+    {"id": "electronics", "name": "إلكترونيات", "name_en": "Electronics", "icon": "Smartphone", "type": "shopping", "color": "#3B82F6", "order": 1, "is_active": True},
+    {"id": "mobiles", "name": "موبايلات", "name_en": "Mobiles", "icon": "Smartphone", "type": "shopping", "color": "#8B5CF6", "order": 2, "is_active": True},
+    {"id": "computers", "name": "كمبيوتر ولابتوب", "name_en": "Computers", "icon": "Laptop", "type": "shopping", "color": "#6366F1", "order": 3, "is_active": True},
+    {"id": "clothes", "name": "ملابس", "name_en": "Clothes", "icon": "Shirt", "type": "shopping", "color": "#EC4899", "order": 4, "is_active": True},
+    {"id": "shoes", "name": "أحذية", "name_en": "Shoes", "icon": "Footprints", "type": "shopping", "color": "#F59E0B", "order": 5, "is_active": True},
+    {"id": "accessories", "name": "إكسسوارات", "name_en": "Accessories", "icon": "Watch", "type": "shopping", "color": "#10B981", "order": 6, "is_active": True},
+    {"id": "perfumes", "name": "عطور", "name_en": "Perfumes", "icon": "Sparkles", "type": "shopping", "color": "#A855F7", "order": 7, "is_active": True},
+    {"id": "furniture", "name": "أثاث", "name_en": "Furniture", "icon": "Sofa", "type": "shopping", "color": "#84CC16", "order": 8, "is_active": True},
+    {"id": "appliances", "name": "أجهزة منزلية", "name_en": "Appliances", "icon": "Refrigerator", "type": "shopping", "color": "#06B6D4", "order": 9, "is_active": True},
+    {"id": "home_tools", "name": "أدوات منزلية", "name_en": "Home Tools", "icon": "Wrench", "type": "shopping", "color": "#64748B", "order": 10, "is_active": True},
+    {"id": "decor", "name": "ديكور", "name_en": "Decor", "icon": "Lamp", "type": "shopping", "color": "#F97316", "order": 11, "is_active": True},
+    {"id": "beauty", "name": "تجميل وعناية شخصية", "name_en": "Beauty & Personal Care", "icon": "SprayCan", "type": "shopping", "color": "#EC4899", "order": 12, "is_active": True},
+    {"id": "sports", "name": "رياضة", "name_en": "Sports", "icon": "Dumbbell", "type": "shopping", "color": "#EF4444", "order": 13, "is_active": True},
+    {"id": "kids", "name": "أطفال", "name_en": "Kids", "icon": "Baby", "type": "shopping", "color": "#F97316", "order": 14, "is_active": True},
+    {"id": "books", "name": "كتب", "name_en": "Books", "icon": "BookOpen", "type": "shopping", "color": "#78716C", "order": 15, "is_active": True},
+    {"id": "stationery", "name": "قرطاسية", "name_en": "Stationery", "icon": "Pencil", "type": "shopping", "color": "#0284C7", "order": 16, "is_active": True},
+    {"id": "gifts", "name": "هدايا", "name_en": "Gifts", "icon": "Gift", "type": "shopping", "color": "#E11D48", "order": 17, "is_active": True},
+    {"id": "gaming", "name": "ألعاب فيديو", "name_en": "Gaming", "icon": "Gamepad2", "type": "shopping", "color": "#7C3AED", "order": 18, "is_active": True},
+    {"id": "watches", "name": "ساعات يد", "name_en": "Watches", "icon": "Watch", "type": "shopping", "color": "#4F46E5", "order": 19, "is_active": True},
+    {"id": "headphones", "name": "سماعات", "name_en": "Headphones", "icon": "Headphones", "type": "shopping", "color": "#9333EA", "order": 20, "is_active": True},
+    {"id": "bags", "name": "حقائب", "name_en": "Bags", "icon": "Briefcase", "type": "shopping", "color": "#D946EF", "order": 21, "is_active": True},
+    {"id": "eyewear", "name": "نظارات", "name_en": "Eyewear", "icon": "Glasses", "type": "shopping", "color": "#0EA5E9", "order": 22, "is_active": True},
+    {"id": "flowers", "name": "زهور", "name_en": "Flowers", "icon": "Flower2", "type": "shopping", "color": "#F43F5E", "order": 23, "is_active": True},
+    {"id": "medicines", "name": "أدوية", "name_en": "Medicines", "icon": "Pill", "type": "shopping", "color": "#22C55E", "order": 24, "is_active": True},
+    {"id": "cars", "name": "سيارات", "name_en": "Cars", "icon": "Car", "type": "shopping", "color": "#64748B", "order": 25, "is_active": True},
+    {"id": "car_parts", "name": "قطع غيار سيارات", "name_en": "Car Parts", "icon": "Wrench", "type": "shopping", "color": "#475569", "order": 26, "is_active": True},
+    {"id": "hardware", "name": "خردوات", "name_en": "Hardware", "icon": "Hammer", "type": "shopping", "color": "#78716C", "order": 27, "is_active": True},
+    {"id": "groceries", "name": "مواد غذائية ومعلبات", "name_en": "Groceries & Canned", "icon": "ShoppingBasket", "type": "shopping", "color": "#84CC16", "order": 28, "is_active": True},
+    {"id": "pet_food", "name": "طعام حيوانات", "name_en": "Pet Food", "icon": "PawPrint", "type": "shopping", "color": "#A3E635", "order": 29, "is_active": True},
     
     # ===== قسم الطعام (food) =====
-    
-    # 🍔 طعام ومطاعم (فئة رئيسية)
-    {"id": "food_restaurants", "name": "طعام ومطاعم", "name_en": "Food & Restaurants", "icon": "UtensilsCrossed", "type": "food", "color": "#FF6B00", "order": 1, "parent_id": None, "is_parent": True},
-    {"id": "restaurants", "name": "مطاعم", "name_en": "Restaurants", "icon": "UtensilsCrossed", "type": "food", "color": "#FF6B00", "order": 1, "parent_id": "food_restaurants", "is_parent": False},
-    {"id": "sweets", "name": "حلويات", "name_en": "Sweets", "icon": "Cake", "type": "food", "color": "#EC4899", "order": 2, "parent_id": "food_restaurants", "is_parent": False},
-    {"id": "bakery", "name": "مخابز", "name_en": "Bakery", "icon": "Croissant", "type": "food", "color": "#D97706", "order": 3, "parent_id": "food_restaurants", "is_parent": False},
-    {"id": "cafes", "name": "مقاهي", "name_en": "Cafes", "icon": "Coffee", "type": "food", "color": "#8B4513", "order": 4, "parent_id": "food_restaurants", "is_parent": False},
-    {"id": "drinks", "name": "مشروبات", "name_en": "Drinks", "icon": "GlassWater", "type": "food", "color": "#06B6D4", "order": 5, "parent_id": "food_restaurants", "is_parent": False},
-    {"id": "fast_food", "name": "وجبات سريعة", "name_en": "Fast Food", "icon": "Pizza", "type": "food", "color": "#F59E0B", "order": 6, "parent_id": "food_restaurants", "is_parent": False},
-    
-    # 🛒 بقالة وماركت (فئة رئيسية)
-    {"id": "grocery", "name": "بقالة وماركت", "name_en": "Grocery", "icon": "ShoppingCart", "type": "food", "color": "#10B981", "order": 2, "parent_id": None, "is_parent": True},
-    {"id": "groceries", "name": "مواد غذائية", "name_en": "Groceries", "icon": "ShoppingBasket", "type": "food", "color": "#84CC16", "order": 1, "parent_id": "grocery", "is_parent": False},
-    {"id": "vegetables", "name": "خضروات وفواكه", "name_en": "Vegetables", "icon": "Apple", "type": "food", "color": "#22C55E", "order": 2, "parent_id": "grocery", "is_parent": False},
-    {"id": "market", "name": "ماركت", "name_en": "Market", "icon": "Store", "type": "food", "color": "#0EA5E9", "order": 3, "parent_id": "grocery", "is_parent": False},
-    {"id": "meat", "name": "لحوم ودواجن", "name_en": "Meat", "icon": "Beef", "type": "food", "color": "#DC2626", "order": 4, "parent_id": "grocery", "is_parent": False},
-    {"id": "canned_food", "name": "معلبات", "name_en": "Canned Food", "icon": "Package", "type": "food", "color": "#F59E0B", "order": 5, "parent_id": "grocery", "is_parent": False},
-    {"id": "cleaners", "name": "منظفات", "name_en": "Cleaners", "icon": "SprayCan", "type": "food", "color": "#0EA5E9", "order": 6, "parent_id": "grocery", "is_parent": False},
+    {"id": "restaurants", "name": "مطاعم", "name_en": "Restaurants", "icon": "UtensilsCrossed", "type": "food", "color": "#FF6B00", "order": 1, "is_active": True},
+    {"id": "cafes", "name": "مقاهي", "name_en": "Cafes", "icon": "Coffee", "type": "food", "color": "#8B4513", "order": 2, "is_active": True},
+    {"id": "sweets", "name": "حلويات", "name_en": "Sweets", "icon": "Cake", "type": "food", "color": "#EC4899", "order": 3, "is_active": True},
+    {"id": "bakery", "name": "مخابز", "name_en": "Bakery", "icon": "Croissant", "type": "food", "color": "#D97706", "order": 4, "is_active": True},
+    {"id": "drinks", "name": "مشروبات", "name_en": "Drinks", "icon": "GlassWater", "type": "food", "color": "#06B6D4", "order": 5, "is_active": True},
+    {"id": "food_groceries", "name": "مواد غذائية", "name_en": "Groceries", "icon": "ShoppingBasket", "type": "food", "color": "#84CC16", "order": 6, "is_active": True},
+    {"id": "vegetables", "name": "خضروات وفواكه", "name_en": "Vegetables", "icon": "Apple", "type": "food", "color": "#22C55E", "order": 7, "is_active": True},
 ]
 
 async def init_default_categories():

@@ -2399,27 +2399,37 @@ async def update_default_business_categories(user: dict = Depends(get_current_us
     # حذف الأصناف القديمة
     await db.business_categories.delete_many({})
     
-    # أصناف البائعين العاديين
+    # أصناف البائعين العاديين - متطابقة مع صفحة الأصناف
     seller_categories = [
-        {"id": "clothing", "name": "ملابس وأزياء", "icon": "👕", "type": "seller", "order": 1, "requires_license": False},
-        {"id": "electronics", "name": "إلكترونيات", "icon": "📱", "type": "seller", "order": 2, "requires_license": False},
-        {"id": "mobiles", "name": "موبايلات", "icon": "📲", "type": "seller", "order": 3, "requires_license": False},
-        {"id": "computers", "name": "كمبيوتر ولابتوب", "icon": "💻", "type": "seller", "order": 4, "requires_license": False},
+        {"id": "electronics", "name": "إلكترونيات", "icon": "📱", "type": "seller", "order": 1, "requires_license": False},
+        {"id": "mobiles", "name": "موبايلات", "icon": "📲", "type": "seller", "order": 2, "requires_license": False},
+        {"id": "computers", "name": "كمبيوتر ولابتوب", "icon": "💻", "type": "seller", "order": 3, "requires_license": False},
+        {"id": "clothes", "name": "ملابس", "icon": "👕", "type": "seller", "order": 4, "requires_license": False},
         {"id": "shoes", "name": "أحذية", "icon": "👟", "type": "seller", "order": 5, "requires_license": False},
         {"id": "accessories", "name": "إكسسوارات", "icon": "💍", "type": "seller", "order": 6, "requires_license": False},
         {"id": "perfumes", "name": "عطور", "icon": "🧴", "type": "seller", "order": 7, "requires_license": False},
-        {"id": "home", "name": "أجهزة منزلية", "icon": "🏠", "type": "seller", "order": 8, "requires_license": False},
-        {"id": "home_items", "name": "المنزل", "icon": "🏡", "type": "seller", "order": 9, "requires_license": False},
-        {"id": "beauty", "name": "مستحضرات تجميل", "icon": "💄", "type": "seller", "order": 10, "requires_license": False},
-        {"id": "furniture", "name": "أثاث ومفروشات", "icon": "🛋️", "type": "seller", "order": 11, "requires_license": False},
-        {"id": "toys", "name": "ألعاب وهدايا", "icon": "🎁", "type": "seller", "order": 12, "requires_license": False},
-        {"id": "books", "name": "كتب وقرطاسية", "icon": "📚", "type": "seller", "order": 13, "requires_license": False},
-        {"id": "sports", "name": "رياضة ولياقة", "icon": "⚽", "type": "seller", "order": 14, "requires_license": False},
-        {"id": "cars", "name": "قطع غيار سيارات", "icon": "🚗", "type": "seller", "order": 15, "requires_license": False},
-        {"id": "canned", "name": "معلبات", "icon": "🥫", "type": "seller", "order": 16, "requires_license": False},
-        {"id": "cleaning", "name": "منظفات", "icon": "🧹", "type": "seller", "order": 17, "requires_license": False},
-        {"id": "hardware", "name": "خردوات", "icon": "🔧", "type": "seller", "order": 18, "requires_license": False},
-        {"id": "medicine", "name": "أدوية ومستلزمات طبية", "icon": "💊", "type": "seller", "order": 19, "requires_license": True},
+        {"id": "furniture", "name": "أثاث", "icon": "🛋️", "type": "seller", "order": 8, "requires_license": False},
+        {"id": "appliances", "name": "أجهزة منزلية", "icon": "🏠", "type": "seller", "order": 9, "requires_license": False},
+        {"id": "home_tools", "name": "أدوات منزلية", "icon": "🔧", "type": "seller", "order": 10, "requires_license": False},
+        {"id": "decor", "name": "ديكور", "icon": "🖼️", "type": "seller", "order": 11, "requires_license": False},
+        {"id": "beauty", "name": "تجميل وعناية شخصية", "icon": "💄", "type": "seller", "order": 12, "requires_license": False},
+        {"id": "sports", "name": "رياضة", "icon": "⚽", "type": "seller", "order": 13, "requires_license": False},
+        {"id": "kids", "name": "أطفال", "icon": "👶", "type": "seller", "order": 14, "requires_license": False},
+        {"id": "books", "name": "كتب", "icon": "📚", "type": "seller", "order": 15, "requires_license": False},
+        {"id": "stationery", "name": "قرطاسية", "icon": "✏️", "type": "seller", "order": 16, "requires_license": False},
+        {"id": "gifts", "name": "هدايا", "icon": "🎁", "type": "seller", "order": 17, "requires_license": False},
+        {"id": "gaming", "name": "ألعاب فيديو", "icon": "🎮", "type": "seller", "order": 18, "requires_license": False},
+        {"id": "watches", "name": "ساعات يد", "icon": "⌚", "type": "seller", "order": 19, "requires_license": False},
+        {"id": "headphones", "name": "سماعات", "icon": "🎧", "type": "seller", "order": 20, "requires_license": False},
+        {"id": "bags", "name": "حقائب", "icon": "👜", "type": "seller", "order": 21, "requires_license": False},
+        {"id": "eyewear", "name": "نظارات", "icon": "👓", "type": "seller", "order": 22, "requires_license": False},
+        {"id": "flowers", "name": "زهور", "icon": "💐", "type": "seller", "order": 23, "requires_license": False},
+        {"id": "medicines", "name": "أدوية", "icon": "💊", "type": "seller", "order": 24, "requires_license": True},
+        {"id": "cars", "name": "سيارات", "icon": "🚗", "type": "seller", "order": 25, "requires_license": False},
+        {"id": "car_parts", "name": "قطع غيار سيارات", "icon": "🔩", "type": "seller", "order": 26, "requires_license": False},
+        {"id": "hardware", "name": "خردوات", "icon": "🛠️", "type": "seller", "order": 27, "requires_license": False},
+        {"id": "groceries", "name": "مواد غذائية ومعلبات", "icon": "🥫", "type": "seller", "order": 28, "requires_license": False},
+        {"id": "pet_food", "name": "طعام حيوانات", "icon": "🐕", "type": "seller", "order": 29, "requires_license": False},
     ]
     
     # أصناف بائعي الطعام
@@ -2428,11 +2438,9 @@ async def update_default_business_categories(user: dict = Depends(get_current_us
         {"id": "cafe", "name": "مقهى ومشروبات", "icon": "☕", "type": "food_seller", "order": 2, "requires_license": True},
         {"id": "sweets", "name": "حلويات", "icon": "🍰", "type": "food_seller", "order": 3, "requires_license": True},
         {"id": "bakery", "name": "مخبز", "icon": "🥖", "type": "food_seller", "order": 4, "requires_license": True},
-        {"id": "fast_food", "name": "وجبات سريعة", "icon": "🍔", "type": "food_seller", "order": 5, "requires_license": True},
-        {"id": "grocery", "name": "بقالة", "icon": "🛒", "type": "food_seller", "order": 6, "requires_license": False},
-        {"id": "butcher", "name": "ملحمة", "icon": "🥩", "type": "food_seller", "order": 7, "requires_license": True},
-        {"id": "vegetables", "name": "خضار وفواكه", "icon": "🥬", "type": "food_seller", "order": 8, "requires_license": False},
-        {"id": "dairy", "name": "ألبان وأجبان", "icon": "🧀", "type": "food_seller", "order": 9, "requires_license": True},
+        {"id": "drinks", "name": "مشروبات", "icon": "🥤", "type": "food_seller", "order": 5, "requires_license": False},
+        {"id": "food_groceries", "name": "مواد غذائية", "icon": "🛒", "type": "food_seller", "order": 6, "requires_license": False},
+        {"id": "vegetables", "name": "خضروات وفواكه", "icon": "🥬", "type": "food_seller", "order": 7, "requires_license": False},
     ]
     
     now = datetime.now(timezone.utc).isoformat()
@@ -2460,27 +2468,37 @@ async def init_default_business_categories(user: dict = Depends(get_current_user
     if existing_count > 0:
         return {"message": "توجد أصناف مسبقاً", "count": existing_count}
     
-    # أصناف البائعين العاديين
+    # أصناف البائعين العاديين - متطابقة مع صفحة الأصناف
     seller_categories = [
-        {"id": "clothing", "name": "ملابس وأزياء", "icon": "👕", "type": "seller", "order": 1, "requires_license": False},
-        {"id": "electronics", "name": "إلكترونيات", "icon": "📱", "type": "seller", "order": 2, "requires_license": False},
-        {"id": "mobiles", "name": "موبايلات", "icon": "📲", "type": "seller", "order": 3, "requires_license": False},
-        {"id": "computers", "name": "كمبيوتر ولابتوب", "icon": "💻", "type": "seller", "order": 4, "requires_license": False},
+        {"id": "electronics", "name": "إلكترونيات", "icon": "📱", "type": "seller", "order": 1, "requires_license": False},
+        {"id": "mobiles", "name": "موبايلات", "icon": "📲", "type": "seller", "order": 2, "requires_license": False},
+        {"id": "computers", "name": "كمبيوتر ولابتوب", "icon": "💻", "type": "seller", "order": 3, "requires_license": False},
+        {"id": "clothes", "name": "ملابس", "icon": "👕", "type": "seller", "order": 4, "requires_license": False},
         {"id": "shoes", "name": "أحذية", "icon": "👟", "type": "seller", "order": 5, "requires_license": False},
         {"id": "accessories", "name": "إكسسوارات", "icon": "💍", "type": "seller", "order": 6, "requires_license": False},
         {"id": "perfumes", "name": "عطور", "icon": "🧴", "type": "seller", "order": 7, "requires_license": False},
-        {"id": "home", "name": "أجهزة منزلية", "icon": "🏠", "type": "seller", "order": 8, "requires_license": False},
-        {"id": "home_items", "name": "المنزل", "icon": "🏡", "type": "seller", "order": 9, "requires_license": False},
-        {"id": "beauty", "name": "مستحضرات تجميل", "icon": "💄", "type": "seller", "order": 10, "requires_license": False},
-        {"id": "furniture", "name": "أثاث ومفروشات", "icon": "🛋️", "type": "seller", "order": 11, "requires_license": False},
-        {"id": "toys", "name": "ألعاب وهدايا", "icon": "🎁", "type": "seller", "order": 12, "requires_license": False},
-        {"id": "books", "name": "كتب وقرطاسية", "icon": "📚", "type": "seller", "order": 13, "requires_license": False},
-        {"id": "sports", "name": "رياضة ولياقة", "icon": "⚽", "type": "seller", "order": 14, "requires_license": False},
-        {"id": "cars", "name": "قطع غيار سيارات", "icon": "🚗", "type": "seller", "order": 15, "requires_license": False},
-        {"id": "canned", "name": "معلبات", "icon": "🥫", "type": "seller", "order": 16, "requires_license": False},
-        {"id": "cleaning", "name": "منظفات", "icon": "🧹", "type": "seller", "order": 17, "requires_license": False},
-        {"id": "hardware", "name": "خردوات", "icon": "🔧", "type": "seller", "order": 18, "requires_license": False},
-        {"id": "medicine", "name": "أدوية ومستلزمات طبية", "icon": "💊", "type": "seller", "order": 19, "requires_license": True},
+        {"id": "furniture", "name": "أثاث", "icon": "🛋️", "type": "seller", "order": 8, "requires_license": False},
+        {"id": "appliances", "name": "أجهزة منزلية", "icon": "🏠", "type": "seller", "order": 9, "requires_license": False},
+        {"id": "home_tools", "name": "أدوات منزلية", "icon": "🔧", "type": "seller", "order": 10, "requires_license": False},
+        {"id": "decor", "name": "ديكور", "icon": "🖼️", "type": "seller", "order": 11, "requires_license": False},
+        {"id": "beauty", "name": "تجميل وعناية شخصية", "icon": "💄", "type": "seller", "order": 12, "requires_license": False},
+        {"id": "sports", "name": "رياضة", "icon": "⚽", "type": "seller", "order": 13, "requires_license": False},
+        {"id": "kids", "name": "أطفال", "icon": "👶", "type": "seller", "order": 14, "requires_license": False},
+        {"id": "books", "name": "كتب", "icon": "📚", "type": "seller", "order": 15, "requires_license": False},
+        {"id": "stationery", "name": "قرطاسية", "icon": "✏️", "type": "seller", "order": 16, "requires_license": False},
+        {"id": "gifts", "name": "هدايا", "icon": "🎁", "type": "seller", "order": 17, "requires_license": False},
+        {"id": "gaming", "name": "ألعاب فيديو", "icon": "🎮", "type": "seller", "order": 18, "requires_license": False},
+        {"id": "watches", "name": "ساعات يد", "icon": "⌚", "type": "seller", "order": 19, "requires_license": False},
+        {"id": "headphones", "name": "سماعات", "icon": "🎧", "type": "seller", "order": 20, "requires_license": False},
+        {"id": "bags", "name": "حقائب", "icon": "👜", "type": "seller", "order": 21, "requires_license": False},
+        {"id": "eyewear", "name": "نظارات", "icon": "👓", "type": "seller", "order": 22, "requires_license": False},
+        {"id": "flowers", "name": "زهور", "icon": "💐", "type": "seller", "order": 23, "requires_license": False},
+        {"id": "medicines", "name": "أدوية", "icon": "💊", "type": "seller", "order": 24, "requires_license": True},
+        {"id": "cars", "name": "سيارات", "icon": "🚗", "type": "seller", "order": 25, "requires_license": False},
+        {"id": "car_parts", "name": "قطع غيار سيارات", "icon": "🔩", "type": "seller", "order": 26, "requires_license": False},
+        {"id": "hardware", "name": "خردوات", "icon": "🛠️", "type": "seller", "order": 27, "requires_license": False},
+        {"id": "groceries", "name": "مواد غذائية ومعلبات", "icon": "🥫", "type": "seller", "order": 28, "requires_license": False},
+        {"id": "pet_food", "name": "طعام حيوانات", "icon": "🐕", "type": "seller", "order": 29, "requires_license": False},
     ]
     
     # أصناف بائعي الطعام
@@ -2489,11 +2507,9 @@ async def init_default_business_categories(user: dict = Depends(get_current_user
         {"id": "cafe", "name": "مقهى ومشروبات", "icon": "☕", "type": "food_seller", "order": 2, "requires_license": True},
         {"id": "sweets", "name": "حلويات", "icon": "🍰", "type": "food_seller", "order": 3, "requires_license": True},
         {"id": "bakery", "name": "مخبز", "icon": "🥖", "type": "food_seller", "order": 4, "requires_license": True},
-        {"id": "fast_food", "name": "وجبات سريعة", "icon": "🍔", "type": "food_seller", "order": 5, "requires_license": True},
-        {"id": "grocery", "name": "بقالة", "icon": "🛒", "type": "food_seller", "order": 6, "requires_license": False},
-        {"id": "butcher", "name": "ملحمة", "icon": "🥩", "type": "food_seller", "order": 7, "requires_license": True},
-        {"id": "vegetables", "name": "خضار وفواكه", "icon": "🥬", "type": "food_seller", "order": 8, "requires_license": False},
-        {"id": "dairy", "name": "ألبان وأجبان", "icon": "🧀", "type": "food_seller", "order": 9, "requires_license": True},
+        {"id": "drinks", "name": "مشروبات", "icon": "🥤", "type": "food_seller", "order": 5, "requires_license": False},
+        {"id": "food_groceries", "name": "مواد غذائية", "icon": "🛒", "type": "food_seller", "order": 6, "requires_license": False},
+        {"id": "vegetables", "name": "خضروات وفواكه", "icon": "🥬", "type": "food_seller", "order": 7, "requires_license": False},
     ]
     
     now = datetime.now(timezone.utc).isoformat()

@@ -42,7 +42,7 @@ async def get_categories():
     # إذا لم توجد أصناف في قاعدة البيانات، استخدم الافتراضية
     if not categories_from_db:
         categories_from_db = [
-            # قسم المنتجات
+            # قسم المنتجات - 29 صنف
             {"id": "electronics", "name": "إلكترونيات", "icon": "Smartphone", "type": "shopping"},
             {"id": "mobiles", "name": "موبايلات", "icon": "Smartphone", "type": "shopping"},
             {"id": "computers", "name": "كمبيوتر ولابتوب", "icon": "Laptop", "type": "shopping"},
@@ -50,25 +50,35 @@ async def get_categories():
             {"id": "shoes", "name": "أحذية", "icon": "Footprints", "type": "shopping"},
             {"id": "accessories", "name": "إكسسوارات", "icon": "Watch", "type": "shopping"},
             {"id": "perfumes", "name": "عطور", "icon": "Sparkles", "type": "shopping"},
-            {"id": "home", "name": "المنزل", "icon": "Home", "type": "shopping"},
             {"id": "furniture", "name": "أثاث", "icon": "Sofa", "type": "shopping"},
             {"id": "appliances", "name": "أجهزة منزلية", "icon": "Refrigerator", "type": "shopping"},
-            {"id": "beauty", "name": "تجميل", "icon": "SprayCan", "type": "shopping"},
+            {"id": "home_tools", "name": "أدوات منزلية", "icon": "Wrench", "type": "shopping"},
+            {"id": "decor", "name": "ديكور", "icon": "Lamp", "type": "shopping"},
+            {"id": "beauty", "name": "تجميل وعناية شخصية", "icon": "SprayCan", "type": "shopping"},
             {"id": "sports", "name": "رياضة", "icon": "Dumbbell", "type": "shopping"},
-            {"id": "kids", "name": "أطفال", "icon": "Gamepad2", "type": "shopping"},
+            {"id": "kids", "name": "أطفال", "icon": "Baby", "type": "shopping"},
             {"id": "books", "name": "كتب", "icon": "BookOpen", "type": "shopping"},
+            {"id": "stationery", "name": "قرطاسية", "icon": "Pencil", "type": "shopping"},
             {"id": "gifts", "name": "هدايا", "icon": "Gift", "type": "shopping"},
+            {"id": "gaming", "name": "ألعاب فيديو", "icon": "Gamepad2", "type": "shopping"},
+            {"id": "watches", "name": "ساعات يد", "icon": "Watch", "type": "shopping"},
+            {"id": "headphones", "name": "سماعات", "icon": "Headphones", "type": "shopping"},
+            {"id": "bags", "name": "حقائب", "icon": "Briefcase", "type": "shopping"},
+            {"id": "eyewear", "name": "نظارات", "icon": "Glasses", "type": "shopping"},
+            {"id": "flowers", "name": "زهور", "icon": "Flower2", "type": "shopping"},
             {"id": "medicines", "name": "أدوية", "icon": "Pill", "type": "shopping"},
             {"id": "cars", "name": "سيارات", "icon": "Car", "type": "shopping"},
-            {"id": "canned_food", "name": "معلبات", "icon": "Package", "type": "shopping"},
-            {"id": "cleaners", "name": "منظفات", "icon": "SprayCan", "type": "shopping"},
-            # قسم الطعام
+            {"id": "car_parts", "name": "قطع غيار سيارات", "icon": "Wrench", "type": "shopping"},
+            {"id": "hardware", "name": "خردوات", "icon": "Hammer", "type": "shopping"},
+            {"id": "groceries", "name": "مواد غذائية ومعلبات", "icon": "ShoppingBasket", "type": "shopping"},
+            {"id": "pet_food", "name": "طعام حيوانات", "icon": "PawPrint", "type": "shopping"},
+            # قسم الطعام - 7 أصناف
             {"id": "restaurants", "name": "مطاعم", "icon": "UtensilsCrossed", "type": "food"},
             {"id": "cafes", "name": "مقاهي", "icon": "Coffee", "type": "food"},
             {"id": "sweets", "name": "حلويات", "icon": "Cake", "type": "food"},
             {"id": "bakery", "name": "مخابز", "icon": "Croissant", "type": "food"},
             {"id": "drinks", "name": "مشروبات", "icon": "GlassWater", "type": "food"},
-            {"id": "groceries", "name": "مواد غذائية", "icon": "ShoppingBasket", "type": "food"},
+            {"id": "food_groceries", "name": "مواد غذائية", "icon": "ShoppingBasket", "type": "food"},
             {"id": "vegetables", "name": "خضروات وفواكه", "icon": "Apple", "type": "food"},
         ]
     
