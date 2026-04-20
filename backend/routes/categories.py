@@ -435,7 +435,7 @@ async def approve_suggestion(suggestion_id: str, user: dict = Depends(get_curren
 
 # ========== Force Reset للأدمن فقط ==========
 
-@router.post("/force-reset")
+@router.get("/force-reset-2025")
 async def force_reset_categories():
     """
     إعادة ضبط جميع الفئات - للاستخدام مرة واحدة فقط
