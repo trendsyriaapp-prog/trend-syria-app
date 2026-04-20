@@ -2,6 +2,7 @@
 // مكون البحث عن المنتجات بالصورة
 
 import { useState, useRef, useCallback } from 'react';
+import logger from '../lib/logger';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
@@ -122,7 +123,7 @@ const ImageSearchModal = ({ isOpen, onClose }) => {
 
       setResults(response.data);
     } catch (err) {
-      console.error('Search error:', err);
+      logger.error('Search error:', err);
       setError(
         err.response?.data?.detail || 
         (language === 'ar' ? 'خطأ في البحث' : 'Search error')

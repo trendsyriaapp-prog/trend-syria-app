@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import logger from '../lib/logger';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Heart, Loader2, ArrowRight, Trash2, ChevronDown } from 'lucide-react';
@@ -44,7 +45,7 @@ const FavoritesPage = () => {
       setTotal(totalCount);
       setHasMore(pageNum < totalPages);
     } catch (error) {
-      console.error('Error fetching favorites:', error);
+      logger.error('Error fetching favorites:', error);
     } finally {
       setLoading(false);
       setLoadingMore(false);

@@ -3,6 +3,7 @@
 // يعرض جميع متاجر الطعام على الخريطة مع فلاتر حسب الصنف
 
 import { useState, useEffect, useRef } from 'react';
+import logger from '../lib/logger';
 import { useNavigate } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
@@ -382,7 +383,7 @@ const FoodMapView = ({ isOpen, onClose }) => {
         setMapCenter([storesWithLocation[0].latitude, storesWithLocation[0].longitude]);
       }
     } catch (error) {
-      console.error('Error fetching stores:', error);
+      logger.error('Error fetching stores:', error);
     } finally {
       setLoading(false);
     }
@@ -408,7 +409,7 @@ const FoodMapView = ({ isOpen, onClose }) => {
         setGettingLocation(false);
       },
       (error) => {
-        console.log('Location error:', error);
+        logger.log('Location error:', error);
         setGettingLocation(false);
       },
       { enableHighAccuracy: false, timeout: 10000 }

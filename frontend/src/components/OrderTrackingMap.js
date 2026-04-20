@@ -2,6 +2,7 @@
 // خريطة تتبع الطلب الحية
 
 import { useState, useEffect, useCallback } from 'react';
+import logger from '../lib/logger';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 import { 
@@ -34,7 +35,7 @@ const OrderTrackingMap = ({ order, orderId, onClose, trackingData: externalTrack
       setLastUpdate(new Date());
       setError(null);
     } catch (err) {
-      console.error('Error fetching tracking:', err);
+      logger.error('Error fetching tracking:', err);
       if (!silent) setError('فشل في تحميل بيانات التتبع');
     } finally {
       setLoading(false);

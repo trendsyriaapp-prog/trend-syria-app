@@ -6,6 +6,8 @@
  * @param {number} lon2 - خط الطول للنقطة الثانية
  * @returns {number} المسافة بالكيلومترات
  */
+import logger from '../lib/logger';
+
 export const calculateDistance = (lat1, lon1, lat2, lon2) => {
   const R = 6371; // نصف قطر الأرض بالكيلومترات
   const dLat = toRad(lat2 - lat1);
@@ -177,7 +179,7 @@ export const getCurrentLocation = () => {
       },
       (error) => {
         // في حالة الفشل، نستخدم موقع افتراضي (دمشق)
-        console.log('تعذر الحصول على الموقع:', error.message);
+        logger.log('تعذر الحصول على الموقع:', error.message);
         resolve(SYRIA_LOCATIONS['دمشق']);
       },
       {

@@ -2,6 +2,7 @@
 // لوحة صدارة السائقين - أفضل 10 سائقين هذا الشهر
 
 import { useState, useEffect } from 'react';
+import logger from '../../lib/logger';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -29,7 +30,7 @@ const DriverLeaderboard = () => {
       const res = await axios.get(`${API}/api/delivery/leaderboard`);
       setData(res.data);
     } catch (error) {
-      console.error('Error fetching leaderboard:', error);
+      logger.error('Error fetching leaderboard:', error);
     } finally {
       setLoading(false);
     }

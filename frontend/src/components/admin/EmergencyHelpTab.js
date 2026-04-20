@@ -2,6 +2,7 @@
 // إدارة طلبات المساعدة الطارئة من السائقين
 
 import React, { useState, useEffect } from 'react';
+import logger from '../../lib/logger';
 import axios from 'axios';
 import { AlertTriangle, Phone, User, MapPin, Clock, CheckCircle, Loader2, RefreshCw, PhoneCall } from 'lucide-react';
 import { useToast } from '../../hooks/use-toast';
@@ -27,7 +28,7 @@ const EmergencyHelpTab = ({ token }) => {
       });
       setRequests(res.data.requests || []);
     } catch (err) {
-      console.error('Error fetching emergency requests:', err);
+      logger.error('Error fetching emergency requests:', err);
     } finally {
       setLoading(false);
     }

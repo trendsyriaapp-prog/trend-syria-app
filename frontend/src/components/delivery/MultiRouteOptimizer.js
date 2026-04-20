@@ -2,6 +2,7 @@
 // مكون تخطيط المسار الذكي لعدة طلبات
 
 import { useState, useEffect } from 'react';
+import logger from '../../lib/logger';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Navigation, MapPin, Clock, Truck, Route, ArrowDown, CheckCircle, Sparkles, RotateCcw } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
@@ -99,7 +100,7 @@ const fetchRoute = async (waypoints) => {
     }
     return null;
   } catch (error) {
-    console.error('Error fetching route:', error);
+    logger.error('Error fetching route:', error);
     return null;
   }
 };
@@ -295,7 +296,7 @@ const MultiRouteOptimizer = ({
         driverPos = await getDriverLocation();
         setDriverCoords(driverPos);
       } catch (e) {
-        console.log('Could not get driver location');
+        logger.log('Could not get driver location');
         setLocationError(true);
         // استخدام موقع افتراضي (حلب)
         driverPos = [36.2021, 37.1343];

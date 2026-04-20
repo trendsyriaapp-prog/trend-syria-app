@@ -2,6 +2,7 @@
 // صفحة الإحالات - دعوة الأصدقاء والحصول على مكافآت
 
 import { useState, useEffect } from 'react';
+import logger from '../lib/logger';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
@@ -54,7 +55,7 @@ const ReferralsPage = () => {
       setReferralData(codeRes.data);
       setReferrals(referralsRes.data || []);
     } catch (error) {
-      console.error('Error fetching referral data:', error);
+      logger.error('Error fetching referral data:', error);
     } finally {
       setLoading(false);
     }

@@ -2,6 +2,7 @@
 // عرض نقاط السلوك والمكافآت للموظف
 
 import { useState, useEffect } from 'react';
+import logger from '../../lib/logger';
 import axios from 'axios';
 import { motion } from 'framer-motion';
 import { Shield, AlertTriangle, Clock, TrendingDown, TrendingUp, Gift } from 'lucide-react';
@@ -35,7 +36,7 @@ const DriverPenaltyPoints = () => {
       });
       setData(res.data);
     } catch (error) {
-      console.error('Error fetching penalty points:', error);
+      logger.error('Error fetching penalty points:', error);
     } finally {
       setLoading(false);
     }

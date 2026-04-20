@@ -2,6 +2,7 @@
 // شريط تتبع المسار الذكي - يظهر المحطة الحالية وزر الإجراء
 
 import { useState, useEffect, useMemo, useCallback, useRef, useLayoutEffect } from 'react';
+import logger from '../../lib/logger';
 import { flushSync } from 'react-dom';
 import { MapPin, Navigation, Package, User, ChevronDown, ChevronUp, Loader2, Lock, CheckCircle } from 'lucide-react';
 import axios from 'axios';
@@ -365,7 +366,7 @@ const RouteProgressBar = ({
       },
       (error) => {
         setCheckingLocationFor(null);
-        console.error("GPS Error:", error);
+        logger.error("GPS Error:", error);
         // فشل GPS - نعرض رسالة توضيحية
         let gpsErrorMsg = "تعذر تحديد موقعك";
         if (error.code === 1) {

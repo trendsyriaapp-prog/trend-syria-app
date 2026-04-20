@@ -2,6 +2,7 @@
 // مكون اختيار خلفية الصورة - مثل Trendyol
 
 import { useState, useEffect } from 'react';
+import logger from '../../lib/logger';
 import { motion } from 'framer-motion';
 import axios from 'axios';
 import { X, Loader2, Wand2, Check, Image as ImageIcon } from 'lucide-react';
@@ -44,7 +45,7 @@ const ImageBackgroundSelector = ({
       const res = await axios.get(`${API}/api/image/backgrounds`);
       setBackgrounds(res.data.backgrounds);
     } catch (error) {
-      console.error('Error fetching backgrounds:', error);
+      logger.error('Error fetching backgrounds:', error);
     }
   };
 
@@ -74,7 +75,7 @@ const ImageBackgroundSelector = ({
         setProcessedImage(res.data.image);
       }
     } catch (error) {
-      console.error('Error processing image:', error);
+      logger.error('Error processing image:', error);
     } finally {
       setProcessing(false);
     }

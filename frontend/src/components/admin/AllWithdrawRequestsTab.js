@@ -2,6 +2,7 @@
 // صفحة موحدة لجميع طلبات السحب (بائعين منتجات + بائعين طعام + موظفين توصيل)
 
 import React, { useState, useEffect } from 'react';
+import logger from '../../lib/logger';
 import axios from 'axios';
 import { useToast } from '../../hooks/use-toast';
 import { 
@@ -30,7 +31,7 @@ const AllWithdrawRequestsTab = () => {
       const response = await axios.get(`${API}/api/payment/admin/withdrawals`);
       setWithdrawRequests(response.data || []);
     } catch (error) {
-      console.error('Error fetching withdrawals:', error);
+      logger.error('Error fetching withdrawals:', error);
       toast({ title: "خطأ", description: "فشل في جلب طلبات السحب", variant: "destructive" });
       setWithdrawRequests([]);
     } finally {

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import logger from '../lib/logger';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
@@ -132,7 +133,7 @@ const FoodFreeDeliveryPage = () => {
         setFreeDeliveryProducts(freeDelivery);
         setBadgeSettings(badgeRes.data);
       } catch (error) {
-        console.error('Error fetching products:', error);
+        logger.error('Error fetching products:', error);
       } finally {
         setLoading(false);
       }

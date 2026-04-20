@@ -2,6 +2,7 @@
 // إدارة الفئات الديناميكية
 
 import React, { useState, useEffect } from 'react';
+import logger from '../../lib/logger';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -63,7 +64,7 @@ const CategoriesTab = () => {
       });
       setSuggestions(res.data);
     } catch (err) {
-      console.error('Error fetching suggestions:', err);
+      logger.error('Error fetching suggestions:', err);
     } finally {
       setLoadingSuggestions(false);
     }
@@ -107,7 +108,7 @@ const CategoriesTab = () => {
       });
       setCategories(res.data);
     } catch (err) {
-      console.error('Error fetching categories:', err);
+      logger.error('Error fetching categories:', err);
       toast({ title: 'خطأ', description: 'فشل في جلب الفئات', variant: 'destructive' });
     } finally {
       setLoading(false);

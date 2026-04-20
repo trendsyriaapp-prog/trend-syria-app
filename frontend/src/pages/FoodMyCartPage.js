@@ -1,5 +1,6 @@
 // صفحة سلة الطعام المجمعة - تعرض جميع الطلبات من مختلف المتاجر
 import { useState, useEffect } from 'react';
+import logger from '../lib/logger';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowRight, Store, Trash2, ShoppingBag, Plus, Minus, UtensilsCrossed, Truck, Check, ShoppingCart, Loader2, MapPin, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -59,7 +60,7 @@ const FoodMyCartPage = () => {
           setDefaultAddress(defaultAddr);
         }
       } catch (error) {
-        console.error('Error fetching addresses:', error);
+        logger.error('Error fetching addresses:', error);
       }
     };
     
@@ -81,7 +82,7 @@ const FoodMyCartPage = () => {
         axios.get(`${API}/api/food/stores/${store.storeId}`)
           .then(res => ({ storeId: store.storeId, data: res.data }))
           .catch(err => {
-            console.error('Error fetching store:', store.storeId, err);
+            logger.error('Error fetching store:', store.storeId, err);
             return { storeId: store.storeId, data: null };
           })
       );
@@ -96,7 +97,7 @@ const FoodMyCartPage = () => {
       
       setStoreDetails(details);
     } catch (error) {
-      console.error('Error fetching stores:', error);
+      logger.error('Error fetching stores:', error);
     } finally {
       setLoading(false);
     }

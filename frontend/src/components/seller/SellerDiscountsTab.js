@@ -2,6 +2,7 @@
 // تبويب إدارة العروض والخصومات للبائع
 
 import { useState, useEffect } from 'react';
+import logger from '../../lib/logger';
 import { motion } from 'framer-motion';
 import axios from 'axios';
 import { 
@@ -71,7 +72,7 @@ const SellerDiscountsTab = ({ products = [] }) => {
       setDiscounts(discountsRes.data);
       setStats(statsRes.data);
     } catch (error) {
-      console.error('Error fetching discounts:', error);
+      logger.error('Error fetching discounts:', error);
     } finally {
       setLoading(false);
     }

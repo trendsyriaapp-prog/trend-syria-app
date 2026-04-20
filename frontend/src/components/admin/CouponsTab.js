@@ -2,6 +2,7 @@
 // إدارة كوبونات الخصم
 
 import { useState, useEffect } from 'react';
+import logger from '../../lib/logger';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 import { 
@@ -51,7 +52,7 @@ const CouponsTab = ({ token }) => {
       setCoupons(res.data.coupons || []);
       setStats(res.data.stats || {});
     } catch (error) {
-      console.error('Error fetching coupons:', error);
+      logger.error('Error fetching coupons:', error);
     } finally {
       setLoading(false);
     }

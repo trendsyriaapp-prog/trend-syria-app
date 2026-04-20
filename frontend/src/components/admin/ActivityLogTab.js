@@ -2,6 +2,7 @@
 // سجل نشاط المسؤولين
 
 import { useState, useEffect } from 'react';
+import logger from '../../lib/logger';
 import axios from 'axios';
 import {
   Activity, Clock, User, Filter, RefreshCw,
@@ -73,7 +74,7 @@ const ActivityLogTab = () => {
       setLogs(res.data.logs || []);
       setTotalPages(res.data.pages || 1);
     } catch (err) {
-      console.error('Error fetching logs:', err);
+      logger.error('Error fetching logs:', err);
     } finally {
       setLoading(false);
     }
@@ -87,7 +88,7 @@ const ActivityLogTab = () => {
       });
       setStats(res.data);
     } catch (err) {
-      console.error('Error fetching stats:', err);
+      logger.error('Error fetching stats:', err);
     }
   };
 
@@ -99,7 +100,7 @@ const ActivityLogTab = () => {
       });
       setAdmins(res.data.admins || []);
     } catch (err) {
-      console.error('Error fetching admins:', err);
+      logger.error('Error fetching admins:', err);
     }
   };
 

@@ -2,6 +2,7 @@
 // مكون إدارة الأطباق المعلقة للموافقة
 
 import { useState, useEffect } from 'react';
+import logger from '../../lib/logger';
 import axios from 'axios';
 import { Check, X, UtensilsCrossed, RefreshCw, Store } from 'lucide-react';
 import { useToast } from '../../hooks/use-toast';
@@ -35,7 +36,7 @@ const PendingFoodItemsTab = () => {
       setItems(itemsRes.data);
       setStats(statsRes.data);
     } catch (error) {
-      console.error('Error fetching pending food items:', error);
+      logger.error('Error fetching pending food items:', error);
       toast({
         title: "خطأ",
         description: "فشل جلب الأطباق المعلقة",

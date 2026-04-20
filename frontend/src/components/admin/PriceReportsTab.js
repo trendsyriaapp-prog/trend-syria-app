@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import logger from '../../lib/logger';
 import axios from 'axios';
 import { Flag, CheckCircle, XCircle, RefreshCw, AlertTriangle, Package, Clock, Eye, Ban, UserCheck, ChevronDown, ChevronUp, MessageSquare, X } from 'lucide-react';
 import { useToast } from '../../hooks/use-toast';
@@ -56,7 +57,7 @@ const PriceReportsTab = () => {
       setReports(reportsRes.data.reports || []);
       setStats(statsRes.data || {});
     } catch (error) {
-      console.error('Error fetching reports:', error);
+      logger.error('Error fetching reports:', error);
     } finally {
       setLoading(false);
     }
@@ -70,7 +71,7 @@ const PriceReportsTab = () => {
       });
       setSellersWithViolations(res.data.sellers || []);
     } catch (error) {
-      console.error('Error fetching sellers:', error);
+      logger.error('Error fetching sellers:', error);
     }
   };
 

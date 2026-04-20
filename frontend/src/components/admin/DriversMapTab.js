@@ -2,6 +2,7 @@
 // خريطة مراقبة جميع السائقين للمدير
 
 import { useState, useEffect, useRef } from 'react';
+import logger from '../../lib/logger';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import axios from 'axios';
@@ -107,7 +108,7 @@ const DriversMapTab = () => {
         });
         setCities(res.data || []);
       } catch (err) {
-        console.error('Error fetching cities:', err);
+        logger.error('Error fetching cities:', err);
       }
     };
     fetchCities();
@@ -145,7 +146,7 @@ const DriversMapTab = () => {
         setMapCenter([avgLat, avgLng]);
       }
     } catch (err) {
-      console.error('Error fetching drivers:', err);
+      logger.error('Error fetching drivers:', err);
     } finally {
       setLoading(false);
     }

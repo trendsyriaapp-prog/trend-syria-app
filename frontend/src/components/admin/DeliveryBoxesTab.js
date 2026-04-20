@@ -2,6 +2,7 @@
 // تبويب إدارة صناديق التوصيل في لوحة المشرف
 
 import { useState, useEffect } from 'react';
+import logger from '../../lib/logger';
 import axios from 'axios';
 import { motion } from 'framer-motion';
 import { 
@@ -71,7 +72,7 @@ const DeliveryBoxesTab = () => {
       const driversData = driversRes.data?.data || [];
       setDrivers(driversData.filter(d => d.is_approved) || []);
     } catch (error) {
-      console.error('Error fetching data:', error);
+      logger.error('Error fetching data:', error);
       toast({
         title: "خطأ",
         description: "فشل في تحميل البيانات",

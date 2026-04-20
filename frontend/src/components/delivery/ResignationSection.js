@@ -2,6 +2,7 @@
 // قسم طلب الاستقالة للسائق
 
 import React, { useState, useEffect } from 'react';
+import logger from '../../lib/logger';
 import { LogOut, Shield, AlertTriangle, Phone, CheckCircle, Clock, X } from 'lucide-react';
 
 const API = process.env.REACT_APP_BACKEND_URL;
@@ -41,7 +42,7 @@ export default function ResignationSection({ token, theme }) {
         }
       }
     } catch (err) {
-      console.error('Error fetching data:', err);
+      logger.error('Error fetching data:', err);
     }
   };
 

@@ -2,6 +2,7 @@
 // مكون صفقة اليوم - عرض يومي محدود الوقت
 
 import { useState, useEffect } from 'react';
+import logger from '../lib/logger';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Clock, Flame, ChevronLeft, Percent, ShoppingCart, MapPin } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -74,7 +75,7 @@ const DailyDeal = ({ onAddToCart }) => {
       const response = await axios.get(`${API}/api/daily-deals/active`);
       setDeal(response.data.deal);
     } catch (error) {
-      console.error('Error fetching daily deal:', error);
+      logger.error('Error fetching daily deal:', error);
     } finally {
       setLoading(false);
     }

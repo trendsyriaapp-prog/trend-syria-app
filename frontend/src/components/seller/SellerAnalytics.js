@@ -2,6 +2,7 @@
 // لوحة تحليلات مفصلة للبائع
 
 import { useState, useEffect } from 'react';
+import logger from '../../lib/logger';
 import axios from 'axios';
 import {
   TrendingUp, TrendingDown, DollarSign, ShoppingBag,
@@ -33,7 +34,7 @@ const SellerAnalytics = ({ token }) => {
       });
       setData(res.data);
     } catch (err) {
-      console.error('Error fetching analytics:', err);
+      logger.error('Error fetching analytics:', err);
     } finally {
       setLoading(false);
     }
@@ -71,7 +72,7 @@ const SellerAnalytics = ({ token }) => {
       window.URL.revokeObjectURL(url);
       a.remove();
     } catch (err) {
-      console.error('Export error:', err);
+      logger.error('Export error:', err);
       alert('فشل تصدير التقرير');
     } finally {
       setExporting(null);

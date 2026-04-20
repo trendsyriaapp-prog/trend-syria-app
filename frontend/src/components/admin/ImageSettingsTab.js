@@ -2,6 +2,7 @@
 // إعدادات صور المنتجات - لوحة المدير
 
 import { useState, useEffect } from 'react';
+import logger from '../../lib/logger';
 import axios from 'axios';
 import { 
   Image, Settings, Save, Loader2, Camera, 
@@ -41,7 +42,7 @@ const ImageSettingsTab = ({ token }) => {
       });
       setUsage(res.data.usage);
     } catch (error) {
-      console.error('Error fetching settings:', error);
+      logger.error('Error fetching settings:', error);
     } finally {
       setLoading(false);
     }
@@ -52,7 +53,7 @@ const ImageSettingsTab = ({ token }) => {
       const res = await axios.get(`${API}/api/image/photoroom-credits`);
       setPhotoRoomCredits(res.data);
     } catch (error) {
-      console.error('Error fetching PhotoRoom credits:', error);
+      logger.error('Error fetching PhotoRoom credits:', error);
     }
   };
 

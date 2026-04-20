@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import logger from '../lib/logger';
 import axios from 'axios';
 
 const API = process.env.REACT_APP_BACKEND_URL;
@@ -28,7 +29,7 @@ const useDriverLocationTracker = (isActive = false, currentOrderId = null) => {
       setError(null);
       return true;
     } catch (err) {
-      console.error('Error sending location:', err);
+      logger.error('Error sending location:', err);
       setError('فشل في إرسال الموقع');
       return false;
     }
@@ -49,7 +50,7 @@ const useDriverLocationTracker = (isActive = false, currentOrderId = null) => {
         sendLocationToServer(latitude, longitude, speedKmh, heading);
       },
       (err) => {
-        console.error('Geolocation error:', err);
+        logger.error('Geolocation error:', err);
         if (err.code === 1) {
           setError('يرجى السماح بالوصول للموقع');
         } else {

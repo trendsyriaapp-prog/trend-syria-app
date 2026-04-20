@@ -1,4 +1,5 @@
 import "./App.css";
+import logger from './lib/logger';
 import { useState, useEffect, lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
@@ -30,7 +31,7 @@ import { Capacitor } from '@capacitor/core';
 import { Loader2 } from 'lucide-react';
 
 // تهيئة قاعدة البيانات المحلية عند بدء التطبيق
-initDB().then(() => console.log('✅ Offline DB ready')).catch(console.error);
+initDB().then(() => logger.log('✅ Offline DB ready')).catch(logger.error);
 
 // مكون تحميل للـ Lazy Loading
 const PageLoader = () => (
@@ -310,7 +311,7 @@ function App() {
     const handleAppStateChange = CapacitorApp.addListener('appStateChange', ({ isActive }) => {
       if (isActive) {
         // التطبيق عاد للواجهة - لا نعرض الـ Splash مرة أخرى
-        console.log('App resumed - skipping splash');
+        logger.log('App resumed - skipping splash');
         sessionStorage.setItem('hasSeenSplash', 'true');
       }
     });

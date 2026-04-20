@@ -2,6 +2,7 @@
 // تبويب إدارة أصناف الأنشطة التجارية
 
 import { useState, useEffect } from 'react';
+import logger from '../../lib/logger';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -53,7 +54,7 @@ const BusinessCategoriesTab = () => {
       });
       setCategories(res.data.categories || []);
     } catch (error) {
-      console.error('Error fetching categories:', error);
+      logger.error('Error fetching categories:', error);
       toast({
         title: "خطأ",
         description: "فشل في جلب الأصناف",

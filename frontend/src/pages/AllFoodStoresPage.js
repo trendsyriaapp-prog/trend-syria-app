@@ -2,6 +2,7 @@
 // صفحة عرض جميع متاجر الطعام
 
 import { useState, useEffect, useMemo } from 'react';
+import logger from '../lib/logger';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { 
@@ -65,7 +66,7 @@ const AllFoodStoresPage = () => {
       
       setStores(storesData);
     } catch (error) {
-      console.error('Error fetching stores:', error);
+      logger.error('Error fetching stores:', error);
     } finally {
       setLoading(false);
     }

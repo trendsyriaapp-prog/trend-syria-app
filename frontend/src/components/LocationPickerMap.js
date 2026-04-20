@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import logger from '../lib/logger';
 import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet';
 import { MapPin, Navigation, X, Check, Loader2 } from 'lucide-react';
 import L from 'leaflet';
@@ -90,7 +91,7 @@ const LocationPickerMap = ({
         setAddress(data.display_name);
       }
     } catch (error) {
-      console.error('Reverse geocode error:', error);
+      logger.error('Reverse geocode error:', error);
     }
   };
 
@@ -124,7 +125,7 @@ const LocationPickerMap = ({
         setGettingLocation(false);
       },
       (error) => {
-        console.error('Geolocation error:', error);
+        logger.error('Geolocation error:', error);
         alert('تعذر تحديد موقعك. تأكد من تفعيل خدمة الموقع.');
         setGettingLocation(false);
       },

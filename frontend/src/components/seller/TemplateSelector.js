@@ -2,6 +2,7 @@
 // اختيار قوالب 3D للمنتجات - مجاني + AI مدفوع
 
 import { useState, useEffect } from 'react';
+import logger from '../../lib/logger';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 import { 
@@ -44,7 +45,7 @@ const TemplateSelector = ({
         setSelectedTemplate(res.data.templates[0].id);
       }
     } catch (error) {
-      console.error('Error fetching templates:', error);
+      logger.error('Error fetching templates:', error);
     }
   };
 
@@ -56,7 +57,7 @@ const TemplateSelector = ({
       });
       setWalletBalance(res.data.wallet_balance);
     } catch (error) {
-      console.error('Error checking balance:', error);
+      logger.error('Error checking balance:', error);
     }
   };
 
@@ -91,7 +92,7 @@ const TemplateSelector = ({
         }
       }
     } catch (error) {
-      console.error('Error applying template:', error);
+      logger.error('Error applying template:', error);
       if (error.response?.status === 402) {
         setError('رصيد غير كافٍ في المحفظة');
       } else {

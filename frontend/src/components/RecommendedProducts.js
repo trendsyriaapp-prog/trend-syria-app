@@ -2,6 +2,7 @@
 // أقسام التوصيات - رائج الآن + عروض وخصومات + منتجات جديدة
 
 import { useState, useEffect, memo, useRef } from 'react';
+import logger from '../lib/logger';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -181,7 +182,7 @@ const RecommendedProducts = () => {
         setBadgeSettings(badgeRes.data);
         setLoaded(true);
       } catch (error) {
-        console.error('Error fetching recommendations:', error);
+        logger.error('Error fetching recommendations:', error);
         setLoaded(true);
       }
     };

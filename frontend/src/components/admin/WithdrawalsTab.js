@@ -2,6 +2,7 @@
 // إدارة طلبات السحب - لوحة المدير
 
 import { useState, useEffect } from 'react';
+import logger from '../../lib/logger';
 import axios from 'axios';
 import { motion } from 'framer-motion';
 import { 
@@ -39,7 +40,7 @@ const WithdrawalsTab = () => {
       });
       setWithdrawals(res.data);
     } catch (error) {
-      console.error('Error fetching withdrawals:', error);
+      logger.error('Error fetching withdrawals:', error);
     } finally {
       setLoading(false);
     }

@@ -4,6 +4,7 @@
  */
 
 import axios from 'axios';
+import logger from '../lib/logger';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -74,7 +75,7 @@ const createAxiosWithRetry = (config = {}) => {
       // زيادة عداد المحاولات
       config._retryCount += 1;
       
-      console.log(`🔄 إعادة المحاولة ${config._retryCount}/${RETRY_CONFIG.maxRetries} - ${config.url}`);
+      logger.log(`🔄 إعادة المحاولة ${config._retryCount}/${RETRY_CONFIG.maxRetries} - ${config.url}`);
 
       // انتظار قبل إعادة المحاولة (exponential backoff)
       const delay = RETRY_CONFIG.retryDelay * Math.pow(2, config._retryCount - 1);
@@ -99,7 +100,7 @@ export const fetchWithRetry = async (url, options = {}) => {
     const response = await axiosRetry.get(url, options);
     return response.data;
   } catch (error) {
-    console.error(`❌ فشل الطلب بعد ${RETRY_CONFIG.maxRetries} محاولات:`, url);
+    logger.error(`❌ فشل الطلب بعد ${RETRY_CONFIG.maxRetries} محاولات:`, url);
     throw error;
   }
 };
@@ -112,7 +113,7 @@ export const postWithRetry = async (url, data, options = {}) => {
     const response = await axiosRetry.post(url, data, options);
     return response.data;
   } catch (error) {
-    console.error(`❌ فشل الطلب بعد ${RETRY_CONFIG.maxRetries} محاولات:`, url);
+    logger.error(`❌ فشل الطلب بعد ${RETRY_CONFIG.maxRetries} محاولات:`, url);
     throw error;
   }
 };
@@ -125,7 +126,7 @@ export const putWithRetry = async (url, data, options = {}) => {
     const response = await axiosRetry.put(url, data, options);
     return response.data;
   } catch (error) {
-    console.error(`❌ فشل الطلب بعد ${RETRY_CONFIG.maxRetries} محاولات:`, url);
+    logger.error(`❌ فشل الطلب بعد ${RETRY_CONFIG.maxRetries} محاولات:`, url);
     throw error;
   }
 };
@@ -138,7 +139,7 @@ export const deleteWithRetry = async (url, options = {}) => {
     const response = await axiosRetry.delete(url, options);
     return response.data;
   } catch (error) {
-    console.error(`❌ فشل الطلب بعد ${RETRY_CONFIG.maxRetries} محاولات:`, url);
+    logger.error(`❌ فشل الطلب بعد ${RETRY_CONFIG.maxRetries} محاولات:`, url);
     throw error;
   }
 };

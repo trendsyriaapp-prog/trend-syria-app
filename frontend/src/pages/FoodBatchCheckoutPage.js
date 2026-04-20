@@ -1,5 +1,6 @@
 // صفحة الدفع الموحد - إكمال جميع طلبات الطعام دفعة واحدة
 import { useState, useEffect } from 'react';
+import logger from '../lib/logger';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
@@ -188,7 +189,7 @@ const FoodBatchCheckoutPage = () => {
         }));
       }
     } catch (error) {
-      console.error('Error fetching data:', error);
+      logger.error('Error fetching data:', error);
     } finally {
       setLoading(false);
     }

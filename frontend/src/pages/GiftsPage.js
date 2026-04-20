@@ -2,6 +2,7 @@
 // صفحة الهدايا المستلمة والمرسلة
 
 import { useState, useEffect } from 'react';
+import logger from '../lib/logger';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
@@ -88,7 +89,7 @@ const GiftsPage = () => {
       setReceivedGifts(receivedRes.data);
       setSentGifts(sentRes.data);
     } catch (err) {
-      console.error('Error fetching gifts:', err);
+      logger.error('Error fetching gifts:', err);
     } finally {
       setLoading(false);
     }

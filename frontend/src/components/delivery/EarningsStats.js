@@ -2,6 +2,7 @@
 // إحصائيات الأرباح للسائق مع رسوم بيانية
 
 import { useState, useEffect } from 'react';
+import logger from '../../lib/logger';
 import { TrendingUp, TrendingDown, DollarSign, Package, Clock, ChevronLeft, ChevronRight, Utensils, ShoppingBag } from 'lucide-react';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
@@ -44,7 +45,7 @@ export default function EarningsStats({ token, theme = 'dark' }) {
         setStats(data);
       }
     } catch (err) {
-      console.error('Error fetching stats:', err);
+      logger.error('Error fetching stats:', err);
     } finally {
       setLoading(false);
     }
@@ -60,7 +61,7 @@ export default function EarningsStats({ token, theme = 'dark' }) {
         setChartData(data);
       }
     } catch (err) {
-      console.error('Error fetching chart:', err);
+      logger.error('Error fetching chart:', err);
     }
   };
 
@@ -75,7 +76,7 @@ export default function EarningsStats({ token, theme = 'dark' }) {
         setTotalPages(data.total_pages);
       }
     } catch (err) {
-      console.error('Error fetching history:', err);
+      logger.error('Error fetching history:', err);
     }
   };
 

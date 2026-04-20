@@ -3,6 +3,7 @@
 // مثل تطبيق وديني - يمكن للمستخدم تحريك الدبوس
 
 import { useState, useEffect, useRef } from 'react';
+import logger from '../lib/logger';
 import { MapContainer, TileLayer, Marker, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -226,7 +227,7 @@ const InteractiveMapPicker = ({
       
       return null;
     } catch (error) {
-      console.error('Error fetching address:', error);
+      logger.error('Error fetching address:', error);
       return null;
     }
   };

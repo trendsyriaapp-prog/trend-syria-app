@@ -2,6 +2,7 @@
 // تبويب المكالمات المسجلة - للمدير فقط
 
 import { useState, useEffect, useRef } from 'react';
+import logger from '../../lib/logger';
 import { motion } from 'framer-motion';
 import { 
   Phone, Play, Pause, Download, Calendar, Clock, 
@@ -30,7 +31,7 @@ const RecordedCallsTab = () => {
       setCalls(response.data.calls || []);
       setTotalPages(response.data.pages || 1);
     } catch (err) {
-      console.error('Error fetching recorded calls:', err);
+      logger.error('Error fetching recorded calls:', err);
     }
     setLoading(false);
   };
@@ -53,7 +54,7 @@ const RecordedCallsTab = () => {
           setPlayingId(recordingId);
         }
       } catch (err) {
-        console.error('Error playing recording:', err);
+        logger.error('Error playing recording:', err);
       }
     }
   };

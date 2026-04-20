@@ -2,6 +2,7 @@
 // صفحة المحفظة للعملاء - شحن واستخدام الرصيد
 
 import { useState, useEffect } from 'react';
+import logger from '../lib/logger';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { 
@@ -76,7 +77,7 @@ const BuyerWalletPage = () => {
       setTransactions(transactionsRes.data);
       setTopupHistory(topupRes.data);
     } catch (error) {
-      console.error('Error fetching wallet data:', error);
+      logger.error('Error fetching wallet data:', error);
     } finally {
       setLoading(false);
     }
@@ -87,7 +88,7 @@ const BuyerWalletPage = () => {
       const res = await axios.get(`${API}/api/payment/v2/instructions/${paymentMethod}`);
       setPaymentSettings(res.data);
     } catch (error) {
-      console.error('Error fetching payment settings:', error);
+      logger.error('Error fetching payment settings:', error);
     }
   };
   

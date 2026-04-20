@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef, useLayoutEffect, memo } from 'react';
+import logger from '../../lib/logger';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapPin, Phone, MessageCircle, HelpCircle, CheckCircle, Loader2, ChevronDown, ChevronUp, TrendingUp, TrendingDown, Lock, Truck } from 'lucide-react';
@@ -156,9 +157,9 @@ const MyOrdersList = ({
   const [checkingLocationFor, setCheckingLocationFor] = useState(null);
   
   const handleArrivedAtStore = async (order) => {
-    console.log('🚗 handleArrivedAtStore called with order:', order);
-    console.log('🚗 order.id:', order.id);
-    console.log('🚗 order._id:', order._id);
+    logger.log('🚗 handleArrivedAtStore called with order:', order);
+    logger.log('🚗 order.id:', order.id);
+    logger.log('🚗 order._id:', order._id);
     
     const isFood = order.store_id || order.restaurant_name;
     
@@ -259,10 +260,10 @@ const MyOrdersList = ({
           const { latitude, longitude } = position.coords;
           
           // استدعاء API لتسجيل الوصول مع فحص المسافة (طلبات الطعام فقط)
-          console.log('📍 Order data:', { id: order.id, order_number: order.order_number, status: order.status });
+          logger.log('📍 Order data:', { id: order.id, order_number: order.order_number, status: order.status });
           // إصلاح: إزالة /api/ المكرر - API يحتوي بالفعل على /api
           const endpoint = `${API}/api/food/orders/delivery/${order.id}/arrived?latitude=${latitude}&longitude=${longitude}`;
-          console.log('📍 Calling endpoint:', endpoint);
+          logger.log('📍 Calling endpoint:', endpoint);
 
           const response = await axios.post(endpoint, {}, {
             headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
@@ -349,7 +350,7 @@ const MyOrdersList = ({
       (error) => {
         // فشل الحصول على الموقع
         setCheckingLocationFor(null);
-        console.error("GPS Error:", error);
+        logger.error("GPS Error:", error);
         
         let errorMessage = "تعذر تحديد موقعك";
         if (error.code === 1) errorMessage = "تم رفض صلاحية الموقع";

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import logger from '../lib/logger';
 import axios from 'axios';
 import { Zap, Loader2, Clock } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
@@ -23,7 +24,7 @@ const FlashSaleProductsPage = () => {
         setFlashSale(productsRes.data?.flash_sale || null);
         setBadgeSettings(badgeRes.data);
       } catch (error) {
-        console.error('Error fetching flash products:', error);
+        logger.error('Error fetching flash products:', error);
       } finally {
         setLoading(false);
       }

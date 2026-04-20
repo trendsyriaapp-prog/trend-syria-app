@@ -2,6 +2,7 @@
 // إعدادات المنصة - لوحة المدير
 
 import { useState, useEffect } from 'react';
+import logger from '../../lib/logger';
 import axios from 'axios';
 import { Settings, Truck, Banknote, Package, Save, AlertTriangle, AlertCircle, RefreshCw, XCircle, Bell, MapPin, Users, Cloud, Thermometer, ToggleLeft, ToggleRight } from 'lucide-react';
 import { useToast } from '../../hooks/use-toast';
@@ -71,7 +72,7 @@ const SettingsTab = ({ user }) => {
         setLowStockThreshold(res.data.low_stock_threshold);
       }
     } catch (error) {
-      console.error('Error fetching settings:', error);
+      logger.error('Error fetching settings:', error);
     } finally {
       setLoading(false);
     }
@@ -504,7 +505,7 @@ const DriverCancelSettingsSection = ({ toast }) => {
         });
         setStats(statsRes.data);
       } catch (err) {
-        console.error('Error fetching stats:', err);
+        logger.error('Error fetching stats:', err);
       }
     };
     
@@ -696,7 +697,7 @@ const DriverShortageAlertSettings = ({ toast }) => {
       setShortageAlert(settingsRes.data);
       setAvailableCities(citiesRes.data.cities || []);
     } catch (error) {
-      console.error('Error fetching shortage alert settings:', error);
+      logger.error('Error fetching shortage alert settings:', error);
     }
   };
   
@@ -860,7 +861,7 @@ const AutoWeatherSettings = ({ toast }) => {
         api_key: res.data.has_api_key ? '**********' : ''
       }));
     } catch (err) {
-      console.error('Error fetching weather settings:', err);
+      logger.error('Error fetching weather settings:', err);
     } finally {
       setLoading(false);
     }

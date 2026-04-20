@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import logger from '../lib/logger';
 import axios from 'axios';
 import { Truck, Loader2 } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
@@ -29,7 +30,7 @@ const FreeShippingProductsPage = () => {
         setProducts(prods);
         setBadgeSettings(badgeRes.data);
       } catch (error) {
-        console.error('Error fetching free shipping products:', error);
+        logger.error('Error fetching free shipping products:', error);
       } finally {
         setLoading(false);
       }

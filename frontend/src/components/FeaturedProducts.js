@@ -2,6 +2,7 @@
 // مكون عرض المنتجات المميزة (المعلن عنها)
 
 import { useState, useEffect, memo, useCallback } from 'react';
+import logger from '../lib/logger';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
@@ -37,7 +38,7 @@ const FeaturedProducts = memo(() => {
       const res = await axios.get(`${API}/api/settings/product-badges`);
       setBadgeSettings(res.data);
     } catch (err) {
-      console.log('Badge settings not available');
+      logger.log('Badge settings not available');
     }
   };
   
@@ -46,7 +47,7 @@ const FeaturedProducts = memo(() => {
       const res = await axios.get(`${API}/api/ads/featured-products?limit=6`);
       setProducts(res.data);
     } catch (error) {
-      console.error('Error fetching featured products:', error);
+      logger.error('Error fetching featured products:', error);
     } finally {
       setLoading(false);
     }

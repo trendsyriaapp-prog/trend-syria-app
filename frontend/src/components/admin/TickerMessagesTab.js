@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import logger from '../../lib/logger';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -53,7 +54,7 @@ const TickerMessagesTab = () => {
       setOriginalMessages(JSON.parse(JSON.stringify(fetchedMessages)));
       setIsEnabled(res.data.is_enabled !== false);
     } catch (error) {
-      console.error('Error fetching ticker messages:', error);
+      logger.error('Error fetching ticker messages:', error);
     } finally {
       setLoading(false);
     }

@@ -2,6 +2,7 @@
 // تبويب إدارة البلاغات الأخلاقية ضد موظفي التوصيل
 
 import { useState, useEffect } from 'react';
+import logger from '../../lib/logger';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -72,7 +73,7 @@ const DriverReportsTab = () => {
       setReports(res.data.reports);
       setStats(res.data.stats);
     } catch (error) {
-      console.error('Error fetching reports:', error);
+      logger.error('Error fetching reports:', error);
     } finally {
       setLoading(false);
     }
@@ -91,7 +92,7 @@ const DriverReportsTab = () => {
       setAdminNotes('');
       toast({ title: "تم بنجاح", description: "تم معالجة البلاغ" });
     } catch (error) {
-      console.error('Error handling report:', error);
+      logger.error('Error handling report:', error);
       toast({ title: "خطأ", description: error.response?.data?.detail || 'حدث خطأ', variant: "destructive" });
     } finally {
       setActionLoading(false);

@@ -2,6 +2,7 @@
 // أداة ترحيل الصور من Base64 إلى CDN
 
 import { useState, useEffect } from 'react';
+import logger from '../../lib/logger';
 import axios from 'axios';
 import { 
   Cloud, RefreshCw, CheckCircle2, AlertTriangle, 
@@ -33,7 +34,7 @@ const ImageMigrationTab = () => {
       );
       setDiagnosis(res.data);
     } catch (error) {
-      console.error('Diagnosis error:', error);
+      logger.error('Diagnosis error:', error);
     } finally {
       setDiagnosing(false);
     }
@@ -82,7 +83,7 @@ const ImageMigrationTab = () => {
       }
       
     } catch (error) {
-      console.error('Migration error:', error);
+      logger.error('Migration error:', error);
       toast({
         title: "خطأ في الترحيل",
         description: error.response?.data?.detail || "حدث خطأ أثناء الترحيل",

@@ -2,6 +2,7 @@
 // تبويب "روّج منتجك" - النظام الجديد البسيط
 
 import { useState, useEffect } from 'react';
+import logger from '../../lib/logger';
 import axios from 'axios';
 import { Zap, Clock, CheckCircle, Loader2, Package, Percent, Wallet, Sparkles, Timer, XCircle } from 'lucide-react';
 import { useToast } from '../../hooks/use-toast';
@@ -79,7 +80,7 @@ const PromoteProductTab = ({ products, token, walletBalance = 0, onPromotionSucc
       } || { cost_per_product: 1000, duration_hours: 24 });
       setMyPromotions(promotionsRes.data || { active: [], expired: [] });
     } catch (error) {
-      console.error('Error fetching promotion data:', error);
+      logger.error('Error fetching promotion data:', error);
     } finally {
       setLoading(false);
     }
@@ -126,7 +127,7 @@ const PromoteProductTab = ({ products, token, walletBalance = 0, onPromotionSucc
       
       // تحديث رصيد المحفظة في الـ parent
       if (onPromotionSuccess && res.data.new_balance !== undefined) {
-        console.log('Updating wallet balance to:', res.data.new_balance);
+        logger.log('Updating wallet balance to:', res.data.new_balance);
         onPromotionSuccess(res.data.new_balance);
       }
     } catch (error) {

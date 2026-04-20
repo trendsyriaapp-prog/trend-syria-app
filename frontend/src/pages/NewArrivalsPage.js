@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import logger from '../lib/logger';
 import axios from 'axios';
 import { Sparkles, Loader2 } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
@@ -20,7 +21,7 @@ const NewArrivalsPage = () => {
         setProducts(productsRes.data || []);
         setBadgeSettings(badgeRes.data);
       } catch (error) {
-        console.error('Error fetching new arrivals:', error);
+        logger.error('Error fetching new arrivals:', error);
       } finally {
         setLoading(false);
       }

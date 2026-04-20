@@ -2,6 +2,7 @@
 // تبويب إدارة الإعلانات للمدير
 
 import { useState, useEffect } from 'react';
+import logger from '../../lib/logger';
 import { motion } from 'framer-motion';
 import axios from 'axios';
 import { 
@@ -66,7 +67,7 @@ const AdsTab = ({ user }) => {
       setStats(statsRes.data);
       setPrices(pricesRes.data);
     } catch (error) {
-      console.error('Error fetching ads data:', error);
+      logger.error('Error fetching ads data:', error);
     } finally {
       setLoading(false);
     }

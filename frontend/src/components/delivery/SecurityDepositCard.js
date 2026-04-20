@@ -2,6 +2,7 @@
 // بطاقة حالة تأمين موظف التوصيل
 
 import React, { useState, useEffect } from 'react';
+import logger from '../../lib/logger';
 import { Shield, AlertTriangle, CheckCircle, CreditCard, Building, Banknote, Send, RefreshCw, Clock } from 'lucide-react';
 
 const API = process.env.REACT_APP_BACKEND_URL;
@@ -35,7 +36,7 @@ export default function SecurityDepositCard({ token, onDepositComplete }) {
         }
       }
     } catch (err) {
-      console.error('Error fetching security status:', err);
+      logger.error('Error fetching security status:', err);
     }
     
     try {
@@ -46,7 +47,7 @@ export default function SecurityDepositCard({ token, onDepositComplete }) {
         setSettings(await res.json());
       }
     } catch (err) {
-      console.error('Error fetching settings:', err);
+      logger.error('Error fetching settings:', err);
     }
     
     setLoading(false);
@@ -61,7 +62,7 @@ export default function SecurityDepositCard({ token, onDepositComplete }) {
         setMyRequests(await res.json());
       }
     } catch (err) {
-      console.error('Error fetching requests:', err);
+      logger.error('Error fetching requests:', err);
     }
   };
 

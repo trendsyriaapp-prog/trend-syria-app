@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import logger from '../../lib/logger';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Navigation, MapPin, Clock, Truck, Locate } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
@@ -69,7 +70,7 @@ const fetchRoute = async (from, to) => {
     }
     return null;
   } catch (error) {
-    console.error('Error fetching route:', error);
+    logger.error('Error fetching route:', error);
     return null;
   }
 };
@@ -131,7 +132,7 @@ const RouteMapModal = ({ order, orderType, onClose, theme = 'dark' }) => {
         driverPosition = await getDriverLocation();
         setDriverCoords(driverPosition);
       } catch (error) {
-        console.log('Could not get driver location:', error);
+        logger.log('Could not get driver location:', error);
         setLocationError(true);
       }
       

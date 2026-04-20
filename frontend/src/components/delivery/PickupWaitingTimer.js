@@ -2,6 +2,7 @@
 // مؤقت انتظار السائق عند المتجر - يظهر في نافذة إدخال كود الاستلام
 
 import { useState, useEffect, useCallback } from 'react';
+import logger from '../../lib/logger';
 import { Clock, CheckCircle, TrendingUp } from 'lucide-react';
 import axios from 'axios';
 
@@ -41,7 +42,7 @@ const PickupWaitingTimer = ({
           });
         }
       } catch (error) {
-        console.log('Using default wait compensation settings');
+        logger.log('Using default wait compensation settings');
       } finally {
         setLoadingSettings(false);
       }

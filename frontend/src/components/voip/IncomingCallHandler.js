@@ -2,6 +2,7 @@
 // مكون للتعامل مع المكالمات الواردة على مستوى التطبيق
 
 import { useState, useEffect } from 'react';
+import logger from '../../lib/logger';
 import { AnimatePresence } from 'framer-motion';
 import useIncomingCall from '../../hooks/useIncomingCall';
 import { IncomingCallModal, ActiveCallModal } from './VoIPCallModal';
@@ -38,7 +39,7 @@ const IncomingCallHandler = () => {
       // حفظ reference لإيقافه لاحقاً
       window._ringtoneAudio = audio;
     } catch (err) {
-      console.error('Error playing ringtone:', err);
+      logger.error('Error playing ringtone:', err);
     }
   };
 

@@ -2,6 +2,7 @@
 // لوحة تقارير أداء السائق مع رسوم بيانية
 
 import { useState, useEffect } from 'react';
+import logger from '../../lib/logger';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -37,7 +38,7 @@ const DriverPerformance = () => {
       const res = await axios.get(`${API}/api/delivery/performance`);
       setData(res.data);
     } catch (error) {
-      console.error('Error fetching performance:', error);
+      logger.error('Error fetching performance:', error);
     } finally {
       setLoading(false);
     }

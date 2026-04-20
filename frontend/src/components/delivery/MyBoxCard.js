@@ -2,6 +2,7 @@
 // بطاقة معلومات صندوق التوصيل للموظف
 
 import { useState, useEffect } from 'react';
+import logger from '../../lib/logger';
 import axios from 'axios';
 import { motion } from 'framer-motion';
 import { 
@@ -34,7 +35,7 @@ const MyBoxCard = () => {
       const res = await axios.get(`${API}/api/delivery-boxes/my-box`);
       setBoxData(res.data);
     } catch (error) {
-      console.error('Error fetching box data:', error);
+      logger.error('Error fetching box data:', error);
     } finally {
       setLoading(false);
     }

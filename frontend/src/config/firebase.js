@@ -2,6 +2,7 @@
 // إعدادات Firebase للإشعارات
 
 import { initializeApp } from 'firebase/app';
+import logger from '../lib/logger';
 import { getMessaging, getToken, onMessage, isSupported } from 'firebase/messaging';
 
 const firebaseConfig = {
@@ -22,7 +23,7 @@ const initializeFirebase = async () => {
   try {
     const supported = await isSupported();
     if (!supported) {
-      console.log('Firebase Messaging not supported in this browser');
+      logger.log('Firebase Messaging not supported in this browser');
       return { app: null, messaging: null };
     }
     
@@ -36,7 +37,7 @@ const initializeFirebase = async () => {
     
     return { app, messaging };
   } catch (error) {
-    console.error('Error initializing Firebase:', error);
+    logger.error('Error initializing Firebase:', error);
     return { app: null, messaging: null };
   }
 };
@@ -53,13 +54,13 @@ export const requestNotificationPermission = async () => {
     const { messaging: msg } = await initializeFirebase();
     
     if (!msg) {
-      console.log('Messaging not available');
+      logger.log('Messaging not available');
       return null;
     }
 
     // التحقق من دعم Service Worker
     if (!('serviceWorker' in navigator)) {
-      console.log('Service Worker not supported');
+      logger.log('Service Worker not supported');
       return null;
     }
 
@@ -74,14 +75,14 @@ export const requestNotificationPermission = async () => {
         serviceWorkerRegistration: registration
       });
       
-      console.log('✅ FCM Token:', token?.substring(0, 20) + '...');
+      logger.log('✅ FCM Token:', token?.substring(0, 20) + '...');
       return token;
     } else {
-      console.log('Notification permission denied');
+      logger.log('Notification permission denied');
       return null;
     }
   } catch (error) {
-    console.error('Error getting notification permission:', error);
+    logger.error('Error getting notification permission:', error);
     return null;
   }
 };
@@ -97,7 +98,7 @@ export const onMessageListener = () => {
     }
     
     onMessage(msg, (payload) => {
-      console.log('Message received:', payload);
+      logger.log('Message received:', payload);
       resolve(payload);
     });
   });

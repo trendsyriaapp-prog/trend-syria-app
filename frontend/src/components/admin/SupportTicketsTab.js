@@ -2,6 +2,7 @@
 // تبويب إدارة تذاكر الدعم في لوحة المدير
 
 import { useState, useEffect } from 'react';
+import logger from '../../lib/logger';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -52,7 +53,7 @@ const SupportTicketsTab = () => {
       setTickets(res.data.requests);
       setStats(res.data.stats);
     } catch (error) {
-      console.error('Error fetching tickets:', error);
+      logger.error('Error fetching tickets:', error);
     } finally {
       setLoading(false);
     }
@@ -63,7 +64,7 @@ const SupportTicketsTab = () => {
       const res = await axios.get(`${API}/api/chatbot/admin/rating-stats`);
       setRatingStats(res.data);
     } catch (error) {
-      console.error('Error fetching rating stats:', error);
+      logger.error('Error fetching rating stats:', error);
     }
   };
 
@@ -72,7 +73,7 @@ const SupportTicketsTab = () => {
       const res = await axios.get(`${API}/api/chatbot/admin/analytics`);
       setAnalytics(res.data);
     } catch (error) {
-      console.error('Error fetching analytics:', error);
+      logger.error('Error fetching analytics:', error);
     }
   };
 
@@ -110,7 +111,7 @@ const SupportTicketsTab = () => {
       // For now, we'll just show the initial message
       setChatHistory([]);
     } catch (error) {
-      console.error('Error fetching chat history:', error);
+      logger.error('Error fetching chat history:', error);
     }
   };
 

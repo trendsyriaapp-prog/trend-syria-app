@@ -2,6 +2,7 @@
 // واجهة تذاكر الدعم للمستخدمين
 
 import { useState, useEffect } from 'react';
+import logger from '../../lib/logger';
 import axios from 'axios';
 import {
   HelpCircle, Plus, MessageCircle, Clock, 
@@ -54,7 +55,7 @@ const SupportTickets = ({ token }) => {
       });
       setTickets(res.data.tickets || []);
     } catch (err) {
-      console.error('Error fetching tickets:', err);
+      logger.error('Error fetching tickets:', err);
     } finally {
       setLoading(false);
     }

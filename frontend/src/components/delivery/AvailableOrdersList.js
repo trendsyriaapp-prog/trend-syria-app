@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, memo } from 'react';
+import logger from '../../lib/logger';
 import { motion } from 'framer-motion';
 import { Package, MapPin, UtensilsCrossed, ShoppingBag, Clock, Locate } from 'lucide-react';
 import { formatPrice } from '../../utils/imageHelpers';
@@ -34,7 +35,7 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onAccept
       const location = await getCurrentLocation();
       setDriverLocation(location);
     } catch (error) {
-      console.error('خطأ في الحصول على الموقع:', error);
+      logger.error('خطأ في الحصول على الموقع:', error);
     } finally {
       setLoadingLocation(false);
     }

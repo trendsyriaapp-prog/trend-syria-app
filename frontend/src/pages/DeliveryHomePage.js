@@ -2,6 +2,7 @@
 // الصفحة الرئيسية لموظف التوصيل
 
 import { useState, useEffect } from 'react';
+import logger from '../lib/logger';
 import { Link, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
@@ -73,7 +74,7 @@ const DeliveryHomePage = () => {
       const ordersData = myOrdersRes.data?.orders || myOrdersRes.data || [];
       setMyOrders(Array.isArray(ordersData) ? ordersData.filter(o => o.delivery_status === 'out_for_delivery') : []);
     } catch (error) {
-      console.error('Error fetching delivery data:', error);
+      logger.error('Error fetching delivery data:', error);
     } finally {
       setLoading(false);
     }

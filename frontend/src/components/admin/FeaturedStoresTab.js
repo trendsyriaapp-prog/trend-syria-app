@@ -2,6 +2,7 @@
 // إدارة المتاجر المميزة في قسم الطعام
 
 import { useState, useEffect } from 'react';
+import logger from '../../lib/logger';
 import axios from 'axios';
 import { Store, Check, X, Search, Star, GripVertical } from 'lucide-react';
 import { useToast } from '../../hooks/use-toast';
@@ -32,7 +33,7 @@ const FeaturedStoresTab = () => {
       setSelectedStores(settingsRes.data.store_ids || []);
       setAllStores(storesRes.data || []);
     } catch (error) {
-      console.error('Error fetching data:', error);
+      logger.error('Error fetching data:', error);
     } finally {
       setLoading(false);
     }

@@ -3,6 +3,7 @@
 // يدعم: سحب مباشر، تصغير/تكبير، تدوير، تعديلات الصورة، ظل جانبي
 
 import { useState, useRef, useEffect, useCallback } from 'react';
+import logger from '../../lib/logger';
 import axios from 'axios';
 import { 
   X, Camera, RotateCcw, Check, Loader2, ZoomIn, ZoomOut, RotateCw,
@@ -227,7 +228,7 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
         setStream(mediaStream);
       }
     } catch (err) {
-      console.error('Camera error:', err);
+      logger.error('Camera error:', err);
       if (err.name === 'NotAllowedError') {
         setError('يرجى السماح بالوصول للكاميرا');
       } else if (err.name === 'NotFoundError') {
@@ -336,7 +337,7 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
       setSelectedShadow('none');
       
     } catch (err) {
-      console.error('Error:', err);
+      logger.error('Error:', err);
       setProcessedImage(imageData);
       setBgRemovalFailed(true);
       // القيم الافتراضية للصورة (100%)

@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, memo } from 'react';
+import logger from '../lib/logger';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { Home, Grid3X3, ShoppingCart, User, Heart, Package, MessageCircle, Settings, LogOut, Store, X, UtensilsCrossed, Gift, ShoppingBag, Wallet, ClipboardList, BarChart3, Users, Trophy, DollarSign, UserX, Truck, Plus, ChevronRight } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -50,7 +51,7 @@ const MobileNav = memo(() => {
       setUserRoles(res.data.roles || [user?.user_type || 'buyer']);
       setRoleStatus(res.data.role_status || {});
     } catch (error) {
-      console.error('Error fetching roles:', error);
+      logger.error('Error fetching roles:', error);
       setUserRoles(user?.roles || [user?.user_type || 'buyer']);
     } finally {
       setLoadingRoles(false);

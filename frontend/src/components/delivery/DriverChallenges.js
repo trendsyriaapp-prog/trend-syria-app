@@ -2,6 +2,7 @@
 // مكون التحديات والمكافآت للسائقين
 
 import { useState, useEffect } from 'react';
+import logger from '../../lib/logger';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -30,7 +31,7 @@ const DriverChallenges = () => {
       const res = await axios.get(`${API}/api/challenges/active`);
       setChallenges(res.data);
     } catch (error) {
-      console.error('Error fetching challenges:', error);
+      logger.error('Error fetching challenges:', error);
     } finally {
       setLoading(false);
     }

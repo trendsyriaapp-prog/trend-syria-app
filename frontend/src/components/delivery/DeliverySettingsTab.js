@@ -2,6 +2,7 @@
 // تبويب إعدادات موظف التوصيل وحسابات الاستلام المالي
 
 import { useState, useEffect } from 'react';
+import logger from '../../lib/logger';
 import axios from 'axios';
 import { 
   Truck, CreditCard, Plus, Edit2, Trash2, Check, X, Save, Loader2, MapPin, Clock, Bike, Car
@@ -68,7 +69,7 @@ const DeliverySettingsTab = ({ onSaveSuccess }) => {
       setDeliverySettings(settingsRes.data);
       setPaymentAccounts(accountsRes.data);
     } catch (error) {
-      console.error('Error fetching data:', error);
+      logger.error('Error fetching data:', error);
     } finally {
       setLoading(false);
     }

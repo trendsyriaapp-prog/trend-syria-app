@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import logger from '../../lib/logger';
 import axios from 'axios';
 import { Star, MessageSquare, Send, Loader2, Package, CheckCircle } from 'lucide-react';
 import { useToast } from '../../hooks/use-toast';
@@ -34,7 +35,7 @@ const SellerReviewsTab = () => {
       const res = await axios.get(`${API}/api/reviews/seller/pending`);
       setPendingReviews(res.data);
     } catch (error) {
-      console.error('Error fetching reviews:', error);
+      logger.error('Error fetching reviews:', error);
     } finally {
       setLoading(false);
     }

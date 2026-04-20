@@ -2,6 +2,7 @@
 // أدوات حل المشاكل للمدير
 
 import { useState, useEffect } from 'react';
+import logger from '../../lib/logger';
 import axios from 'axios';
 import {
   DollarSign, Trash2, RefreshCw, Truck, Search,
@@ -33,7 +34,7 @@ const ProblemSolverTools = () => {
       });
       setAvailableDrivers(res.data.drivers || []);
     } catch (err) {
-      console.error('Error fetching drivers:', err);
+      logger.error('Error fetching drivers:', err);
     }
   };
 

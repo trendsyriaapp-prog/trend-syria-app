@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import logger from '../../lib/logger';
 import axios from 'axios';
 import { AlertTriangle, CheckCircle, XCircle, RefreshCw, User, Package, Clock, DollarSign, X } from 'lucide-react';
 import { useToast } from '../../hooks/use-toast';
@@ -45,7 +46,7 @@ const ViolationsTab = () => {
       setViolations(res.data.violations || []);
       setStats(res.data.stats || {});
     } catch (error) {
-      console.error('Error fetching violations:', error);
+      logger.error('Error fetching violations:', error);
     } finally {
       setLoading(false);
     }

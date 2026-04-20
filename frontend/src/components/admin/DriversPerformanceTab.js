@@ -2,6 +2,7 @@
 // إحصائيات أداء السائقين
 
 import React, { useState, useEffect } from 'react';
+import logger from '../../lib/logger';
 import axios from 'axios';
 import {
   Users, Truck, Clock, Star, TrendingUp, TrendingDown,
@@ -43,7 +44,7 @@ const DriversPerformanceTab = () => {
       });
       setCities(res.data || []);
     } catch (err) {
-      console.error('Error fetching cities:', err);
+      logger.error('Error fetching cities:', err);
     }
   };
 
@@ -62,7 +63,7 @@ const DriversPerformanceTab = () => {
       setDrivers(res.data.drivers || []);
       setSummary(res.data.summary || {});
     } catch (err) {
-      console.error('Error fetching drivers performance:', err);
+      logger.error('Error fetching drivers performance:', err);
     } finally {
       setLoading(false);
     }
@@ -78,7 +79,7 @@ const DriversPerformanceTab = () => {
       );
       setDriverDetails(res.data);
     } catch (err) {
-      console.error('Error fetching driver details:', err);
+      logger.error('Error fetching driver details:', err);
     } finally {
       setLoadingDetails(false);
     }

@@ -2,6 +2,7 @@
 // Hook للتحقق من المكالمات الواردة
 
 import { useState, useEffect, useCallback } from 'react';
+import logger from '../lib/logger';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 
@@ -28,7 +29,7 @@ const useIncomingCall = () => {
         setIncomingCall(null);
       }
     } catch (err) {
-      console.error('Error checking incoming call:', err);
+      logger.error('Error checking incoming call:', err);
     } finally {
       setIsChecking(false);
     }
@@ -45,7 +46,7 @@ const useIncomingCall = () => {
       });
       return true;
     } catch (err) {
-      console.error('Error accepting call:', err);
+      logger.error('Error accepting call:', err);
       return false;
     }
   }, [token]);
@@ -62,7 +63,7 @@ const useIncomingCall = () => {
       setIncomingCall(null);
       return true;
     } catch (err) {
-      console.error('Error rejecting call:', err);
+      logger.error('Error rejecting call:', err);
       return false;
     }
   }, [token]);

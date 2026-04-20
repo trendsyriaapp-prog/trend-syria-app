@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import logger from '../lib/logger';
 import axios from 'axios';
 import { Star, Loader2 } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
@@ -20,7 +21,7 @@ const SponsoredProductsPage = () => {
         setProducts(productsRes.data || []);
         setBadgeSettings(badgeRes.data);
       } catch (error) {
-        console.error('Error fetching sponsored products:', error);
+        logger.error('Error fetching sponsored products:', error);
       } finally {
         setLoading(false);
       }

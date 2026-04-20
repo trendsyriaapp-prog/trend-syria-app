@@ -2,6 +2,7 @@
 // تنبيه للبائع عندما يكون السائق ينتظر - تنبيهين فقط (5 دقائق و 10 دقائق)
 
 import { useState, useEffect, useCallback } from 'react';
+import logger from '../../lib/logger';
 import { Clock, AlertTriangle, Truck, XCircle } from 'lucide-react';
 import axios from 'axios';
 
@@ -37,7 +38,7 @@ const DriverWaitingAlert = ({
           });
         }
       } catch (error) {
-        console.log('Using default wait compensation settings');
+        logger.log('Using default wait compensation settings');
       }
     };
     fetchSettings();

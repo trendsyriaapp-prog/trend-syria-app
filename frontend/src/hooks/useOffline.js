@@ -2,6 +2,7 @@
 // Hook للتعامل مع حالة Offline والمزامنة
 
 import { useState, useEffect, useCallback } from 'react';
+import logger from '../lib/logger';
 import syncManager from '../lib/syncManager';
 
 /**
@@ -104,7 +105,7 @@ export const useLocalStorage = (key, initialValue) => {
       const item = localStorage.getItem(key);
       return item ? JSON.parse(item) : initialValue;
     } catch (error) {
-      console.error(`Error reading localStorage key "${key}":`, error);
+      logger.error(`Error reading localStorage key "${key}":`, error);
       return initialValue;
     }
   });
@@ -115,7 +116,7 @@ export const useLocalStorage = (key, initialValue) => {
       setStoredValue(valueToStore);
       localStorage.setItem(key, JSON.stringify(valueToStore));
     } catch (error) {
-      console.error(`Error setting localStorage key "${key}":`, error);
+      logger.error(`Error setting localStorage key "${key}":`, error);
     }
   }, [key, storedValue]);
 
@@ -124,7 +125,7 @@ export const useLocalStorage = (key, initialValue) => {
       localStorage.removeItem(key);
       setStoredValue(initialValue);
     } catch (error) {
-      console.error(`Error removing localStorage key "${key}":`, error);
+      logger.error(`Error removing localStorage key "${key}":`, error);
     }
   }, [key, initialValue]);
 

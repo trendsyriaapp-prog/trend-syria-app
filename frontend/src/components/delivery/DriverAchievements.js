@@ -2,6 +2,7 @@
 // مكون الإنجازات والشارات للسائقين
 
 import { useState, useEffect } from 'react';
+import logger from '../../lib/logger';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -47,7 +48,7 @@ const DriverAchievements = () => {
       const res = await axios.get(`${API}/api/achievements/my-achievements`);
       setData(res.data);
     } catch (error) {
-      console.error('Error fetching achievements:', error);
+      logger.error('Error fetching achievements:', error);
     } finally {
       setLoading(false);
     }
@@ -61,7 +62,7 @@ const DriverAchievements = () => {
         fetchAchievements(); // Refresh data
       }
     } catch (error) {
-      console.error('Error checking achievements:', error);
+      logger.error('Error checking achievements:', error);
     }
   };
 

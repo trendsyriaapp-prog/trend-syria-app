@@ -2,6 +2,7 @@
 // نظام عرض الأخطاء - يعرض الخطأ على الشاشة مباشرة
 
 import React from 'react';
+import logger from '../lib/logger';
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -26,8 +27,8 @@ class ErrorBoundary extends React.Component {
     });
     
     // طباعة في Console
-    console.error('🔴 ErrorBoundary caught error:', error);
-    console.error('📍 Component Stack:', errorInfo.componentStack);
+    logger.error('🔴 ErrorBoundary caught error:', error);
+    logger.error('📍 Component Stack:', errorInfo.componentStack);
   }
 
   render() {

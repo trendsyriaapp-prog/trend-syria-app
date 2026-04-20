@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import logger from '../lib/logger';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
@@ -58,11 +59,11 @@ const CategoriesPage = () => {
       if (Array.isArray(res.data)) {
         setCategories(res.data);
       } else {
-        console.error('Categories data is not an array:', res.data);
+        logger.error('Categories data is not an array:', res.data);
         setCategories([]);
       }
     } catch (error) {
-      console.error('Error fetching categories:', error);
+      logger.error('Error fetching categories:', error);
       setCategories([]);
     } finally {
       setLoading(false);

@@ -2,6 +2,7 @@
 // تبويب إدارة التحديات في لوحة المدير
 
 import { useState, useEffect } from 'react';
+import logger from '../../lib/logger';
 import axios from 'axios';
 import { 
   Target, Plus, Edit, Trash2, Gift, Users, 
@@ -35,7 +36,7 @@ const ChallengesTab = () => {
       setChallenges(res.data.challenges);
       setStats(res.data.stats);
     } catch (error) {
-      console.error('Error fetching challenges:', error);
+      logger.error('Error fetching challenges:', error);
     } finally {
       setLoading(false);
     }

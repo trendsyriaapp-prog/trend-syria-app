@@ -2,6 +2,7 @@
 // إعدادات أقسام الصفحة الرئيسية
 
 import { useState, useEffect } from 'react';
+import logger from '../../lib/logger';
 import axios from 'axios';
 import { 
   Star, Zap, Truck, TrendingUp, Sparkles, 
@@ -71,7 +72,7 @@ const HomepageSectionsTab = () => {
       const res = await axios.get(`${API}/api/settings/homepage-sections`);
       setSections(res.data);
     } catch (error) {
-      console.error('Error fetching sections:', error);
+      logger.error('Error fetching sections:', error);
       toast({ 
         title: "خطأ", 
         description: "فشل جلب إعدادات الأقسام", 
@@ -101,7 +102,7 @@ const HomepageSectionsTab = () => {
         description: "تم حفظ إعدادات الأقسام بنجاح" 
       });
     } catch (error) {
-      console.error('Error saving sections:', error);
+      logger.error('Error saving sections:', error);
       toast({ 
         title: "خطأ", 
         description: error.response?.data?.detail || "فشل حفظ الإعدادات", 

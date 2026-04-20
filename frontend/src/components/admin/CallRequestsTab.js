@@ -2,6 +2,7 @@
 // لوحة طلبات الاتصال - للموظفين
 
 import React, { useState, useEffect } from 'react';
+import logger from '../../lib/logger';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -40,7 +41,7 @@ const CallRequestsTab = () => {
       
       setRequests(filter === 'pending' ? res.data.requests : res.data);
     } catch (err) {
-      console.error('Error fetching call requests:', err);
+      logger.error('Error fetching call requests:', err);
     } finally {
       setLoading(false);
     }

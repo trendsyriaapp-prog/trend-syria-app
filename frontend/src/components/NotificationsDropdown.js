@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, memo, useCallback } from 'react';
+import logger from '../lib/logger';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { Bell, X, Check, CheckCheck, Package, Truck, ShoppingCart, Gift, Star, Tag, Utensils, CreditCard, AlertTriangle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -210,7 +211,7 @@ const NotificationsDropdown = memo(() => {
       setNotifications(res.data || []);
       setUnreadCount(res.data.filter(n => !n.is_read).length);
     } catch (err) {
-      console.error('Error fetching notifications:', err);
+      logger.error('Error fetching notifications:', err);
     }
   };
 
@@ -261,7 +262,7 @@ const NotificationsDropdown = memo(() => {
       );
       setUnreadCount(prev => Math.max(0, prev - 1));
     } catch (err) {
-      console.error('Error marking notification as read:', err);
+      logger.error('Error marking notification as read:', err);
     }
   };
 
@@ -273,7 +274,7 @@ const NotificationsDropdown = memo(() => {
       setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
       setUnreadCount(0);
     } catch (err) {
-      console.error('Error marking all as read:', err);
+      logger.error('Error marking all as read:', err);
     }
   };
 

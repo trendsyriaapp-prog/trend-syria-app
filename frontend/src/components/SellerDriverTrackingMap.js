@@ -2,6 +2,7 @@
 // مكون خريطة تتبع السائق للبائع
 
 import { useState, useEffect, useRef } from 'react';
+import logger from '../lib/logger';
 import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
 import { Icon } from 'leaflet';
 import axios from 'axios';
@@ -53,7 +54,7 @@ const SellerDriverTrackingMap = ({ orderId, token, driverName }) => {
       setLastUpdate(new Date());
       setError(null);
     } catch (err) {
-      console.error('Error fetching driver location:', err);
+      logger.error('Error fetching driver location:', err);
       setError('فشل في جلب موقع السائق');
     } finally {
       setLoading(false);

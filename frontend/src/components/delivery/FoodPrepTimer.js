@@ -2,6 +2,7 @@
 // مؤقت وقت تحضير الطعام للسائق - مع إشعار صوتي عندما يقترب الوقت
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import logger from '../../lib/logger';
 import { motion } from 'framer-motion';
 import { Clock, ChefHat, AlertTriangle, Bell, BellRing } from 'lucide-react';
 
@@ -73,7 +74,7 @@ const FoodPrepTimer = ({
         onAlmostReady(order);
       }
     } catch (err) {
-      console.log('Audio warning not supported:', err);
+      logger.log('Audio warning not supported:', err);
     }
   }, [hasPlayedWarning, onAlmostReady, order]);
 

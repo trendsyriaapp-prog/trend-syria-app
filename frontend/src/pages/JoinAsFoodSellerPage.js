@@ -2,6 +2,7 @@
 // صفحة التسجيل كمتجر طعام
 
 import { useState, useEffect } from 'react';
+import logger from '../lib/logger';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
@@ -147,7 +148,7 @@ const JoinAsFoodSellerPage = () => {
           setBusinessCategories(res.data.categories);
         }
       } catch (error) {
-        console.error('Error fetching categories:', error);
+        logger.error('Error fetching categories:', error);
         // لا شيء - سنستخدم الأصناف الافتراضية
       } finally {
         setLoadingCategories(false);
@@ -262,7 +263,7 @@ const JoinAsFoodSellerPage = () => {
       const compressedImage = await compressDocumentImage(file);
       setFormData({ ...formData, [field]: compressedImage });
     } catch (error) {
-      console.error('Error compressing image:', error);
+      logger.error('Error compressing image:', error);
       toast({
         title: "خطأ",
         description: "فشل في معالجة الصورة، يرجى المحاولة مرة أخرى",

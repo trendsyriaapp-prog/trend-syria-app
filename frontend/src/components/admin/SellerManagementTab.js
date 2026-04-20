@@ -2,6 +2,7 @@
 // تبويب إدارة حسابات البائعين
 
 import React, { useState, useEffect } from 'react';
+import logger from '../../lib/logger';
 import { 
   Store, Check, X, Clock, AlertTriangle, RefreshCw, 
   UserX, UserCheck, Trash2, Phone, Package, ShoppingBag,
@@ -35,7 +36,7 @@ export default function SellerManagementTab() {
         setSellers(await res.json());
       }
     } catch (err) {
-      console.error('Error fetching sellers:', err);
+      logger.error('Error fetching sellers:', err);
     }
     setLoading(false);
   };

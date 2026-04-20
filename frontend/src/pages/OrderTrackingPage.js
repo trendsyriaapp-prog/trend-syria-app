@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import logger from '../lib/logger';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
@@ -72,7 +73,7 @@ const OrderTrackingPage = () => {
       const res = await axios.get(`${API}/api/delivery/check-rating/${orderId}`);
       setHasRated(res.data.has_rated);
     } catch (error) {
-      console.error('Error checking rating:', error);
+      logger.error('Error checking rating:', error);
     }
   };
 
@@ -86,7 +87,7 @@ const OrderTrackingPage = () => {
       setTracking(trackingRes.data);
       setDeliveryNote(trackingRes.data.delivery_note || '');
     } catch (error) {
-      console.error('Error fetching tracking:', error);
+      logger.error('Error fetching tracking:', error);
       toast({
         title: "خطأ",
         description: "فشل في تحميل معلومات التتبع",

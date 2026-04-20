@@ -2,6 +2,7 @@
 // إعدادات شارات المنتجات للمدير
 
 import { useState, useEffect } from 'react';
+import logger from '../../lib/logger';
 import axios from 'axios';
 import { 
   Save, 
@@ -32,7 +33,7 @@ const ProductBadgesTab = () => {
       const res = await axios.get(`${API}/api/settings/product-badges`);
       setSettings(res.data);
     } catch (err) {
-      console.error('Error fetching badge settings:', err);
+      logger.error('Error fetching badge settings:', err);
       // إعدادات افتراضية
       setSettings({
         enabled: true,

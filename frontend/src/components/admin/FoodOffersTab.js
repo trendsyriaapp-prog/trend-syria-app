@@ -2,6 +2,7 @@
 // تبويب إدارة عروض الطعام وعروض الفلاش
 
 import { useState, useEffect } from 'react';
+import logger from '../../lib/logger';
 import { motion } from 'framer-motion';
 import axios from 'axios';
 import { 
@@ -48,7 +49,7 @@ const FoodOffersTab = ({ token }) => {
       setFlashRequests(requestsRes.data?.requests || []);
       setRequestsStats(requestsRes.data?.stats || { pending: 0, approved: 0, rejected: 0 });
     } catch (error) {
-      console.error('Error fetching offers:', error);
+      logger.error('Error fetching offers:', error);
     } finally {
       setLoading(false);
     }
@@ -842,7 +843,7 @@ const FlashSaleModal = ({ flash, token, onClose, onSave }) => {
       const res = await axios.get(`${API}/api/food/products?limit=500`);
       setAllProducts(res.data || []);
     } catch (error) {
-      console.error('Error fetching products:', error);
+      logger.error('Error fetching products:', error);
     } finally {
       setLoadingProducts(false);
     }

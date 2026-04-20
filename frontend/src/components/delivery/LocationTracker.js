@@ -2,6 +2,7 @@
 // مكون لتحديث موقع السائق GPS
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import logger from '../../lib/logger';
 import axios from 'axios';
 import { MapPin, Navigation, Power, PowerOff, Loader2 } from 'lucide-react';
 import { useToast } from '../../hooks/use-toast';
@@ -32,14 +33,14 @@ const LocationTracker = () => {
       setLastUpdate(new Date());
       setError(null);
     } catch (err) {
-      console.error('Error sending location:', err);
+      logger.error('Error sending location:', err);
       setError('فشل في إرسال الموقع');
     }
   }, []);
 
   // معالجة أخطاء GPS
   const handleError = useCallback((err) => {
-    console.error('Geolocation error:', err);
+    logger.error('Geolocation error:', err);
     let message = 'خطأ في تحديد الموقع';
     
     switch (err.code) {
@@ -108,7 +109,7 @@ const LocationTracker = () => {
     try {
       await axios.delete(`${API}/api/delivery/location`);
     } catch (err) {
-      console.error('Error clearing location:', err);
+      logger.error('Error clearing location:', err);
     }
 
     toast({

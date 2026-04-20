@@ -2,6 +2,7 @@
 // تبويب إدارة إعلانات البائع
 
 import { useState, useEffect } from 'react';
+import logger from '../../lib/logger';
 import { motion } from 'framer-motion';
 import axios from 'axios';
 import { 
@@ -67,7 +68,7 @@ const SellerAdsTab = ({ user, products, walletBalance = 0 }) => {
       setAds(adsRes.data);
       setPrices(pricesRes.data);
     } catch (error) {
-      console.error('Error fetching ads:', error);
+      logger.error('Error fetching ads:', error);
     } finally {
       setLoading(false);
     }

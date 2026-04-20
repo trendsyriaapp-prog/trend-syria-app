@@ -2,6 +2,7 @@
 // سلة طلبات الطعام
 
 import { useState, useEffect } from 'react';
+import logger from '../lib/logger';
 import { useNavigate, useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
@@ -276,7 +277,7 @@ const FoodCartPage = () => {
         setDistanceWarning(null);
       }
     } catch (error) {
-      console.error('Error calculating distance delivery fee:', error);
+      logger.error('Error calculating distance delivery fee:', error);
       setDistanceDeliveryFee(null);
       setDistanceWarning(null);
     } finally {
@@ -472,7 +473,7 @@ const FoodCartPage = () => {
         calculateDistanceDeliveryFee();
       }
     } catch (error) {
-      console.error('Error saving location:', error);
+      logger.error('Error saving location:', error);
       toast({ title: "خطأ", description: "فشل في حفظ الموقع", variant: "destructive" });
     }
   };
@@ -634,7 +635,7 @@ const FoodCartPage = () => {
       });
       navigate(`/food/order/${res.data.order_id}`);
     } catch (error) {
-      console.error('Order error:', error.response?.data);
+      logger.error('Order error:', error.response?.data);
       const errorDetail = error.response?.data?.detail;
       let errorMessage = typeof errorDetail === 'string' 
         ? errorDetail 

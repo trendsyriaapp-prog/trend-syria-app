@@ -2,6 +2,7 @@
 // تبويب محفظة المنصة في لوحة تحكم المدير
 
 import { useState, useEffect } from 'react';
+import logger from '../../lib/logger';
 import axios from 'axios';
 import { 
   Wallet, TrendingUp, ArrowDownCircle, RefreshCw,
@@ -48,7 +49,7 @@ const PlatformWalletTab = () => {
       setTransactions(transactionsRes.data);
       setPaymentSettings(paymentRes.data?.payment_settings || {});
     } catch (error) {
-      console.error('Error fetching platform wallet:', error);
+      logger.error('Error fetching platform wallet:', error);
       toast({
         title: "خطأ",
         description: "فشل تحميل محفظة المنصة",

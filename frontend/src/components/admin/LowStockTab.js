@@ -2,6 +2,7 @@
 // تقرير المخزون المنخفض - لوحة المدير
 
 import { useState, useEffect } from 'react';
+import logger from '../../lib/logger';
 import axios from 'axios';
 import { AlertTriangle, Package, Phone, User, RefreshCw, ExternalLink } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -27,7 +28,7 @@ const LowStockTab = () => {
       const res = await axios.get(`${API}/api/admin/products/low-stock`);
       setData(res.data);
     } catch (error) {
-      console.error('Error fetching low stock products:', error);
+      logger.error('Error fetching low stock products:', error);
     } finally {
       setLoading(false);
       setRefreshing(false);

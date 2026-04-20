@@ -2,6 +2,7 @@
 // تبويب إدارة متاجر الطعام
 
 import React, { useState, useEffect } from 'react';
+import logger from '../../lib/logger';
 import { 
   UtensilsCrossed, Check, X, Clock, AlertTriangle, RefreshCw, 
   UserX, UserCheck, Trash2, Phone, Package, ShoppingBag,
@@ -43,7 +44,7 @@ export default function FoodStoreManagementTab() {
         setStores(await res.json());
       }
     } catch (err) {
-      console.error('Error fetching stores:', err);
+      logger.error('Error fetching stores:', err);
     }
     setLoading(false);
   };

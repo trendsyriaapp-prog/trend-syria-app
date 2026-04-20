@@ -1,4 +1,5 @@
 import { Loader2 } from 'lucide-react';
+import logger from '../lib/logger';
 import usePushNotifications from '../hooks/usePushNotifications';
 import { useToast } from '../hooks/use-toast';
 
@@ -18,11 +19,11 @@ const PushNotificationButton = ({ userType, showLabel = false, size = 'default' 
   } = usePushNotifications(userType);
 
   const handleToggle = async () => {
-    console.log('Push button clicked, current state:', { isSubscribed, permission, isLoading });
+    logger.log('Push button clicked, current state:', { isSubscribed, permission, isLoading });
     
     try {
       const result = await toggleSubscription();
-      console.log('Toggle result:', result);
+      logger.log('Toggle result:', result);
       
       if (result) {
         toast({
@@ -48,7 +49,7 @@ const PushNotificationButton = ({ userType, showLabel = false, size = 'default' 
         }
       }
     } catch (err) {
-      console.error('Toggle error:', err);
+      logger.error('Toggle error:', err);
       toast({
         title: "حدث خطأ",
         description: "فشل في تغيير حالة الإشعارات",

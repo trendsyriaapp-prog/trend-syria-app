@@ -2,6 +2,7 @@
 // تقارير أداء إعلانات البائع + تصدير التقارير
 
 import { useState, useEffect } from 'react';
+import logger from '../../lib/logger';
 import { motion } from 'framer-motion';
 import axios from 'axios';
 import { 
@@ -36,7 +37,7 @@ const SellerAdAnalytics = () => {
       const res = await axios.get(`${API}/api/ads/my-analytics`);
       setAnalytics(res.data);
     } catch (error) {
-      console.error('Error fetching analytics:', error);
+      logger.error('Error fetching analytics:', error);
     } finally {
       setLoading(false);
     }
@@ -70,7 +71,7 @@ const SellerAdAnalytics = () => {
       window.URL.revokeObjectURL(url);
       a.remove();
     } catch (err) {
-      console.error('Export error:', err);
+      logger.error('Export error:', err);
       alert('فشل تصدير التقرير');
     } finally {
       setExporting(null);

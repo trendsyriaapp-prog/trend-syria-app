@@ -2,6 +2,7 @@
 // إدارة فلاش البائعين
 
 import { useState, useEffect } from 'react';
+import logger from '../../lib/logger';
 import axios from 'axios';
 import { Zap, Clock, DollarSign, Settings, Trash2, Loader2, CheckCircle, XCircle, TrendingUp, Package } from 'lucide-react';
 import { useToast } from '../../hooks/use-toast';
@@ -44,7 +45,7 @@ const SellerPromotionsTab = () => {
       setSettings(settingsRes.data);
       setPromotions(promotionsRes.data);
     } catch (error) {
-      console.error('Error fetching promotions data:', error);
+      logger.error('Error fetching promotions data:', error);
       toast({
         title: "خطأ",
         description: "فشل في تحميل بيانات الفلاش",

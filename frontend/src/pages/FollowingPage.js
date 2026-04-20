@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import logger from '../lib/logger';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Store, Package, Heart, Loader2, ArrowRight, ChevronDown } from 'lucide-react';
@@ -39,7 +40,7 @@ const FollowingPage = () => {
       setTotal(totalCount);
       setHasMore(pageNum < totalPages);
     } catch (error) {
-      console.error('Error fetching following:', error);
+      logger.error('Error fetching following:', error);
     } finally {
       setLoading(false);
       setLoadingMore(false);

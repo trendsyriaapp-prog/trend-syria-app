@@ -2,6 +2,7 @@
 // إدارة صفقات اليوم - لوحة المدير
 
 import { useState, useEffect } from 'react';
+import logger from '../../lib/logger';
 import axios from 'axios';
 import { motion } from 'framer-motion';
 import { 
@@ -68,7 +69,7 @@ const DailyDealsTab = () => {
       const response = await axios.get(`${API}/api/daily-deals/admin/all`);
       setDeals(response.data.deals || []);
     } catch (error) {
-      console.error('Error fetching deals:', error);
+      logger.error('Error fetching deals:', error);
     } finally {
       setLoading(false);
     }
@@ -80,13 +81,13 @@ const DailyDealsTab = () => {
       const response = await axios.get(`${API}/api/admin/products/all`);
       setProducts(response.data || []);
     } catch (error) {
-      console.error('Error fetching products:', error);
+      logger.error('Error fetching products:', error);
       // محاولة جلب من المسار العادي كبديل
       try {
         const fallbackRes = await axios.get(`${API}/api/products?limit=100`);
         setProducts(fallbackRes.data.products || []);
       } catch (e) {
-        console.error('Fallback fetch also failed:', e);
+        logger.error('Fallback fetch also failed:', e);
       }
     }
   };
@@ -97,7 +98,7 @@ const DailyDealsTab = () => {
       const response = await axios.get(`${API}/api/daily-deals/requests`);
       setDealRequests(response.data.requests || []);
     } catch (error) {
-      console.error('Error fetching deal requests:', error);
+      logger.error('Error fetching deal requests:', error);
     }
   };
 

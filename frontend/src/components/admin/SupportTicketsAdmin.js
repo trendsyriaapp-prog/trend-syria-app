@@ -2,6 +2,7 @@
 // لوحة إدارة تذاكر الدعم للمسؤولين
 
 import { useState, useEffect } from 'react';
+import logger from '../../lib/logger';
 import axios from 'axios';
 import {
   HelpCircle, MessageCircle, Clock, CheckCircle, 
@@ -66,7 +67,7 @@ const SupportTicketsAdmin = () => {
       setTickets(res.data.tickets || []);
       setTotalPages(res.data.pages || 1);
     } catch (err) {
-      console.error('Error fetching tickets:', err);
+      logger.error('Error fetching tickets:', err);
     } finally {
       setLoading(false);
     }
@@ -80,7 +81,7 @@ const SupportTicketsAdmin = () => {
       });
       setStats(res.data);
     } catch (err) {
-      console.error('Error fetching stats:', err);
+      logger.error('Error fetching stats:', err);
     }
   };
 

@@ -2,6 +2,7 @@
 // تبويب إعدادات المتجر وحسابات الاستلام المالي
 
 import { useState, useEffect } from 'react';
+import logger from '../../lib/logger';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { 
@@ -73,7 +74,7 @@ const StoreSettingsTab = ({ onLogoUpdate, onSaveSuccess }) => {
       setStoreLogo(settingsRes.data.store_logo || null);
       setPaymentAccounts(accountsRes.data);
     } catch (error) {
-      console.error('Error fetching data:', error);
+      logger.error('Error fetching data:', error);
     } finally {
       setLoading(false);
     }
@@ -106,7 +107,7 @@ const StoreSettingsTab = ({ onLogoUpdate, onSaveSuccess }) => {
       }
       toast({ title: "تم", description: "تم تحديث صورة المتجر" });
     } catch (error) {
-      console.error('Error uploading logo:', error);
+      logger.error('Error uploading logo:', error);
       toast({ title: "خطأ", description: "فشل تحديث الصورة", variant: "destructive" });
     } finally {
       setUploadingLogo(false);

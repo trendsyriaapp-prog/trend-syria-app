@@ -2,6 +2,7 @@
 // لوحة التحليلات والإحصائيات للمدير
 
 import { useState, useEffect } from 'react';
+import logger from '../../lib/logger';
 import axios from 'axios';
 import { motion } from 'framer-motion';
 import {
@@ -51,7 +52,7 @@ const AnalyticsDashboard = () => {
       setCategoriesStats(categoriesRes.data);
       setPeakHours(hoursRes.data);
     } catch (error) {
-      console.error('Error fetching analytics:', error);
+      logger.error('Error fetching analytics:', error);
     } finally {
       setLoading(false);
     }

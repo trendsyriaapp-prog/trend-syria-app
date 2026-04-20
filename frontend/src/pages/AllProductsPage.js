@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import logger from '../lib/logger';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { Package, Search, SlidersHorizontal } from 'lucide-react';
@@ -56,7 +57,7 @@ const AllProductsPage = () => {
         setProducts(allProducts);
         setBadgeSettings(badgeRes.data);
       } catch (error) {
-        console.error('Error fetching products:', error);
+        logger.error('Error fetching products:', error);
       } finally {
         setLoading(false);
       }

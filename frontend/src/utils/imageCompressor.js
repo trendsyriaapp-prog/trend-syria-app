@@ -2,6 +2,8 @@
 // نظام ضغط الصور المحسّن - إصدار 2.0
 // يدعم WebP، أحجام متعددة، وضغط ذكي
 
+import logger from '../lib/logger';
+
 /**
  * إعدادات الضغط الافتراضية
  */
@@ -183,7 +185,7 @@ export const compressImageMultipleSizes = async (file, sizes = ['thumbnail', 'me
         url: URL.createObjectURL(compressed)
       };
     } catch (error) {
-      console.error(`Error compressing ${sizeName}:`, error);
+      logger.error(`Error compressing ${sizeName}:`, error);
     }
   }
   

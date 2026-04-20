@@ -2,6 +2,7 @@
 // مكون إدارة العمولات
 
 import { useState, useEffect } from 'react';
+import logger from '../../lib/logger';
 import { Percent, Edit2, Trash2, Plus, Store, Utensils, Save, X } from 'lucide-react';
 import axios from 'axios';
 
@@ -79,7 +80,7 @@ const CommissionsTab = ({
       });
       setFoodCommissions(res.data.commissions);
     } catch (error) {
-      console.error('Error fetching food commissions:', error);
+      logger.error('Error fetching food commissions:', error);
     }
   };
 

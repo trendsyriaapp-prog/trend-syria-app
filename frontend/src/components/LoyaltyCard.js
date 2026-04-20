@@ -2,6 +2,7 @@
 // بطاقة نقاط الولاء للعميل
 
 import { useState, useEffect } from 'react';
+import logger from '../lib/logger';
 import { motion } from 'framer-motion';
 import axios from 'axios';
 import { 
@@ -54,7 +55,7 @@ const LoyaltyCard = () => {
       setData(pointsRes.data);
       setHistory(historyRes.data);
     } catch (error) {
-      console.error('Error fetching loyalty data:', error);
+      logger.error('Error fetching loyalty data:', error);
     } finally {
       setLoading(false);
     }

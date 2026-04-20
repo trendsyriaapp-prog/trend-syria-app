@@ -2,6 +2,7 @@
 // تبويب إعدادات الدفع في لوحة تحكم المدير
 
 import { useState, useEffect } from 'react';
+import logger from '../../lib/logger';
 import axios from 'axios';
 import { 
   CreditCard, Wallet, Phone, Building2, 
@@ -45,7 +46,7 @@ const PaymentSettingsTab = () => {
       }
       setProviderStatus(statusRes.data);
     } catch (error) {
-      console.error('Error fetching payment settings:', error);
+      logger.error('Error fetching payment settings:', error);
       toast({
         title: "خطأ",
         description: "فشل تحميل إعدادات الدفع",

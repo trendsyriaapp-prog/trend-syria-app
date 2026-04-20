@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import logger from '../lib/logger';
 import axios from 'axios';
 import { TrendingUp, Loader2 } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
@@ -20,7 +21,7 @@ const BestSellersPage = () => {
         setProducts(productsRes.data || []);
         setBadgeSettings(badgeRes.data);
       } catch (error) {
-        console.error('Error fetching best sellers:', error);
+        logger.error('Error fetching best sellers:', error);
       } finally {
         setLoading(false);
       }

@@ -2,6 +2,7 @@
 // تبويب إدارة تأمينات وحسابات موظفي التوصيل
 
 import React, { useState, useEffect } from 'react';
+import logger from '../../lib/logger';
 import { 
   Shield, Check, X, Clock, AlertTriangle, RefreshCw, 
   CreditCard, Building, Send, Banknote, Settings, Users,
@@ -50,7 +51,7 @@ export default function DriverSecurityTab() {
       if (depositsRes.ok) setPendingDeposits(await depositsRes.json());
       if (resignationsRes.ok) setPendingResignations(await resignationsRes.json());
     } catch (err) {
-      console.error('Error fetching data:', err);
+      logger.error('Error fetching data:', err);
     }
     setLoading(false);
   };
