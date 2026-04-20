@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Store, Users, Package, Heart, ArrowRight, Loader2 } from 'lucide-react';
@@ -19,11 +19,7 @@ const StorePage = () => {
   const [following, setFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
 
-  useEffect(() => {
-    fetchStore();
-  }, [sellerId]);
-
-  const fetchStore = async () => {
+  const fetchStore = useCallback(async () => {
     try {
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
       const res = await axios.get(`${API}/api/stores/${sellerId}`, { headers });
@@ -34,7 +30,11 @@ const StorePage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [sellerId, token]);
+
+  useEffect(() => {
+    fetchStore();
+  }, [fetchStore]);
 
   const handleFollow = async () => {
     if (!user) {

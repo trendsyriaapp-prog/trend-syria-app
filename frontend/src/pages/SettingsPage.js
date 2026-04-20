@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
@@ -87,11 +87,7 @@ const SettingsPage = () => {
     type: 'shamcash', phone: '', holder_name: '', is_default: false
   });
 
-  useEffect(() => {
-    if (user) fetchData();
-  }, [user]);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       const [addressesRes, paymentsRes] = await Promise.all([
         axios.get(`${API}/api/user/addresses`),
@@ -118,7 +114,11 @@ const SettingsPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?.user_type]);
+
+  useEffect(() => {
+    if (user) fetchData();
+  }, [user, fetchData]);
 
   // رفع صورة السائق
   const handleImageUpload = async (e) => {

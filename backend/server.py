@@ -649,8 +649,8 @@ async def ensure_super_admin_exists():
     try:
         from core.security import hash_password_secure, verify_password
         
-        admin_phone = "0945570365"
-        admin_password = "TrendSyria@2026"
+        admin_phone = os.environ.get("SUPER_ADMIN_PHONE", "0945570365")
+        admin_password = os.environ.get("SUPER_ADMIN_PASSWORD", "TrendSyria@2026")
         
         # التحقق من وجود الحساب
         existing_admin = await db.users.find_one({"phone": admin_phone}, {"_id": 0})

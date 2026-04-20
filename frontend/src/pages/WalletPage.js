@@ -1,7 +1,7 @@
 // /app/frontend/src/pages/WalletPage.js
 // صفحة المحفظة للبائعين وموظفي التوصيل
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { motion } from 'framer-motion';
@@ -48,28 +48,21 @@ const WalletPage = () => {
     { id: 'bank_account', name: 'حساب بنكي', icon: '🏦', placeholder: '' },
   ];
   
-  useEffect(() => {
-    if (user && (user.user_type === 'seller' || user.user_type === 'food_seller' || user.user_type === 'delivery')) {
-      fetchWalletData();
-      fetchWithdrawalLimits();
-    }
-  }, [user]);
-  
-  const fetchWithdrawalLimits = async () => {
+  const fetchWithdrawalLimits = useCallback(async () => {
     try {
       const res = await axios.get(`${API}/api/settings/wallet`);
-      if (user.user_type === 'seller' || user.user_type === 'food_seller') {
+      if (user?.user_type === 'seller' || user?.user_type === 'food_seller') {
         setMinWithdrawal(res.data.seller_min_withdrawal || 50000);
       } else {
         setMinWithdrawal(res.data.delivery_min_withdrawal || 25000);
       }
     } catch (error) {
       // استخدام القيم الافتراضية
-      setMinWithdrawal((user.user_type === 'seller' || user.user_type === 'food_seller') ? 50000 : 25000);
+      setMinWithdrawal((user?.user_type === 'seller' || user?.user_type === 'food_seller') ? 50000 : 25000);
     }
-  };
+  }, [user?.user_type]);
   
-  const fetchWalletData = async () => {
+  const fetchWalletData = useCallback(async () => {
     try {
       const [walletRes, transactionsRes, withdrawalsRes, heldRes] = await Promise.all([
         axios.get(`${API}/api/wallet/balance`),
@@ -89,7 +82,14 @@ const WalletPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+  
+  useEffect(() => {
+    if (user && (user.user_type === 'seller' || user.user_type === 'food_seller' || user.user_type === 'delivery')) {
+      fetchWalletData();
+      fetchWithdrawalLimits();
+    }
+  }, [user, fetchWalletData, fetchWithdrawalLimits]);
   
   const handleWithdraw = async (e) => {
     e.preventDefault();

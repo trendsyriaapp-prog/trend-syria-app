@@ -98,7 +98,7 @@ class TestFoodPriorityDeliverySystem:
         print(f"   - lock_message: {data['lock_message']}")
     
     def test_is_locked_false_when_no_active_food_orders(self, driver_token):
-        """Test that is_locked is False when driver has no active food orders"""
+        """Test that is_locked == False when driver has no active food orders"""
         headers = {"Authorization": f"Bearer {driver_token}"}
         
         # First, get driver's food orders to check current state
@@ -116,7 +116,7 @@ class TestFoodPriorityDeliverySystem:
         if data["active_food_orders"] == 0:
             assert not data["is_locked"], "is_locked should be False when no active food orders"
             assert data["lock_message"] is None, "lock_message should be None when not locked"
-            print("✅ is_locked is False when no active food orders")
+            print("✅ is_locked == False when no active food orders")
         else:
             # Driver has active food orders, so is_locked should be True
             assert data["is_locked"], "is_locked should be True when active food orders exist"

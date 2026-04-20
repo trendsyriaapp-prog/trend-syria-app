@@ -29,7 +29,7 @@ from models.schemas import (
     ForgotPasswordRequest, VerifyIdentityRequest, ResetPasswordRequest,
     DeviceOTPVerify
 )
-import random
+import secrets
 import string
 import os
 import logging
@@ -292,7 +292,7 @@ async def login(request: Request, credentials: UserLogin):
                     from services.whatsapp_service import send_otp, TEST_MODE, TEST_OTP_CODE
                     
                     # في وضع الاختبار: استخدم الرمز الثابت
-                    otp_code = TEST_OTP_CODE if TEST_MODE else ''.join(random.choices(string.digits, k=6))
+                    otp_code = TEST_OTP_CODE if TEST_MODE else ''.join(''.join(secrets.choice(string.digits) for _ in range(6)))
                     
                     # حفظ OTP مؤقت
                     await db.device_otp_codes.update_one(
@@ -546,7 +546,7 @@ async def resend_device_otp(request: Request, phone: str, device_id: str):
         raise HTTPException(status_code=400, detail="لا يوجد طلب تحقق لهذا الجهاز")
     
     # إنشاء OTP جديد
-    otp_code = ''.join(random.choices(string.digits, k=6))
+    otp_code = ''.join(''.join(secrets.choice(string.digits) for _ in range(6)))
     
     # تحديث السجل
     await db.device_otp_codes.update_one(
@@ -1410,12 +1410,12 @@ async def set_default_delivery_payment_account(account_id: str, user: dict = Dep
 
 def generate_reset_token():
     """توليد رمز إعادة تعيين كلمة المرور"""
-    return ''.join(random.choices(string.ascii_letters + string.digits, k=32))
+    return ''.join(secrets.token_urlsafe(24))
 
 
 def generate_sms_code():
     """توليد كود SMS من 6 أرقام"""
-    return ''.join(random.choices(string.digits, k=6))
+    return ''.join(''.join(secrets.choice(string.digits) for _ in range(6)))
 
 
 # وضع المحاكاة - True للتطوير، False للإنتاج مع Twilio
@@ -1913,8 +1913,8 @@ async def admin_reset_user_password(phone: str, admin: dict = Depends(get_curren
     if not user:
         raise HTTPException(status_code=404, detail="المستخدم غير موجود")
     
-    # كلمة مرور افتراضية
-    default_password = "test1234"
+    # كلمة مرور افتراضية من environment variable
+    default_password = os.environ.get("DEFAULT_RESET_PASSWORD", "test1234")
     new_hash = hash_password_secure(default_password)
     
     await db.users.update_one(
@@ -1965,7 +1965,7 @@ async def send_whatsapp_otp(request: Request, data: ForgotPasswordRequest):
         }
     
     # توليد رمز OTP (6 أرقام)
-    otp_code = ''.join(random.choices(string.digits, k=6))
+    otp_code = ''.join(''.join(secrets.choice(string.digits) for _ in range(6)))
     
     # حفظ OTP في قاعدة البيانات (صالح لمدة 10 دقائق)
     await db.otp_codes.update_one(
@@ -2016,7 +2016,7 @@ async def verify_whatsapp_otp(request: Request, phone: str, otp: str):
             raise HTTPException(status_code=404, detail="هذا الرقم غير مسجل في التطبيق")
         
         # توليد رمز إعادة التعيين
-        reset_token = ''.join(random.choices(string.ascii_letters + string.digits, k=32))
+        reset_token = ''.join(secrets.token_urlsafe(24))
         
         # حفظ رمز إعادة التعيين
         await db.password_resets.update_one(
@@ -2067,7 +2067,7 @@ async def verify_whatsapp_otp(request: Request, phone: str, otp: str):
         raise HTTPException(status_code=401, detail=f"رمز التحقق غير صحيح. المحاولات المتبقية: {remaining}")
     
     # OTP صحيح - توليد رمز إعادة التعيين
-    reset_token = ''.join(random.choices(string.ascii_letters + string.digits, k=32))
+    reset_token = ''.join(secrets.token_urlsafe(24))
     
     # تحديث OTP كمستخدم
     await db.otp_codes.update_one(

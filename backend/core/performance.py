@@ -74,8 +74,8 @@ def cached(ttl_seconds: int = 300, key_prefix: str = ""):
     def decorator(func):
         @wraps(func)
         async def wrapper(*args, **kwargs):
-            # إنشاء مفتاح فريد
-            cache_key = f"{key_prefix}:{func.__name__}:{hashlib.md5(str(args).encode() + str(kwargs).encode()).hexdigest()[:16]}"
+            # إنشاء مفتاح فريد باستخدام SHA-256
+            cache_key = f"{key_prefix}:{func.__name__}:{hashlib.sha256(str(args).encode() + str(kwargs).encode()).hexdigest()[:16]}"
             
             # التحقق من الكاش
             cached_value = cache.get(cache_key)

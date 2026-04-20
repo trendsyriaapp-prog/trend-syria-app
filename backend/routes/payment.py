@@ -4,7 +4,7 @@
 from fastapi import APIRouter, HTTPException, Depends, Query
 from datetime import datetime, timezone
 import uuid
-import random
+import secrets
 
 from core.database import db, get_current_user, create_notification_for_user
 from routes.wallet import add_pending_to_wallet, confirm_pending_earnings
@@ -246,7 +246,7 @@ async def checkout_order(
     
     # If ShamCash payment, initiate OTP
     if payment_method == "shamcash" and shamcash_phone:
-        otp = str(random.randint(100000, 999999))
+        otp = ''.join(secrets.choice('0123456789') for _ in range(6))
         await db.payment_otps.insert_one({
             "order_id": order_id,
             "phone": shamcash_phone,

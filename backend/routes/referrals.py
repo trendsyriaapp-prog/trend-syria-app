@@ -4,7 +4,7 @@
 from fastapi import APIRouter, HTTPException, Depends
 from datetime import datetime, timezone
 import uuid
-import random
+import secrets
 
 from core.database import db, get_current_user
 
@@ -18,7 +18,7 @@ router = APIRouter(prefix="/referrals", tags=["Referrals"])
 def generate_referral_code(length=8):
     """توليد كود إحالة فريد"""
     chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
-    return ''.join(random.choice(chars) for _ in range(length))
+    return ''.join(secrets.choice(chars) for _ in range(length))
 
 
 async def get_or_create_referral_code(user_id: str, user_name: str) -> str:

@@ -357,7 +357,7 @@ const ProductsPage = () => {
             <div className="relative overflow-hidden h-16 md:h-20">
               {ads.map((ad, index) => (
                 <div
-                  key={index}
+                  key={ad.id || ad._id || `ad-${index}`}
                   className={`absolute inset-0 transition-all duration-500 ease-in-out ${
                     index === currentAdIndex 
                       ? 'opacity-100 translate-y-0' 
@@ -416,9 +416,9 @@ const ProductsPage = () => {
               
               {ads.length > 1 && (
                 <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
-                  {ads.map((_, i) => (
+                  {ads.map((ad, i) => (
                     <button
-                      key={i}
+                      key={ad.id || ad._id || `dot-${i}`}
                       onClick={() => setCurrentAdIndex(i)}
                       className={`w-2 h-2 rounded-full transition-all ${
                         i === currentAdIndex ? 'bg-white w-4' : 'bg-white/50'
@@ -792,7 +792,7 @@ const ProductsPage = () => {
             {loading && products.length === 0 ? (
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                 {[...Array(12)].map((_, i) => (
-                  <div key={i} className="bg-white rounded-2xl overflow-hidden shadow-sm">
+                  <div key={`skeleton-${i}`} className="bg-white rounded-2xl overflow-hidden shadow-sm">
                     <div className="aspect-[4/5] shimmer-effect bg-gray-100" />
                     <div className="p-3 space-y-2">
                       <div className="h-4 shimmer-effect bg-gray-100 rounded w-full" />

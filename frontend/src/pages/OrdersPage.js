@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
@@ -106,13 +106,7 @@ const OrdersPage = () => {
     }
   }, [user, navigate]);
 
-  useEffect(() => {
-    if (user && user.user_type !== 'delivery') {
-      fetchOrders();
-    }
-  }, [user]);
-
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     try {
       const [ordersRes, foodRes] = await Promise.all([
         axios.get(`${API}/api/orders`),
@@ -143,7 +137,13 @@ const OrdersPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (user && user.user_type !== 'delivery') {
+      fetchOrders();
+    }
+  }, [user, fetchOrders]);
 
   // إعادة الطلب - إضافة جميع منتجات الطلب السابق للسلة
   const handleReorder = async (order) => {

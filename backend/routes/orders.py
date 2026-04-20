@@ -297,11 +297,11 @@ async def create_order(order: OrderCreate, user: dict = Depends(get_current_user
     final_total = total + delivery_fee
     
     # توليد كود التسليم للعميل (4 أرقام)
-    import random
-    delivery_code = str(random.randint(1000, 9999))
+    import secrets
+    delivery_code = ''.join(secrets.choice('0123456789') for _ in range(4))
     
     # توليد رقم طلب بسيط (6 أرقام) للعميل
-    order_number = str(random.randint(100000, 999999))
+    order_number = ''.join(secrets.choice('0123456789') for _ in range(6))
     
     order_doc = {
         "id": order_id,
@@ -872,7 +872,7 @@ async def seller_preparing_order(order_id: str, user: dict = Depends(get_current
 @router.post("/orders/{order_id}/seller/shipped")
 async def seller_ship_order(order_id: str, tracking_number: Optional[str] = None, user: dict = Depends(get_current_user)):
     """البائع يشحن الطلب - يُنشئ كود استلام للسائق"""
-    import random
+    import secrets
     
     if user["user_type"] != "seller":
         raise HTTPException(status_code=403, detail="للبائعين فقط")
@@ -888,7 +888,7 @@ async def seller_ship_order(order_id: str, tracking_number: Optional[str] = None
         raise HTTPException(status_code=403, detail="هذا الطلب لا يخصك")
     
     # إنشاء كود استلام من البائع (4 أرقام)
-    pickup_code = str(random.randint(1000, 9999))
+    pickup_code = ''.join(secrets.choice('0123456789') for _ in range(4))
     
     # جلب إعدادات وقت الإغلاق
     settings = await db.platform_settings.find_one({"id": "main"}, {"_id": 0})

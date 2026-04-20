@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
@@ -246,7 +246,7 @@ const FoodOrdersSection = ({ orders, onStatusChange, actionLoading }) => {
               <div className="flex justify-center gap-1 flex-wrap" dir="ltr">
                 {order.pickup_code.split('').map((digit, i) => (
                   <span 
-                    key={i} 
+                    key={`pickup-digit-${i}`} 
                     className="w-8 h-10 flex items-center justify-center text-lg font-bold bg-[#FF6B00] text-white rounded-lg shadow-md"
                   >
                     {digit}
@@ -466,13 +466,7 @@ const SellerDocumentsPage = () => {
     fetchBusinessCategories();
   }, [user?.user_type]);
 
-  useEffect(() => {
-    if (user) {
-      checkStatus();
-    }
-  }, [user]);
-
-  const checkStatus = async () => {
+  const checkStatus = useCallback(async () => {
     try {
       const res = await axios.get(`${API}/api/seller/documents/status`, {
         headers: { Authorization: `Bearer ${token}` }
@@ -485,7 +479,13 @@ const SellerDocumentsPage = () => {
     } catch (error) {
       console.error('Error checking status:', error);
     }
-  };
+  }, [token]);
+
+  useEffect(() => {
+    if (user) {
+      checkStatus();
+    }
+  }, [user, checkStatus]);
 
   const handleFileChange = (setter) => async (e) => {
     const file = e.target.files[0];
@@ -2025,7 +2025,7 @@ const SellerDashboardPage = () => {
                   { icon: '4️⃣', title: 'أغلق بإحكام', desc: 'استخدم شريط لاصق قوي وأغلق جميع الجوانب' },
                   { icon: '5️⃣', title: 'ألصق ملصق الطلب', desc: 'ألصق ملصق الطلب في مكان واضح على الصندوق' }
                 ].map((item, index) => (
-                  <div key={index} className="flex gap-3 p-3 bg-gray-50 rounded-lg">
+                  <div key={`packaging-step-${index}`} className="flex gap-3 p-3 bg-gray-50 rounded-lg">
                     <span className="text-xl">{item.icon}</span>
                     <div>
                       <p className="font-bold text-gray-900 text-sm">{item.title}</p>
@@ -2128,7 +2128,7 @@ const SellerDashboardPage = () => {
                   'استخدام شريط لاصق ضعيف',
                   'إرسال منتج مختلف عن المطلوب'
                 ].map((item, index) => (
-                  <div key={index} className="flex items-center gap-2 text-sm text-red-700">
+                  <div key={`packaging-mistake-${index}`} className="flex items-center gap-2 text-sm text-red-700">
                     <span className="text-red-500">✕</span>
                     {item}
                   </div>
@@ -2165,7 +2165,7 @@ const SellerDashboardPage = () => {
                   'صوّر المنتج قبل التغليف كدليل',
                   'تأكد من نظافة الصندوق من الخارج'
                 ].map((item, index) => (
-                  <div key={index} className="flex items-center gap-2 text-sm text-[#FF6B00]">
+                  <div key={`packaging-tip-${index}`} className="flex items-center gap-2 text-sm text-[#FF6B00]">
                     <span className="text-[#FF6B00]">✓</span>
                     {item}
                   </div>
@@ -2188,7 +2188,7 @@ const SellerDashboardPage = () => {
                   'الصندوق نظيف ومرتب',
                   'جميع الملحقات موجودة'
                 ].map((item, index) => (
-                  <div key={index} className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg">
+                  <div key={`checklist-item-${index}`} className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg">
                     <div className="w-5 h-5 border-2 border-gray-300 rounded flex-shrink-0"></div>
                     <span className="text-sm text-gray-700">{item}</span>
                   </div>

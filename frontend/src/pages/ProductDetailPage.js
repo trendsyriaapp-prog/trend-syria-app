@@ -117,7 +117,7 @@ const ReportPriceModal = ({ isOpen, onClose, productId, productName, productType
             </label>
             <div className="space-y-2">
               {reasons.map((r, i) => (
-                <label key={i} className="flex items-center gap-2 cursor-pointer">
+                <label key={`reason-${r.slice(0, 10)}-${i}`} className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="radio"
                     name="reason"
@@ -320,7 +320,7 @@ const ReviewForm = ({ productId, onSuccess }) => {
         </label>
         <div className="flex gap-2 flex-wrap">
           {images.map((img, i) => (
-            <div key={i} className="relative w-20 h-20">
+            <div key={`img-${img.slice(-20)}-${i}`} className="relative w-20 h-20">
               <img src={img} alt="" className="w-full h-full object-cover rounded-lg" />
               <button
                 type="button"

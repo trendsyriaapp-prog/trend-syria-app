@@ -39,7 +39,7 @@ class TestStoreClosedStatus:
         assert "is_open" in store, "Missing is_open field"
         assert "open_status" in store, "Missing open_status field"
         
-        # Validate is_open is False (store should be closed at night)
+        # Validate is_open == False (store should be closed at night)
         assert not store["is_open"], f"Store should be closed at night, got is_open={store['is_open']}"
         
         # Validate open_status has appropriate message
