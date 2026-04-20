@@ -162,6 +162,27 @@ app.add_middleware(GZipMiddleware, minimum_size=256)
 
 logger.info("✅ FastAPI app created with GZip compression")
 
+# ========== Force Reset Categories - Temporary ==========
+@app.get("/api/reset-cats-2025")
+async def reset_categories_now():
+    """إعادة ضبط الفئات - مؤقت"""
+    from routes.categories import DEFAULT_CATEGORIES
+    try:
+        await db.categories.delete_many({})
+        now = datetime.now(timezone.utc).isoformat()
+        cats = []
+        for cat in DEFAULT_CATEGORIES:
+            c = cat.copy()
+            c["created_at"] = now
+            c["is_active"] = True
+            c["parent_id"] = None
+            c["is_parent"] = False
+            cats.append(c)
+        await db.categories.insert_many(cats)
+        return {"success": True, "total": len(cats)}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
 # ============== Cache-Control Middleware (للـ CDN) ==============
 @app.middleware("http")
 async def add_cache_headers(request: Request, call_next):
