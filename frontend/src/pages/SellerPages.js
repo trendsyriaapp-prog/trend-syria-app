@@ -655,13 +655,21 @@ const SellerDocumentsPage = () => {
 
         {status === 'pending' ? (
           <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm text-center">
-            <div className="w-16 h-16 rounded-full bg-yellow-500/20 flex items-center justify-center mx-auto mb-4">
-              <Clock size={32} className="text-yellow-500" />
+            <div className="w-16 h-16 rounded-full bg-amber-500/20 flex items-center justify-center mx-auto mb-4">
+              <Clock size={32} className="text-amber-500" />
             </div>
-            <h3 className="font-bold mb-2 text-gray-900">في انتظار الموافقة</h3>
-            <p className="text-gray-500 text-sm">
-              تم رفع مستنداتك بنجاح. سيتم مراجعتها والرد عليك قريباً.
-            </p>
+            <h3 className="font-bold mb-3 text-gray-900 text-lg">طلبك قيد المراجعة</h3>
+            <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 mb-4 text-right">
+              <p className="text-gray-700 leading-relaxed">
+                شكراً لاهتمامك بالانضمام إلى <strong className="text-[#FF6B00]">ترند سوريا</strong>.
+              </p>
+              <p className="text-gray-700 leading-relaxed mt-2 font-bold">
+                سيقوم أحد أعضاء فريقنا بزيارتك للتحقق من معلوماتك وتأكيد طلبك.
+              </p>
+              <p className="text-gray-600 mt-2 text-sm">
+                سنتواصل معك قريباً على رقم الهاتف المسجل.
+              </p>
+            </div>
           </div>
         ) : status === 'rejected' ? (
           <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm text-center">
@@ -2439,10 +2447,10 @@ const SellerPendingApproval = () => {
       const status = res.data?.status;
       
       if (status === 'approved') {
-        toast({ title: "تم الاعتماد!", description: "تم اعتماد وثائقك. يمكنك الآن بيع منتجاتك." });
+        toast({ title: "تمت الموافقة! 🎉", description: "تم اعتماد حسابك. يمكنك الآن بيع منتجاتك." });
         navigate('/seller/dashboard', { replace: true });
       } else if (status === 'rejected') {
-        toast({ title: "تم الرفض", description: res.data?.rejection_reason || "تم رفض وثائقك. يرجى إعادة رفعها.", variant: "destructive" });
+        toast({ title: "تم الرفض", description: res.data?.rejection_reason || "تم رفض طلبك. يرجى إعادة المحاولة.", variant: "destructive" });
         navigate('/seller/documents', { replace: true });
       } else {
         toast({ title: "جاري المراجعة", description: "لا يزال طلبك قيد المراجعة. يرجى الانتظار." });
@@ -2487,26 +2495,26 @@ const SellerPendingApproval = () => {
         </div>
         
         {/* العنوان */}
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">جاري مراجعة وثائقك</h1>
-        <p className="text-gray-600 mb-6">
-          تم استلام وثائقك بنجاح وهي قيد المراجعة من قبل الإدارة.
-          <br />
-          سيتم إعلامك فور اتخاذ القرار.
-        </p>
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">طلبك قيد المراجعة</h1>
+        
+        {/* الرسالة الرئيسية */}
+        <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 mb-6 text-right">
+          <p className="text-gray-700 leading-relaxed">
+            شكراً لاهتمامك بالانضمام إلى <strong className="text-[#FF6B00]">ترند سوريا</strong>.
+          </p>
+          <p className="text-gray-700 leading-relaxed mt-2 font-bold">
+            سيقوم أحد أعضاء فريقنا بزيارتك للتحقق من معلوماتك وتأكيد طلبك.
+          </p>
+          <p className="text-gray-600 mt-2">
+            سنتواصل معك قريباً على رقم الهاتف المسجل.
+          </p>
+        </div>
         
         {/* معلومات المستخدم */}
         <div className="bg-gray-50 rounded-xl p-4 mb-6">
-          <p className="text-sm text-gray-500">الحساب</p>
+          <p className="text-sm text-gray-500 mb-1">الحساب</p>
           <p className="font-bold text-gray-900">{user?.name || user?.full_name}</p>
-          <p className="text-gray-600">{user?.phone}</p>
-        </div>
-        
-        {/* ملاحظة */}
-        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6 text-right">
-          <p className="text-blue-800 text-sm">
-            <strong>ملاحظة:</strong> عادة تستغرق المراجعة من ساعة إلى 24 ساعة.
-            يمكنك الضغط على "تحقق من الحالة" للتحديث.
-          </p>
+          <p className="text-gray-600 text-lg font-mono mt-1" dir="ltr">{user?.phone}</p>
         </div>
         
         {/* الأزرار */}
@@ -2521,7 +2529,7 @@ const SellerPendingApproval = () => {
             ) : (
               <>
                 <Check size={20} />
-                تحقق من الحالة
+                تحقق من حالة الطلب
               </>
             )}
           </button>

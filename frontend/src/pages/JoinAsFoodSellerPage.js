@@ -38,16 +38,20 @@ const MAIN_TYPES = [
 // الأصناف الفرعية الافتراضية (تُستخدم كـ fallback)
 const DEFAULT_SUB_CATEGORIES = {
   food: [
-    { id: 'restaurants', name: 'وجبات سريعة', icon: '🍔', description: 'شاورما، برغر، بيتزا، سندويشات' },
-    { id: 'hot_drinks', name: 'مشروبات ساخنة', icon: '☕', description: 'قهوة، شاي، نسكافيه' },
+    { id: 'restaurants', name: 'مطاعم', icon: '🍽️', description: 'وجبات سريعة، شاورما، برغر، بيتزا' },
+    { id: 'cafes', name: 'مقاهي', icon: '☕', description: 'قهوة، شاي، مشروبات ساخنة' },
     { id: 'sweets', name: 'حلويات', icon: '🍰', description: 'حلويات شرقية وغربية، كيك' },
+    { id: 'bakery', name: 'مخابز', icon: '🥖', description: 'خبز، معجنات، فطائر' },
+    { id: 'drinks', name: 'مشروبات', icon: '🥤', description: 'عصائر، مشروبات باردة' },
+    { id: 'food_groceries', name: 'مواد غذائية', icon: '🛒', description: 'مواد غذائية ومعلبات' },
+    { id: 'vegetables', name: 'خضروات وفواكه', icon: '🥬', description: 'خضار طازجة، فواكه موسمية' },
+    { id: 'dairy', name: 'ألبان وأجبان', icon: '🧀', description: 'حليب، لبن، أجبان' },
   ],
   market: [
-    { id: 'supermarket', name: 'سوبرماركت', icon: '🛒', description: 'مواد غذائية، مستلزمات منزلية' },
+    { id: 'food_groceries', name: 'مواد غذائية', icon: '🛒', description: 'مواد غذائية، مستلزمات منزلية' },
     { id: 'bakery', name: 'مخابز', icon: '🥖', description: 'خبز، معجنات، فطائر' },
-    { id: 'butcher', name: 'ملاحم', icon: '🍖', description: 'لحوم، دجاج، أسماك' },
     { id: 'dairy', name: 'ألبان وأجبان', icon: '🧀', description: 'حليب، لبن، أجبان' },
-    { id: 'vegetables', name: 'خضار وفواكه', icon: '🥬', description: 'خضار طازجة، فواكه موسمية' },
+    { id: 'vegetables', name: 'خضروات وفواكه', icon: '🥬', description: 'خضار طازجة، فواكه موسمية' },
   ]
 };
 
@@ -1086,22 +1090,37 @@ const JoinAsFoodSellerPage = () => {
           </motion.div>
         )}
 
-        {/* Step 6: Success */}
+        {/* Step 6: Success - شاشة انتظار الموافقة */}
         {step === 6 && (
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             className="text-center py-8"
           >
-            <div className="w-20 h-20 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <CheckCircle size={40} className="text-[#FF6B00]" />
+            <div className="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Clock size={40} className="text-amber-600" />
             </div>
-            <h2 className="text-xl font-bold text-gray-900 mb-2">تم إرسال طلبك بنجاح! 🎉</h2>
-            <p className="text-gray-600 mb-6">
-              سيتم مراجعة طلبك من قبل فريق الإدارة وستصلك إشعار عند الموافقة.
-              <br />
-              عادةً ما تستغرق المراجعة 24-48 ساعة.
-            </p>
+            <h2 className="text-xl font-bold text-gray-900 mb-4">تم إرسال طلبك بنجاح!</h2>
+            
+            {/* الرسالة الرئيسية */}
+            <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 mb-6 text-right">
+              <p className="text-gray-700 leading-relaxed">
+                شكراً لاهتمامك بالانضمام إلى <strong className="text-[#FF6B00]">ترند سوريا</strong>.
+              </p>
+              <p className="text-gray-700 leading-relaxed mt-2 font-bold">
+                سيقوم أحد أعضاء فريقنا بزيارتك للتحقق من معلوماتك وتأكيد طلبك.
+              </p>
+              <p className="text-gray-600 mt-2">
+                سنتواصل معك قريباً على رقم الهاتف المسجل.
+              </p>
+            </div>
+            
+            {/* رقم الهاتف */}
+            <div className="bg-gray-50 rounded-xl p-4 mb-6">
+              <p className="text-sm text-gray-500 mb-1">رقم الهاتف المسجل</p>
+              <p className="text-lg font-mono font-bold text-gray-900" dir="ltr">{formData.phone || user?.phone}</p>
+            </div>
+            
             <div className="flex gap-3">
               <button
                 onClick={() => navigate('/')}
