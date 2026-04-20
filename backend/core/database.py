@@ -27,6 +27,9 @@ load_dotenv(ROOT_DIR / '.env')
 mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
 db_name = os.environ.get('DB_NAME', 'trend_syria')
 
+# Debug: Log the MONGO_URL to verify it's loaded correctly
+logger.info(f"🔧 MONGO_URL loaded: {mongo_url[:60]}...")
+
 # ⚡ إعدادات محسّنة للاتصال
 MONGO_SETTINGS = {
     # Timeouts

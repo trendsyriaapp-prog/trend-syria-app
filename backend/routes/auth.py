@@ -288,7 +288,11 @@ async def login(request: Request, credentials: UserLogin):
                 
                 if is_new_device:
                     # جهاز جديد - نطلب OTP
-                    otp_code = ''.join(random.choices(string.digits, k=6))
+                    # إرسال OTP عبر WhatsApp
+                    from services.whatsapp_service import send_otp, TEST_MODE, TEST_OTP_CODE
+                    
+                    # في وضع الاختبار: استخدم الرمز الثابت
+                    otp_code = TEST_OTP_CODE if TEST_MODE else ''.join(random.choices(string.digits, k=6))
                     
                     # حفظ OTP مؤقت
                     await db.device_otp_codes.update_one(
@@ -307,11 +311,8 @@ async def login(request: Request, credentials: UserLogin):
                         upsert=True
                     )
                     
-                    # إرسال OTP عبر WhatsApp
-                    from services.whatsapp_service import send_otp, TEST_MODE, TEST_OTP_CODE
-                    
                     if TEST_MODE:
-                        auth_logger.info(f"🧪 [TEST MODE] Device OTP for {user['phone']}: {TEST_OTP_CODE}")
+                        auth_logger.info(f"🧪 [TEST MODE] Device OTP for {user['phone']}: {otp_code}")
                     else:
                         await send_otp(user["phone"], otp_code)
                     

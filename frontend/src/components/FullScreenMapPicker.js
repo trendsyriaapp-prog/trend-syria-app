@@ -201,7 +201,7 @@ const FullScreenMapPicker = ({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 bg-white"
+        className="fixed inset-0 z-[100] bg-white"
       >
         {/* Header */}
         <div className="absolute top-0 left-0 right-0 z-[1001] bg-white/95 backdrop-blur-sm border-b border-gray-200 px-4 py-3 safe-area-top">

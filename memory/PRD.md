@@ -9,7 +9,50 @@ Full-stack e-commerce application for Syria market with Android/Capacitor, React
 
 ---
 
-## Latest Update: 2026-04-19
+## Latest Update: 2026-04-20
+
+### ✅ Full-Screen Map Picker - COMPLETED & TESTED
+**Date:** 2026-04-20
+**Session Focus:** تحسين خريطة تحديد الموقع للبائعين وموظفي التوصيل
+
+**Work Done:**
+1. **Created `/app/frontend/src/components/FullScreenMapPicker.js`:**
+   - خريطة بملء الشاشة (z-index: 100 لتغطية شريط التنقل السفلي)
+   - Header مع زر "رجوع" وعنوان "تحديد الموقع على الخريطة"
+   - دبوس برتقالي قابل للسحب
+   - زر GPS للحصول على الموقع الحالي
+   - عرض الإحداثيات في الأسفل
+   - زر "تأكيد الموقع" برتقالي كبير
+   - تعليمات واضحة للمستخدم
+
+2. **Updated `/app/frontend/src/components/GoogleMapsLocationPicker.js`:**
+   - تكامل مع FullScreenMapPicker
+   - Lazy loading للخريطة لتحسين الأداء
+   - دعم API القديمة والجديدة للتوافق الخلفي
+
+3. **Bug Fix in `/app/backend/routes/auth.py`:**
+   - إصلاح خطأ في device OTP - كان يحفظ رمز عشوائي بينما يطبع TEST_OTP_CODE
+   - الآن في وضع الاختبار يستخدم الرمز الثابت 123456 بشكل صحيح
+
+**Files Modified:**
+- `/app/frontend/src/components/FullScreenMapPicker.js` - مكون جديد
+- `/app/frontend/src/components/GoogleMapsLocationPicker.js` - تحديث
+- `/app/backend/routes/auth.py` - إصلاح bug
+- `/app/backend/core/database.py` - إضافة debug log لـ MONGO_URL
+
+**Testing:**
+- ✅ تسجيل الدخول كبائع غير موافق عليه
+- ✅ فتح الخريطة بملء الشاشة
+- ✅ النقر على الخريطة لوضع دبوس
+- ✅ عرض الإحداثيات
+- ✅ تأكيد الموقع والعودة للنموذج
+- ✅ حفظ الموقع في النموذج
+
+**Note:** اختبار Preview Environment استخدم MongoDB محلي بسبب مشكلة DNS في قاعدة بيانات DigitalOcean الخارجية.
+
+---
+
+## Previous Update: 2026-04-19
 
 ### ✅ Firebase Push Notifications - FIXED & COMPLETED
 **Date:** 2026-04-19
