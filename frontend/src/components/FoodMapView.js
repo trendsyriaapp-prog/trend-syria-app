@@ -94,10 +94,11 @@ const CATEGORY_CONFIG = {
 };
 
 // إنشاء أيقونة مخصصة للمتجر
-const createStoreIcon = (category, isSelected = false) => {
+const createStoreIcon = (category, isSelected = false, isOpen = true) => {
   const config = CATEGORY_CONFIG[category] || CATEGORY_CONFIG.restaurants;
   const size = isSelected ? 48 : 36;
-  const color = config.color;
+  const color = isOpen ? config.color : '#9CA3AF'; // رمادي إذا مغلق
+  const opacity = isOpen ? '1' : '0.7';
   
   return L.divIcon({
     className: 'custom-store-marker',
@@ -112,13 +113,14 @@ const createStoreIcon = (category, isSelected = false) => {
         align-items: center;
         justify-content: center;
         box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-        border: 3px solid white;
+        border: 3px solid ${isOpen ? 'white' : '#EF4444'};
+        opacity: ${opacity};
         ${isSelected ? 'animation: pulse 1s infinite;' : ''}
       ">
         <span style="
           transform: rotate(45deg);
           font-size: ${size * 0.45}px;
-        ">${config.emoji}</span>
+        ">${isOpen ? config.emoji : '🚫'}</span>
       </div>
     `,
     iconSize: [size, size],
@@ -224,10 +226,15 @@ const StoreCard = ({ store, onClose, onViewStore }) => {
               >
                 {config.name}
               </span>
-              {store.is_open !== false && (
+              {store.is_open !== false ? (
                 <span className="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700">
                   مفتوح
                 </span>
+              ) : (
+                <span className="text-xs px-2 py-0.5 rounded-full bg-red-100 text-red-700">
+                  مغلق
+                </span>
+              )}
               )}
             </div>
           </div>
@@ -247,12 +254,13 @@ const StoreCard = ({ store, onClose, onViewStore }) => {
 };
 
 // مكون شريط الفلاتر
-const CategoryFilter = ({ selectedCategory, onSelectCategory }) => {
+const CategoryFilter = ({ selectedCategory, onSelectCategory, showOpenOnly, onToggleOpenOnly, sortByDistance, onToggleSortByDistance }) => {
   const categories = Object.values(CATEGORY_CONFIG);
   const scrollRef = useRef(null);
   
   return (
     <div className="absolute top-16 left-0 right-0 z-[1003] px-2 pointer-events-auto">
+      {/* شريط الأصناف */}
       <div 
         ref={scrollRef}
         className="flex gap-2 overflow-x-auto py-2 scrollbar-hide"
@@ -260,7 +268,6 @@ const CategoryFilter = ({ selectedCategory, onSelectCategory }) => {
       >
         {categories.map((cat) => {
           const isSelected = selectedCategory === cat.id;
-          const Icon = cat.Icon;
           
           return (
             <button
@@ -279,6 +286,35 @@ const CategoryFilter = ({ selectedCategory, onSelectCategory }) => {
           );
         })}
       </div>
+      
+      {/* شريط الفلاتر السريعة */}
+      <div className="flex gap-2 mt-1">
+        {/* فلتر مفتوح الآن */}
+        <button
+          onClick={onToggleOpenOnly}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+            showOpenOnly 
+              ? 'bg-green-500 text-white shadow-md' 
+              : 'bg-white/90 text-gray-600 shadow-sm hover:shadow-md'
+          }`}
+        >
+          <span className={`w-2 h-2 rounded-full ${showOpenOnly ? 'bg-white' : 'bg-green-500'}`}></span>
+          مفتوح الآن
+        </button>
+        
+        {/* فلتر الأقرب أولاً */}
+        <button
+          onClick={onToggleSortByDistance}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+            sortByDistance 
+              ? 'bg-blue-500 text-white shadow-md' 
+              : 'bg-white/90 text-gray-600 shadow-sm hover:shadow-md'
+          }`}
+        >
+          <MapPin size={12} />
+          الأقرب أولاً
+        </button>
+      </div>
     </div>
   );
 };
@@ -294,6 +330,8 @@ const FoodMapView = ({ isOpen, onClose }) => {
   const [userLocation, setUserLocation] = useState(null);
   const [mapCenter, setMapCenter] = useState([33.5138, 36.2765]); // دمشق
   const [gettingLocation, setGettingLocation] = useState(false);
+  const [showOpenOnly, setShowOpenOnly] = useState(false); // فلتر مفتوح الآن
+  const [sortByDistance, setSortByDistance] = useState(true); // ترتيب حسب المسافة
 
   // جلب المتاجر
   useEffect(() => {
@@ -303,15 +341,28 @@ const FoodMapView = ({ isOpen, onClose }) => {
     }
   }, [isOpen]);
 
-  // فلترة المتاجر حسب الصنف
+  // فلترة وترتيب المتاجر
   useEffect(() => {
-    if (selectedCategory === 'all') {
-      setFilteredStores(stores);
-    } else {
-      setFilteredStores(stores.filter(s => s.category === selectedCategory));
+    let result = [...stores];
+    
+    // فلتر حسب الصنف
+    if (selectedCategory !== 'all') {
+      result = result.filter(s => s.category === selectedCategory);
     }
+    
+    // فلتر مفتوح الآن
+    if (showOpenOnly) {
+      result = result.filter(s => s.is_open !== false);
+    }
+    
+    // ترتيب حسب المسافة (إذا كان الموقع متاح)
+    if (sortByDistance && userLocation) {
+      result.sort((a, b) => (a.distance || 999) - (b.distance || 999));
+    }
+    
+    setFilteredStores(result);
     setSelectedStore(null);
-  }, [selectedCategory, stores]);
+  }, [selectedCategory, stores, showOpenOnly, sortByDistance, userLocation]);
 
   const fetchStores = async () => {
     setLoading(true);
@@ -434,10 +485,14 @@ const FoodMapView = ({ isOpen, onClose }) => {
         <CategoryFilter 
           selectedCategory={selectedCategory}
           onSelectCategory={setSelectedCategory}
+          showOpenOnly={showOpenOnly}
+          onToggleOpenOnly={() => setShowOpenOnly(!showOpenOnly)}
+          sortByDistance={sortByDistance}
+          onToggleSortByDistance={() => setSortByDistance(!sortByDistance)}
         />
 
         {/* الخريطة - يجب أن تكون أولاً (أسفل كل شيء) */}
-        <div className="absolute inset-0 pt-28 pb-0 z-[1]">
+        <div className="absolute inset-0 pt-36 pb-0 z-[1]">
           {loading ? (
             <div className="flex items-center justify-center h-full">
               <div className="text-center">
@@ -471,7 +526,7 @@ const FoodMapView = ({ isOpen, onClose }) => {
                 <Marker
                   key={store.id}
                   position={[store.latitude, store.longitude]}
-                  icon={createStoreIcon(store.category, selectedStore?.id === store.id)}
+                  icon={createStoreIcon(store.category, selectedStore?.id === store.id, store.is_open !== false)}
                   eventHandlers={{
                     click: () => handleStoreClick(store)
                   }}
