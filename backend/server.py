@@ -516,27 +516,6 @@ api_router.include_router(feedback_router)
 api_router.include_router(driver_security_router)
 api_router.include_router(storage_router)
 
-# ============== Categories ==============
-
-CATEGORIES = [
-    {"id": "electronics", "name": "إلكترونيات", "icon": "Smartphone"},
-    {"id": "fashion", "name": "أزياء", "icon": "Shirt"},
-    {"id": "home", "name": "المنزل", "icon": "Home"},
-    {"id": "beauty", "name": "تجميل", "icon": "Sparkles"},
-    {"id": "sports", "name": "رياضة", "icon": "Dumbbell"},
-    {"id": "books", "name": "كتب", "icon": "BookOpen"},
-    {"id": "toys", "name": "ألعاب", "icon": "Gamepad2"},
-    {"id": "food", "name": "طعام", "icon": "UtensilsCrossed"},
-    {"id": "health", "name": "صحة", "icon": "Heart"},
-    {"id": "cleaning", "name": "أدوات تنظيف", "icon": "SprayCan"},
-    {"id": "medicines", "name": "أدوية", "icon": "Pill"},
-    {"id": "cars", "name": "سيارات", "icon": "Car"},
-]
-
-@api_router.get("/categories")
-async def get_categories():
-    return CATEGORIES
-
 # ============== Root Endpoint ==============
 
 @api_router.get("/")
