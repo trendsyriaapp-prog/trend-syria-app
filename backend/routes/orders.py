@@ -142,8 +142,11 @@ async def add_commission_to_platform_wallet(order_id: str, commission_amount: fl
     await db.platform_wallet_transactions.insert_one(transaction)
 
 async def distribute_seller_earnings(order: dict):
-    """توزيع أرباح البائعين بعد إتمام الطلب"""
-    now = datetime.now(timezone.utc).isoformat()
+    """
+    توزيع أرباح البائعين بعد إتمام الطلب
+    الأرباح تكون معلقة لمدة 24 ساعة قبل أن تصبح متاحة للسحب
+    """
+    from services.earnings_hold import add_held_earnings
     
     # تجميع الأرباح حسب البائع
     seller_earnings = {}
@@ -155,27 +158,22 @@ async def distribute_seller_earnings(order: dict):
                 seller_earnings[seller_id] = 0
             seller_earnings[seller_id] += seller_amount
     
-    # إضافة الأرباح لمحفظة كل بائع
+    # إضافة الأرباح المعلقة لكل بائع
+    order_id = order.get("id", "")
     for seller_id, amount in seller_earnings.items():
-        await db.wallets.update_one(
-            {"user_id": seller_id},
-            {
-                "$inc": {"balance": amount, "total_earned": amount},
-                "$set": {"updated_at": now}
-            },
-            upsert=True
-        )
+        # تحديد نوع البائع
+        seller = await db.users.find_one({"id": seller_id}, {"_id": 0, "user_type": 1})
+        user_type = seller.get("user_type", "seller") if seller else "seller"
         
-        # تسجيل المعاملة
-        await db.wallet_transactions.insert_one({
-            "id": str(uuid.uuid4()),
-            "user_id": seller_id,
-            "type": "sale_earning",
-            "amount": amount,
-            "order_id": order.get("id"),
-            "created_at": now,
-            "description": f"أرباح مبيعات طلب #{order.get('id', '')[:8]}"
-        })
+        # إضافة أرباح معلقة (24 ساعة للمنتجات)
+        await add_held_earnings(
+            user_id=seller_id,
+            user_type=user_type,
+            amount=amount,
+            order_id=order_id,
+            order_type="product",  # منتجات = 24 ساعة تعليق
+            description=f"أرباح مبيعات طلب #{order_id[:8]}"
+        )
 
 # ============== Orders ==============
 
@@ -1597,24 +1595,18 @@ async def verify_shop_delivery_code(
             order_id=order_id
         )
     
-    # إضافة أجرة التوصيل لمحفظة موظف التوصيل
+    # إضافة أجرة التوصيل لمحفظة موظف التوصيل (معلقة 24 ساعة)
     delivery_fee = order.get("driver_delivery_fee", order.get("delivery_fee", 5000))
-    await db.wallets.update_one(
-        {"user_id": user["id"]},
-        {
-            "$inc": {"balance": delivery_fee, "total_earned": delivery_fee},
-            "$push": {
-                "transactions": {
-                    "id": str(uuid.uuid4()),
-                    "type": "delivery_earning",
-                    "amount": delivery_fee,
-                    "order_id": order_id,
-                    "timestamp": now.isoformat(),
-                    "description": f"أجرة توصيل طلب #{order_id[:8]}"
-                }
-            }
-        },
-        upsert=True
+    
+    # استخدام نظام الأرباح المعلقة للسائق أيضاً
+    from services.earnings_hold import add_held_earnings
+    await add_held_earnings(
+        user_id=user["id"],
+        user_type="delivery",
+        amount=delivery_fee,
+        order_id=order_id,
+        order_type="product",  # منتجات = 24 ساعة تعليق
+        description=f"أجرة توصيل طلب #{order_id[:8]}"
     )
     
     # التحقق من التأمين وخصم تلقائي إذا لزم
