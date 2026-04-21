@@ -46,15 +46,13 @@ const DeliveryDocuments = () => {
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState(null);
   const [rejectionReason, setRejectionReason] = useState(null);
-  const [vehicleTypes, setVehicleTypes] = useState([]);
   const [docs, setDocs] = useState({
     national_id: '',
     personal_photo: '',
     id_photo: '',
-    vehicle_type: '',
-    motorcycle_license: '',
-    vehicle_photo: '',
-    // حقول العنوان الجديدة
+    bike_photo: '',  // صورة الدراجة - إلزامية
+    fuel_type: '',   // نوع الوقود: petrol أو electric
+    // حقول العنوان والموقع
     home_address: '',
     home_latitude: null,
     home_longitude: null,
@@ -72,27 +70,15 @@ const DeliveryDocuments = () => {
   
   const [showAddressModal, setShowAddressModal] = useState(false);
 
-  // أنواع المركبات
-  const defaultVehicleTypes = [
-    { id: 'car', name: 'سيارة', icon: '🚗', requires_license: true },
-    { id: 'motorcycle', name: 'دراجة نارية', icon: '🏍️', requires_license: true },
-    { id: 'electric_scooter', name: 'سكوتر كهربائي', icon: '🛵', requires_license: false },
-    { id: 'bicycle', name: 'دراجة هوائية', icon: '🚲', requires_license: false }
+  // أنواع الوقود المتاحة
+  const fuelTypes = [
+    { id: 'petrol', name: 'بنزين', icon: '⛽' },
+    { id: 'electric', name: 'كهرباء', icon: '🔋' }
   ];
 
   useEffect(() => {
     checkStatus();
-    fetchVehicleTypes();
   }, []);
-
-  const fetchVehicleTypes = async () => {
-    try {
-      const res = await axios.get(`${API}/api/delivery/vehicle-types`);
-      setVehicleTypes(res.data.vehicle_types || defaultVehicleTypes);
-    } catch (error) {
-      setVehicleTypes(defaultVehicleTypes);
-    }
-  };
 
   const checkStatus = async () => {
     try {
@@ -103,11 +89,6 @@ const DeliveryDocuments = () => {
       logger.error(error);
     }
   };
-
-  // التحقق من الحاجة للرخصة
-  const allVehicleTypes = vehicleTypes.length > 0 ? vehicleTypes : defaultVehicleTypes;
-  const selectedVehicle = allVehicleTypes.find(v => v.id === docs.vehicle_type);
-  const requiresLicense = docs.vehicle_type ? (selectedVehicle?.requires_license ?? true) : true;
 
   const handleImageUpload = (field) => async (e) => {
     const file = e.target.files[0];
@@ -130,46 +111,79 @@ const DeliveryDocuments = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // التحقق من الحقول الأساسية
-    if (!docs.national_id || !docs.personal_photo || !docs.id_photo || !docs.vehicle_type) {
+    // ========== التحقق من جميع الحقول الإلزامية ==========
+    
+    // 1. رقم الهوية
+    if (!docs.national_id || !docs.national_id.trim()) {
       toast({
         title: "خطأ",
-        description: "يرجى ملء جميع الحقول الأساسية واختيار نوع المركبة",
+        description: "رقم الهوية الوطنية مطلوب",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // 2. الصورة الشخصية
+    if (!docs.personal_photo) {
+      toast({
+        title: "خطأ",
+        description: "الصورة الشخصية مطلوبة",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // 3. صورة الهوية
+    if (!docs.id_photo) {
+      toast({
+        title: "خطأ",
+        description: "صورة الهوية مطلوبة",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // 4. صورة الدراجة - إلزامية
+    if (!docs.bike_photo) {
+      toast({
+        title: "خطأ",
+        description: "صورة الدراجة مطلوبة",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // 5. نوع الوقود - إلزامي
+    if (!docs.fuel_type) {
+      toast({
+        title: "خطأ",
+        description: "يرجى اختيار نوع الوقود (بنزين أو كهرباء)",
         variant: "destructive"
       });
       return;
     }
 
-    // التحقق من الرخصة إذا كانت مطلوبة
-    if (requiresLicense && !docs.motorcycle_license) {
-      toast({
-        title: "خطأ",
-        description: "رخصة القيادة مطلوبة لهذا النوع من المركبات",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    // التحقق من العنوان والموقع - إلزامي
+    // 6. العنوان والموقع - إلزامي
     if (!docs.home_address || !docs.home_address.trim()) {
       toast({
         title: "خطأ",
-        description: "يرجى كتابة عنوان السكن",
+        description: "يرجى إدخال عنوانك (المدينة + العنوان التفصيلي)",
         variant: "destructive"
       });
       return;
     }
 
+    // 7. الموقع GPS - إلزامي
     if (!docs.home_latitude || !docs.home_longitude) {
       toast({
         title: "خطأ",
-        description: "يرجى تحديد موقع السكن على الخريطة (إجباري)",
+        description: "يرجى تحديد موقعك على الخريطة لتستقبل طلبات من منطقتك",
         variant: "destructive"
       });
       return;
     }
 
-    // التحقق من حساب استلام الأرباح
+    // 8. حساب استلام الأرباح
     if (!docs.payment_account_number || !docs.payment_account_holder) {
       toast({
         title: "خطأ",
@@ -190,9 +204,17 @@ const DeliveryDocuments = () => {
 
     setLoading(true);
     try {
-      // إعداد بيانات حساب الدفع
+      // إعداد بيانات الإرسال
       const submitData = {
-        ...docs,
+        national_id: docs.national_id,
+        personal_photo: docs.personal_photo,
+        id_photo: docs.id_photo,
+        bike_photo: docs.bike_photo,
+        fuel_type: docs.fuel_type,
+        home_address: docs.home_address,
+        home_latitude: docs.home_latitude,
+        home_longitude: docs.home_longitude,
+        home_city: docs.home_city,
         payment_account: {
           type: docs.payment_account_type,
           account_number: docs.payment_account_number,
@@ -200,12 +222,6 @@ const DeliveryDocuments = () => {
           bank_name: docs.payment_account_type === 'bank_account' ? docs.payment_bank_name : null
         }
       };
-      
-      // حذف الحقول القديمة
-      delete submitData.payment_account_type;
-      delete submitData.payment_account_number;
-      delete submitData.payment_account_holder;
-      delete submitData.payment_bank_name;
       
       await axios.post(`${API}/api/delivery/documents`, submitData);
       toast({
@@ -301,7 +317,7 @@ const DeliveryDocuments = () => {
     <div className="bg-white rounded-xl p-4 border border-gray-200">
       <label className="block text-sm font-bold text-gray-700 mb-2">
         <Camera size={16} className="inline ml-1" />
-        صورة شخصية حية (سيلفي)
+        صورة شخصية حية (سيلفي) *
       </label>
       <div className="relative">
         {value ? (
@@ -335,6 +351,13 @@ const DeliveryDocuments = () => {
             />
           </label>
         )}
+      </div>
+      {/* ملاحظة عرض الصورة */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-2 mt-2">
+        <p className="text-xs text-blue-700 flex items-center gap-1">
+          <AlertTriangle size={12} />
+          ستظهر صورتك الشخصية للبائعين والعملاء عند استلام وتسليم الطلبات
+        </p>
       </div>
       <p className="text-[10px] text-orange-600 mt-2 flex items-center gap-1">
         <AlertTriangle size={10} />
@@ -380,100 +403,69 @@ const DeliveryDocuments = () => {
             onUpload={handleImageUpload('id_photo')}
           />
 
-          {/* اختيار نوع المركبة */}
-          <div className="bg-white rounded-xl p-4 border border-gray-200">
-            <label className="block text-sm font-bold text-gray-700 mb-3">
-              <Truck size={16} className="inline ml-1" />
-              نوع المركبة
-            </label>
-            <div className="grid grid-cols-2 gap-2">
-              {(vehicleTypes.length > 0 ? vehicleTypes : defaultVehicleTypes).map((vehicle) => (
-                <button
-                  key={vehicle.id}
-                  type="button"
-                  onClick={() => setDocs(prev => ({ ...prev, vehicle_type: vehicle.id, motorcycle_license: vehicle.requires_license ? prev.motorcycle_license : '' }))}
-                  className={`p-3 rounded-xl border-2 transition-all text-center ${
-                    docs.vehicle_type === vehicle.id
-                      ? 'border-[#FF6B00] bg-orange-50'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <span className="text-2xl block mb-1">{vehicle.icon}</span>
-                  <span className="text-sm font-medium block">{vehicle.name}</span>
-                  {!vehicle.requires_license && (
-                    <span className="text-[10px] text-green-600 block mt-1">بدون رخصة</span>
-                  )}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* رخصة القيادة - تظهر فقط إذا كانت مطلوبة */}
-          {requiresLicense && (
-            <div className="bg-white rounded-xl p-4 border border-gray-200">
-              <label className="block text-sm font-bold text-gray-700 mb-2">
-                <CreditCard size={16} className="inline ml-1" />
-                رخصة القيادة
-              </label>
-              <div className="relative">
-                {docs.motorcycle_license ? (
-                  <div className="relative">
-                    <img src={docs.motorcycle_license} alt="رخصة القيادة" className="w-full h-40 object-cover rounded-lg" />
-                    <button
-                      type="button"
-                      onClick={() => setDocs(prev => ({ ...prev, motorcycle_license: '' }))}
-                      className="absolute top-2 left-2 bg-red-500 text-white p-1 rounded-full"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                ) : (
-                  <label className="flex flex-col items-center justify-center h-40 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-[#FF6B00] transition-colors">
-                    <Upload size={24} className="text-gray-400 mb-2" />
-                    <span className="text-sm text-gray-500">اضغط لرفع رخصة القيادة</span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageUpload('motorcycle_license')}
-                      className="hidden"
-                    />
-                  </label>
-                )}
-              </div>
-              <p className="text-[10px] text-red-500 mt-2">* يجب أن تكون الرخصة باسمك الشخصي وسارية المفعول</p>
-            </div>
-          )}
-
-          {/* صورة المركبة (اختياري) */}
-          <div className="bg-white rounded-xl p-4 border border-gray-200">
+          {/* صورة الدراجة - إلزامية */}
+          <div className="bg-white rounded-xl p-4 border-2 border-orange-200">
             <label className="block text-sm font-bold text-gray-700 mb-2">
-              <Camera size={16} className="inline ml-1" />
-              صورة المركبة <span className="text-gray-400 font-normal">(اختياري)</span>
+              <Bike size={16} className="inline ml-1" />
+              صورة الدراجة *
             </label>
             <div className="relative">
-              {docs.vehicle_photo ? (
+              {docs.bike_photo ? (
                 <div className="relative">
-                  <img src={docs.vehicle_photo} alt="صورة المركبة" className="w-full h-40 object-cover rounded-lg" />
+                  <img src={docs.bike_photo} alt="صورة الدراجة" className="w-full h-40 object-cover rounded-lg" />
                   <button
                     type="button"
-                    onClick={() => setDocs(prev => ({ ...prev, vehicle_photo: '' }))}
+                    onClick={() => setDocs(prev => ({ ...prev, bike_photo: '' }))}
                     className="absolute top-2 left-2 bg-red-500 text-white p-1 rounded-full"
                   >
                     ✕
                   </button>
                 </div>
               ) : (
-                <label className="flex flex-col items-center justify-center h-40 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-[#FF6B00] transition-colors">
-                  <Upload size={24} className="text-gray-400 mb-2" />
-                  <span className="text-sm text-gray-500">اضغط لرفع صورة المركبة</span>
+                <label className="flex flex-col items-center justify-center h-40 border-2 border-dashed border-orange-300 rounded-lg cursor-pointer hover:border-[#FF6B00] transition-colors bg-orange-50/50">
+                  <Upload size={24} className="text-orange-400 mb-2" />
+                  <span className="text-sm text-gray-600 font-medium">اضغط لرفع صورة الدراجة</span>
+                  <span className="text-xs text-gray-400 mt-1">يجب أن تظهر الدراجة بوضوح</span>
                   <input
                     type="file"
                     accept="image/*"
-                    onChange={handleImageUpload('vehicle_photo')}
+                    onChange={handleImageUpload('bike_photo')}
                     className="hidden"
                   />
                 </label>
               )}
+            </div>
+            {/* تحذير موتورات البارت */}
+            <div className="bg-red-50 border border-red-200 rounded-lg p-3 mt-3">
+              <p className="text-sm text-red-700 font-bold flex items-start gap-2">
+                <AlertTriangle size={18} className="flex-shrink-0 mt-0.5" />
+                <span>⚠️ موتورات البارت غير مصرح بها إطلاقاً. ومن يخالف هذه القاعدة يُجمّد حسابه مباشرة.</span>
+              </p>
+            </div>
+          </div>
+
+          {/* اختيار نوع الوقود - إلزامي */}
+          <div className="bg-white rounded-xl p-4 border border-gray-200">
+            <label className="block text-sm font-bold text-gray-700 mb-3">
+              <Truck size={16} className="inline ml-1" />
+              نوع الوقود *
+            </label>
+            <div className="grid grid-cols-2 gap-3">
+              {fuelTypes.map((fuel) => (
+                <button
+                  key={fuel.id}
+                  type="button"
+                  onClick={() => setDocs(prev => ({ ...prev, fuel_type: fuel.id }))}
+                  className={`p-4 rounded-xl border-2 transition-all text-center ${
+                    docs.fuel_type === fuel.id
+                      ? 'border-[#FF6B00] bg-orange-50 ring-2 ring-orange-200'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <span className="text-3xl block mb-2">{fuel.icon}</span>
+                  <span className="text-sm font-bold block">{fuel.name}</span>
+                </button>
+              ))}
             </div>
           </div>
 
@@ -484,22 +476,14 @@ const DeliveryDocuments = () => {
                 <MapPin size={16} className="text-green-600" />
               </div>
               <div>
-                <h3 className="font-bold text-gray-900">عنوان السكن</h3>
-                <p className="text-xs text-gray-500">هذا العنوان سيظهر للإدارة عند مراجعة طلبك</p>
-              </div>
-            </div>
-            
-            {/* تنبيه إلزامي */}
-            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
-              <div className="flex items-center gap-2 text-amber-700">
-                <AlertTriangle size={16} />
-                <span className="text-sm font-medium">تحديد الموقع إلزامي لإكمال التسجيل</span>
+                <h3 className="font-bold text-gray-900">العنوان والموقع *</h3>
+                <p className="text-xs text-gray-500">حدد موقعك بدقة لتستقبل طلبات من منطقتك</p>
               </div>
             </div>
             
             {/* زر إضافة العنوان */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">العنوان *</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">العنوان (المدينة + التفاصيل) *</label>
               <button
                 type="button"
                 onClick={() => setShowAddressModal(true)}
@@ -578,42 +562,31 @@ const DeliveryDocuments = () => {
                 )}
               </div>
               <div className={`flex items-center justify-between p-2 rounded-lg ${docs.id_photo ? 'bg-green-50' : 'bg-red-50'}`}>
-                <span className="text-sm">صورة الهوية / إخراج القيد</span>
+                <span className="text-sm">صورة الهوية</span>
                 {docs.id_photo ? (
                   <span className="text-green-600 text-sm flex items-center gap-1"><Check size={14} /> مرفوع</span>
                 ) : (
                   <span className="text-red-600 text-sm flex items-center gap-1"><X size={14} /> مطلوب</span>
                 )}
               </div>
-              <div className={`flex items-center justify-between p-2 rounded-lg ${docs.vehicle_type ? 'bg-green-50' : 'bg-red-50'}`}>
-                <span className="text-sm">نوع المركبة</span>
-                {docs.vehicle_type ? (
+              <div className={`flex items-center justify-between p-2 rounded-lg ${docs.bike_photo ? 'bg-green-50' : 'bg-red-50'}`}>
+                <span className="text-sm">صورة الدراجة</span>
+                {docs.bike_photo ? (
+                  <span className="text-green-600 text-sm flex items-center gap-1"><Check size={14} /> مرفوع</span>
+                ) : (
+                  <span className="text-red-600 text-sm flex items-center gap-1"><X size={14} /> مطلوب</span>
+                )}
+              </div>
+              <div className={`flex items-center justify-between p-2 rounded-lg ${docs.fuel_type ? 'bg-green-50' : 'bg-red-50'}`}>
+                <span className="text-sm">نوع الوقود</span>
+                {docs.fuel_type ? (
                   <span className="text-green-600 text-sm flex items-center gap-1"><Check size={14} /> محدد</span>
                 ) : (
                   <span className="text-red-600 text-sm flex items-center gap-1"><X size={14} /> مطلوب</span>
                 )}
               </div>
-              {requiresLicense && (
-                <div className={`flex items-center justify-between p-2 rounded-lg ${docs.motorcycle_license ? 'bg-green-50' : 'bg-red-50'}`}>
-                  <span className="text-sm">رخصة القيادة</span>
-                  {docs.motorcycle_license ? (
-                    <span className="text-green-600 text-sm flex items-center gap-1"><Check size={14} /> مرفوع</span>
-                  ) : (
-                    <span className="text-red-600 text-sm flex items-center gap-1"><X size={14} /> مطلوب</span>
-                  )}
-                </div>
-              )}
-              <div className={`flex items-center justify-between p-2 rounded-lg ${docs.vehicle_photo ? 'bg-green-50' : 'bg-gray-50'}`}>
-                <span className="text-sm">صورة المركبة</span>
-                {docs.vehicle_photo ? (
-                  <span className="text-green-600 text-sm flex items-center gap-1"><Check size={14} /> مرفوع</span>
-                ) : (
-                  <span className="text-gray-500 text-sm">اختياري</span>
-                )}
-              </div>
-              {/* حالة العنوان */}
               <div className={`flex items-center justify-between p-2 rounded-lg ${docs.home_address && docs.home_latitude ? 'bg-green-50' : 'bg-red-50'}`}>
-                <span className="text-sm">عنوان السكن</span>
+                <span className="text-sm">العنوان والموقع</span>
                 {docs.home_address && docs.home_latitude ? (
                   <span className="text-green-600 text-sm flex items-center gap-1"><Check size={14} /> محدد</span>
                 ) : (
@@ -624,7 +597,7 @@ const DeliveryDocuments = () => {
           </div>
 
           {/* تحذير إذا كانت الوثائق ناقصة */}
-          {(!docs.national_id || !docs.personal_photo || !docs.id_photo || !docs.vehicle_type || (requiresLicense && !docs.motorcycle_license) || !docs.home_address || !docs.home_latitude) && (
+          {(!docs.national_id || !docs.personal_photo || !docs.id_photo || !docs.bike_photo || !docs.fuel_type || !docs.home_address || !docs.home_latitude) && (
             <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
               <div className="flex items-start gap-2">
                 <AlertTriangle size={20} className="text-amber-600 flex-shrink-0 mt-0.5" />
@@ -746,7 +719,7 @@ const DeliveryDocuments = () => {
           {/* زر الإرسال */}
           <button
             type="submit"
-            disabled={loading || !docs.national_id || !docs.personal_photo || !docs.id_photo || !docs.vehicle_type || (requiresLicense && !docs.motorcycle_license) || !docs.home_address || !docs.home_latitude || !docs.payment_account_number || !docs.payment_account_holder || (docs.payment_account_type === 'bank_account' && !docs.payment_bank_name)}
+            disabled={loading || !docs.national_id || !docs.personal_photo || !docs.id_photo || !docs.bike_photo || !docs.fuel_type || !docs.home_address || !docs.home_latitude || !docs.payment_account_number || !docs.payment_account_holder || (docs.payment_account_type === 'bank_account' && !docs.payment_bank_name)}
             className="w-full bg-[#FF6B00] text-white py-3 rounded-xl font-bold disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? 'جاري الإرسال...' : 'إرسال الوثائق'}
@@ -776,7 +749,7 @@ const DeliveryDocuments = () => {
           street_number: docs.home_street_number,
           building_number: docs.home_building_number
         }}
-        title="إضافة عنوان السكن"
+        title="إضافة العنوان"
       />
     </div>
   );

@@ -60,7 +60,7 @@ const JoinAsDeliveryPage = () => {
   const requirements = [
     { icon: CheckCircle, text: 'عمر 18 سنة أو أكثر' },
     { icon: CheckCircle, text: 'هوية سورية سارية المفعول' },
-    { icon: CheckCircle, text: 'دراجة نارية مرخصة (باسمك)' },
+    { icon: CheckCircle, text: 'دراجة نارية (بنزين أو كهرباء)' },
     { icon: CheckCircle, text: 'هاتف ذكي مع إنترنت' },
     { icon: CheckCircle, text: 'معرفة جيدة بالمنطقة' }
   ];
@@ -74,7 +74,7 @@ const JoinAsDeliveryPage = () => {
 
   const steps = [
     { number: '1', title: 'سجّل حسابك', description: 'أنشئ حساب توصيل برقم هاتفك' },
-    { number: '2', title: 'ارفع وثائقك', description: 'الهوية + صورة شخصية + رخصة الدراجة' },
+    { number: '2', title: 'ارفع وثائقك', description: 'الهوية + صورة شخصية + صورة الدراجة' },
     { number: '3', title: 'انتظر الموافقة', description: 'نراجع وثائقك خلال 24 ساعة' },
     { number: '4', title: 'ابدأ العمل', description: 'استقبل الطلبات واكسب المال!' }
   ];
@@ -89,8 +89,8 @@ const JoinAsDeliveryPage = () => {
       a: 'يمكنك طلب السحب في أي وقت. الحد الأدنى 25,000 ل.س والتحويل لشام كاش.'
     },
     {
-      q: 'ماذا لو الدراجة ليست باسمي؟',
-      a: 'للأسف نشترط أن تكون الدراجة مسجلة باسمك لأسباب قانونية وتأمينية.'
+      q: 'هل أحتاج رخصة قيادة؟',
+      a: 'لا، لا نطلب رخصة قيادة. نحتاج فقط صورة الهوية وصورة شخصية وصورة الدراجة.'
     },
     {
       q: 'هل أختار الطلبات أم تُفرض علي؟',

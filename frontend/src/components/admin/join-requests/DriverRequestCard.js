@@ -9,8 +9,8 @@ export const getDriverDocumentsStatus = (doc) => {
   const driver = doc.driver || doc;
   const requiredDocs = [
     { key: 'personal_photo', label: 'صورة شخصية', required: true },
-    { key: 'id_photo', label: 'صورة الهوية / إخراج القيد', required: true },
-    { key: 'motorcycle_license', label: 'رخصة القيادة', required: doc.requires_license !== false },
+    { key: 'id_photo', label: 'صورة الهوية', required: true },
+    { key: 'bike_photo', label: 'صورة الدراجة', required: true },
   ];
 
   const uploadedCount = requiredDocs.filter(d => doc[d.key]).length;
@@ -90,7 +90,7 @@ const DriverRequestCard = ({
               <Image size={16} />
               الوثائق المرفقة
             </h5>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               <DocumentImage 
                 src={item.personal_photo || driver.personal_photo} 
                 label="صورة شخصية"
@@ -102,13 +102,8 @@ const DriverRequestCard = ({
                 onClick={(src, label) => setViewImage({ src, label })}
               />
               <DocumentImage 
-                src={item.motorcycle_license || driver.motorcycle_license} 
-                label="رخصة القيادة"
-                onClick={(src, label) => setViewImage({ src, label })}
-              />
-              <DocumentImage 
-                src={item.vehicle_photo || driver.vehicle_photo} 
-                label="صورة المركبة"
+                src={item.bike_photo || driver.bike_photo} 
+                label="صورة الدراجة"
                 onClick={(src, label) => setViewImage({ src, label })}
               />
             </div>
@@ -117,7 +112,7 @@ const DriverRequestCard = ({
           <div className="grid grid-cols-2 gap-3 py-3 text-sm border-t">
             <div><span className="text-gray-500">المدينة:</span> {item.home_city || driver.city || 'غير محدد'}</div>
             <div><span className="text-gray-500">الهاتف:</span> {driver.phone}</div>
-            <div><span className="text-gray-500">نوع المركبة:</span> {item.vehicle_type_name || item.vehicle_type || 'غير محدد'}</div>
+            <div><span className="text-gray-500">نوع الوقود:</span> {item.fuel_type_name || (item.fuel_type === 'petrol' ? 'بنزين' : item.fuel_type === 'electric' ? 'كهرباء' : 'غير محدد')}</div>
             <div><span className="text-gray-500">رقم الهوية:</span> {item.national_id || 'غير محدد'}</div>
             {(item.home_address || driver.home_address) && (
               <div className="col-span-2">

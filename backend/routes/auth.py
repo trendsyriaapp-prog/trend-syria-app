@@ -839,47 +839,44 @@ async def upload_delivery_documents(docs: DeliveryDocuments, user: dict = Depend
     if existing:
         raise HTTPException(status_code=400, detail="تم رفع المستندات مسبقاً")
     
-    # التحقق من الحقول الإلزامية (الصور)
+    # ========== التحقق من جميع الحقول الإلزامية ==========
+    
+    # 1. رقم الهوية
+    if not docs.national_id or not docs.national_id.strip():
+        raise HTTPException(status_code=400, detail="رقم الهوية الوطنية مطلوب")
+    
+    # 2. الصورة الشخصية (سيلفي)
     if not docs.personal_photo or not docs.personal_photo.strip():
         raise HTTPException(status_code=400, detail="الصورة الشخصية مطلوبة")
     
+    # 3. صورة الهوية
     if not docs.id_photo or not docs.id_photo.strip():
         raise HTTPException(status_code=400, detail="صورة الهوية مطلوبة")
     
-    if not docs.national_id or not docs.national_id.strip():
-        raise HTTPException(status_code=400, detail="رقم الهوية مطلوب")
+    # 4. صورة الدراجة - إلزامية
+    if not docs.bike_photo or not docs.bike_photo.strip():
+        raise HTTPException(status_code=400, detail="صورة الدراجة مطلوبة")
     
-    # التحقق من العنوان والموقع - إلزامي
+    # 5. نوع الوقود - إلزامي
+    valid_fuel_types = ["petrol", "electric"]
+    if not docs.fuel_type or docs.fuel_type not in valid_fuel_types:
+        raise HTTPException(
+            status_code=400, 
+            detail="نوع الوقود مطلوب. الخيارات المتاحة: بنزين أو كهرباء"
+        )
+    
+    # 6. العنوان والموقع - إلزامي
     if not docs.home_address or not docs.home_address.strip():
-        raise HTTPException(status_code=400, detail="عنوان السكن مطلوب")
+        raise HTTPException(status_code=400, detail="العنوان مطلوب (المدينة + العنوان التفصيلي)")
     
+    # 7. الموقع GPS - إلزامي
     if not docs.home_latitude or not docs.home_longitude:
-        raise HTTPException(status_code=400, detail="يرجى تحديد موقع السكن على الخريطة")
+        raise HTTPException(status_code=400, detail="يرجى تحديد موقعك على الخريطة لتستقبل طلبات من منطقتك")
     
-    # التحقق من نوع المركبة
-    valid_vehicle_types = ["car", "motorcycle", "electric_scooter", "bicycle"]
-    if docs.vehicle_type not in valid_vehicle_types:
-        raise HTTPException(
-            status_code=400, 
-            detail="نوع المركبة غير صالح. الأنواع المتاحة: سيارة، دراجة نارية، سكوتر كهربائي، دراجة هوائية"
-        )
-    
-    # المركبات التي تتطلب رخصة قيادة
-    requires_license = ["car", "motorcycle"]
-    
-    if docs.vehicle_type in requires_license and not docs.motorcycle_license:
-        vehicle_name = "السيارة" if docs.vehicle_type == "car" else "الدراجة النارية"
-        raise HTTPException(
-            status_code=400, 
-            detail=f"رخصة القيادة مطلوبة لـ{vehicle_name}"
-        )
-    
-    # ترجمة نوع المركبة للعرض
-    vehicle_type_names = {
-        "car": "سيارة",
-        "motorcycle": "دراجة نارية",
-        "electric_scooter": "سكوتر كهربائي",
-        "bicycle": "دراجة هوائية"
+    # ترجمة نوع الوقود للعرض
+    fuel_type_names = {
+        "petrol": "بنزين",
+        "electric": "كهرباء"
     }
     
     doc = {
@@ -889,12 +886,10 @@ async def upload_delivery_documents(docs: DeliveryDocuments, user: dict = Depend
         "national_id": docs.national_id,
         "personal_photo": docs.personal_photo,
         "id_photo": docs.id_photo,
-        "vehicle_type": docs.vehicle_type,
-        "vehicle_type_name": vehicle_type_names.get(docs.vehicle_type, docs.vehicle_type),
-        "motorcycle_license": docs.motorcycle_license if docs.vehicle_type in requires_license else None,
-        "vehicle_photo": docs.vehicle_photo,
-        "requires_license": docs.vehicle_type in requires_license,
-        # حقول العنوان الجديدة
+        "bike_photo": docs.bike_photo,  # صورة الدراجة
+        "fuel_type": docs.fuel_type,  # نوع الوقود
+        "fuel_type_name": fuel_type_names.get(docs.fuel_type, docs.fuel_type),
+        # حقول العنوان والموقع
         "home_address": docs.home_address,
         "home_latitude": docs.home_latitude,
         "home_longitude": docs.home_longitude,
@@ -924,7 +919,7 @@ async def upload_delivery_documents(docs: DeliveryDocuments, user: dict = Depend
         from core.firebase_admin import send_push_to_admins
         driver_name = user.get("name", user.get("full_name", "سائق جديد"))
         await send_push_to_admins(
-            title="🚗 طلب انضمام سائق جديد",
+            title="🛵 طلب انضمام سائق جديد",
             body=f"سائق جديد '{driver_name}' بانتظار الموافقة",
             notification_type="new_driver_registration",
             data={"driver_id": user["id"], "driver_name": driver_name}
@@ -947,44 +942,27 @@ async def get_delivery_documents_status(user: dict = Depends(get_current_user)):
         return {"status": "not_submitted"}
     return {
         "status": doc["status"],
-        "vehicle_type": doc.get("vehicle_type"),
-        "vehicle_type_name": doc.get("vehicle_type_name"),
-        "requires_license": doc.get("requires_license", True),
+        "fuel_type": doc.get("fuel_type"),
+        "fuel_type_name": doc.get("fuel_type_name"),
         "rejection_reason": doc.get("rejection_reason")
     }
 
-@delivery_auth_router.get("/vehicle-types")
-async def get_vehicle_types():
-    """جلب أنواع المركبات المتاحة للتسجيل"""
+@delivery_auth_router.get("/fuel-types")
+async def get_fuel_types():
+    """جلب أنواع الوقود المتاحة للتسجيل"""
     return {
-        "vehicle_types": [
+        "fuel_types": [
             {
-                "id": "car",
-                "name": "سيارة",
-                "icon": "🚗",
-                "requires_license": True,
-                "description": "سيارة عادية أو فان"
-            },
-            {
-                "id": "motorcycle",
-                "name": "دراجة نارية",
-                "icon": "🏍️",
-                "requires_license": True,
+                "id": "petrol",
+                "name": "بنزين",
+                "icon": "⛽",
                 "description": "دراجة نارية بنزين"
             },
             {
-                "id": "electric_scooter",
-                "name": "سكوتر كهربائي",
-                "icon": "🛵",
-                "requires_license": False,
-                "description": "دراجة كهربائية أو سكوتر"
-            },
-            {
-                "id": "bicycle",
-                "name": "دراجة هوائية",
-                "icon": "🚲",
-                "requires_license": False,
-                "description": "دراجة هوائية عادية"
+                "id": "electric",
+                "name": "كهرباء",
+                "icon": "🔋",
+                "description": "دراجة كهربائية"
             }
         ]
     }

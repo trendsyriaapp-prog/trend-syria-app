@@ -50,16 +50,15 @@ class PaymentAccount(BaseModel):
     bank_name: Optional[str] = None
 
 class DeliveryDocuments(BaseModel):
-    national_id: str
-    personal_photo: str
-    id_photo: str
-    vehicle_type: str  # car, motorcycle, electric_scooter, bicycle
-    motorcycle_license: Optional[str] = None  # إجباري فقط لـ car و motorcycle
-    vehicle_photo: Optional[str] = None  # صورة المركبة
-    # حقول العنوان الإلزامية
-    home_address: str  # العنوان النصي
-    home_latitude: float  # خط العرض
-    home_longitude: float  # خط الطول
+    national_id: str  # رقم الهوية الوطنية
+    personal_photo: str  # صورة شخصية (سيلفي) - إلزامية
+    id_photo: str  # صورة الهوية - إلزامية
+    bike_photo: str  # صورة الدراجة - إلزامية
+    fuel_type: str  # نوع الوقود: petrol أو electric
+    # حقول العنوان والموقع الإلزامية
+    home_address: str  # العنوان النصي (المدينة + العنوان)
+    home_latitude: float  # خط العرض - إلزامي
+    home_longitude: float  # خط الطول - إلزامي
     home_city: Optional[str] = None  # المدينة
     # حساب استلام الأرباح
     payment_account: Optional[PaymentAccount] = None

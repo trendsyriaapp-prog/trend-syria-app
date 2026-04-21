@@ -44,12 +44,10 @@ const DeliveryTab = ({
   const getDocumentsStatus = (doc) => {
     const requiredDocs = [
       { key: 'personal_photo', label: 'صورة شخصية', required: true },
-      { key: 'id_photo', label: 'صورة الهوية / إخراج القيد', required: true },
-      { key: 'motorcycle_license', label: 'رخصة القيادة', required: doc.requires_license !== false },
+      { key: 'id_photo', label: 'صورة الهوية', required: true },
+      { key: 'bike_photo', label: 'صورة الدراجة', required: true },
     ];
-    const optionalDocs = [
-      { key: 'vehicle_photo', label: 'صورة المركبة', required: false },
-    ];
+    const optionalDocs = [];
 
     const allDocs = [...requiredDocs, ...optionalDocs];
     const uploadedCount = allDocs.filter(d => doc[d.key]).length;
@@ -294,32 +292,34 @@ const DeliveryTab = ({
                       )}
                     </div>
 
-                    {/* رخصة القيادة */}
-                    <div className={`rounded-xl p-2 border-2 ${doc.motorcycle_license ? 'bg-green-50 border-green-200' : (doc.requires_license !== false ? 'bg-red-50 border-red-200' : 'bg-gray-50 border-gray-200')}`}>
+                    {/* صورة الدراجة */}
+                    <div className={`rounded-xl p-2 border-2 ${doc.bike_photo ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
                       <p className="text-xs text-gray-600 mb-2 text-center font-medium flex items-center justify-center gap-1">
-                        {doc.motorcycle_license ? <CheckCircle size={12} className="text-green-500" /> : (doc.requires_license !== false ? <XCircle size={12} className="text-red-500" /> : null)}
-                        رخصة القيادة
-                        {doc.requires_license !== false && <span className="text-[10px] text-red-500">*</span>}
+                        {doc.bike_photo ? <CheckCircle size={12} className="text-green-500" /> : <XCircle size={12} className="text-red-500" />}
+                        صورة الدراجة
+                        <span className="text-[10px] text-red-500">*</span>
                       </p>
-                      {doc.motorcycle_license ? (
+                      {doc.bike_photo ? (
                         <img 
-                          src={doc.motorcycle_license} 
-                          alt="رخصة القيادة" 
+                          src={doc.bike_photo} 
+                          alt="صورة الدراجة" 
                           className="w-full h-28 object-cover rounded-lg cursor-pointer hover:scale-105 transition-transform border-2 border-white shadow-sm"
-                          onClick={() => setLightboxImage({ src: doc.motorcycle_license, alt: 'رخصة القيادة' })}
+                          onClick={() => setLightboxImage({ src: doc.bike_photo, alt: 'صورة الدراجة' })}
                         />
                       ) : (
-                        <div className={`w-full h-28 rounded-lg flex flex-col items-center justify-center border-2 border-dashed ${doc.requires_license !== false ? 'bg-red-100 border-red-300' : 'bg-gray-100 border-gray-300'}`}>
-                          {doc.requires_license !== false ? (
-                            <>
-                              <XCircle size={24} className="text-red-400 mb-1" />
-                              <span className="text-red-500 text-xs font-medium">غير مرفوع</span>
-                            </>
-                          ) : (
-                            <span className="text-gray-400 text-xs">غير مطلوب</span>
-                          )}
+                        <div className="w-full h-28 rounded-lg flex flex-col items-center justify-center border-2 border-dashed bg-red-100 border-red-300">
+                          <XCircle size={24} className="text-red-400 mb-1" />
+                          <span className="text-red-500 text-xs font-medium">غير مرفوع</span>
                         </div>
                       )}
+                    </div>
+                  </div>
+                  
+                  {/* معلومات إضافية */}
+                  <div className="mt-3 p-2 bg-gray-50 rounded-lg">
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div><span className="text-gray-500">نوع الوقود:</span> <span className="font-medium">{doc.fuel_type_name || (doc.fuel_type === 'petrol' ? 'بنزين' : doc.fuel_type === 'electric' ? 'كهرباء' : 'غير محدد')}</span></div>
+                      <div><span className="text-gray-500">رقم الهوية:</span> <span className="font-medium">{doc.national_id || 'غير محدد'}</span></div>
                     </div>
                   </div>
                 </div>
@@ -508,39 +508,28 @@ const DeliveryTab = ({
                     )}
                     {selectedDriver.documents.id_photo && (
                       <div>
-                        <p className="text-[10px] text-gray-400 mb-1">الهوية / إخراج القيد</p>
+                        <p className="text-[10px] text-gray-400 mb-1">صورة الهوية</p>
                         <img 
                           src={selectedDriver.documents.id_photo} 
-                          alt="صورة الهوية / إخراج القيد" 
+                          alt="صورة الهوية" 
                           className="w-full h-16 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity border"
-                          onClick={() => setLightboxImage({ src: selectedDriver.documents.id_photo, alt: 'صورة الهوية / إخراج القيد' })}
+                          onClick={() => setLightboxImage({ src: selectedDriver.documents.id_photo, alt: 'صورة الهوية' })}
                         />
                       </div>
                     )}
-                    {selectedDriver.documents.motorcycle_license && (
+                    {selectedDriver.documents.bike_photo && (
                       <div>
-                        <p className="text-[10px] text-gray-400 mb-1">رخصة القيادة</p>
+                        <p className="text-[10px] text-gray-400 mb-1">صورة الدراجة</p>
                         <img 
-                          src={selectedDriver.documents.motorcycle_license} 
-                          alt="رخصة القيادة" 
+                          src={selectedDriver.documents.bike_photo} 
+                          alt="صورة الدراجة" 
                           className="w-full h-16 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity border"
-                          onClick={() => setLightboxImage({ src: selectedDriver.documents.motorcycle_license, alt: 'رخصة القيادة' })}
-                        />
-                      </div>
-                    )}
-                    {selectedDriver.documents.vehicle_photo && (
-                      <div>
-                        <p className="text-[10px] text-gray-400 mb-1">صورة المركبة</p>
-                        <img 
-                          src={selectedDriver.documents.vehicle_photo} 
-                          alt="صورة المركبة" 
-                          className="w-full h-16 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity border"
-                          onClick={() => setLightboxImage({ src: selectedDriver.documents.vehicle_photo, alt: 'صورة المركبة' })}
+                          onClick={() => setLightboxImage({ src: selectedDriver.documents.bike_photo, alt: 'صورة الدراجة' })}
                         />
                       </div>
                     )}
                   </div>
-                  {!selectedDriver.documents.personal_photo && !selectedDriver.documents.id_photo && !selectedDriver.documents.motorcycle_license && (
+                  {!selectedDriver.documents.personal_photo && !selectedDriver.documents.id_photo && !selectedDriver.documents.bike_photo && (
                     <p className="text-xs text-gray-400 italic">لم يتم تقديم مستندات</p>
                   )}
                 </div>
