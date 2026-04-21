@@ -86,7 +86,7 @@ class TestLoyaltyAPIs:
         # التحقق من أن min_redeem = 100
         assert data["min_redeem"] == 100, f"Expected min_redeem=100, got {data['min_redeem']}"
         
-        print(f"✅ GET /api/loyalty/points - Success")
+        print("✅ GET /api/loyalty/points - Success")
         print(f"   Available points: {data['available_points']}")
         print(f"   Min redeem: {data['min_redeem']}")
     
@@ -112,7 +112,7 @@ class TestLoyaltyAPIs:
         
         data = response.json()
         assert "detail" in data, "Missing error detail"
-        print(f"✅ POST /api/loyalty/redeem (below minimum) - Correctly returns 400")
+        print("✅ POST /api/loyalty/redeem (below minimum) - Correctly returns 400")
         print(f"   Error: {data.get('detail')}")
     
     def test_redeem_points_exceeds_balance(self):
@@ -135,7 +135,7 @@ class TestLoyaltyAPIs:
         
         data = response.json()
         assert "detail" in data, "Missing error detail"
-        print(f"✅ POST /api/loyalty/redeem (exceeds balance) - Correctly returns 400")
+        print("✅ POST /api/loyalty/redeem (exceeds balance) - Correctly returns 400")
         print(f"   Tried to redeem: {redeem_amount}, Available: {available}")
         print(f"   Error: {data.get('detail')}")
     
@@ -162,7 +162,7 @@ class TestLoyaltyAPIs:
         
         data = response.json()
         assert isinstance(data, list), "Expected list response"
-        print(f"✅ GET /api/loyalty/history - Success")
+        print("✅ GET /api/loyalty/history - Success")
         print(f"   History entries: {len(data)}")
     
     # ============ اختبارات GET /api/loyalty/tiers ============
@@ -181,7 +181,7 @@ class TestLoyaltyAPIs:
         tier_names = [t.get("name_en") for t in data]
         assert "bronze" in tier_names, "Missing bronze tier"
         
-        print(f"✅ GET /api/loyalty/tiers - Success")
+        print("✅ GET /api/loyalty/tiers - Success")
         print(f"   Tiers: {tier_names}")
     
     # ============ اختبارات GET /api/loyalty/settings ============
@@ -196,7 +196,7 @@ class TestLoyaltyAPIs:
         assert "min_redeem_points" in data, "Missing min_redeem_points"
         assert data["min_redeem_points"] == 100, f"Expected min_redeem_points=100, got {data['min_redeem_points']}"
         
-        print(f"✅ GET /api/loyalty/settings - Success")
+        print("✅ GET /api/loyalty/settings - Success")
         print(f"   Min redeem points: {data['min_redeem_points']}")
         print(f"   Points value: {data.get('points_value_syp')} SYP")
 

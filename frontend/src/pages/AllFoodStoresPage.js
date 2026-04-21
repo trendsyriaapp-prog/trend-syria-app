@@ -220,7 +220,7 @@ const AllFoodStoresPage = () => {
         {loading ? (
           <div className="grid grid-cols-2 gap-3">
             {[...Array(6)].map((_, i) => (
-              <div key={i} className="bg-white rounded-2xl overflow-hidden animate-pulse">
+              <div key={`food-store-skeleton-${i}`} className="bg-white rounded-2xl overflow-hidden animate-pulse">
                 <div className="h-32 bg-gray-200" />
                 <div className="p-3 space-y-2">
                   <div className="h-4 bg-gray-200 rounded w-3/4" />

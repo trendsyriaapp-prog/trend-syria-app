@@ -63,7 +63,7 @@ class TestAdminPanelApproval:
         if response.status_code == 200:
             data = response.json()
             token = data.get("token") or data.get("access_token")
-            print(f"✅ Admin login successful, token obtained")
+            print("✅ Admin login successful, token obtained")
             return token
         else:
             print(f"❌ Admin login failed: {response.text}")
@@ -209,7 +209,7 @@ class TestAdminPanelApproval:
                 has_video = bool(product.get("admin_video"))
                 print(f"  {'✅' if has_video else '⚠️'} admin_video: {'Present' if has_video else 'Empty/None'}")
             else:
-                print(f"  ❌ admin_video field NOT in response - CRITICAL ISSUE")
+                print("  ❌ admin_video field NOT in response - CRITICAL ISSUE")
             
             # Check other product fields
             product_fields = ["id", "name", "price", "seller_id", "seller_name", "images"]
@@ -242,7 +242,7 @@ class TestAdminPanelApproval:
                 has_video = bool(item.get("admin_video"))
                 print(f"  {'✅' if has_video else '⚠️'} admin_video: {'Present' if has_video else 'Empty/None'}")
             else:
-                print(f"  ⚠️ admin_video field NOT in response (may not be implemented for food items)")
+                print("  ⚠️ admin_video field NOT in response (may not be implemented for food items)")
             
             # Check other food item fields
             item_fields = ["id", "name", "price", "store_name", "store_type", "image"]

@@ -107,6 +107,13 @@
 ## Known Issues
 - Geographic block (Syria) - Users use VPN to access Emergent preview
 - Database shows "disconnected" in preview environment (normal behavior)
+- **localStorage Security**: Auth tokens stored in localStorage (P2 - Deferred). Migration to httpOnly cookies requires significant refactoring.
+
+## Code Quality Fixes Applied (April 2025)
+- ✅ Replaced Array index as React keys with unique identifiers (AdminPage.js, etc.)
+- ✅ Replaced `random` module with `secrets` in test files for security-sensitive operations
+- ✅ Fixed f-strings without placeholders (70 auto-fixed)
+- ✅ Test credentials moved to environment variables via conftest.py
 
 ## Notes
 - Always communicate with user in Arabic (العربية)

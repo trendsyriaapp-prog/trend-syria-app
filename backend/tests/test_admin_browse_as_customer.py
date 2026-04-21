@@ -106,7 +106,7 @@ class TestAdminBrowseAsCustomer:
         
         # Cart might be empty (404) or exist (200)
         assert response.status_code in [200, 404], f"Unexpected cart response: {response.text}"
-        print(f"✅ Admin can access cart")
+        print("✅ Admin can access cart")
     
     def test_admin_add_to_cart(self, headers):
         """Admin can add products to cart"""
@@ -166,7 +166,7 @@ class TestAdminBrowseAsCustomer:
         
         # Expected: 404 (order not found) or 400 (bad request)
         assert response.status_code in [400, 404], f"Unexpected status: {response.status_code}"
-        print(f"✅ Wallet pay API accessible to admin (no 403)")
+        print("✅ Wallet pay API accessible to admin (no 403)")
 
 
 class TestWalletPaymentFlow:
@@ -205,7 +205,7 @@ class TestWalletPaymentFlow:
         
         # According to main agent, admin has ~50,000 SYP after previous payment
         if balance < 1000:
-            print(f"⚠️ Low balance - may need topup for payment tests")
+            print("⚠️ Low balance - may need topup for payment tests")
         
         return balance
     
@@ -230,11 +230,11 @@ class TestWalletPaymentFlow:
             if delivery_code:
                 print(f"   ✅ Delivery code: {delivery_code}")
             else:
-                print(f"   ⚠️ No delivery code found in order")
+                print("   ⚠️ No delivery code found in order")
             
             return order
         else:
-            print(f"ℹ️ No paid orders found for admin")
+            print("ℹ️ No paid orders found for admin")
             return None
 
 
@@ -270,7 +270,7 @@ class TestWalletAPIsNoRestriction:
         # Should NOT return 403
         assert response.status_code != 403, "topup/request should not be restricted to buyers"
         assert response.status_code == 200, f"Unexpected status: {response.status_code}"
-        print(f"✅ POST /api/wallet/topup/request works for admin")
+        print("✅ POST /api/wallet/topup/request works for admin")
     
     def test_topup_history_no_buyer_restriction(self, admin_headers):
         """GET /api/wallet/topup/history should work for admin (not just buyer)"""
@@ -279,7 +279,7 @@ class TestWalletAPIsNoRestriction:
         # Should NOT return 403
         assert response.status_code != 403, "topup/history should not be restricted to buyers"
         assert response.status_code == 200, f"Unexpected status: {response.status_code}"
-        print(f"✅ GET /api/wallet/topup/history works for admin")
+        print("✅ GET /api/wallet/topup/history works for admin")
     
     def test_wallet_pay_no_buyer_restriction(self, admin_headers):
         """POST /api/payment/wallet/pay should work for admin (not just buyer)"""

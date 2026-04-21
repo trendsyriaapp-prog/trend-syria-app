@@ -9,7 +9,7 @@ Tests the complete driver (delivery) workflow:
 import pytest
 import requests
 import os
-import random
+import secrets
 import string
 
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
@@ -17,12 +17,12 @@ if not BASE_URL:
     BASE_URL = "https://shopper-suite.preview.emergentagent.com"
 
 # Test credentials
-ADMIN_PHONE = "0911111111"
-ADMIN_PASSWORD = "Admin@123"
+ADMIN_PHONE = os.environ.get('TEST_ADMIN_PHONE', "0911111111")
+ADMIN_PASSWORD = os.environ.get('TEST_ADMIN_PASSWORD', "Admin@123")
 
 # Generate random phone for new driver
 def generate_random_phone():
-    return f"09{''.join(random.choices(string.digits, k=8))}"
+    return f"09{''.join(secrets.choice(string.digits) for _ in range(8))}"
 
 
 class TestDriverScenario:

@@ -1106,8 +1106,8 @@ const AdminDashboardPage = () => {
                     { icon: Store, label: 'إدارة البائعين', tab: 'seller-management' },
                     { icon: UtensilsCrossed, label: 'إدارة المطاعم', tab: 'food-store-management' },
                     { icon: Truck, label: 'سائقين', tab: 'delivery' },
-                  ].map((item, i) => (
-                    <button key={i} onClick={() => setActiveTab(item.tab)} className="bg-white p-2 flex flex-col items-center gap-1 hover:bg-blue-50 transition-colors">
+                  ].map((item) => (
+                    <button key={item.tab} onClick={() => setActiveTab(item.tab)} className="bg-white p-2 flex flex-col items-center gap-1 hover:bg-blue-50 transition-colors">
                       <item.icon size={16} className="text-blue-600" />
                       <span className="text-[10px] text-gray-600">{item.label}</span>
                     </button>
@@ -1126,8 +1126,8 @@ const AdminDashboardPage = () => {
                   {[
                     { icon: MessageCircle, label: 'محادثات الدعم', tab: 'support-tickets' },
                     { icon: MessageSquare, label: 'اقتراحات المستخدمين', tab: 'feedback' },
-                  ].map((item, i) => (
-                    <button key={i} onClick={() => setActiveTab(item.tab)} className="bg-white p-2 flex flex-col items-center gap-1 hover:bg-indigo-50 transition-colors">
+                  ].map((item) => (
+                    <button key={item.tab} onClick={() => setActiveTab(item.tab)} className="bg-white p-2 flex flex-col items-center gap-1 hover:bg-indigo-50 transition-colors">
                       <item.icon size={16} className="text-indigo-600" />
                       <span className="text-[10px] text-gray-600">{item.label}</span>
                     </button>
@@ -1151,8 +1151,8 @@ const AdminDashboardPage = () => {
                     { icon: AlertTriangle, label: 'المخالفات', tab: 'violations' },
                     { icon: DollarSign, label: 'التحديات', tab: 'challenges' },
                     { icon: Phone, label: 'المكالمات المسجلة', tab: 'recorded-calls' },
-                  ].map((item, i) => (
-                    <button key={i} onClick={() => setActiveTab(item.tab)} className="bg-white p-2 flex flex-col items-center gap-1 hover:bg-cyan-50 transition-colors">
+                  ].map((item) => (
+                    <button key={item.tab} onClick={() => setActiveTab(item.tab)} className="bg-white p-2 flex flex-col items-center gap-1 hover:bg-cyan-50 transition-colors">
                       <item.icon size={16} className="text-cyan-600" />
                       <span className="text-[10px] text-gray-600">{item.label}</span>
                     </button>
@@ -1178,8 +1178,8 @@ const AdminDashboardPage = () => {
                     { icon: AlertTriangle, label: 'المخزون', tab: 'low-stock' },
                     { icon: Flag, label: 'بلاغات السعر', tab: 'price-reports' },
                     { icon: AlertTriangle, label: 'البلاغات', tab: 'driver-reports' },
-                  ].map((item, i) => (
-                    <button key={i} onClick={() => setActiveTab(item.tab)} className="bg-white p-2 flex flex-col items-center gap-1 hover:bg-purple-50 transition-colors">
+                  ].map((item) => (
+                    <button key={item.tab} onClick={() => setActiveTab(item.tab)} className="bg-white p-2 flex flex-col items-center gap-1 hover:bg-purple-50 transition-colors">
                       <item.icon size={16} className="text-purple-600" />
                       <span className="text-[10px] text-gray-600">{item.label}</span>
                     </button>
@@ -1203,8 +1203,8 @@ const AdminDashboardPage = () => {
                     { icon: Megaphone, label: 'الإعلانات', tab: 'ads' },
                     { icon: Megaphone, label: 'شريط العروض', tab: 'ticker-messages' },
                     { icon: Flame, label: 'شارات المنتجات', tab: 'product-badges' },
-                  ].map((item, i) => (
-                    <button key={i} onClick={() => setActiveTab(item.tab)} className="bg-white p-2 flex flex-col items-center gap-1 hover:bg-orange-50 transition-colors">
+                  ].map((item) => (
+                    <button key={item.tab} onClick={() => setActiveTab(item.tab)} className="bg-white p-2 flex flex-col items-center gap-1 hover:bg-orange-50 transition-colors">
                       <item.icon size={16} className="text-orange-600" />
                       <span className="text-[10px] text-gray-600">{item.label}</span>
                     </button>
@@ -1234,8 +1234,8 @@ const AdminDashboardPage = () => {
                       { icon: Cloud, label: 'ترحيل الصور', tab: 'image-migration' },
                       { icon: Shield, label: 'Rate Limiting', tab: 'rate-limits' },
                       { icon: Trash2, label: 'مسح البيانات', tab: 'reset-database', danger: true },
-                    ].map((item, i) => (
-                      <button key={i} onClick={() => setActiveTab(item.tab)} className={`bg-white p-2 flex flex-col items-center gap-1 hover:bg-gray-50 transition-colors ${item.danger ? 'bg-red-50' : ''}`}>
+                    ].map((item) => (
+                      <button key={item.tab} onClick={() => setActiveTab(item.tab)} className={`bg-white p-2 flex flex-col items-center gap-1 hover:bg-gray-50 transition-colors ${item.danger ? 'bg-red-50' : ''}`}>
                         <item.icon size={16} className={item.danger ? 'text-red-500' : 'text-gray-600'} />
                         <span className={`text-[10px] ${item.danger ? 'text-red-500 font-bold' : 'text-gray-600'}`}>{item.label}</span>
                         {item.badge > 0 && <span className="text-[8px] bg-blue-500 text-white px-1 rounded-full">{item.badge}</span>}
@@ -1257,8 +1257,8 @@ const AdminDashboardPage = () => {
                     {[
                       { icon: TrendingUp, label: 'التحليلات', tab: 'analytics' },
                       { icon: Clock, label: 'سجل النشاط', tab: 'activity-log' },
-                    ].map((item, i) => (
-                      <button key={i} onClick={() => setActiveTab(item.tab)} className="bg-white p-2 flex flex-col items-center gap-1 hover:bg-indigo-50 transition-colors">
+                    ].map((item) => (
+                      <button key={item.tab} onClick={() => setActiveTab(item.tab)} className="bg-white p-2 flex flex-col items-center gap-1 hover:bg-indigo-50 transition-colors">
                         <item.icon size={16} className="text-indigo-600" />
                         <span className="text-[10px] text-gray-600">{item.label}</span>
                       </button>

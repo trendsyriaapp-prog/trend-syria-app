@@ -94,7 +94,7 @@ class TestProductsAPI:
         response = requests.get(f"{BASE_URL}/api/products/homepage-data")
         assert response.status_code == 200
         data = response.json()
-        print(f"✅ Homepage data API working")
+        print("✅ Homepage data API working")
 
 
 class TestFoodStoresAPI:

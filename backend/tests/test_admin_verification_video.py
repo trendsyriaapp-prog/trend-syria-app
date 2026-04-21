@@ -77,12 +77,12 @@ class TestAdminVerificationVideo:
     def test_01_seller_login(self, seller_token):
         """Test seller can login successfully"""
         assert seller_token is not None
-        print(f"✅ Seller login successful, token obtained")
+        print("✅ Seller login successful, token obtained")
     
     def test_02_admin_login(self, admin_token):
         """Test admin can login successfully"""
         assert admin_token is not None
-        print(f"✅ Admin login successful, token obtained")
+        print("✅ Admin login successful, token obtained")
     
     def test_03_product_schema_includes_admin_video(self):
         """Verify ProductCreate schema accepts admin_video field"""
@@ -177,7 +177,7 @@ class TestAdminVerificationVideo:
         test_product = next((p for p in products if p.get("id") == product_id), None)
         if test_product:
             assert "admin_video" in test_product, "admin_video field should be present for admin"
-            print(f"✅ Pending product includes admin_video field for admin")
+            print("✅ Pending product includes admin_video field for admin")
         else:
             print("⚠️ Test product not found in pending list (may have been auto-approved)")
         
@@ -313,7 +313,7 @@ class TestAdminVerificationVideo:
         # Admin should be able to see admin_video
         # Note: Current implementation returns admin_video to all users
         if "admin_video" in product:
-            print(f"✅ Admin can see admin_video field in product details")
+            print("✅ Admin can see admin_video field in product details")
         else:
             print("⚠️ admin_video field not present in product response")
         
@@ -362,7 +362,7 @@ class TestAdminVerificationVideo:
         )
         
         assert update_response.status_code == 200, f"Failed to update product: {update_response.text}"
-        print(f"✅ Product updated with admin_video")
+        print("✅ Product updated with admin_video")
         
         # Store for cleanup
         self.__class__.updated_product_id = product_id

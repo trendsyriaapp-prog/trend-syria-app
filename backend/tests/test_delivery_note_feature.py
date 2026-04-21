@@ -55,7 +55,7 @@ class TestDeliveryNoteFeature:
     def test_01_customer_login(self):
         """Test customer can login"""
         assert self.login_customer(), "Customer login failed"
-        print(f"✅ Customer logged in successfully")
+        print("✅ Customer logged in successfully")
     
     def test_02_get_products_for_cart(self):
         """Get available products to add to cart"""
@@ -91,7 +91,7 @@ class TestDeliveryNoteFeature:
             "quantity": 1
         })
         assert response.status_code == 200, f"Failed to add to cart: {response.text}"
-        print(f"✅ Product added to cart")
+        print("✅ Product added to cart")
     
     def test_04_create_order_with_delivery_note(self):
         """Test creating order with delivery_note"""
@@ -195,7 +195,7 @@ class TestDeliveryNoteFeature:
             assert "delivery_note" not in error_detail.lower(), \
                 f"API rejected delivery_note: {error_detail}"
         
-        print(f"✅ OrderCreate schema accepts delivery_note field")
+        print("✅ OrderCreate schema accepts delivery_note field")
     
     # ============== Food Orders Tests ==============
     
@@ -254,9 +254,9 @@ class TestDeliveryNoteFeature:
             assert "delivery_note" not in error_detail.lower(), \
                 f"Food order API rejected delivery_note: {error_detail}"
         else:
-            print(f"✅ Food order created successfully with delivery_note")
+            print("✅ Food order created successfully with delivery_note")
         
-        print(f"✅ FoodOrderCreate schema accepts delivery_note field")
+        print("✅ FoodOrderCreate schema accepts delivery_note field")
     
     def test_08_batch_order_schema_accepts_delivery_note(self):
         """Verify BatchOrderCreate schema accepts delivery_note field"""
@@ -303,9 +303,9 @@ class TestDeliveryNoteFeature:
             assert "delivery_note" not in error_detail.lower(), \
                 f"Batch order API rejected delivery_note: {error_detail}"
         else:
-            print(f"✅ Batch order created successfully with delivery_note")
+            print("✅ Batch order created successfully with delivery_note")
         
-        print(f"✅ BatchOrderCreate schema accepts delivery_note field")
+        print("✅ BatchOrderCreate schema accepts delivery_note field")
     
     # ============== Admin Verification Tests ==============
     
@@ -328,7 +328,7 @@ class TestDeliveryNoteFeature:
                 print(f"✅ Admin can see delivery_note in orders: {order.get('delivery_note', '')[:50]}...")
                 return
         
-        print(f"⚠️ No orders with delivery_note found (field may be empty)")
+        print("⚠️ No orders with delivery_note found (field may be empty)")
 
 
 if __name__ == "__main__":

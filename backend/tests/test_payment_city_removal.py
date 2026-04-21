@@ -105,7 +105,7 @@ class TestSellerPaymentAccountTypes:
         # Should NOT contain mtn_cash
         assert "mtn_cash" not in output, "mtn_cash should NOT be in valid_types"
         
-        print(f"✅ Valid types check passed")
+        print("✅ Valid types check passed")
 
 
 if __name__ == "__main__":

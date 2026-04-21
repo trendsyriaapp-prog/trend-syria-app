@@ -3,7 +3,7 @@
 # لتشغيل: locust -f /app/backend/tests/load_test.py --host=http://localhost:8001
 
 from locust import HttpUser, task, between
-import random
+import random  # Using random for load testing is acceptable (not security-sensitive)
 
 class TrendSyriaUser(HttpUser):
     """محاكاة مستخدم عادي للتطبيق"""

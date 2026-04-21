@@ -43,13 +43,13 @@ class TestHealthAndBasics:
         """Test categories endpoint"""
         response = requests.get(f"{BASE_URL}/api/categories")
         assert response.status_code == 200
-        print(f"✅ Categories endpoint working")
+        print("✅ Categories endpoint working")
     
     def test_products_endpoint(self):
         """Test products listing endpoint"""
         response = requests.get(f"{BASE_URL}/api/products")
         assert response.status_code == 200
-        print(f"✅ Products endpoint working")
+        print("✅ Products endpoint working")
 
 
 class TestAuthentication:
@@ -336,7 +336,7 @@ class TestAdminDashboard:
         headers = {"Authorization": f"Bearer {admin_token}"}
         response = requests.get(f"{BASE_URL}/api/admin/orders", headers=headers)
         assert response.status_code == 200
-        print(f"✅ Admin orders list retrieved")
+        print("✅ Admin orders list retrieved")
     
     def test_admin_pending_sellers(self, admin_token):
         """Test admin viewing pending sellers"""

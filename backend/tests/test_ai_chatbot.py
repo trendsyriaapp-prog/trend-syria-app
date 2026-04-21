@@ -76,7 +76,7 @@ class TestAIChatbotSendMessage:
         has_tracking_keyword = any(kw in response_text for kw in tracking_keywords)
         assert has_tracking_keyword, f"Response should mention tracking: {response_text[:200]}"
         
-        print(f"✅ AI responded to order tracking question")
+        print("✅ AI responded to order tracking question")
     
     def test_send_message_return_product(self):
         """Test asking about product return"""
@@ -98,7 +98,7 @@ class TestAIChatbotSendMessage:
         has_return_keyword = any(kw in response_text for kw in return_keywords)
         assert has_return_keyword, f"Response should mention return policy: {response_text[:200]}"
         
-        print(f"✅ AI responded to return product question")
+        print("✅ AI responded to return product question")
     
     def test_send_message_payment_methods(self):
         """Test asking about payment methods"""
@@ -120,7 +120,7 @@ class TestAIChatbotSendMessage:
         has_payment_keyword = any(kw in response_text for kw in payment_keywords)
         assert has_payment_keyword, f"Response should mention payment methods: {response_text[:200]}"
         
-        print(f"✅ AI responded to payment methods question")
+        print("✅ AI responded to payment methods question")
 
 
 class TestAIChatbotSessionContinuity:
@@ -196,7 +196,7 @@ class TestAIChatbotResponseStructure:
         assert isinstance(data["category"], str), "category should be string"
         assert isinstance(data["needs_human"], bool), "needs_human should be boolean"
         
-        print(f"✅ Response structure verified with all required fields")
+        print("✅ Response structure verified with all required fields")
     
     def test_quick_replies_are_strings(self):
         """Test that quick_replies are list of strings"""

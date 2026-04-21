@@ -12,7 +12,7 @@ Tests the complete customer journey:
 import pytest
 import requests
 import os
-import random
+import secrets
 import string
 
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://shopper-suite.preview.emergentagent.com')
@@ -32,7 +32,7 @@ class TestCustomerScenario:
     @classmethod
     def generate_phone(cls):
         """Generate random Syrian phone number"""
-        return f"09{''.join(random.choices(string.digits, k=8))}"
+        return f"09{''.join(secrets.choice(string.digits) for _ in range(8))}"
     
     # ============== REGISTRATION TESTS ==============
     

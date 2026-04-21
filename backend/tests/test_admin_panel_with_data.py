@@ -41,7 +41,7 @@ class TestAdminPanelWithTestData:
         if response.status_code == 200:
             data = response.json()
             token = data.get("token") or data.get("access_token")
-            print(f"✅ Admin login successful")
+            print("✅ Admin login successful")
             return token
         else:
             print(f"❌ Admin login failed: {response.text}")
@@ -51,8 +51,8 @@ class TestAdminPanelWithTestData:
     
     def test_01_create_test_seller(self, admin_token):
         """Create a test seller and verify it appears in pending sellers"""
-        import random
-        unique_digits = ''.join([str(random.randint(0, 9)) for _ in range(6)])
+        import secrets
+        unique_digits = ''.join([str(secrets.randbelow(9 - 0 + 1) + 0) for _ in range(6)])
         unique_id = unique_digits
         # Syrian phone format: 09XXXXXXXX (10 digits)
         test_phone = f"0911{unique_digits}"
@@ -97,7 +97,7 @@ class TestAdminPanelWithTestData:
                         break
                 
                 if test_seller:
-                    print(f"✅ Test seller found in pending list")
+                    print("✅ Test seller found in pending list")
                     seller_obj = test_seller.get("seller", test_seller)
                     
                     # Verify fields
@@ -115,7 +115,7 @@ class TestAdminPanelWithTestData:
                         else:
                             print(f"  ⚠️ {arabic_name} ({field}): MISSING")
                 else:
-                    print(f"⚠️ Test seller not found in pending list (may need document submission)")
+                    print("⚠️ Test seller not found in pending list (may need document submission)")
         else:
             print(f"⚠️ Seller registration: {response.status_code} - {response.text[:200]}")
     
@@ -123,8 +123,8 @@ class TestAdminPanelWithTestData:
     
     def test_02_create_test_food_seller(self, admin_token):
         """Create a test food seller and verify it appears in pending food stores"""
-        import random
-        unique_digits = ''.join([str(random.randint(0, 9)) for _ in range(6)])
+        import secrets
+        unique_digits = ''.join([str(secrets.randbelow(9 - 0 + 1) + 0) for _ in range(6)])
         unique_id = unique_digits
         # Syrian phone format: 09XXXXXXXX (10 digits)
         test_phone = f"0922{unique_digits}"
@@ -145,7 +145,7 @@ class TestAdminPanelWithTestData:
         
         if response.status_code in [200, 201]:
             data = response.json()
-            print(f"✅ Test food seller created")
+            print("✅ Test food seller created")
             
             # Verify in pending food stores
             headers = {"Authorization": f"Bearer {admin_token}"}
@@ -164,7 +164,7 @@ class TestAdminPanelWithTestData:
                         break
                 
                 if test_store:
-                    print(f"✅ Test food store found in pending list")
+                    print("✅ Test food store found in pending list")
                     
                     # Verify fields
                     fields_to_check = {
@@ -181,7 +181,7 @@ class TestAdminPanelWithTestData:
                         else:
                             print(f"  ⚠️ {arabic_name} ({field}): MISSING")
                 else:
-                    print(f"⚠️ Test food store not found in pending list")
+                    print("⚠️ Test food store not found in pending list")
         else:
             print(f"⚠️ Food seller registration: {response.status_code} - {response.text[:200]}")
     
@@ -189,8 +189,8 @@ class TestAdminPanelWithTestData:
     
     def test_03_create_test_delivery_driver(self, admin_token):
         """Create a test delivery driver and verify documents appear in admin panel"""
-        import random
-        unique_digits = ''.join([str(random.randint(0, 9)) for _ in range(6)])
+        import secrets
+        unique_digits = ''.join([str(secrets.randbelow(9 - 0 + 1) + 0) for _ in range(6)])
         unique_id = unique_digits
         # Syrian phone format: 09XXXXXXXX (10 digits)
         test_phone = f"0933{unique_digits}"
@@ -233,7 +233,7 @@ class TestAdminPanelWithTestData:
                         break
                 
                 if test_driver:
-                    print(f"✅ Test driver found in pending list")
+                    print("✅ Test driver found in pending list")
                     
                     # Verify document fields (critical for admin approval)
                     document_fields = {
@@ -262,7 +262,7 @@ class TestAdminPanelWithTestData:
                         if value:
                             print(f"  ✅ {arabic_name}: {value}")
                 else:
-                    print(f"⚠️ Test driver not found in pending list")
+                    print("⚠️ Test driver not found in pending list")
         else:
             print(f"⚠️ Driver registration: {response.status_code} - {response.text[:200]}")
     
@@ -276,7 +276,7 @@ class TestAdminPanelWithTestData:
         assert response.status_code == 200
         data = response.json()
         
-        print(f"\n=== Pending Sellers Structure Analysis ===")
+        print("\n=== Pending Sellers Structure Analysis ===")
         print(f"Total pending sellers: {len(data)}")
         
         if len(data) > 0:
@@ -303,7 +303,7 @@ class TestAdminPanelWithTestData:
         assert response.status_code == 200
         data = response.json()
         
-        print(f"\n=== Pending Drivers Structure Analysis ===")
+        print("\n=== Pending Drivers Structure Analysis ===")
         print(f"Total pending drivers: {len(data)}")
         
         if len(data) > 0:
@@ -331,7 +331,7 @@ class TestAdminPanelWithTestData:
         assert response.status_code == 200
         data = response.json()
         
-        print(f"\n=== Pending Products Structure Analysis ===")
+        print("\n=== Pending Products Structure Analysis ===")
         print(f"Total pending products: {len(data)}")
         
         if len(data) > 0:
@@ -343,7 +343,7 @@ class TestAdminPanelWithTestData:
                 has_video = bool(sample.get("admin_video"))
                 print(f"  {'✅' if has_video else '⚠️'} admin_video: {'Present' if has_video else 'Empty'}")
             else:
-                print(f"  ❌ admin_video: NOT IN RESPONSE - CRITICAL!")
+                print("  ❌ admin_video: NOT IN RESPONSE - CRITICAL!")
             
             # Check other fields
             other_fields = ["id", "name", "price", "seller_name", "images"]
@@ -359,7 +359,7 @@ class TestAdminPanelWithTestData:
         assert response.status_code == 200
         data = response.json()
         
-        print(f"\n=== Pending Food Items Structure Analysis ===")
+        print("\n=== Pending Food Items Structure Analysis ===")
         print(f"Total pending food items: {len(data)}")
         
         if len(data) > 0:
@@ -371,7 +371,7 @@ class TestAdminPanelWithTestData:
                 has_video = bool(sample.get("admin_video"))
                 print(f"  {'✅' if has_video else '⚠️'} admin_video: {'Present' if has_video else 'Empty'}")
             else:
-                print(f"  ⚠️ admin_video: NOT IN RESPONSE (may not be implemented for food items)")
+                print("  ⚠️ admin_video: NOT IN RESPONSE (may not be implemented for food items)")
             
             # Check other fields
             other_fields = ["id", "name", "price", "store_name", "store_type"]

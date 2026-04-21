@@ -88,7 +88,7 @@ class TestFlashPromotionSystem:
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
         data = response.json()
         assert "message" in data, "Missing message in response"
-        print(f"✓ Admin updated promotion settings successfully")
+        print("✓ Admin updated promotion settings successfully")
     
     def test_admin_get_all_promotions(self, admin_token):
         """Test admin can view all promotions"""
@@ -138,7 +138,7 @@ class TestFlashPromotionSystem:
         data = response.json()
         
         assert "cost_per_product" in data, "Missing cost_per_product"
-        print(f"✓ Food seller can view promotion settings")
+        print("✓ Food seller can view promotion settings")
     
     # ============== Seller My Promotions Tests ==============
     
@@ -167,7 +167,7 @@ class TestFlashPromotionSystem:
         
         assert "active" in data, "Missing active promotions"
         assert "expired" in data, "Missing expired promotions"
-        print(f"✓ Food seller can view their promotions")
+        print("✓ Food seller can view their promotions")
     
     # ============== Public Promoted Products Tests ==============
     

@@ -145,7 +145,7 @@ class TestWalletAPIStructure:
         
         # Should return 400 for invalid amount
         assert response.status_code == 400, f"Should reject amount below minimum: {response.text}"
-        print(f"✅ Topup validation works - rejected amount below minimum")
+        print("✅ Topup validation works - rejected amount below minimum")
     
     def test_topup_request_success(self, headers):
         """Test successful topup request"""
@@ -198,7 +198,7 @@ class TestWalletNoUserTypeRestriction:
         # Should NOT be 403 (forbidden)
         assert response.status_code != 403, "Wallet balance should not be restricted to buyers only"
         assert response.status_code == 200, f"Unexpected status: {response.status_code}"
-        print(f"✅ Wallet balance accessible - no user_type restriction")
+        print("✅ Wallet balance accessible - no user_type restriction")
     
     def test_topup_request_no_403_for_non_buyer(self, headers):
         """Topup request should NOT return 403 for non-buyer users"""
@@ -213,7 +213,7 @@ class TestWalletNoUserTypeRestriction:
         # Should NOT be 403 (forbidden)
         assert response.status_code != 403, "Topup request should not be restricted to buyers only"
         assert response.status_code == 200, f"Unexpected status: {response.status_code}"
-        print(f"✅ Topup request accessible - no user_type restriction")
+        print("✅ Topup request accessible - no user_type restriction")
     
     def test_topup_history_no_403_for_non_buyer(self, headers):
         """Topup history should NOT return 403 for non-buyer users"""
@@ -222,7 +222,7 @@ class TestWalletNoUserTypeRestriction:
         # Should NOT be 403 (forbidden)
         assert response.status_code != 403, "Topup history should not be restricted to buyers only"
         assert response.status_code == 200, f"Unexpected status: {response.status_code}"
-        print(f"✅ Topup history accessible - no user_type restriction")
+        print("✅ Topup history accessible - no user_type restriction")
 
 
 if __name__ == "__main__":

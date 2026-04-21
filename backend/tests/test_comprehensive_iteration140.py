@@ -312,7 +312,7 @@ class TestFlashSalesAPIs:
         response = requests.get(f"{BASE_URL}/api/products/flash-products")
         assert response.status_code == 200
         data = response.json()
-        print(f"✅ Flash products endpoint working")
+        print("✅ Flash products endpoint working")
 
 
 class TestNotificationsAndSettings:

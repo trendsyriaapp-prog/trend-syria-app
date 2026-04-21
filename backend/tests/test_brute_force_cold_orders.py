@@ -12,7 +12,7 @@ Tests:
 import pytest
 import requests
 import os
-import random
+import secrets
 
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://shopper-suite.preview.emergentagent.com').rstrip('/')
 
@@ -82,7 +82,7 @@ class TestBruteForceProtection:
     def test_no_immediate_lockout_after_few_attempts(self):
         """Test 4: System should NOT lock immediately after a few failed attempts (threshold=10)"""
         # Use a unique phone to avoid interference with other tests
-        test_phone = f"099{random.randint(1000000, 9999999)}"
+        test_phone = f"099{secrets.randbelow(9999999 - 1000000 + 1) + 1000000}"
         
         # Try 5 failed attempts - should NOT be locked (threshold is 10)
         failed_attempts = 0

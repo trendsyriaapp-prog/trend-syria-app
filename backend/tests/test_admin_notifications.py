@@ -51,7 +51,7 @@ class TestAdminNotifications:
     def test_admin_login_success(self, admin_token):
         """Test admin can login successfully"""
         assert admin_token is not None
-        print(f"✅ Admin login successful, token obtained")
+        print("✅ Admin login successful, token obtained")
     
     def test_get_admin_notifications_with_context(self, admin_headers):
         """Test GET /api/notifications?context=admin returns only admin notification types"""

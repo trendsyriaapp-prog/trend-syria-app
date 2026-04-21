@@ -179,7 +179,7 @@ const JoinAsDeliveryPage = () => {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {benefits.map((benefit, i) => (
               <motion.div
-                key={i}
+                key={step.number || i}
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: i * 0.05 }}
@@ -205,7 +205,7 @@ const JoinAsDeliveryPage = () => {
           <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
             {earnings.map((item, i) => (
               <div 
-                key={i}
+                key={step.number || i}
                 className={`flex items-center justify-between p-4 ${i < earnings.length - 1 ? 'border-b border-gray-100' : ''}`}
               >
                 <span className="text-sm text-gray-700">{item.label}</span>
@@ -225,7 +225,7 @@ const JoinAsDeliveryPage = () => {
           <div className="bg-white rounded-xl border border-gray-200 p-6">
             <div className="space-y-3">
               {requirements.map((req, i) => (
-                <div key={i} className="flex items-center gap-3">
+                <div key={step.number || i} className="flex items-center gap-3">
                   <req.icon size={20} className="text-green-500 flex-shrink-0" />
                   <span className="text-sm text-gray-700">{req.text}</span>
                 </div>
@@ -244,7 +244,7 @@ const JoinAsDeliveryPage = () => {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {steps.map((step, i) => (
               <motion.div
-                key={i}
+                key={step.number || i}
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: i * 0.1 }}
@@ -271,7 +271,7 @@ const JoinAsDeliveryPage = () => {
           </h2>
           <div className="space-y-4">
             {testimonials.map((t, i) => (
-              <div key={i} className="bg-white rounded-xl border border-gray-200 p-4">
+              <div key={step.number || i} className="bg-white rounded-xl border border-gray-200 p-4">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
                     <span className="text-green-600 font-bold">{t.name[0]}</span>
@@ -302,7 +302,7 @@ const JoinAsDeliveryPage = () => {
           <div className="space-y-3">
             {faqs.map((faq, i) => (
               <div
-                key={i}
+                key={step.number || i}
                 className="bg-white rounded-xl border border-gray-200 overflow-hidden"
               >
                 <button

@@ -9,18 +9,18 @@ Tests the complete seller workflow:
 
 import pytest
 import requests
-import random
+import secrets
 import os
 
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
-# Test credentials from context
-ADMIN_PHONE = "0911111111"
-ADMIN_PASSWORD = "Admin@123"
+# Test credentials from environment or defaults
+ADMIN_PHONE = os.environ.get('TEST_ADMIN_PHONE', "0911111111")
+ADMIN_PASSWORD = os.environ.get('TEST_ADMIN_PASSWORD', "Admin@123")
 
 # Generate random phone for new seller
 def generate_random_phone():
-    return f"09{random.randint(10000000, 99999999)}"
+    return f"09{secrets.randbelow(90000000) + 10000000}"
 
 
 class TestSellerScenario:

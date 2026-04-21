@@ -5,17 +5,17 @@ Tests all user types: buyer, seller, food_seller, delivery
 import pytest
 import requests
 import os
-import random
+import secrets
 
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://shopper-suite.preview.emergentagent.com').rstrip('/')
 
 def generate_phone():
     """Generate a unique Syrian phone number for testing"""
-    return f"09{random.randint(10000000, 99999999)}"
+    return f"09{secrets.randbelow(90000000) + 10000000}"
 
 def generate_password():
     """Generate a valid password"""
-    return f"Test@{random.randint(1000, 9999)}"
+    return f"Test@{secrets.randbelow(9000) + 1000}"
 
 class TestBuyerRegistration:
     """Test buyer (customer) registration flow"""

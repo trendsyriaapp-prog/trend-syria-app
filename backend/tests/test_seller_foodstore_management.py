@@ -136,7 +136,7 @@ class TestSellerManagement:
             json={"reason": "اختبار الإيقاف - Test suspension"}
         )
         assert suspend_response.status_code == 200, f"Suspend failed: {suspend_response.text}"
-        print(f"✅ Seller suspended successfully")
+        print("✅ Seller suspended successfully")
         
         # Verify suspension
         verify_response = requests.get(
@@ -147,7 +147,7 @@ class TestSellerManagement:
         suspended_seller = next((s for s in sellers_after_suspend if s["id"] == seller_id), None)
         assert suspended_seller is not None, "Seller not found after suspension"
         assert suspended_seller.get("is_suspended"), "Seller should be suspended"
-        print(f"✅ Verified seller is suspended")
+        print("✅ Verified seller is suspended")
         
         # Test activate
         activate_response = requests.post(
@@ -155,7 +155,7 @@ class TestSellerManagement:
             headers=self.headers
         )
         assert activate_response.status_code == 200, f"Activate failed: {activate_response.text}"
-        print(f"✅ Seller activated successfully")
+        print("✅ Seller activated successfully")
         
         # Verify activation
         verify_response2 = requests.get(
@@ -166,7 +166,7 @@ class TestSellerManagement:
         activated_seller = next((s for s in sellers_after_activate if s["id"] == seller_id), None)
         assert activated_seller is not None, "Seller not found after activation"
         assert not activated_seller.get("is_suspended"), "Seller should be active"
-        print(f"✅ Verified seller is active")
+        print("✅ Verified seller is active")
 
 
 class TestFoodStoreManagement:
@@ -264,7 +264,7 @@ class TestFoodStoreManagement:
             json={"reason": "اختبار الإيقاف - Test suspension"}
         )
         assert suspend_response.status_code == 200, f"Suspend failed: {suspend_response.text}"
-        print(f"✅ Food store suspended successfully")
+        print("✅ Food store suspended successfully")
         
         # Verify suspension
         verify_response = requests.get(
@@ -275,7 +275,7 @@ class TestFoodStoreManagement:
         suspended_store = next((s for s in stores_after_suspend if s["id"] == store_id), None)
         assert suspended_store is not None, "Store not found after suspension"
         assert suspended_store.get("is_suspended"), "Store should be suspended"
-        print(f"✅ Verified food store is suspended")
+        print("✅ Verified food store is suspended")
         
         # Test activate
         activate_response = requests.post(
@@ -283,7 +283,7 @@ class TestFoodStoreManagement:
             headers=self.headers
         )
         assert activate_response.status_code == 200, f"Activate failed: {activate_response.text}"
-        print(f"✅ Food store activated successfully")
+        print("✅ Food store activated successfully")
         
         # Verify activation
         verify_response2 = requests.get(
@@ -294,7 +294,7 @@ class TestFoodStoreManagement:
         activated_store = next((s for s in stores_after_activate if s["id"] == store_id), None)
         assert activated_store is not None, "Store not found after activation"
         assert not activated_store.get("is_suspended"), "Store should be active"
-        print(f"✅ Verified food store is active")
+        print("✅ Verified food store is active")
 
 
 class TestSelfAccountDeletion:

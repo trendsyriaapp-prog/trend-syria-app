@@ -35,7 +35,7 @@ const iconMap = {
 const ProductSkeleton = ({ count = 4 }) => (
   <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2" style={{ minHeight: '200px' }}>
     {[...Array(count)].map((_, i) => (
-      <div key={i} className="flex-shrink-0 w-36 animate-pulse">
+      <div key={`skeleton-${i}`} className="flex-shrink-0 w-36 animate-pulse">
         <div className="bg-white rounded-xl overflow-hidden border-2 border-gray-100">
           <div className="aspect-square bg-gray-200" />
           <div className="p-2 space-y-2">

@@ -32,7 +32,7 @@ class TestDriverSecurityAPIs:
         })
         if admin_res.status_code == 200:
             cls.admin_token = admin_res.json().get("token")
-            print(f"✅ Admin login successful")
+            print("✅ Admin login successful")
         else:
             print(f"❌ Admin login failed: {admin_res.status_code} - {admin_res.text}")
         
