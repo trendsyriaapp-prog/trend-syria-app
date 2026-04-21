@@ -3,6 +3,7 @@ name: Deploy to VPS
 on:
   push:
     branches: [main]
+  workflow_dispatch:
 
 jobs:
   deploy:
@@ -13,31 +14,40 @@ jobs:
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
-          password: ${{ secrets.VPS_PASSWORD }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: 2222
           command_timeout: 15m
           script: |
+            echo "🚀 بدء عملية النشر..."
+            
             cd ~/trend-syria-app
             
             # سحب أحدث الكود
+            echo "📥 سحب الكود الجديد..."
             git fetch origin main
             git reset --hard origin/main
             
             # تحديث Frontend
+            echo "⚛️ تحديث Frontend..."
             cd frontend
-            npm install --legacy-peer-deps 2>/dev/null || true
-            npm run build || echo "Frontend build completed"
+            yarn install --frozen-lockfile --silent 2>/dev/null || npm install --legacy-peer-deps 2>/dev/null || true
+            yarn build || npm run build || echo "Frontend build completed"
             
             # تحديث Backend
+            echo "🐍 تحديث Backend..."
             cd ../backend
             source venv/bin/activate
             pip install -r requirements.txt -q 2>/dev/null || true
             
-            # إعادة تشغيل الخدمة باستخدام systemd
-            if systemctl is-active --quiet trendsyria; then
-              systemctl restart trendsyria
+            # إعادة تشغيل الخدمة
+            echo "🔄 إعادة تشغيل الخدمات..."
+            if command -v supervisorctl &> /dev/null; then
+              sudo supervisorctl restart backend 2>/dev/null || true
+              echo "✅ Backend restarted via supervisor"
+            elif systemctl is-active --quiet trendsyria; then
+              sudo systemctl restart trendsyria
               echo "✅ Service restarted via systemd"
             else
-              # تشغيل يدوي إذا لم تكن الخدمة مُعدة
               pkill -9 -f "uvicorn server:app" 2>/dev/null || true
               sleep 2
               cd ~/trend-syria-app/backend
@@ -46,5 +56,8 @@ jobs:
               echo "✅ Service started manually"
             fi
             
+            # إعادة تحميل Nginx
+            sudo systemctl reload nginx 2>/dev/null || sudo nginx -s reload 2>/dev/null || true
+            
             sleep 3
-            echo "✅ Deployed successfully!"
+            echo "🎉 تم النشر بنجاح!"
