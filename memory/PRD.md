@@ -137,7 +137,14 @@
 - Super Admin: `0945570365` / Password: `TrendSyria@2026`
 - Test Seller: `0945570399` / Password: `Test@123456`
 - OTP Test Code: `123456`
-- VPS SSH: `ssh -p 2222 root@130.94.57.227`
+
+## VPS Info
+- **مزود الخدمة**: LightNode (https://console.lightnode.com/)
+- **IP**: `130.94.57.227`
+- **Port**: `2222`
+- **User**: `root`
+- **الموقع**: الرياض، السعودية
+- **SSH Command**: `ssh -p 2222 root@130.94.57.227`
 
 ## 3rd Party Integrations
 - Firebase Admin (Push Notifications)
