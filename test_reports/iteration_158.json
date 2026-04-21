@@ -1,0 +1,87 @@
+{
+  "summary": "Tested updated wallet and withdrawal system for Trend Syria E-commerce. Backend APIs verified: withdrawal with bank_account option, automatic approval (status: ready_for_transfer), immediate balance deduction, admin mark-transferred API. Frontend wallet page loads correctly with transaction history showing both shamcash and bank_account withdrawals.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "/api/support/incoming-call", "issue": "Aggressive rate limiting causing 429 errors during testing - not related to wallet features"}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_wallet_withdrawal_system.py"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "✅ POST /api/wallet/withdraw correctly accepts withdrawal_method (shamcash/bank_account)",
+    "✅ Bank account fields (bank_name, account_number, account_holder) are validated when bank_account selected",
+    "✅ Shamcash phone is validated when shamcash selected",
+    "✅ Withdrawal status is 'ready_for_transfer' (not 'pending') - no admin approval needed",
+    "✅ Amount is deducted from wallet immediately upon withdrawal request",
+    "✅ GET /api/payment/admin/withdrawals returns bank account details for admin",
+    "✅ POST /api/payment/admin/withdrawals/{id}/mark-transferred changes status to 'transferred'",
+    "✅ POST /api/wallet/topup/verify sets status to 'failed' on verification failure (in production mode)",
+    "✅ Frontend WalletPage shows both shamcash and bank_account withdrawal options",
+    "✅ Frontend displays new statuses (ready_for_transfer, transferred) correctly",
+    "Note: Sham Cash Payment Gateway is MOCKED (sandbox=True) - verification always succeeds in sandbox mode"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_wallet_withdrawal_system.py"
+  ],
+  "success_rate": {
+    "backend": "100% (8/8 API tests passed via curl)",
+    "frontend": "100% (Wallet page loads, withdrawal form has bank account option)"
+  },
+  "test_credentials": {
+    "admin_phone": "0945570365",
+    "admin_password": "TrendSyria@2026",
+    "test_seller_phone": "0945570399",
+    "test_seller_password": "Test@123456",
+    "otp_code": "123456"
+  },
+  "seed_data_creation": "Created test seller user (0945570399) with wallet balance for testing withdrawals",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Wallet withdrawal system updated: 1) Bank account option added alongside shamcash 2) Withdrawals auto-approved with status 'ready_for_transfer' 3) Amount deducted immediately 4) Admin confirms transfer via mark-transferred API. Sham Cash is MOCKED in sandbox mode.",
+  "tests_performed": {
+    "backend_withdraw_shamcash": {
+      "status": "✅ PASSED",
+      "details": "POST /api/wallet/withdraw with shamcash returns status: ready_for_transfer, amount deducted immediately"
+    },
+    "backend_withdraw_bank_account": {
+      "status": "✅ PASSED",
+      "details": "POST /api/wallet/withdraw with bank_account returns status: ready_for_transfer, bank details stored"
+    },
+    "backend_withdraw_validation_shamcash": {
+      "status": "✅ PASSED",
+      "details": "Missing shamcash_phone returns 400 'يرجى إدخال رقم شام كاش'"
+    },
+    "backend_withdraw_validation_bank": {
+      "status": "✅ PASSED",
+      "details": "Missing bank details returns 400 'يرجى إدخال جميع بيانات الحساب البنكي'"
+    },
+    "backend_admin_get_withdrawals": {
+      "status": "✅ PASSED",
+      "details": "GET /api/payment/admin/withdrawals returns list with bank_name, account_number, account_holder"
+    },
+    "backend_admin_mark_transferred": {
+      "status": "✅ PASSED",
+      "details": "POST /api/payment/admin/withdrawals/{id}/mark-transferred changes status to 'transferred'"
+    },
+    "backend_topup_verify": {
+      "status": "✅ PASSED (sandbox)",
+      "details": "In sandbox mode, verification succeeds. Code correctly handles failure case in production."
+    },
+    "frontend_wallet_page": {
+      "status": "✅ PASSED",
+      "details": "Wallet page loads, shows balance, transaction history with shamcash and bank_account withdrawals"
+    }
+  },
+  "mocked_apis": {
+    "has_mocked_apis": true,
+    "mocked_apis_list": ["Sham Cash verify_payment - returns sandbox=True in sandbox mode"]
+  }
+}

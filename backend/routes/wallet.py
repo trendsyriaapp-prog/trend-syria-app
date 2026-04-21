@@ -107,15 +107,25 @@ async def clear_wallet_transactions(user: dict = Depends(get_current_user)):
 
 class TopUpRequest(BaseModel):
     amount: int
-    shamcash_phone: Optional[str] = None  # اختياري الآن
-    payment_method: Optional[str] = "shamcash"  # شام كاش، سيرياتيل، MTN
+    payment_method: Optional[str] = "shamcash"  # shamcash, bank_account
+    # حقول شام كاش
+    shamcash_phone: Optional[str] = None
+    # حقول الحساب البنكي (لتحويل من حساب المستخدم)
+    bank_name: Optional[str] = None
+    sender_name: Optional[str] = None
 
 @router.post("/topup/request")
 async def request_topup(
     data: TopUpRequest,
     user: dict = Depends(get_current_user)
 ):
-    """طلب شحن رصيد المحفظة - متاح لجميع المستخدمين"""
+    """
+    طلب شحن رصيد المحفظة - متاح لجميع المستخدمين
+    
+    ✅ النظام الجديد:
+    - إذا فشل التحقق التلقائي، يفشل الطلب مباشرة (لا يُرسل للأدمن)
+    - يدعم الشحن عبر شام كاش أو حساب بنكي
+    """
     
     # التحقق من الحد الأدنى فقط
     MIN_TOPUP = 100       # 100 ل.س جديدة (الحد الأدنى)
@@ -135,19 +145,20 @@ async def request_topup(
         "user_phone": user.get("phone", ""),
         "amount": data.amount,
         "payment_method": data.payment_method or "shamcash",
+        # بيانات شام كاش
         "shamcash_phone": data.shamcash_phone,
-        "status": "pending",  # pending, approved, rejected, cancelled
+        # بيانات الحساب البنكي
+        "bank_name": data.bank_name,
+        "sender_name": data.sender_name,
+        "status": "pending",  # pending, approved, failed, cancelled
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     
     await db.topup_requests.insert_one(topup_request)
     
-    # ملاحظة: لا نرسل إشعار للمدير لأن النظام يتحقق تلقائياً من التحويل
-    # المدير يمكنه مراجعة الطلبات المعلقة من لوحة التحكم إذا لزم الأمر
-    
     return {
         "success": True,
-        "message": "تم إرسال طلب الشحن. سيتم مراجعته وإضافة الرصيد خلال دقائق.",
+        "message": "تم إنشاء طلب الشحن. قم بالتحويل ثم أدخل رقم العملية للتحقق.",
         "topup_id": topup_id,
         "topup_code": topup_code,
         "amount": data.amount,
@@ -202,7 +213,9 @@ async def verify_topup_payment(
     """
     التحقق من تحويل شحن المحفظة برقم العملية
     
-    يقوم بالتحقق من التحويل عبر API Syria وإضافة الرصيد تلقائياً
+    ✅ النظام الجديد:
+    - إذا نجح التحقق: يُضاف الرصيد فوراً
+    - إذا فشل التحقق: يفشل الطلب مباشرة (لا يُرسل للأدمن للموافقة اليدوية)
     """
     
     # جلب طلب الشحن
@@ -214,8 +227,11 @@ async def verify_topup_payment(
     if not topup:
         raise HTTPException(status_code=404, detail="طلب الشحن غير موجود")
     
-    if topup["status"] != "pending":
-        raise HTTPException(status_code=400, detail="تم معالجة هذا الطلب مسبقاً")
+    if topup["status"] == "approved":
+        raise HTTPException(status_code=400, detail="تم شحن هذا الطلب مسبقاً")
+    
+    if topup["status"] == "failed":
+        raise HTTPException(status_code=400, detail="فشل هذا الطلب - أنشئ طلباً جديداً")
     
     # التحقق من أن رقم العملية لم يُستخدم من قبل
     existing_tx = await db.topup_requests.find_one({
@@ -226,6 +242,10 @@ async def verify_topup_payment(
         raise HTTPException(status_code=400, detail="رقم العملية مستخدم مسبقاً")
     
     # التحقق عبر مزود الدفع
+    verification_failed = False
+    failure_reason = ""
+    is_sandbox = True
+    
     if PAYMENT_PROVIDERS_AVAILABLE:
         try:
             result = await payment_manager.verify_payment(
@@ -236,23 +256,34 @@ async def verify_topup_payment(
             )
             
             if not result.get("verified"):
-                return {
-                    "success": False,
-                    "message": result.get("error", "فشل التحقق من العملية"),
-                    "code": result.get("code")
-                }
-            
-            is_sandbox = result.get("sandbox", False)
+                verification_failed = True
+                failure_reason = result.get("error", "فشل التحقق من العملية")
+            else:
+                is_sandbox = result.get("sandbox", False)
             
         except PaymentProviderError as e:
-            return {
-                "success": False,
-                "message": e.message,
-                "code": e.code
+            verification_failed = True
+            failure_reason = e.message
+    
+    # إذا فشل التحقق - نُفشل الطلب مباشرة (بدون إرسال للأدمن)
+    if verification_failed:
+        await db.topup_requests.update_one(
+            {"id": data.topup_id},
+            {
+                "$set": {
+                    "status": "failed",
+                    "failed_at": datetime.now(timezone.utc).isoformat(),
+                    "failure_reason": failure_reason,
+                    "attempted_transaction_id": data.transaction_id
+                }
             }
-    else:
-        # إذا لم تكن مزودات الدفع متاحة، نعتبره تجريبي
-        is_sandbox = True
+        )
+        
+        return {
+            "success": False,
+            "message": failure_reason or "فشل التحقق من التحويل. تأكد من رقم العملية والمبلغ.",
+            "status": "failed"
+        }
     
     # نجح التحقق - إضافة الرصيد للمحفظة
     wallet = await db.wallets.find_one({"user_id": user["id"]})
@@ -456,19 +487,40 @@ async def reject_topup(
 
 class WithdrawRequest(BaseModel):
     amount: int
-    shamcash_phone: str
+    # طريقة السحب
+    withdrawal_method: str = "shamcash"  # shamcash, bank_account
+    # حقول شام كاش
+    shamcash_phone: Optional[str] = None
+    # حقول الحساب البنكي
+    bank_name: Optional[str] = None
+    account_number: Optional[str] = None
+    account_holder: Optional[str] = None
 
 @router.post("/withdraw")
 async def request_withdrawal(
     data: WithdrawRequest,
     user: dict = Depends(get_current_user)
 ):
-    """طلب سحب رصيد"""
-    amount = data.amount
-    shamcash_phone = data.shamcash_phone
+    """
+    طلب سحب رصيد - بدون موافقة الأدمن
     
-    if user["user_type"] not in ["seller", "delivery"]:
+    ✅ النظام الجديد:
+    - الأرباح تصبح متاحة للسحب تلقائياً بعد 24 ساعة من التسليم
+    - لا حاجة لموافقة الأدمن على السحب
+    - الأدمن يرى الطلبات ويقوم بالتحويل الفعلي فقط
+    """
+    amount = data.amount
+    
+    if user["user_type"] not in ["seller", "food_seller", "delivery"]:
         raise HTTPException(status_code=403, detail="للبائعين وموظفي التوصيل فقط")
+    
+    # التحقق من طريقة السحب والبيانات المطلوبة
+    if data.withdrawal_method == "bank_account":
+        if not data.bank_name or not data.account_number or not data.account_holder:
+            raise HTTPException(status_code=400, detail="يرجى إدخال جميع بيانات الحساب البنكي")
+    else:  # shamcash
+        if not data.shamcash_phone:
+            raise HTTPException(status_code=400, detail="يرجى إدخال رقم شام كاش")
     
     # Get wallet
     wallet = await db.wallets.find_one({"user_id": user["id"]})
@@ -480,7 +532,7 @@ async def request_withdrawal(
     min_withdrawal = 50000  # Default
     
     if settings:
-        if user["user_type"] == "seller":
+        if user["user_type"] in ["seller", "food_seller"]:
             min_withdrawal = settings.get("min_seller_withdrawal", 50000)
         else:
             min_withdrawal = settings.get("min_delivery_withdrawal", 25000)
@@ -492,14 +544,15 @@ async def request_withdrawal(
             detail=f"الحد الأدنى للسحب هو {min_withdrawal:,} ل.س"
         )
     
-    # Check pending withdrawals
+    # التحقق من الرصيد المتاح (الرصيد - الطلبات المعلقة)
     pending = await db.withdrawal_requests.find({
         "user_id": user["id"],
-        "status": "pending"
+        "status": {"$in": ["pending", "processing"]}
     }).to_list(10)
     pending_amount = sum(w.get("amount", 0) for w in pending)
     
-    available = wallet["balance"] - pending_amount
+    # الرصيد المتاح = الرصيد الكلي - المعلقات
+    available = wallet.get("balance", 0) - pending_amount
     
     if amount > available:
         raise HTTPException(
@@ -507,8 +560,10 @@ async def request_withdrawal(
             detail=f"الرصيد المتاح للسحب هو {available:,} ل.س"
         )
     
-    # Create withdrawal request
+    # إنشاء طلب السحب
     withdrawal_id = str(uuid.uuid4())
+    now = datetime.now(timezone.utc)
+    
     withdrawal = {
         "id": withdrawal_id,
         "user_id": user["id"],
@@ -516,37 +571,79 @@ async def request_withdrawal(
         "user_type": user["user_type"],
         "user_phone": user.get("phone", ""),
         "amount": amount,
-        "shamcash_phone": shamcash_phone,
-        "status": "pending",
-        "created_at": datetime.now(timezone.utc).isoformat()
+        # طريقة السحب
+        "withdrawal_method": data.withdrawal_method,
+        # بيانات شام كاش
+        "shamcash_phone": data.shamcash_phone,
+        # بيانات الحساب البنكي
+        "bank_name": data.bank_name,
+        "account_number": data.account_number,
+        "account_holder": data.account_holder,
+        # الحالة: ready_for_transfer = جاهز للتحويل (بدون موافقة)
+        "status": "ready_for_transfer",
+        "created_at": now.isoformat(),
+        "auto_approved": True  # تم الموافقة تلقائياً
     }
     await db.withdrawal_requests.insert_one(withdrawal)
     
-    # إرسال إشعار Push للمدراء
+    # خصم المبلغ من المحفظة مباشرة (لأن الطلب موافق عليه تلقائياً)
+    await db.wallets.update_one(
+        {"user_id": user["id"]},
+        {
+            "$inc": {
+                "balance": -amount,
+                "total_withdrawn": amount
+            }
+        }
+    )
+    
+    # تسجيل المعاملة
+    await db.wallet_transactions.insert_one({
+        "id": str(uuid.uuid4()),
+        "user_id": user["id"],
+        "type": "withdrawal",
+        "amount": -amount,
+        "description": f"طلب سحب - {data.withdrawal_method}",
+        "withdrawal_id": withdrawal_id,
+        "created_at": now.isoformat()
+    })
+    
+    # إرسال إشعار Push للمدراء (إعلام فقط - ليس طلب موافقة)
     try:
         from core.firebase_admin import send_push_to_admins
         user_name = user.get("full_name", user.get("name", "مستخدم"))
+        method_name = "شام كاش" if data.withdrawal_method == "shamcash" else "حساب بنكي"
         await send_push_to_admins(
-            title="💰 طلب سحب جديد",
-            body=f"طلب سحب {amount:,} ل.س من '{user_name}'",
-            notification_type="withdrawal_request",
+            title="💳 طلب سحب جاهز للتحويل",
+            body=f"'{user_name}' يريد سحب {amount:,} ل.س عبر {method_name}",
+            notification_type="withdrawal_ready",
             data={"withdrawal_id": withdrawal_id, "amount": str(amount), "user_name": user_name}
         )
     except Exception as e:
         import logging
         logging.warning(f"Failed to send admin notification for withdrawal request: {e}")
     
+    # إشعار المستخدم
+    await create_notification_for_user(
+        user_id=user["id"],
+        title="✅ تم قبول طلب السحب",
+        message=f"طلب سحب {amount:,} ل.س جاهز للتحويل. سيتم التحويل خلال 24 ساعة.",
+        notification_type="withdrawal_approved"
+    )
+    
     return {
-        "message": "تم إرسال طلب السحب بنجاح",
+        "success": True,
+        "message": "تم قبول طلب السحب وسيتم التحويل خلال 24 ساعة",
         "withdrawal_id": withdrawal_id,
         "amount": amount,
-        "status": "pending"
+        "status": "ready_for_transfer",
+        "withdrawal_method": data.withdrawal_method
     }
 
 @router.get("/withdrawals")
 async def get_withdrawal_history(user: dict = Depends(get_current_user)):
     """سجل طلبات السحب"""
-    if user["user_type"] not in ["seller", "delivery"]:
+    if user["user_type"] not in ["seller", "food_seller", "delivery"]:
         raise HTTPException(status_code=403, detail="للبائعين وموظفي التوصيل فقط")
     
     withdrawals = await db.withdrawal_requests.find(
@@ -558,7 +655,7 @@ async def get_withdrawal_history(user: dict = Depends(get_current_user)):
 
 @router.delete("/withdrawals/{withdrawal_id}")
 async def cancel_withdrawal(withdrawal_id: str, user: dict = Depends(get_current_user)):
-    """إلغاء طلب سحب معلق"""
+    """إلغاء طلب سحب - فقط إذا لم يتم التحويل بعد"""
     withdrawal = await db.withdrawal_requests.find_one({
         "id": withdrawal_id,
         "user_id": user["id"]
@@ -567,15 +664,41 @@ async def cancel_withdrawal(withdrawal_id: str, user: dict = Depends(get_current
     if not withdrawal:
         raise HTTPException(status_code=404, detail="طلب السحب غير موجود")
     
-    if withdrawal["status"] != "pending":
-        raise HTTPException(status_code=400, detail="لا يمكن إلغاء هذا الطلب")
+    # يمكن إلغاء الطلبات الجاهزة للتحويل فقط (لم يتم تحويلها بعد)
+    if withdrawal["status"] not in ["ready_for_transfer", "pending"]:
+        raise HTTPException(status_code=400, detail="لا يمكن إلغاء هذا الطلب - تم التحويل أو الإلغاء مسبقاً")
     
-    await db.withdrawal_requests.update_one(
-        {"id": withdrawal_id},
-        {"$set": {"status": "cancelled", "cancelled_at": datetime.now(timezone.utc).isoformat()}}
+    now = datetime.now(timezone.utc)
+    
+    # إرجاع المبلغ للمحفظة
+    await db.wallets.update_one(
+        {"user_id": user["id"]},
+        {
+            "$inc": {
+                "balance": withdrawal["amount"],
+                "total_withdrawn": -withdrawal["amount"]
+            }
+        }
     )
     
-    return {"message": "تم إلغاء طلب السحب"}
+    # تحديث حالة الطلب
+    await db.withdrawal_requests.update_one(
+        {"id": withdrawal_id},
+        {"$set": {"status": "cancelled", "cancelled_at": now.isoformat()}}
+    )
+    
+    # تسجيل معاملة الإرجاع
+    await db.wallet_transactions.insert_one({
+        "id": str(uuid.uuid4()),
+        "user_id": user["id"],
+        "type": "withdrawal_cancelled",
+        "amount": withdrawal["amount"],
+        "description": "إلغاء طلب سحب - تم إرجاع المبلغ",
+        "withdrawal_id": withdrawal_id,
+        "created_at": now.isoformat()
+    })
+    
+    return {"message": "تم إلغاء طلب السحب وإرجاع المبلغ لمحفظتك"}
 
 # ============== Helper Functions (للاستخدام الداخلي) ==============
 

@@ -524,7 +524,14 @@ async def get_all_withdrawals(
     status: str = Query(default=None),
     user: dict = Depends(get_current_user)
 ):
-    """جميع طلبات السحب (للمدير)"""
+    """
+    جميع طلبات السحب (للمدير)
+    
+    ✅ النظام الجديد:
+    - الطلبات تأتي بحالة "ready_for_transfer" (جاهز للتحويل)
+    - الأدمن يقوم بالتحويل الفعلي ثم يضغط "تم التحويل"
+    - لا توجد موافقة مسبقة - الطلب يُقبل تلقائياً
+    """
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
     
@@ -539,9 +546,16 @@ async def get_all_withdrawals(
     
     return withdrawals
 
-@router.post("/admin/withdrawals/{withdrawal_id}/approve")
-async def approve_withdrawal(withdrawal_id: str, user: dict = Depends(get_current_user)):
-    """الموافقة على طلب سحب"""
+@router.post("/admin/withdrawals/{withdrawal_id}/mark-transferred")
+async def mark_withdrawal_transferred(withdrawal_id: str, user: dict = Depends(get_current_user)):
+    """
+    تأكيد أن التحويل تم فعلياً (للأدمن)
+    
+    ✅ النظام الجديد:
+    - الأدمن يفتح تطبيق البنك/شام كاش ويحول المبلغ
+    - ثم يضغط هذا الزر لتأكيد أن التحويل تم
+    - المبلغ مخصوم مسبقاً من محفظة المستخدم
+    """
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
     
@@ -549,48 +563,105 @@ async def approve_withdrawal(withdrawal_id: str, user: dict = Depends(get_curren
     if not withdrawal:
         raise HTTPException(status_code=404, detail="طلب السحب غير موجود")
     
-    if withdrawal["status"] != "pending":
-        raise HTTPException(status_code=400, detail="لا يمكن معالجة هذا الطلب")
+    if withdrawal["status"] != "ready_for_transfer":
+        raise HTTPException(status_code=400, detail="هذا الطلب ليس جاهزاً للتحويل")
     
-    # Deduct from wallet
-    await db.wallets.update_one(
-        {"user_id": withdrawal["user_id"]},
-        {
-            "$inc": {
-                "balance": -withdrawal["amount"],
-                "total_withdrawn": withdrawal["amount"]
-            }
-        }
-    )
+    now = datetime.now(timezone.utc)
     
-    # Update withdrawal status
+    # تحديث حالة الطلب إلى "مكتمل"
     await db.withdrawal_requests.update_one(
         {"id": withdrawal_id},
         {
             "$set": {
-                "status": "approved",
-                "approved_by": user["id"],
-                "approved_at": datetime.now(timezone.utc).isoformat()
+                "status": "transferred",
+                "transferred_by": user["id"],
+                "transferred_at": now.isoformat()
             }
         }
     )
     
-    # Create transaction record
-    await db.wallet_transactions.insert_one({
-        "id": str(uuid.uuid4()),
-        "user_id": withdrawal["user_id"],
-        "type": "withdrawal",
-        "amount": -withdrawal["amount"],
-        "description": f"سحب إلى شام كاش {withdrawal['shamcash_phone']}",
-        "withdrawal_id": withdrawal_id,
-        "created_at": datetime.now(timezone.utc).isoformat()
-    })
+    # إشعار المستخدم
+    method = withdrawal.get("withdrawal_method", "shamcash")
+    method_name = "حساب بنكي" if method == "bank_account" else "شام كاش"
     
-    # Notify user
     await create_notification_for_user(
         user_id=withdrawal["user_id"],
-        title="تم تحويل الرصيد!",
-        message=f"تم تحويل {withdrawal['amount']:,.0f} ل.س إلى محفظة شام كاش",
+        title="✅ تم تحويل مبلغك!",
+        message=f"تم تحويل {withdrawal['amount']:,.0f} ل.س إلى {method_name}",
+        notification_type="withdrawal_transferred"
+    )
+    
+    return {"message": "تم تأكيد التحويل بنجاح"}
+
+
+@router.post("/admin/withdrawals/{withdrawal_id}/approve")
+async def approve_withdrawal(withdrawal_id: str, user: dict = Depends(get_current_user)):
+    """
+    [للتوافق الخلفي] الموافقة على طلب سحب قديم (pending)
+    
+    ⚠️ هذا الـ API للطلبات القديمة فقط. الطلبات الجديدة تأتي بحالة ready_for_transfer
+    """
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    withdrawal = await db.withdrawal_requests.find_one({"id": withdrawal_id})
+    if not withdrawal:
+        raise HTTPException(status_code=404, detail="طلب السحب غير موجود")
+    
+    # دعم الطلبات القديمة (pending) والجديدة (ready_for_transfer)
+    if withdrawal["status"] not in ["pending", "ready_for_transfer"]:
+        raise HTTPException(status_code=400, detail="لا يمكن معالجة هذا الطلب")
+    
+    now = datetime.now(timezone.utc)
+    
+    # إذا كان الطلب قديماً (pending) - نخصم من المحفظة
+    if withdrawal["status"] == "pending":
+        await db.wallets.update_one(
+            {"user_id": withdrawal["user_id"]},
+            {
+                "$inc": {
+                    "balance": -withdrawal["amount"],
+                    "total_withdrawn": withdrawal["amount"]
+                }
+            }
+        )
+        
+        # تسجيل المعاملة
+        method = withdrawal.get("withdrawal_method", "shamcash")
+        method_details = withdrawal.get("shamcash_phone", "") if method == "shamcash" else withdrawal.get("bank_name", "")
+        
+        await db.wallet_transactions.insert_one({
+            "id": str(uuid.uuid4()),
+            "user_id": withdrawal["user_id"],
+            "type": "withdrawal",
+            "amount": -withdrawal["amount"],
+            "description": f"سحب إلى {method_details}",
+            "withdrawal_id": withdrawal_id,
+            "created_at": now.isoformat()
+        })
+    
+    # تحديث حالة الطلب
+    await db.withdrawal_requests.update_one(
+        {"id": withdrawal_id},
+        {
+            "$set": {
+                "status": "transferred",
+                "approved_by": user["id"],
+                "approved_at": now.isoformat(),
+                "transferred_by": user["id"],
+                "transferred_at": now.isoformat()
+            }
+        }
+    )
+    
+    # إشعار المستخدم
+    method = withdrawal.get("withdrawal_method", "shamcash")
+    method_name = "حساب بنكي" if method == "bank_account" else "شام كاش"
+    
+    await create_notification_for_user(
+        user_id=withdrawal["user_id"],
+        title="✅ تم تحويل مبلغك!",
+        message=f"تم تحويل {withdrawal['amount']:,.0f} ل.س إلى {method_name}",
         notification_type="wallet"
     )
     
@@ -602,7 +673,11 @@ async def reject_withdrawal(
     reason: str = Query(default=""),
     user: dict = Depends(get_current_user)
 ):
-    """رفض طلب سحب"""
+    """
+    رفض/إلغاء طلب سحب - يُرجع المبلغ للمحفظة
+    
+    ⚠️ يستخدم فقط في حالات استثنائية (مثل: بيانات خاطئة)
+    """
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
     
@@ -610,9 +685,35 @@ async def reject_withdrawal(
     if not withdrawal:
         raise HTTPException(status_code=404, detail="طلب السحب غير موجود")
     
-    if withdrawal["status"] != "pending":
+    if withdrawal["status"] not in ["pending", "ready_for_transfer"]:
         raise HTTPException(status_code=400, detail="لا يمكن معالجة هذا الطلب")
     
+    now = datetime.now(timezone.utc)
+    
+    # إرجاع المبلغ للمحفظة (لأنه مخصوم مسبقاً في النظام الجديد)
+    if withdrawal["status"] == "ready_for_transfer":
+        await db.wallets.update_one(
+            {"user_id": withdrawal["user_id"]},
+            {
+                "$inc": {
+                    "balance": withdrawal["amount"],
+                    "total_withdrawn": -withdrawal["amount"]
+                }
+            }
+        )
+        
+        # تسجيل معاملة الإرجاع
+        await db.wallet_transactions.insert_one({
+            "id": str(uuid.uuid4()),
+            "user_id": withdrawal["user_id"],
+            "type": "withdrawal_rejected",
+            "amount": withdrawal["amount"],
+            "description": f"إلغاء طلب سحب - {reason or 'بيانات غير صحيحة'}",
+            "withdrawal_id": withdrawal_id,
+            "created_at": now.isoformat()
+        })
+    
+    # تحديث حالة الطلب
     await db.withdrawal_requests.update_one(
         {"id": withdrawal_id},
         {
@@ -620,17 +721,17 @@ async def reject_withdrawal(
                 "status": "rejected",
                 "rejection_reason": reason,
                 "rejected_by": user["id"],
-                "rejected_at": datetime.now(timezone.utc).isoformat()
+                "rejected_at": now.isoformat()
             }
         }
     )
     
-    # Notify user
+    # إشعار المستخدم
     await create_notification_for_user(
         user_id=withdrawal["user_id"],
-        title="تم رفض طلب السحب",
-        message=f"تم رفض طلب السحب. السبب: {reason or 'غير محدد'}",
+        title="⚠️ تم إلغاء طلب السحب",
+        message=f"تم إرجاع {withdrawal['amount']:,.0f} ل.س لمحفظتك. السبب: {reason or 'بيانات غير صحيحة'}",
         notification_type="wallet"
     )
     
-    return {"message": "تم رفض طلب السحب"}
+    return {"message": "تم رفض طلب السحب وإرجاع المبلغ للمحفظة"}

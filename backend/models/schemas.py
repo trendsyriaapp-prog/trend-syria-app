@@ -221,7 +221,24 @@ class PaymentMethodCreate(BaseModel):
 
 class WithdrawalRequest(BaseModel):
     amount: int
-    shamcash_phone: str
+    withdrawal_method: str = "shamcash"  # shamcash, bank_account
+    # حقول شام كاش
+    shamcash_phone: Optional[str] = None
+    # حقول الحساب البنكي
+    bank_name: Optional[str] = None
+    account_number: Optional[str] = None
+    account_holder: Optional[str] = None
+
+
+class TopUpRequestModel(BaseModel):
+    amount: int
+    payment_method: str = "shamcash"  # shamcash, bank_account
+    # حقول شام كاش
+    shamcash_phone: Optional[str] = None
+    # حقول الحساب البنكي (للتحويل البنكي)
+    bank_name: Optional[str] = None
+    account_number: Optional[str] = None
+    sender_name: Optional[str] = None
 
 class DeliveryFeesUpdate(BaseModel):
     same_city: int = 3000

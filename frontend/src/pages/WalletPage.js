@@ -97,25 +97,26 @@ const WalletPage = () => {
     setSubmitting(true);
     
     try {
-      const params = {
+      // إنشاء بيانات الطلب
+      const requestData = {
         amount: parseInt(withdrawAmount),
-        method: withdrawMethod,
+        withdrawal_method: withdrawMethod,
       };
       
       // إضافة البيانات حسب طريقة السحب
       if (withdrawMethod === 'bank_account') {
-        params.bank_name = bankDetails.bank_name;
-        params.account_number = bankDetails.account_number;
-        params.account_holder = bankDetails.account_holder;
+        requestData.bank_name = bankDetails.bank_name;
+        requestData.account_number = bankDetails.account_number;
+        requestData.account_holder = bankDetails.account_holder;
       } else {
-        params.phone = withdrawPhone;
+        requestData.shamcash_phone = withdrawPhone;
       }
       
-      await axios.post(`${API}/api/wallet/withdraw`, null, { params });
+      const res = await axios.post(`${API}/api/wallet/withdraw`, requestData);
       
       toast({
-        title: "تم إرسال الطلب",
-        description: "سيتم مراجعة طلب السحب خلال 24 ساعة"
+        title: "✅ تم قبول طلب السحب",
+        description: "سيتم تحويل المبلغ خلال 24 ساعة"
       });
       
       setShowWithdrawForm(false);
@@ -468,41 +469,77 @@ const WalletPage = () => {
                 <p className="text-gray-500">لا توجد طلبات سحب</p>
               </div>
             ) : (
-              withdrawals.map((w) => (
-                <div 
-                  key={w.id} 
-                  className="bg-white rounded-xl p-4 border border-gray-200"
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="font-bold text-gray-900">{formatPrice(w.amount)}</p>
-                    <span className={`text-xs px-2 py-1 rounded-full flex items-center gap-1 ${
-                      w.status === 'pending' ? 'bg-yellow-100 text-yellow-600' :
-                      w.status === 'approved' ? 'bg-green-100 text-green-600' :
-                      'bg-red-100 text-red-600'
-                    }`}>
-                      {w.status === 'pending' && <Clock size={12} />}
-                      {w.status === 'approved' && <CheckCircle size={12} />}
-                      {w.status === 'rejected' && <XCircle size={12} />}
-                      {w.status === 'pending' ? 'قيد المراجعة' :
-                       w.status === 'approved' ? 'تم التحويل' : 
-                       w.status === 'cancelled' ? 'ملغي' : 'مرفوض'}
-                    </span>
+              withdrawals.map((w) => {
+                // تحديد الحالة والألوان
+                const getStatusDisplay = () => {
+                  switch(w.status) {
+                    case 'ready_for_transfer':
+                      return { text: 'جاري التحويل', color: 'bg-blue-100 text-blue-600', icon: <Clock size={12} /> };
+                    case 'transferred':
+                      return { text: 'تم التحويل', color: 'bg-green-100 text-green-600', icon: <CheckCircle size={12} /> };
+                    case 'approved':
+                      return { text: 'تم التحويل', color: 'bg-green-100 text-green-600', icon: <CheckCircle size={12} /> };
+                    case 'pending':
+                      return { text: 'قيد المراجعة', color: 'bg-yellow-100 text-yellow-600', icon: <Clock size={12} /> };
+                    case 'cancelled':
+                      return { text: 'ملغي', color: 'bg-gray-100 text-gray-600', icon: <XCircle size={12} /> };
+                    case 'rejected':
+                      return { text: 'مرفوض', color: 'bg-red-100 text-red-600', icon: <XCircle size={12} /> };
+                    default:
+                      return { text: w.status, color: 'bg-gray-100 text-gray-600', icon: <Clock size={12} /> };
+                  }
+                };
+                const statusDisplay = getStatusDisplay();
+                
+                // تحديد طريقة السحب
+                const getPaymentInfo = () => {
+                  if (w.withdrawal_method === 'bank_account') {
+                    return `${w.bank_name || 'بنك'} - ${w.account_number || ''}`;
+                  }
+                  return w.shamcash_phone || 'شام كاش';
+                };
+                
+                return (
+                  <div 
+                    key={w.id} 
+                    className="bg-white rounded-xl p-4 border border-gray-200"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="font-bold text-gray-900">{formatPrice(w.amount)}</p>
+                      <span className={`text-xs px-2 py-1 rounded-full flex items-center gap-1 ${statusDisplay.color}`}>
+                        {statusDisplay.icon}
+                        {statusDisplay.text}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
+                      <span className={`px-1.5 py-0.5 rounded ${w.withdrawal_method === 'bank_account' ? 'bg-purple-100 text-purple-600' : 'bg-blue-100 text-blue-600'}`}>
+                        {w.withdrawal_method === 'bank_account' ? '🏦 بنكي' : '💳 شام كاش'}
+                      </span>
+                      <span>{getPaymentInfo()}</span>
+                    </div>
+                    <p className="text-xs text-gray-400">
+                      {new Date(w.created_at).toLocaleDateString('ar-SY')}
+                    </p>
+                    
+                    {/* زر إلغاء الطلب - فقط إذا لم يتم التحويل بعد */}
+                    {(w.status === 'ready_for_transfer' || w.status === 'pending') && (
+                      <button
+                        onClick={() => setCancelModal({ isOpen: true, withdrawalId: w.id })}
+                        className="mt-2 text-red-500 text-xs font-medium"
+                      >
+                        إلغاء الطلب
+                      </button>
+                    )}
+                    
+                    {/* عرض سبب الرفض */}
+                    {w.status === 'rejected' && w.rejection_reason && (
+                      <p className="mt-2 text-xs text-red-500 bg-red-50 p-2 rounded">
+                        السبب: {w.rejection_reason}
+                      </p>
+                    )}
                   </div>
-                  <p className="text-xs text-gray-500">إلى: {w.shamcash_phone}</p>
-                  <p className="text-xs text-gray-400">
-                    {new Date(w.created_at).toLocaleDateString('ar-SY')}
-                  </p>
-                  
-                  {w.status === 'pending' && (
-                    <button
-                      onClick={() => setCancelModal({ isOpen: true, withdrawalId: w.id })}
-                      className="mt-2 text-red-500 text-xs font-medium"
-                    >
-                      إلغاء الطلب
-                    </button>
-                  )}
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         )}
