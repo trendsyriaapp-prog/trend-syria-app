@@ -170,22 +170,51 @@ export const productsDB = {
     return new Promise((resolve, reject) => {
       const transaction = db.transaction(STORES.PRODUCTS, 'readonly');
       const store = transaction.objectStore(STORES.PRODUCTS);
+      
+      // التحقق من وجود الـ index
+      if (!store.indexNames.contains('category')) {
+        // Fallback: جلب الكل وفلترة يدوية
+        const allRequest = store.getAll();
+        allRequest.onsuccess = () => {
+          const filtered = (allRequest.result || [])
+            .filter(p => p.category === category)
+            .slice(0, limit);
+          resolve(filtered);
+        };
+        allRequest.onerror = () => resolve([]);
+        return;
+      }
+      
       const index = store.index('category');
       const results = [];
       
-      const request = index.openCursor(IDBKeyRange.only(category));
-      
-      request.onsuccess = (event) => {
-        const cursor = event.target.result;
-        if (cursor && results.length < limit) {
-          results.push(cursor.value);
-          cursor.continue();
-        } else {
-          resolve(results);
-        }
-      };
-      
-      request.onerror = () => reject(request.error);
+      try {
+        const request = index.openCursor(IDBKeyRange.only(category));
+        
+        request.onsuccess = (event) => {
+          const cursor = event.target.result;
+          if (cursor && results.length < limit) {
+            results.push(cursor.value);
+            cursor.continue();
+          } else {
+            resolve(results);
+          }
+        };
+        
+        request.onerror = () => {
+          // Fallback
+          const allRequest = store.getAll();
+          allRequest.onsuccess = () => {
+            const filtered = (allRequest.result || [])
+              .filter(p => p.category === category)
+              .slice(0, limit);
+            resolve(filtered);
+          };
+          allRequest.onerror = () => resolve([]);
+        };
+      } catch (err) {
+        resolve([]);
+      }
     });
   },
 
@@ -366,16 +395,55 @@ export const cartDB = {
    * جلب العناصر غير المتزامنة
    */
   async getUnsynced() {
-    const db = await openDB();
-    return new Promise((resolve, reject) => {
-      const transaction = db.transaction(STORES.CART, 'readonly');
-      const store = transaction.objectStore(STORES.CART);
-      const index = store.index('synced');
-      const request = index.getAll(IDBKeyRange.only(false));
-      
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
-    });
+    try {
+      const db = await openDB();
+      return new Promise((resolve, reject) => {
+        const transaction = db.transaction(STORES.CART, 'readonly');
+        const store = transaction.objectStore(STORES.CART);
+        
+        // التحقق من وجود الـ index
+        if (!store.indexNames.contains('synced')) {
+          // إذا لم يوجد index، نجلب كل العناصر ونفلتر يدوياً
+          const request = store.getAll();
+          request.onsuccess = () => {
+            const unsynced = (request.result || []).filter(item => item.synced === false);
+            resolve(unsynced);
+          };
+          request.onerror = () => reject(request.error);
+          return;
+        }
+        
+        const index = store.index('synced');
+        // استخدام 0 بدلاً من false لتجنب مشاكل IDBKeyRange
+        const request = index.getAll(IDBKeyRange.only(0));
+        
+        request.onsuccess = () => {
+          // إذا لم نجد شيء، نجرب بـ false
+          if (!request.result || request.result.length === 0) {
+            const allRequest = store.getAll();
+            allRequest.onsuccess = () => {
+              const unsynced = (allRequest.result || []).filter(item => item.synced === false || item.synced === 0);
+              resolve(unsynced);
+            };
+            allRequest.onerror = () => resolve([]);
+          } else {
+            resolve(request.result);
+          }
+        };
+        request.onerror = () => {
+          // Fallback: جلب الكل وفلترة يدوية
+          const allRequest = store.getAll();
+          allRequest.onsuccess = () => {
+            const unsynced = (allRequest.result || []).filter(item => item.synced === false || item.synced === 0);
+            resolve(unsynced);
+          };
+          allRequest.onerror = () => resolve([]);
+        };
+      });
+    } catch (err) {
+      console.error('Error getting unsynced cart items:', err);
+      return [];
+    }
   },
 
   /**
@@ -458,16 +526,41 @@ export const syncQueueDB = {
    * جلب العمليات المعلقة
    */
   async getPending() {
-    const db = await openDB();
-    return new Promise((resolve, reject) => {
-      const transaction = db.transaction(STORES.SYNC_QUEUE, 'readonly');
-      const store = transaction.objectStore(STORES.SYNC_QUEUE);
-      const index = store.index('status');
-      const request = index.getAll(IDBKeyRange.only('pending'));
-      
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
-    });
+    try {
+      const db = await openDB();
+      return new Promise((resolve, reject) => {
+        const transaction = db.transaction(STORES.SYNC_QUEUE, 'readonly');
+        const store = transaction.objectStore(STORES.SYNC_QUEUE);
+        
+        // التحقق من وجود الـ index
+        if (!store.indexNames.contains('status')) {
+          const request = store.getAll();
+          request.onsuccess = () => {
+            const pending = (request.result || []).filter(item => item.status === 'pending');
+            resolve(pending);
+          };
+          request.onerror = () => resolve([]);
+          return;
+        }
+        
+        const index = store.index('status');
+        const request = index.getAll(IDBKeyRange.only('pending'));
+        
+        request.onsuccess = () => resolve(request.result || []);
+        request.onerror = () => {
+          // Fallback
+          const allRequest = store.getAll();
+          allRequest.onsuccess = () => {
+            const pending = (allRequest.result || []).filter(item => item.status === 'pending');
+            resolve(pending);
+          };
+          allRequest.onerror = () => resolve([]);
+        };
+      });
+    } catch (err) {
+      console.error('Error getting pending sync queue:', err);
+      return [];
+    }
   },
 
   /**
@@ -507,25 +600,45 @@ export const syncQueueDB = {
    * مسح المكتملة
    */
   async clearCompleted() {
-    const db = await openDB();
-    return new Promise((resolve, reject) => {
-      const transaction = db.transaction(STORES.SYNC_QUEUE, 'readwrite');
-      const store = transaction.objectStore(STORES.SYNC_QUEUE);
-      const index = store.index('status');
-      const request = index.openCursor(IDBKeyRange.only('completed'));
-      
-      request.onsuccess = (event) => {
-        const cursor = event.target.result;
-        if (cursor) {
-          cursor.delete();
-          cursor.continue();
-        } else {
-          resolve();
+    try {
+      const db = await openDB();
+      return new Promise((resolve, reject) => {
+        const transaction = db.transaction(STORES.SYNC_QUEUE, 'readwrite');
+        const store = transaction.objectStore(STORES.SYNC_QUEUE);
+        
+        // التحقق من وجود الـ index
+        if (!store.indexNames.contains('status')) {
+          // مسح يدوي
+          const getAllRequest = store.getAll();
+          getAllRequest.onsuccess = () => {
+            const completed = (getAllRequest.result || []).filter(item => item.status === 'completed');
+            completed.forEach(item => {
+              if (item.id) store.delete(item.id);
+            });
+            resolve();
+          };
+          getAllRequest.onerror = () => resolve();
+          return;
         }
-      };
-      
-      request.onerror = () => reject(request.error);
-    });
+        
+        const index = store.index('status');
+        const request = index.openCursor(IDBKeyRange.only('completed'));
+        
+        request.onsuccess = (event) => {
+          const cursor = event.target.result;
+          if (cursor) {
+            cursor.delete();
+            cursor.continue();
+          } else {
+            resolve();
+          }
+        };
+        
+        request.onerror = () => resolve(); // تجاهل الخطأ
+      });
+    } catch (err) {
+      console.error('Error clearing completed sync queue:', err);
+    }
   }
 };
 
