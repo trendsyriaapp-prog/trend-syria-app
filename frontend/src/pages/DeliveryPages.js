@@ -773,6 +773,9 @@ const DeliveryDashboard = () => {
   const [deletingTransactions, setDeletingTransactions] = useState(false);
   const [processingOrderId, setProcessingOrderId] = useState(null); // لمنع الضغط المتكرر
   
+  // 📸 الصورة الشخصية للسائق
+  const [driverProfile, setDriverProfile] = useState(null);
+  
   // ⭐ حفظ موضع التمرير واستعادته عند العودة
   const scrollPositionRef = useRef(0);
   
@@ -1088,6 +1091,15 @@ const DeliveryDashboard = () => {
       // approved - يمكنه الوصول للوحة التحكم
       if (status === 'approved') {
         fetchOrders();
+        
+        // 📸 جلب الملف الشخصي مع الصورة
+        try {
+          const profileRes = await axios.get(`${API}/api/delivery/profile`);
+          setDriverProfile(profileRes.data);
+        } catch (profileErr) {
+          logger.warn('Failed to fetch driver profile:', profileErr);
+        }
+        
         // فحص حالة التأمين
         try {
           const securityRes = await axios.get(`${API}/api/driver/security/status`);
@@ -1489,19 +1501,40 @@ const DeliveryDashboard = () => {
   return (
     <div className={`min-h-screen pb-20 ${currentTheme === 'dark' ? 'driver-dark' : 'driver-light'}`}>
       <div className="max-w-2xl mx-auto px-4 py-4">
-        {/* Header - الاسم والأيقونات في سطر واحد */}
+        {/* Header - الاسم والصورة والأيقونات */}
         <div className={`flex items-center justify-between mb-4 p-4 rounded-2xl ${
           currentTheme === 'dark' ? 'driver-card' : 'bg-white shadow-sm border'
         }`}>
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center text-black font-bold text-lg">
-              {(user?.full_name || user?.name || 'س').charAt(0)}
-            </div>
+            {/* 📸 صورة السائق الشخصية */}
+            {driverProfile?.personal_photo ? (
+              <div className="relative">
+                <img 
+                  src={driverProfile.personal_photo} 
+                  alt="صورتك الشخصية"
+                  className="w-14 h-14 rounded-full object-cover border-2 border-green-500 shadow-lg"
+                />
+                <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-white flex items-center justify-center">
+                  <Check size={10} className="text-white" />
+                </div>
+              </div>
+            ) : (
+              <div className="w-14 h-14 rounded-full bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center text-black font-bold text-xl shadow-lg">
+                {(user?.full_name || user?.name || 'س').charAt(0)}
+              </div>
+            )}
             <div>
               <h1 className={`text-lg font-bold ${currentTheme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-                مرحباً، {user?.full_name || user?.name}
+                مرحباً، {driverProfile?.name || user?.full_name || user?.name}
               </h1>
-              <p className={`text-xs ${currentTheme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>موظف توصيل</p>
+              <div className="flex items-center gap-2">
+                <p className={`text-xs ${currentTheme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>موظف توصيل</p>
+                {driverProfile?.average_rating > 0 && (
+                  <span className={`text-xs flex items-center gap-0.5 ${currentTheme === 'dark' ? 'text-yellow-400' : 'text-yellow-600'}`}>
+                    ⭐ {driverProfile.average_rating}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
           <div className="flex items-center gap-2">

@@ -947,6 +947,65 @@ async def get_delivery_documents_status(user: dict = Depends(get_current_user)):
         "rejection_reason": doc.get("rejection_reason")
     }
 
+@delivery_auth_router.get("/profile")
+async def get_delivery_profile(user: dict = Depends(get_current_user)):
+    """
+    جلب ملف السائق الشخصي بما في ذلك الصورة الشخصية
+    هذا الـ endpoint يُستخدم في صفحة السائق الرئيسية
+    """
+    if user["user_type"] != "delivery":
+        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
+    
+    # جلب بيانات المستخدم الأساسية
+    user_data = await db.users.find_one(
+        {"id": user["id"]},
+        {"_id": 0, "id": 1, "full_name": 1, "name": 1, "phone": 1, "city": 1, "created_at": 1}
+    )
+    
+    if not user_data:
+        raise HTTPException(status_code=404, detail="المستخدم غير موجود")
+    
+    # جلب الوثائق والصورة الشخصية
+    doc = await db.delivery_documents.find_one(
+        {"$or": [{"delivery_id": user["id"]}, {"driver_id": user["id"]}]},
+        {"_id": 0, "personal_photo": 1, "bike_photo": 1, "fuel_type": 1, "fuel_type_name": 1, 
+         "home_city": 1, "home_address": 1, "status": 1, "created_at": 1}
+    )
+    
+    # جلب إحصائيات السائق
+    total_orders = await db.orders.count_documents({
+        "$or": [
+            {"delivery_id": user["id"]},
+            {"driver_id": user["id"]}
+        ],
+        "delivery_status": "delivered"
+    })
+    
+    # جلب التقييم
+    ratings = await db.delivery_ratings.find(
+        {"driver_id": user["id"]}
+    ).to_list(1000)
+    
+    avg_rating = 0
+    if ratings:
+        avg_rating = sum(r.get("rating", 0) for r in ratings) / len(ratings)
+    
+    return {
+        "id": user_data["id"],
+        "name": user_data.get("full_name") or user_data.get("name", ""),
+        "phone": user_data.get("phone", ""),
+        "city": doc.get("home_city") if doc else user_data.get("city", ""),
+        "personal_photo": doc.get("personal_photo") if doc else None,
+        "bike_photo": doc.get("bike_photo") if doc else None,
+        "fuel_type": doc.get("fuel_type") if doc else None,
+        "fuel_type_name": doc.get("fuel_type_name") if doc else None,
+        "status": doc.get("status") if doc else "not_submitted",
+        "total_delivered_orders": total_orders,
+        "average_rating": round(avg_rating, 1),
+        "total_ratings": len(ratings),
+        "joined_at": user_data.get("created_at", "")
+    }
+
 @delivery_auth_router.get("/fuel-types")
 async def get_fuel_types():
     """جلب أنواع الوقود المتاحة للتسجيل"""

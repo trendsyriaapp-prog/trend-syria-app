@@ -119,6 +119,24 @@ const DriverRequestCard = ({
                 <span className="text-gray-500">العنوان:</span> {item.home_address || driver.home_address}
               </div>
             )}
+            {item.home_latitude && item.home_longitude && (
+              <div className="col-span-2">
+                <span className="text-gray-500">الموقع GPS:</span>{' '}
+                <a 
+                  href={`https://www.google.com/maps?q=${item.home_latitude},${item.home_longitude}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:underline text-xs"
+                >
+                  📍 عرض على الخريطة
+                </a>
+              </div>
+            )}
+            {item.created_at && (
+              <div className="col-span-2">
+                <span className="text-gray-500">تاريخ التقديم:</span> {new Date(item.created_at).toLocaleDateString('ar-SY')}
+              </div>
+            )}
           </div>
           
           <div className="flex gap-2 mt-3">

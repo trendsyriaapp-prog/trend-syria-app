@@ -58,6 +58,14 @@
 - [x] تحديث بطاقة مراجعة الطلب في لوحة الإدارة
 - [x] تحديث الصفحة التسويقية والأسئلة الشائعة
 
+### Driver Profile Photo Display (April 2025) ✅ NEW
+- [x] إضافة API جديد `GET /api/delivery/profile` لجلب الملف الشخصي مع الصورة
+- [x] عرض الصورة الشخصية في Header صفحة السائق الرئيسية
+- [x] عرض التقييم إلى جانب اسم السائق
+- [x] عدم السماح بتعديل الصورة مباشرة (فقط عبر الدعم)
+- [x] عرض رابط الموقع GPS للمدير عند مراجعة الطلب
+- [x] عرض تاريخ تقديم الطلب للمدير
+
 ## In Progress / Upcoming Tasks
 
 ### P1 - High Priority
@@ -92,6 +100,7 @@
 - `GET /api/delivery/fuel-types` - Get available fuel types (petrol, electric)
 - `POST /api/delivery/documents` - Submit driver registration documents
 - `GET /api/delivery/documents/status` - Check registration status
+- `GET /api/delivery/profile` - Get driver profile with personal photo, stats, and rating
 
 ## Test Credentials
 - Super Admin: `0945570365`
