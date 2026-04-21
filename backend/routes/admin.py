@@ -807,16 +807,33 @@ async def approve_seller(seller_id: str, user: dict = Depends(get_current_user))
             {"$set": {"role_status": role_status}}
         )
         
-        # إرسال إشعار للبائع بالموافقة
+        # تحديد نوع البائع للرسالة المناسبة
+        is_food_seller = user_type == "food_seller"
+        seller_type_name = "مطعم" if is_food_seller else "بائع"
+        
+        # إرسال إشعار داخلي للبائع بالموافقة
         await db.notifications.insert_one({
             "id": str(uuid.uuid4()),
             "user_id": seller_id,
             "title": "✅ تم قبول طلبك!",
-            "message": "مبروك! تم قبول طلبك كبائع. يمكنك الآن إضافة منتجاتك والبدء بالبيع.",
+            "message": f"مبروك! تم قبول طلبك كـ{seller_type_name}. يمكنك الآن إضافة منتجاتك والبدء بالبيع.",
             "type": "seller_approved",
             "is_read": False,
             "created_at": now
         })
+        
+        # 📲 إرسال Push Notification للبائع
+        try:
+            from core.firebase_admin import send_push_to_user
+            await send_push_to_user(
+                user_id=seller_id,
+                title="✅ مبروك! تم قبول طلبك",
+                body=f"يمكنك الآن إضافة منتجاتك والبدء بالبيع كـ{seller_type_name}!",
+                notification_type="seller_approved",
+                data={"seller_id": seller_id, "action": "go_to_store"}
+            )
+        except Exception as push_err:
+            admin_logger.warning(f"Failed to send push notification to seller {seller_id}: {push_err}")
     
     return {"message": "تم تفعيل البائع"}
 
@@ -867,21 +884,41 @@ async def reject_seller(seller_id: str, data: dict = Body(default={}), user: dic
         }
     })
     
-    # إرسال إشعار للبائع
+    # إرسال إشعار داخلي للبائع
     if seller:
-        message = "تم رفض طلبك للتسجيل كبائع."
+        user_type = seller.get("user_type", "seller")
+        is_food_seller = user_type == "food_seller"
+        seller_type_name = "مطعم" if is_food_seller else "بائع"
+        
+        message = f"تم رفض طلبك للتسجيل كـ{seller_type_name}."
         if reason:
             message += f"\n📝 السبب: {reason}"
         
         await db.notifications.insert_one({
             "id": str(uuid.uuid4()),
             "user_id": seller_id,
-            "title": "❌ تم رفض طلب البائع",
+            "title": f"❌ تم رفض طلب الـ{seller_type_name}",
             "message": message,
             "type": "seller_rejected",
             "is_read": False,
             "created_at": now
         })
+        
+        # 📲 إرسال Push Notification للبائع بالرفض
+        try:
+            from core.firebase_admin import send_push_to_user
+            push_message = f"تم رفض طلبك كـ{seller_type_name}. يمكنك مراجعة التفاصيل في التطبيق."
+            if reason:
+                push_message = f"تم رفض طلبك. السبب: {reason[:50]}..."
+            await send_push_to_user(
+                user_id=seller_id,
+                title=f"❌ تم رفض طلب الـ{seller_type_name}",
+                body=push_message,
+                notification_type="seller_rejected",
+                data={"seller_id": seller_id, "reason": reason}
+            )
+        except Exception as push_err:
+            admin_logger.warning(f"Failed to send rejection push to seller {seller_id}: {push_err}")
     
     return {"message": "تم رفض البائع", "reason": reason if reason else None}
 
