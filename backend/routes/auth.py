@@ -1248,8 +1248,7 @@ async def set_default_payment_account(account_id: str, user: dict = Depends(get_
 # ============================================
 
 class DeliverySettingsUpdate(BaseModel):
-    vehicle_type: Optional[str] = None  # motorcycle, car, bicycle
-    vehicle_number: Optional[str] = None
+    fuel_type: Optional[str] = None  # petrol, electric
     working_city: Optional[str] = None
     working_hours: Optional[str] = None
     home_address: Optional[str] = None
@@ -1262,16 +1261,23 @@ async def get_delivery_settings(user: dict = Depends(get_current_user)):
     if user["user_type"] != "delivery":
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
     
+    # جلب بيانات المستخدم
     delivery = await db.users.find_one(
         {"id": user["id"]},
-        {"_id": 0, "vehicle_type": 1, "vehicle_number": 1, "working_city": 1, "working_hours": 1, "city": 1,
+        {"_id": 0, "working_city": 1, "working_hours": 1, "city": 1,
          "home_address": 1, "home_latitude": 1, "home_longitude": 1}
     )
     
+    # جلب بيانات الوثائق للحصول على نوع الوقود
+    doc = await db.delivery_documents.find_one(
+        {"$or": [{"delivery_id": user["id"]}, {"driver_id": user["id"]}]},
+        {"_id": 0, "fuel_type": 1, "fuel_type_name": 1, "home_city": 1}
+    )
+    
     return {
-        "vehicle_type": delivery.get("vehicle_type", "motorcycle"),
-        "vehicle_number": delivery.get("vehicle_number", ""),
-        "working_city": delivery.get("working_city", delivery.get("city", "دمشق")),
+        "fuel_type": doc.get("fuel_type") if doc else "petrol",
+        "fuel_type_name": doc.get("fuel_type_name") if doc else "بنزين",
+        "working_city": delivery.get("working_city", delivery.get("city", doc.get("home_city", "دمشق") if doc else "دمشق")),
         "working_hours": delivery.get("working_hours", ""),
         "home_address": delivery.get("home_address", ""),
         "home_latitude": delivery.get("home_latitude"),
@@ -1280,15 +1286,12 @@ async def get_delivery_settings(user: dict = Depends(get_current_user)):
 
 @router.put("/delivery/settings")
 async def update_delivery_settings(settings: DeliverySettingsUpdate, user: dict = Depends(get_current_user)):
-    """تحديث إعدادات موظف التوصيل"""
+    """تحديث إعدادات موظف التوصيل (باستثناء نوع الوقود - يتطلب تواصل مع الدعم)"""
     if user["user_type"] != "delivery":
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
     
     update_data = {}
-    if settings.vehicle_type is not None:
-        update_data["vehicle_type"] = settings.vehicle_type
-    if settings.vehicle_number is not None:
-        update_data["vehicle_number"] = settings.vehicle_number
+    # ملاحظة: لا نسمح بتغيير fuel_type مباشرة - يجب التواصل مع الدعم
     if settings.working_city is not None:
         update_data["working_city"] = settings.working_city
     if settings.working_hours is not None:

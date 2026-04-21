@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import logger from '../../lib/logger';
 import axios from 'axios';
 import { 
-  Truck, CreditCard, Plus, Edit2, Trash2, Check, X, Save, Loader2, MapPin, Clock, Bike, Car
+  Truck, CreditCard, Plus, Edit2, Trash2, Check, X, Save, Loader2, MapPin, Clock, Bike, Fuel
 } from 'lucide-react';
 import { useToast } from '../../hooks/use-toast';
 import GoogleMapsLocationPicker from '../GoogleMapsLocationPicker';
@@ -18,10 +18,10 @@ const SYRIAN_CITIES = [
   'القنيطرة', 'إدلب', 'ريف دمشق'
 ];
 
-const VEHICLE_TYPES = [
-  { id: 'motorcycle', name: 'دراجة نارية', icon: '🏍️' },
-  { id: 'car', name: 'موتور', icon: '🏍️' },
-  { id: 'bicycle', name: 'دراجة هوائية', icon: '🚲' },
+// أنواع الوقود (للعرض فقط - لا يمكن تعديلها)
+const FUEL_TYPES = [
+  { id: 'petrol', name: 'بنزين', icon: '⛽' },
+  { id: 'electric', name: 'كهرباء', icon: '🔋' },
 ];
 
 const PAYMENT_TYPES = [
@@ -36,8 +36,8 @@ const DeliverySettingsTab = ({ onSaveSuccess }) => {
   
   // إعدادات التوصيل
   const [deliverySettings, setDeliverySettings] = useState({
-    vehicle_type: 'motorcycle',
-    vehicle_number: '',
+    fuel_type: 'petrol',
+    fuel_type_name: 'بنزين',
     working_city: 'دمشق',
     home_address: '',
     home_latitude: null,
@@ -169,39 +169,20 @@ const DeliverySettingsTab = ({ onSaveSuccess }) => {
         </div>
 
         <div className="space-y-3">
-          {/* نوع المركبة */}
+          {/* نوع الوقود (للعرض فقط) */}
           <div>
-            <label className="block text-[10px] font-bold text-gray-600 mb-1">نوع المركبة</label>
-            <div className="grid grid-cols-3 gap-2">
-              {VEHICLE_TYPES.map(vehicle => (
-                <button
-                  key={vehicle.id}
-                  type="button"
-                  onClick={() => setDeliverySettings({...deliverySettings, vehicle_type: vehicle.id})}
-                  className={`p-2 rounded-lg border text-center text-xs ${
-                    deliverySettings.vehicle_type === vehicle.id
-                      ? 'border-[#FF6B00] bg-orange-50 text-[#FF6B00]'
-                      : 'border-gray-200 text-gray-600'
-                  }`}
-                >
-                  <div className="text-lg mb-1">{vehicle.icon}</div>
-                  {vehicle.name}
-                </button>
-              ))}
+            <label className="block text-[10px] font-bold text-gray-600 mb-1">نوع الوقود</label>
+            <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
+              <span className="text-xl">
+                {deliverySettings.fuel_type === 'petrol' ? '⛽' : '🔋'}
+              </span>
+              <div>
+                <p className="text-sm font-medium text-gray-800">
+                  {deliverySettings.fuel_type_name || (deliverySettings.fuel_type === 'petrol' ? 'بنزين' : 'كهرباء')}
+                </p>
+                <p className="text-[10px] text-gray-500">لتغيير نوع الوقود، تواصل مع الدعم الفني</p>
+              </div>
             </div>
-          </div>
-
-          {/* رقم المركبة */}
-          <div>
-            <label className="block text-[10px] font-bold text-gray-600 mb-1">رقم المركبة</label>
-            <input
-              type="text"
-              value={deliverySettings.vehicle_number}
-              onChange={(e) => setDeliverySettings({...deliverySettings, vehicle_number: e.target.value})}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-xs focus:border-[#FF6B00] focus:outline-none"
-              placeholder="مثال: دمشق 123456"
-              dir="ltr"
-            />
           </div>
 
           {/* المدينة */}

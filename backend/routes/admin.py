@@ -5,11 +5,15 @@ from fastapi import APIRouter, HTTPException, Depends, Body, Query
 from datetime import datetime, timezone
 import uuid
 import hashlib
+import logging
 
 from core.database import db, get_current_user
 from models.schemas import SubAdminCreate, NotificationCreate, ProductApproval
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
+
+# Logger للإدارة
+admin_logger = logging.getLogger("admin")
 
 def hash_password(password: str) -> str:
     return hashlib.sha256(password.encode()).hexdigest()
@@ -1498,7 +1502,7 @@ async def approve_delivery_driver(driver_id: str, user: dict = Depends(get_curre
             {"$set": {"role_status": role_status}}
         )
     
-    # إرسال إشعار لموظف التوصيل بالموافقة
+    # إرسال إشعار داخلي لموظف التوصيل بالموافقة
     await db.notifications.insert_one({
         "id": str(uuid.uuid4()),
         "user_id": driver_id,
@@ -1508,6 +1512,20 @@ async def approve_delivery_driver(driver_id: str, user: dict = Depends(get_curre
         "is_read": False,
         "created_at": now
     })
+    
+    # 📲 إرسال Push Notification للسائق
+    try:
+        from core.firebase_admin import send_push_to_user
+        await send_push_to_user(
+            user_id=driver_id,
+            title="✅ مبروك! تم قبول طلبك",
+            body="يمكنك الآن البدء باستلام الطلبات والعمل معنا!",
+            notification_type="delivery_approved",
+            data={"driver_id": driver_id, "action": "go_to_dashboard"}
+        )
+    except Exception as push_err:
+        # لا نوقف العملية إذا فشل الإشعار
+        admin_logger.warning(f"Failed to send push notification to driver {driver_id}: {push_err}")
     
     return {"message": "تم اعتماد موظف التوصيل"}
 
@@ -1553,7 +1571,7 @@ async def reject_delivery_driver(driver_id: str, data: dict = Body(default={}), 
         "name": driver.get("name") or driver.get("full_name") if driver else "غير معروف",
         "phone": driver.get("phone") if driver else None,
         "city": driver.get("city") if driver else None,
-        "vehicle_type": driver_docs.get("vehicle_type") if driver_docs else None,
+        "fuel_type": driver_docs.get("fuel_type") if driver_docs else None,
         "reason": reason,
         "rejected_by": user["id"],
         "rejected_by_name": user.get("name") or user.get("full_name"),
@@ -1564,7 +1582,7 @@ async def reject_delivery_driver(driver_id: str, data: dict = Body(default={}), 
         }
     })
     
-    # إرسال إشعار لموظف التوصيل
+    # إرسال إشعار داخلي لموظف التوصيل
     message = "تم رفض طلبك للتسجيل كموظف توصيل."
     if reason:
         message += f"\n📝 السبب: {reason}"
@@ -1578,6 +1596,22 @@ async def reject_delivery_driver(driver_id: str, data: dict = Body(default={}), 
         "is_read": False,
         "created_at": now
     })
+    
+    # 📲 إرسال Push Notification للسائق بالرفض
+    try:
+        from core.firebase_admin import send_push_to_user
+        push_message = "تم رفض طلبك. يمكنك مراجعة التفاصيل في التطبيق."
+        if reason:
+            push_message = f"تم رفض طلبك. السبب: {reason[:50]}..."
+        await send_push_to_user(
+            user_id=driver_id,
+            title="❌ تم رفض طلب التوصيل",
+            body=push_message,
+            notification_type="delivery_rejected",
+            data={"driver_id": driver_id, "reason": reason}
+        )
+    except Exception as push_err:
+        admin_logger.warning(f"Failed to send rejection push to driver {driver_id}: {push_err}")
     
     return {"message": "تم رفض موظف التوصيل", "reason": reason if reason else None}
 
