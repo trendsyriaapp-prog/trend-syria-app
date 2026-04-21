@@ -644,12 +644,34 @@ async def reset_sold_out_products_task():
         # انتظار ساعة
         await asyncio.sleep(3600)
 
+
+async def release_held_earnings_task():
+    """
+    مهمة خلفية لإطلاق الأرباح المعلقة تلقائياً
+    تعمل كل 5 دقائق للتحقق من الأرباح التي انتهت فترة تعليقها
+    """
+    while True:
+        try:
+            from services.earnings_hold import release_held_earnings
+            result = await release_held_earnings()
+            if result["released_count"] > 0:
+                logging.info(f"✅ تم إطلاق {result['released_count']} أرباح معلقة بقيمة {result['total_released']:,.0f} ل.س")
+        except Exception as e:
+            logging.error(f"❌ خطأ في إطلاق الأرباح المعلقة: {e}")
+        
+        # انتظار 5 دقائق
+        await asyncio.sleep(300)
+
+
 @app.on_event("startup")
 async def start_background_tasks():
     """تشغيل المهام الخلفية"""
     try:
         asyncio.create_task(reset_sold_out_products_task())
         logging.info("🔄 تم تشغيل مهمة إعادة المنتجات المنتهية")
+        
+        asyncio.create_task(release_held_earnings_task())
+        logging.info("💰 تم تشغيل مهمة إطلاق الأرباح المعلقة")
     except Exception as e:
         logging.warning(f"⚠️ Could not start background tasks: {e}")
 
