@@ -37,17 +37,21 @@
 - [x] Removed hardcoded secrets from test files
 - [x] Created tests/conftest.py and tests/.env.test
 
-### Wallet System
-- [x] Buyer wallet functionality
-- [x] Seller earnings tracking
-- [x] Driver earnings stats
+### Wallet & Withdrawal System - Updated (April 2025) ✅ NEW
+- [x] **إضافة خيار الحساب البنكي للسحب** - بجانب شام كاش
+- [x] **إزالة موافقة الأدمن للسحوبات** - الطلبات تُقبل تلقائياً بحالة `ready_for_transfer`
+- [x] **خصم فوري من المحفظة** - المبلغ يُخصم فور إرسال طلب السحب
+- [x] **API جديد لتأكيد التحويل** - `POST /api/payment/admin/withdrawals/{id}/mark-transferred`
+- [x] **فشل الشحن مباشر** - إذا فشل التحقق من الشحن، يفشل الطلب بدون إرساله للأدمن
+- [x] **تحديث لوحة الأدمن** - عرض بيانات الحساب البنكي وزر "تم التحويل"
+- [x] **تحديث واجهة المستخدم** - نموذج السحب يدعم شام كاش والحساب البنكي
 
 ### Delivery System
 - [x] Driver performance tracking
 - [x] Unified map system
 - [x] Order assignment
 
-### Delivery Driver Registration - Syrian Local Requirements (April 2025) ✅ NEW
+### Delivery Driver Registration - Syrian Local Requirements (April 2025)
 - [x] إزالة حقل رخصة القيادة نهائياً
 - [x] تغيير "صورة المركبة" إلى "صورة الدراجة" (bike_photo)
 - [x] تغيير "نوع المركبة" إلى "نوع الوقود: بنزين/كهرباء" (fuel_type: petrol/electric)
@@ -58,7 +62,7 @@
 - [x] تحديث بطاقة مراجعة الطلب في لوحة الإدارة
 - [x] تحديث الصفحة التسويقية والأسئلة الشائعة
 
-### Driver Profile Photo Display (April 2025) ✅ NEW
+### Driver Profile Photo Display (April 2025)
 - [x] إضافة API جديد `GET /api/delivery/profile` لجلب الملف الشخصي مع الصورة
 - [x] عرض الصورة الشخصية في Header صفحة السائق الرئيسية
 - [x] عرض التقييم إلى جانب اسم السائق
@@ -100,20 +104,38 @@
 ## Key Files Reference
 - `/app/backend/core/rate_limiter.py` - Rate limiting logic
 - `/app/backend/routes/auth.py` - Authentication & driver registration API
-- `/app/backend/models/schemas.py` - DeliveryDocuments schema
-- `/app/frontend/src/pages/DeliveryPages.js` - Driver registration form
-- `/app/frontend/src/pages/JoinAsDeliveryPage.js` - Marketing page
-- `/app/frontend/src/components/admin/join-requests/DriverRequestCard.js` - Admin review card
-- `/app/frontend/src/components/admin/DeliveryTab.js` - Admin delivery tab
+- `/app/backend/routes/wallet.py` - Wallet and withdrawal APIs
+- `/app/backend/routes/payment.py` - Payment and admin withdrawal APIs
+- `/app/backend/models/schemas.py` - Data schemas including WithdrawalRequest
+- `/app/frontend/src/pages/WalletPage.js` - Seller/Driver wallet page with withdrawal
+- `/app/frontend/src/pages/BuyerWalletPage.js` - Buyer wallet page with top-up
+- `/app/frontend/src/components/admin/AllWithdrawRequestsTab.js` - Admin withdrawal management
 
 ## API Endpoints
+
+### Wallet APIs
+- `GET /api/wallet/balance` - Get wallet balance
+- `POST /api/wallet/withdraw` - Request withdrawal (shamcash or bank_account)
+- `GET /api/wallet/withdrawals` - Get withdrawal history
+- `DELETE /api/wallet/withdrawals/{id}` - Cancel withdrawal (if not transferred)
+- `POST /api/wallet/topup/request` - Request top-up
+- `POST /api/wallet/topup/verify` - Verify top-up payment
+
+### Admin Withdrawal APIs
+- `GET /api/payment/admin/withdrawals` - Get all withdrawals
+- `POST /api/payment/admin/withdrawals/{id}/mark-transferred` - Confirm transfer done
+- `POST /api/payment/admin/withdrawals/{id}/approve` - Legacy approve (for old pending requests)
+- `POST /api/payment/admin/withdrawals/{id}/reject` - Reject and refund
+
+### Delivery APIs
 - `GET /api/delivery/fuel-types` - Get available fuel types (petrol, electric)
 - `POST /api/delivery/documents` - Submit driver registration documents
 - `GET /api/delivery/documents/status` - Check registration status
 - `GET /api/delivery/profile` - Get driver profile with personal photo, stats, and rating
 
 ## Test Credentials
-- Super Admin: `0945570365`
+- Super Admin: `0945570365` / Password: `TrendSyria@2026`
+- Test Seller: `0945570399` / Password: `Test@123456`
 - OTP Test Code: `123456`
 - VPS SSH: `ssh -p 2222 root@130.94.57.227`
 
