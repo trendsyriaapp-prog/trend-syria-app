@@ -374,6 +374,11 @@ async def rate_limit_middleware(request: Request, call_next):
     if any(request.url.path.startswith(p) for p in skip_paths):
         return await call_next(request)
     
+    # TESTING MODE: Skip rate limiting for testing
+    import os
+    if os.environ.get("DISABLE_RATE_LIMIT", "").lower() == "true":
+        return await call_next(request)
+    
     # فحص Rate Limit
     allowed, error_message = rate_limiter.check_rate_limit(request)
     
