@@ -47,6 +47,17 @@
 - [x] Unified map system
 - [x] Order assignment
 
+### Delivery Driver Registration - Syrian Local Requirements (April 2025) ✅ NEW
+- [x] إزالة حقل رخصة القيادة نهائياً
+- [x] تغيير "صورة المركبة" إلى "صورة الدراجة" (bike_photo)
+- [x] تغيير "نوع المركبة" إلى "نوع الوقود: بنزين/كهرباء" (fuel_type: petrol/electric)
+- [x] دمج المدينة والعنوان مع تحديد GPS إلزامي
+- [x] إضافة تحذير: "⚠️ موتورات البارت غير مصرح بها إطلاقاً"
+- [x] إضافة ملاحظة عند الصورة الشخصية: "ستظهر صورتك للبائعين والعملاء"
+- [x] جميع الحقول إلزامية
+- [x] تحديث بطاقة مراجعة الطلب في لوحة الإدارة
+- [x] تحديث الصفحة التسويقية والأسئلة الشائعة
+
 ## In Progress / Upcoming Tasks
 
 ### P1 - High Priority
@@ -55,6 +66,7 @@
 
 ### P2 - Medium Priority
 - [ ] Secure localStorage → httpOnly cookies (High-risk refactor, deferred)
+- [ ] MongoDB Authentication on Riyadh VPS (Deferred - requires SSH session)
 
 ### P3 - Low Priority (COMPLETED)
 - [x] Refactor oversized React components (December 2024):
@@ -69,19 +81,22 @@
 
 ## Key Files Reference
 - `/app/backend/core/rate_limiter.py` - Rate limiting logic
-- `/app/backend/routes/rate_limits.py` - Rate limit API routes
-- `/app/frontend/src/components/admin/RateLimitDashboard.js` - Admin dashboard
-- `/app/frontend/src/lib/logger.js` - Production logging utility
-- `/app/backend/tests/conftest.py` - Test fixtures
+- `/app/backend/routes/auth.py` - Authentication & driver registration API
+- `/app/backend/models/schemas.py` - DeliveryDocuments schema
+- `/app/frontend/src/pages/DeliveryPages.js` - Driver registration form
+- `/app/frontend/src/pages/JoinAsDeliveryPage.js` - Marketing page
+- `/app/frontend/src/components/admin/join-requests/DriverRequestCard.js` - Admin review card
+- `/app/frontend/src/components/admin/DeliveryTab.js` - Admin delivery tab
 
 ## API Endpoints
-- `GET /api/rate-limits/stats` - Rate limit statistics
-- `GET /api/rate-limits/alert-config` - Alert configuration
-- `POST /api/rate-limits/test-alert` - Test security alert
+- `GET /api/delivery/fuel-types` - Get available fuel types (petrol, electric)
+- `POST /api/delivery/documents` - Submit driver registration documents
+- `GET /api/delivery/documents/status` - Check registration status
 
 ## Test Credentials
 - Super Admin: `0945570365`
 - OTP Test Code: `123456`
+- VPS SSH: `ssh -p 2222 root@130.94.57.227`
 
 ## 3rd Party Integrations
 - Firebase Admin (Push Notifications)
