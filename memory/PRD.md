@@ -345,35 +345,31 @@
 
 ---
 
-## Payment Account Validation (April 2025) ✅ NEW
+## Payment Account Validation (April 2025) ✅ COMPLETE
 
-### تم إضافة تحقق من صحة أرقام الحسابات:
+### تم إضافة تحقق شامل من صحة أرقام الحسابات في جميع الأماكن:
 
-**شام كاش (Sham Cash):**
-| الشرط | القيمة |
-|-------|--------|
-| يبدأ بـ | `09` |
-| عدد الأرقام | 10 أرقام بالضبط |
-| يقبل | أرقام فقط |
+**قواعد التحقق:**
 
-**حساب بنكي (Bank Account):**
-| الشرط | القيمة |
-|-------|--------|
-| الحد الأدنى | 10 أحرف |
-| الحد الأقصى | 34 حرف |
-| يقبل | أرقام وحروف (IBAN) |
+| نوع الحساب | التحقق |
+|------------|--------|
+| **شام كاش** | يبدأ بـ `09` + 10 أرقام بالضبط + أرقام فقط |
+| **حساب بنكي** | 10-34 حرف (يقبل IBAN) |
+| **اسم صاحب الحساب** | 3-100 حرف |
 
-**اسم صاحب الحساب:**
-| الشرط | القيمة |
-|-------|--------|
-| الحد الأدنى | 3 أحرف |
-| الحد الأقصى | 100 حرف |
+**Frontend (6 صفحات):**
+- ✅ `CheckoutPage.js` - دفع المنتجات
+- ✅ `FoodCartPage.js` - سلة الطعام
+- ✅ `FoodBatchCheckoutPage.js` - دفع الطعام الموحد
+- ✅ `DeliveryPages.js` - تسجيل موظف التوصيل
+- ✅ `JoinAsFoodSellerPage.js` - تسجيل بائع الطعام
+- ✅ `SettingsPage.js` - صفحة الإعدادات
 
-### الملفات المحدّثة:
-- `/app/backend/models/schemas.py` - Pydantic validators
-- `/app/frontend/src/pages/CheckoutPage.js` - Frontend validation
-- `/app/frontend/src/pages/FoodBatchCheckoutPage.js` - Frontend validation
-- `/app/frontend/src/pages/DeliveryPages.js` - Frontend validation
+**Backend (4 Models):**
+- ✅ `PaymentMethodCreate` - إضافة طريقة دفع
+- ✅ `PaymentAccount` - حساب البائع/التوصيل
+- ✅ `WithdrawalRequest` - طلب سحب من المحفظة
+- ✅ `TopUpRequestModel` - طلب شحن المحفظة
 
 ---
 

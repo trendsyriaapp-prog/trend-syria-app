@@ -293,8 +293,44 @@ const JoinAsFoodSellerPage = () => {
       return;
     }
 
-    if (formData.payment_account_type === 'bank_account' && !formData.payment_bank_name) {
-      toast({ title: "تنبيه", description: "يرجى إدخال اسم البنك", variant: "destructive" });
+    // التحقق من صحة رقم الحساب
+    const accountNumber = formData.payment_account_number?.trim() || '';
+    
+    if (formData.payment_account_type === 'shamcash') {
+      // شام كاش: رقم سوري يبدأ بـ 09 ويتكون من 10 أرقام
+      if (!accountNumber.startsWith('09')) {
+        toast({ title: "خطأ", description: "رقم شام كاش يجب أن يبدأ بـ 09", variant: "destructive" });
+        return;
+      }
+      if (accountNumber.length !== 10) {
+        toast({ title: "خطأ", description: "رقم شام كاش يجب أن يتكون من 10 أرقام", variant: "destructive" });
+        return;
+      }
+      if (!/^\d+$/.test(accountNumber)) {
+        toast({ title: "خطأ", description: "رقم شام كاش يجب أن يحتوي على أرقام فقط", variant: "destructive" });
+        return;
+      }
+    }
+
+    if (formData.payment_account_type === 'bank_account') {
+      // حساب بنكي: رقم IBAN أو رقم حساب (10-34 حرف)
+      if (accountNumber.length < 10) {
+        toast({ title: "خطأ", description: "رقم الحساب البنكي يجب أن يتكون من 10 أحرف على الأقل", variant: "destructive" });
+        return;
+      }
+      if (accountNumber.length > 34) {
+        toast({ title: "خطأ", description: "رقم الحساب البنكي طويل جداً", variant: "destructive" });
+        return;
+      }
+      if (!formData.payment_bank_name) {
+        toast({ title: "تنبيه", description: "يرجى إدخال اسم البنك", variant: "destructive" });
+        return;
+      }
+    }
+    
+    // التحقق من اسم صاحب الحساب
+    if (formData.payment_account_holder?.trim().length < 3) {
+      toast({ title: "خطأ", description: "اسم صاحب الحساب يجب أن يتكون من 3 أحرف على الأقل", variant: "destructive" });
       return;
     }
 
