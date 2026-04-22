@@ -157,6 +157,31 @@ app = FastAPI(
     redoc_url=None
 )
 
+# 🔒 CORS Middleware - السماح بالطلبات من الواجهة الأمامية مع Cookies
+# مهم جداً لنظام httpOnly Cookies
+ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "https://localhost:3000",
+    "http://127.0.0.1:3000",
+    "https://shopper-suite.preview.emergentagent.com",
+    "https://trendsyria.com",
+    "https://www.trendsyria.com",
+    # إضافة origins من البيئة
+    os.getenv("FRONTEND_URL", ""),
+]
+# إزالة القيم الفارغة
+ALLOWED_ORIGINS = [o for o in ALLOWED_ORIGINS if o]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=ALLOWED_ORIGINS,
+    allow_credentials=True,  # 🔒 مهم جداً: يسمح بإرسال Cookies
+    allow_methods=["*"],
+    allow_headers=["*"],
+    expose_headers=["Content-Range", "X-Total-Count"],
+)
+logger.info(f"✅ CORS middleware enabled for: {ALLOWED_ORIGINS}")
+
 # ⚡ GZip Compression - تقليل حجم البيانات المرسلة بنسبة 70-90%
 # خفض الحد الأدنى إلى 256 bytes لضغط المزيد من الاستجابات
 app.add_middleware(GZipMiddleware, minimum_size=256)

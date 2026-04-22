@@ -2,11 +2,13 @@
 # مسارات المصادقة وتسجيل الدخول
 # 🔒 محمي ضد Brute Force و Input Validation
 
-from fastapi import APIRouter, HTTPException, Depends, Request
+from fastapi import APIRouter, HTTPException, Depends, Request, Response
+from fastapi.responses import JSONResponse
 from datetime import datetime, timezone
 import uuid
 
 from core.database import db, get_current_user
+from core.auth_cookies import set_auth_cookies, clear_auth_cookies
 from core.security import (
     hash_password_secure,
     verify_password,
@@ -102,7 +104,11 @@ def mask_phone(phone: str) -> str:
 
 @router.post("/register")
 @limiter.limit("3/minute")
-async def register(request: Request, user: UserRegister):
+async def register(request: Request, user: UserRegister, response: Response):
+    """
+    تسجيل مستخدم جديد
+    🔒 يُرسل Token في httpOnly Cookie للأمان
+    """
     get_remote_address(request)
     
     # 🔒 التحقق من صحة رقم الهاتف
@@ -178,8 +184,11 @@ async def register(request: Request, user: UserRegister):
         "created_at": datetime.now(timezone.utc).isoformat()
     })
     
+    # 🔒 تعيين Token في httpOnly Cookie
+    set_auth_cookies(response, access_token, refresh_token)
+    
     return {
-        "token": access_token,
+        "token": access_token,  # للتوافق مع التطبيقات القديمة
         "refresh_token": refresh_token,
         "user": {
             "id": user_id,
@@ -193,9 +202,10 @@ async def register(request: Request, user: UserRegister):
 
 @router.post("/login")
 @limiter.limit("15/minute")
-async def login(request: Request, credentials: UserLogin):
+async def login(request: Request, credentials: UserLogin, response: Response):
     """
     تسجيل الدخول - مع معالجة أخطاء شاملة
+    🔒 يُرسل Token في httpOnly Cookie للأمان
     """
     import traceback
     auth_logger = logging.getLogger("auth")
@@ -368,8 +378,11 @@ async def login(request: Request, credentials: UserLogin):
         active_role = user.get("active_role", user["user_type"])
         role_status = user.get("role_status", {})
         
+        # 🔒 تعيين Token في httpOnly Cookie
+        set_auth_cookies(response, access_token, refresh_token)
+        
         return {
-            "token": access_token,
+            "token": access_token,  # للتوافق مع التطبيقات القديمة
             "refresh_token": refresh_token,
             "user": {
                 "id": user["id"],
@@ -390,6 +403,27 @@ async def login(request: Request, credentials: UserLogin):
     except Exception as e:
         auth_logger.error(f"❌ Unexpected login error: {e}\n{traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=f"خطأ غير متوقع: {str(e)[:200]}")
+
+@router.post("/logout")
+async def logout(request: Request, response: Response):
+    """
+    🔒 تسجيل الخروج - مسح Cookies المصادقة
+    """
+    # مسح Cookies
+    clear_auth_cookies(response)
+    
+    # حذف refresh token من قاعدة البيانات (اختياري)
+    try:
+        token = request.cookies.get("access_token")
+        if token:
+            from core.security import decode_token
+            payload = decode_token(token)
+            if payload:
+                await db.refresh_tokens.delete_many({"user_id": payload.get("user_id")})
+    except Exception:
+        pass  # نتجاهل الأخطاء - الأهم هو مسح الكوكيز
+    
+    return {"message": "تم تسجيل الخروج بنجاح"}
 
 @router.post("/reset-brute-force")
 async def reset_brute_force_locks(user: dict = Depends(get_current_user)):

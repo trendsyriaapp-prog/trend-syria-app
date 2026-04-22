@@ -4,7 +4,7 @@
 # ⚡ محسّن للأداء والاستقرار
 
 from motor.motor_asyncio import AsyncIOMotorClient
-from fastapi import HTTPException, Depends
+from fastapi import HTTPException, Depends, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 import os
 import jwt
@@ -319,6 +319,9 @@ TOKEN_EXPIRE_DAYS = 7
 
 security = HTTPBearer(auto_error=False)
 
+# اسم Cookie للـ Token
+AUTH_COOKIE_NAME = "access_token"
+
 # ============== Helper Functions ==============
 
 def hash_password(password: str) -> str:
@@ -335,12 +338,40 @@ def create_token(user_id: str, user_type: str) -> str:
     }
     return jwt.encode(payload, JWT_SECRET, algorithm=ALGORITHM)
 
-async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    """🔒 التحقق من المستخدم مع تجديد تلقائي للتوكن"""
-    if credentials is None:
+def _extract_token_from_request(request: Request, credentials: HTTPAuthorizationCredentials = None) -> str:
+    """
+    استخراج Token من الطلب
+    🔒 يدعم:
+    1. httpOnly Cookie (الطريقة الآمنة الجديدة)
+    2. Authorization header (للتوافق مع التطبيقات القديمة والأجهزة)
+    """
+    # 1. محاولة قراءة من Cookie أولاً (الأكثر أماناً)
+    token = request.cookies.get(AUTH_COOKIE_NAME)
+    if token:
+        return token
+    
+    # 2. محاولة قراءة من Authorization header
+    if credentials and credentials.credentials:
+        return credentials.credentials
+    
+    # 3. محاولة قراءة من header مباشرة (fallback)
+    auth_header = request.headers.get("Authorization")
+    if auth_header and auth_header.startswith("Bearer "):
+        return auth_header[7:]
+    
+    return None
+
+async def get_current_user(
+    request: Request,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """🔒 التحقق من المستخدم - يدعم Cookie و Header"""
+    token = _extract_token_from_request(request, credentials)
+    
+    if not token:
         raise HTTPException(status_code=401, detail="غير مصرح - يجب تسجيل الدخول")
     try:
-        payload = jwt.decode(credentials.credentials, JWT_SECRET, algorithms=[ALGORITHM])
+        payload = jwt.decode(token, JWT_SECRET, algorithms=[ALGORITHM])
         user = await db.users.find_one({"id": payload["user_id"]}, {"_id": 0})
         if not user:
             raise HTTPException(status_code=401, detail="المستخدم غير موجود")
@@ -363,18 +394,26 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
     except jwt.InvalidTokenError:
         raise HTTPException(status_code=401, detail="رمز غير صالح")
 
-async def get_current_admin(credentials: HTTPAuthorizationCredentials = Depends(security)):
+async def get_current_admin(
+    request: Request,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
     """التحقق من صلاحيات المشرف"""
-    user = await get_current_user(credentials)
+    user = await get_current_user(request, credentials)
     if user.get("user_type") not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="غير مصرح - صلاحيات المشرف مطلوبة")
     return user
 
-async def get_optional_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    if credentials is None:
+async def get_optional_user(
+    request: Request,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """الحصول على المستخدم الحالي (اختياري - لا يرمي خطأ إذا غير موجود)"""
+    token = _extract_token_from_request(request, credentials)
+    if not token:
         return None
     try:
-        payload = jwt.decode(credentials.credentials, JWT_SECRET, algorithms=[ALGORITHM])
+        payload = jwt.decode(token, JWT_SECRET, algorithms=[ALGORITHM])
         user = await db.users.find_one({"id": payload["user_id"]}, {"_id": 0})
         return user
     except Exception:
