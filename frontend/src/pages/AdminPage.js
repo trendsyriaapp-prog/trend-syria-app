@@ -25,7 +25,7 @@ import DeliveryTab from '../components/admin/DeliveryTab';
 import SubAdminsTab from '../components/admin/SubAdminsTab';
 import NotificationsTab from '../components/admin/NotificationsTab';
 import CommissionsTab from '../components/admin/CommissionsTab';
-import WithdrawalsTab from '../components/admin/WithdrawalsTab';
+// WithdrawalsTab محذوف - يُستخدم AllWithdrawRequestsTab بدلاً منه
 import SettingsTab from '../components/admin/SettingsTab';
 import AdsTab from '../components/admin/AdsTab';
 import LowStockTab from '../components/admin/LowStockTab';
@@ -747,7 +747,7 @@ const AdminDashboardPage = () => {
               />
             )}
             {activeTab === 'withdrawals' && (
-              <WithdrawalsTab />
+              <AllWithdrawRequestsTab />
             )}
             {activeTab === 'settings' && user.user_type === 'admin' && (
               <SettingsTab user={user} />
@@ -878,9 +878,6 @@ const AdminDashboardPage = () => {
             )}
             {activeTab === 'all-pending-items' && (
               <AllPendingItemsTab />
-            )}
-            {activeTab === 'all-withdraw-requests' && (
-              <AllWithdrawRequestsTab />
             )}
             {activeTab === 'reset-database' && user.user_type === 'admin' && (
               <ResetDatabaseTab />
