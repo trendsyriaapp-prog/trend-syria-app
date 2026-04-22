@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapPin, X, Check, Building, Home } from 'lucide-react';
 
@@ -46,6 +46,26 @@ const AddressPickerModal = ({
       });
     }
   }, [initialAddress, isOpen]);
+
+  // معالج زر الرجوع في الهاتف (Back button)
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleBackButton = (e) => {
+      e.preventDefault();
+      onClose();
+    };
+
+    window.history.pushState({ addressPicker: true }, '');
+    window.addEventListener('popstate', handleBackButton);
+
+    return () => {
+      window.removeEventListener('popstate', handleBackButton);
+      if (window.history.state?.addressPicker) {
+        window.history.back();
+      }
+    };
+  }, [isOpen, onClose]);
 
   const handleChange = (field, value) => {
     setAddress(prev => ({ ...prev, [field]: value }));

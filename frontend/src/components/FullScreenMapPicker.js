@@ -1,7 +1,7 @@
 // /app/frontend/src/components/FullScreenMapPicker.js
 // خريطة ملء الشاشة لاختيار الموقع
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { MapContainer, TileLayer, Marker, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -110,6 +110,31 @@ const FullScreenMapPicker = ({
       setMapCenter([currentLocation.latitude, currentLocation.longitude]);
     }
   }, [isOpen, currentLocation]);
+
+  // معالج زر الرجوع في الهاتف (Back button)
+  useEffect(() => {
+    if (!isOpen) return;
+
+    // إضافة entry إلى history عند فتح الخريطة
+    const handleBackButton = (e) => {
+      e.preventDefault();
+      onClose();
+    };
+
+    // إضافة state جديد للـ history
+    window.history.pushState({ mapPicker: true }, '');
+    
+    // الاستماع لحدث popstate (زر الرجوع)
+    window.addEventListener('popstate', handleBackButton);
+
+    return () => {
+      window.removeEventListener('popstate', handleBackButton);
+      // إزالة state من history إذا لم يتم الضغط على زر الرجوع
+      if (window.history.state?.mapPicker) {
+        window.history.back();
+      }
+    };
+  }, [isOpen, onClose]);
 
   // الحصول على موقع GPS الحالي
   const getCurrentLocation = () => {

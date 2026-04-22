@@ -390,3 +390,24 @@
 ### الملفات المحدّثة:
 - `/app/frontend/src/components/FullScreenMapPicker.js`
 - `/app/frontend/src/components/LocationPickerMap.js`
+
+---
+
+## Back Button Fix for Modals (April 2025) ✅ COMPLETE
+
+### المشكلة:
+- عند الضغط على زر الرجوع في الهاتف (Back button) وأنت داخل الخريطة أو أي نافذة منبثقة
+- كان يأخذك إلى صفحة تسجيل الدخول بدلاً من إغلاق النافذة
+
+### الحل:
+- تم إضافة معالج (event listener) لزر الرجوع في جميع النوافذ المنبثقة (Modals)
+- عند الضغط على زر الرجوع، يتم إغلاق النافذة فقط بدلاً من الرجوع في التاريخ
+
+### المكونات المحدّثة (7 مكونات):
+1. ✅ `FullScreenMapPicker.js` - شاشة الخريطة ملء الشاشة
+2. ✅ `LocationPickerMap.js` - خريطة اختيار الموقع
+3. ✅ `AddressPickerModal.js` - نافذة إضافة العنوان
+4. ✅ `AddToCartModal.js` - نافذة إضافة للسلة
+5. ✅ `ChangePasswordModal.js` - نافذة تغيير كلمة المرور
+6. ✅ `GiftModal.js` - نافذة إرسال هدية
+7. ✅ `ImageSearchModal.js` - نافذة البحث بالصورة

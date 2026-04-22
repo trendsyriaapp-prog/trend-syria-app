@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import logger from '../lib/logger';
 import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet';
 import { MapPin, Navigation, X, Check, Loader2 } from 'lucide-react';
@@ -72,6 +72,31 @@ const LocationPickerMap = ({
       setSelectedLng(initialLng);
     }
   }, [isOpen, initialLat, initialLng]);
+
+  // معالج زر الرجوع في الهاتف (Back button)
+  useEffect(() => {
+    if (!isOpen) return;
+
+    // إضافة entry إلى history عند فتح الخريطة
+    const handleBackButton = (e) => {
+      e.preventDefault();
+      onClose();
+    };
+
+    // إضافة state جديد للـ history
+    window.history.pushState({ locationPicker: true }, '');
+    
+    // الاستماع لحدث popstate (زر الرجوع)
+    window.addEventListener('popstate', handleBackButton);
+
+    return () => {
+      window.removeEventListener('popstate', handleBackButton);
+      // إزالة state من history إذا لم يتم الضغط على زر الرجوع
+      if (window.history.state?.locationPicker) {
+        window.history.back();
+      }
+    };
+  }, [isOpen, onClose]);
 
   const handleLocationSelect = (lat, lng) => {
     setSelectedLat(lat);
