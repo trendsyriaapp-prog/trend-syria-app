@@ -1,7 +1,7 @@
 # /app/backend/models/schemas.py
 # نماذج البيانات (Pydantic Models)
 
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
 from typing import List, Optional
 
 # ============== User Models ==============
@@ -216,6 +216,38 @@ class PaymentMethodCreate(BaseModel):
     phone: str
     holder_name: str
     is_default: bool = False
+    
+    @validator('phone')
+    def validate_phone(cls, v, values):
+        payment_type = values.get('type', '')
+        phone = v.strip()
+        
+        if payment_type == 'shamcash':
+            # شام كاش: رقم سوري يبدأ بـ 09 ويتكون من 10 أرقام
+            if not phone.startswith('09'):
+                raise ValueError('رقم شام كاش يجب أن يبدأ بـ 09')
+            if len(phone) != 10:
+                raise ValueError('رقم شام كاش يجب أن يتكون من 10 أرقام')
+            if not phone.isdigit():
+                raise ValueError('رقم شام كاش يجب أن يحتوي على أرقام فقط')
+        
+        elif payment_type == 'bank_account':
+            # حساب بنكي: رقم IBAN أو رقم حساب (10-34 حرف)
+            if len(phone) < 10:
+                raise ValueError('رقم الحساب البنكي يجب أن يتكون من 10 أحرف على الأقل')
+            if len(phone) > 34:
+                raise ValueError('رقم الحساب البنكي طويل جداً')
+        
+        return phone
+    
+    @validator('holder_name')
+    def validate_holder_name(cls, v):
+        name = v.strip()
+        if len(name) < 3:
+            raise ValueError('اسم صاحب الحساب يجب أن يتكون من 3 أحرف على الأقل')
+        if len(name) > 100:
+            raise ValueError('اسم صاحب الحساب طويل جداً')
+        return name
 
 # ============== Wallet & Withdrawal Models ==============
 

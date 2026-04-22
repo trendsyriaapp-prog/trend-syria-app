@@ -345,6 +345,38 @@
 
 ---
 
+## Payment Account Validation (April 2025) ✅ NEW
+
+### تم إضافة تحقق من صحة أرقام الحسابات:
+
+**شام كاش (Sham Cash):**
+| الشرط | القيمة |
+|-------|--------|
+| يبدأ بـ | `09` |
+| عدد الأرقام | 10 أرقام بالضبط |
+| يقبل | أرقام فقط |
+
+**حساب بنكي (Bank Account):**
+| الشرط | القيمة |
+|-------|--------|
+| الحد الأدنى | 10 أحرف |
+| الحد الأقصى | 34 حرف |
+| يقبل | أرقام وحروف (IBAN) |
+
+**اسم صاحب الحساب:**
+| الشرط | القيمة |
+|-------|--------|
+| الحد الأدنى | 3 أحرف |
+| الحد الأقصى | 100 حرف |
+
+### الملفات المحدّثة:
+- `/app/backend/models/schemas.py` - Pydantic validators
+- `/app/frontend/src/pages/CheckoutPage.js` - Frontend validation
+- `/app/frontend/src/pages/FoodBatchCheckoutPage.js` - Frontend validation
+- `/app/frontend/src/pages/DeliveryPages.js` - Frontend validation
+
+---
+
 ## Notes
 - Always communicate with user in Arabic (العربية)
 - MONGO_URL in preview can be swapped to localhost for testing, but must be reverted

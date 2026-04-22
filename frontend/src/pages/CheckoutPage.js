@@ -189,6 +189,43 @@ const CheckoutPage = () => {
       toast({ title: "خطأ", description: "يرجى إكمال بيانات الدفع", variant: "destructive" });
       return;
     }
+    
+    // التحقق من صحة رقم الحساب
+    if (useNewPayment && newPayment.type !== 'bank_card' && newPayment.type !== 'wallet') {
+      const phone = newPayment.phone.trim();
+      
+      if (newPayment.type === 'shamcash') {
+        // شام كاش: رقم سوري يبدأ بـ 09 ويتكون من 10 أرقام
+        if (!phone.startsWith('09')) {
+          toast({ title: "خطأ", description: "رقم شام كاش يجب أن يبدأ بـ 09", variant: "destructive" });
+          return;
+        }
+        if (phone.length !== 10) {
+          toast({ title: "خطأ", description: "رقم شام كاش يجب أن يتكون من 10 أرقام", variant: "destructive" });
+          return;
+        }
+        if (!/^\d+$/.test(phone)) {
+          toast({ title: "خطأ", description: "رقم شام كاش يجب أن يحتوي على أرقام فقط", variant: "destructive" });
+          return;
+        }
+      } else if (newPayment.type === 'bank_account') {
+        // حساب بنكي: رقم IBAN أو رقم حساب (10-34 حرف)
+        if (phone.length < 10) {
+          toast({ title: "خطأ", description: "رقم الحساب البنكي يجب أن يتكون من 10 أحرف على الأقل", variant: "destructive" });
+          return;
+        }
+        if (phone.length > 34) {
+          toast({ title: "خطأ", description: "رقم الحساب البنكي طويل جداً", variant: "destructive" });
+          return;
+        }
+      }
+      
+      // التحقق من اسم صاحب الحساب
+      if (newPayment.holder_name.trim().length < 3) {
+        toast({ title: "خطأ", description: "اسم صاحب الحساب يجب أن يتكون من 3 أحرف على الأقل", variant: "destructive" });
+        return;
+      }
+    }
 
     // === نظام التقييد الجغرافي المؤقت - للإزالة لاحقاً ===
     // التحقق من أن المنطقة مسموحة للتوصيل
