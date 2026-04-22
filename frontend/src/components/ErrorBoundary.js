@@ -11,28 +11,147 @@ class ErrorBoundary extends React.Component {
       hasError: false, 
       error: null, 
       errorInfo: null,
-      timestamp: null
+      timestamp: null,
+      isChunkError: false
     };
   }
 
   static getDerivedStateFromError(error) {
-    return { hasError: true };
+    // التحقق من ChunkLoadError
+    const isChunkError = error?.name === 'ChunkLoadError' || 
+                         error?.message?.includes('Loading chunk') ||
+                         error?.message?.includes('Loading CSS chunk') ||
+                         error?.message?.includes('Failed to fetch dynamically imported module');
+    
+    return { hasError: true, isChunkError };
   }
 
   componentDidCatch(error, errorInfo) {
+    const isChunkError = error?.name === 'ChunkLoadError' || 
+                         error?.message?.includes('Loading chunk') ||
+                         error?.message?.includes('Loading CSS chunk') ||
+                         error?.message?.includes('Failed to fetch dynamically imported module');
+    
     this.setState({
       error: error,
       errorInfo: errorInfo,
-      timestamp: new Date().toLocaleString('ar-SY')
+      timestamp: new Date().toLocaleString('ar-SY'),
+      isChunkError
     });
     
     // طباعة في Console
     logger.error('🔴 ErrorBoundary caught error:', error);
     logger.error('📍 Component Stack:', errorInfo.componentStack);
+    
+    // إذا كان ChunkLoadError، إعادة تحميل الصفحة تلقائياً بعد 2 ثانية
+    if (isChunkError) {
+      logger.log('🔄 ChunkLoadError detected, auto-reloading in 2 seconds...');
+      setTimeout(() => {
+        // مسح الكاش وإعادة التحميل
+        if ('caches' in window) {
+          caches.keys().then(names => {
+            names.forEach(name => caches.delete(name));
+          });
+        }
+        window.location.reload(true);
+      }, 2000);
+    }
   }
+
+  handleReload = () => {
+    // مسح الكاش قبل إعادة التحميل
+    if ('caches' in window) {
+      caches.keys().then(names => {
+        names.forEach(name => caches.delete(name));
+      });
+    }
+    // مسح localStorage للـ chunks القديمة
+    Object.keys(localStorage).forEach(key => {
+      if (key.startsWith('chunk_') || key.startsWith('webpack_')) {
+        localStorage.removeItem(key);
+      }
+    });
+    window.location.reload(true);
+  };
 
   render() {
     if (this.state.hasError) {
+      // رسالة مخصصة لـ ChunkLoadError
+      if (this.state.isChunkError) {
+        return (
+          <div dir="rtl" style={{
+            minHeight: '100vh',
+            background: 'linear-gradient(135deg, #FF6B00 0%, #FF8533 100%)',
+            padding: '20px',
+            fontFamily: 'Tajawal, Arial, sans-serif',
+            color: 'white',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}>
+            <div style={{
+              maxWidth: '400px',
+              textAlign: 'center'
+            }}>
+              <div style={{ fontSize: '80px', marginBottom: '20px' }}>🔄</div>
+              <h1 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '16px' }}>
+                جاري التحديث...
+              </h1>
+              <p style={{ fontSize: '16px', opacity: 0.9, marginBottom: '24px', lineHeight: '1.6' }}>
+                يتم تحميل إصدار جديد من التطبيق.
+                <br />
+                سيتم إعادة التحميل تلقائياً خلال ثوانٍ.
+              </p>
+              
+              {/* Loading indicator */}
+              <div style={{
+                width: '50px',
+                height: '50px',
+                border: '4px solid rgba(255,255,255,0.3)',
+                borderTopColor: 'white',
+                borderRadius: '50%',
+                margin: '0 auto 24px',
+                animation: 'spin 1s linear infinite'
+              }} />
+              
+              <button
+                onClick={this.handleReload}
+                style={{
+                  width: '100%',
+                  padding: '16px 32px',
+                  background: 'white',
+                  color: '#FF6B00',
+                  border: 'none',
+                  borderRadius: '12px',
+                  fontSize: '16px',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  fontFamily: 'Tajawal, Arial, sans-serif'
+                }}
+              >
+                إعادة التحميل الآن
+              </button>
+              
+              <p style={{ 
+                fontSize: '12px', 
+                opacity: 0.7, 
+                marginTop: '20px' 
+              }}>
+                إذا استمرت المشكلة، جرب مسح بيانات التطبيق
+              </p>
+            </div>
+            
+            <style>{`
+              @keyframes spin {
+                to { transform: rotate(360deg); }
+              }
+            `}</style>
+          </div>
+        );
+      }
+      
+      // الشاشة العادية للأخطاء الأخرى
       return (
         <div dir="rtl" style={{
           minHeight: '100vh',
