@@ -150,7 +150,7 @@ const JoinAsDeliveryPage = () => {
               اشتغل بوقتك واكسب دخل ممتاز مع ترند سورية
             </p>
             <Link
-              to="/register"
+              to="/register?type=delivery"
               className="inline-flex items-center gap-2 bg-white text-green-600 font-bold px-8 py-4 rounded-full text-lg hover:bg-green-50 transition-colors shadow-lg"
             >
               سجّل الآن
@@ -336,7 +336,7 @@ const JoinAsDeliveryPage = () => {
             سجّل الآن وابدأ الكسب خلال 24 ساعة!
           </p>
           <Link
-            to="/register"
+            to="/register?type=delivery"
             className="inline-flex items-center gap-2 bg-white text-green-600 font-bold px-8 py-4 rounded-full text-lg hover:bg-green-50 transition-colors shadow-lg"
           >
             سجّل كموظف توصيل

@@ -127,7 +127,7 @@ const JoinAsSellerPage = () => {
               انضم لآلاف البائعين على ترند سورية ووصّل منتجاتك لعملاء في كل سوريا
             </p>
             <Link
-              to="/register"
+              to="/register?type=seller"
               className="inline-flex items-center gap-2 bg-white text-[#FF6B00] font-bold px-8 py-4 rounded-full text-lg hover:bg-orange-50 transition-colors shadow-lg"
             >
               سجّل الآن مجاناً
@@ -257,7 +257,7 @@ const JoinAsSellerPage = () => {
             انضم الآن وابدأ البيع خلال دقائق!
           </p>
           <Link
-            to="/register"
+            to="/register?type=seller"
             className="inline-flex items-center gap-2 bg-white text-[#FF6B00] font-bold px-8 py-4 rounded-full text-lg hover:bg-orange-50 transition-colors shadow-lg"
           >
             سجّل كبائع الآن
