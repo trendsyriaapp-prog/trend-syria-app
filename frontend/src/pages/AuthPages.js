@@ -307,6 +307,10 @@ const LoginPage = () => {
             src="/images/logo.png" 
             alt="ترند سوريا" 
             className="w-20 h-20 object-contain mx-auto mb-4 rounded-2xl"
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src = '/icons/icon-192.png';
+            }}
           />
           <h1 className="text-2xl font-bold text-gray-900">تسجيل الدخول</h1>
           <p className="text-gray-500 mt-2">مرحباً بعودتك إلى ترند سورية</p>
@@ -512,6 +516,10 @@ const RegisterPage = () => {
             src="/images/logo.png" 
             alt="ترند سوريا" 
             className="w-20 h-20 object-contain mx-auto mb-4 rounded-2xl"
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src = '/icons/icon-192.png';
+            }}
           />
           <h1 className="text-2xl font-bold text-gray-900">إنشاء حساب جديد</h1>
           <p className="text-gray-500 mt-2">انضم إلى ترند سورية الآن</p>
