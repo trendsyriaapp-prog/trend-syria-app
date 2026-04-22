@@ -41,6 +41,20 @@ const PAYMENT_TYPES = [
   { id: 'bank_account', name: 'حساب بنكي', icon: '🏦' },
 ];
 
+/**
+ * دالة مساعدة لتحديد CSS classes للـ tab buttons
+ * تُبسط الـ nested ternaries المعقدة
+ */
+const getTabButtonClass = (isActive, isDarkMode, activeColor = 'bg-[#FF6B00]') => {
+  if (isActive) {
+    return `${activeColor} text-white`;
+  }
+  if (isDarkMode) {
+    return 'bg-gray-800 text-gray-300';
+  }
+  return 'bg-white border border-gray-200 text-gray-700';
+};
+
 const SettingsPage = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
@@ -303,7 +317,7 @@ const SettingsPage = () => {
             <button
               onClick={() => setActiveTab('driver')}
               className={`flex-1 flex items-center justify-center gap-1 py-2 rounded-lg font-bold text-[10px] transition-colors whitespace-nowrap px-2 ${
-                activeTab === 'driver' ? 'bg-blue-500 text-white' : isDarkMode ? 'bg-gray-800 text-gray-300' : 'bg-white border border-gray-200 text-gray-700'
+                getTabButtonClass(activeTab === 'driver', isDarkMode, 'bg-blue-500')
               }`}
             >
               <Truck size={12} />
@@ -315,7 +329,7 @@ const SettingsPage = () => {
             <button
               onClick={() => setActiveTab('tones')}
               className={`flex-1 flex items-center justify-center gap-1 py-2 rounded-lg font-bold text-[10px] transition-colors whitespace-nowrap px-2 ${
-                activeTab === 'tones' ? 'bg-purple-500 text-white' : isDarkMode ? 'bg-gray-800 text-gray-300' : 'bg-white border border-gray-200 text-gray-700'
+                getTabButtonClass(activeTab === 'tones', isDarkMode, 'bg-purple-500')
               }`}
               data-testid="tones-tab-btn"
             >
@@ -328,7 +342,7 @@ const SettingsPage = () => {
             <button
               onClick={() => setActiveTab('delivery-settings')}
               className={`flex-1 flex items-center justify-center gap-1 py-2 rounded-lg font-bold text-[10px] transition-colors whitespace-nowrap px-2 ${
-                activeTab === 'delivery-settings' ? 'bg-green-500 text-white' : isDarkMode ? 'bg-gray-800 text-gray-300' : 'bg-white border border-gray-200 text-gray-700'
+                getTabButtonClass(activeTab === 'delivery-settings', isDarkMode, 'bg-green-500')
               }`}
               data-testid="delivery-settings-tab-btn"
             >
@@ -339,7 +353,7 @@ const SettingsPage = () => {
           <button
             onClick={() => setActiveTab('loyalty')}
             className={`flex-1 flex items-center justify-center gap-1 py-2 rounded-lg font-bold text-[10px] transition-colors whitespace-nowrap px-2 ${
-              activeTab === 'loyalty' ? 'bg-[#FF6B00] text-white' : isDarkMode ? 'bg-gray-800 text-gray-300' : 'bg-white border border-gray-200 text-gray-700'
+              getTabButtonClass(activeTab === 'loyalty', isDarkMode)
             }`}
           >
             <Award size={12} />
@@ -348,7 +362,7 @@ const SettingsPage = () => {
           <button
             onClick={() => setActiveTab('addresses')}
             className={`flex-1 flex items-center justify-center gap-1 py-2 rounded-lg font-bold text-[10px] transition-colors whitespace-nowrap px-2 ${
-              activeTab === 'addresses' ? 'bg-[#FF6B00] text-white' : isDarkMode ? 'bg-gray-800 text-gray-300' : 'bg-white border border-gray-200 text-gray-700'
+              getTabButtonClass(activeTab === 'addresses', isDarkMode)
             }`}
           >
             <MapPin size={12} />
@@ -357,7 +371,7 @@ const SettingsPage = () => {
           <button
             onClick={() => setActiveTab('payments')}
             className={`flex-1 flex items-center justify-center gap-1 py-2 rounded-lg font-bold text-[10px] transition-colors whitespace-nowrap px-2 ${
-              activeTab === 'payments' ? 'bg-[#FF6B00] text-white' : isDarkMode ? 'bg-gray-800 text-gray-300' : 'bg-white border border-gray-200 text-gray-700'
+              getTabButtonClass(activeTab === 'payments', isDarkMode)
             }`}
           >
             <CreditCard size={12} />
@@ -366,7 +380,7 @@ const SettingsPage = () => {
           <button
             onClick={() => setActiveTab('support')}
             className={`flex-1 flex items-center justify-center gap-1 py-2 rounded-lg font-bold text-[10px] transition-colors whitespace-nowrap px-2 ${
-              activeTab === 'support' ? 'bg-[#FF6B00] text-white' : isDarkMode ? 'bg-gray-800 text-gray-300' : 'bg-white border border-gray-200 text-gray-700'
+              getTabButtonClass(activeTab === 'support', isDarkMode)
             }`}
             data-testid="support-tab-btn"
           >
@@ -376,7 +390,7 @@ const SettingsPage = () => {
           <button
             onClick={() => setActiveTab('notifications')}
             className={`flex-1 flex items-center justify-center gap-1 py-2 rounded-lg font-bold text-[10px] transition-colors whitespace-nowrap px-2 ${
-              activeTab === 'notifications' ? 'bg-[#FF6B00] text-white' : isDarkMode ? 'bg-gray-800 text-gray-300' : 'bg-white border border-gray-200 text-gray-700'
+              getTabButtonClass(activeTab === 'notifications', isDarkMode)
             }`}
             data-testid="notifications-tab-btn"
           >

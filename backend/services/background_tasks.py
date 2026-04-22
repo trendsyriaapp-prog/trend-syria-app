@@ -5,7 +5,7 @@
 """
 import asyncio
 from datetime import datetime, timezone, timedelta
-from typing import Optional
+from typing import Optional, Dict, Any, List
 import logging
 
 from core.database import db
@@ -18,11 +18,11 @@ from services.driver_assignment import (
 logger = logging.getLogger(__name__)
 
 # حالة المهمة
-task_running = False
+task_running: bool = False
 task_instance: Optional[asyncio.Task] = None
 
 
-async def check_orders_ready_for_dispatch():
+async def check_orders_ready_for_dispatch() -> int:
     """
     فحص الطلبات التي حان وقت إرسالها للسائقين
     
@@ -118,7 +118,7 @@ async def check_orders_ready_for_dispatch():
     return dispatched_count
 
 
-async def check_expired_driver_assignments():
+async def check_expired_driver_assignments() -> None:
     """
     فحص التعيينات المنتهية الصلاحية
     إذا لم يقبل السائق خلال الوقت المحدد، يُرسل الطلب للجميع
@@ -162,7 +162,7 @@ async def check_expired_driver_assignments():
             logger.error(f"Error handling expired assignment: {e}")
 
 
-async def check_driver_shortage():
+async def check_driver_shortage() -> None:
     """
     فحص نقص السائقين في كل مدينة وإرسال إشعار للمدير
     """
@@ -258,7 +258,7 @@ async def check_driver_shortage():
         logger.error(f"Error checking driver shortage: {e}")
 
 
-async def activate_scheduled_orders():
+async def activate_scheduled_orders() -> int:
     """
     تفعيل الطلبات المجدولة التي حان وقتها
     يتم تحويلها من حالة "scheduled" إلى "pending"
@@ -326,7 +326,7 @@ async def activate_scheduled_orders():
         return 0
 
 
-async def background_dispatch_loop():
+async def background_dispatch_loop() -> None:
     """
     الحلقة الرئيسية لمهام التوزيع
     تعمل كل 10 ثواني
@@ -419,7 +419,7 @@ async def background_dispatch_loop():
     logger.info("Background dispatch loop stopped")
 
 
-def start_background_tasks():
+def start_background_tasks() -> None:
     """بدء مهام الخلفية"""
     global task_instance
     
@@ -440,7 +440,7 @@ def start_background_tasks():
             logger.warning(f"Could not start background tasks: {e}")
 
 
-def stop_background_tasks():
+def stop_background_tasks() -> None:
     """إيقاف مهام الخلفية"""
     global task_running, task_instance
     
