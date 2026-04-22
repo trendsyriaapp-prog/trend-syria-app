@@ -113,7 +113,7 @@ const JoinAsFoodSellerPage = () => {
     building_number: '',
     logo: '',
     cover_image: '',
-    commercial_license: '', // رخصة المحل / السجل التجاري
+    commercial_license: '', // الرخصة الصحية
     delivery_time: 30,
     minimum_order: 0,
     delivery_fee: 5000,
@@ -944,11 +944,11 @@ const JoinAsFoodSellerPage = () => {
                 </label>
               </div>
 
-              {/* رخصة المحل / السجل التجاري - يظهر فقط إذا كانت الأصناف تتطلب رخصة */}
+              {/* الرخصة الصحية - يظهر فقط إذا كانت الأصناف تتطلب رخصة */}
               {requiresLicense() && (
                 <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    📋 رخصة المحل / السجل التجاري *
+                    📋 الرخصة الصحية *
                   </label>
                   <label className="cursor-pointer block">
                     {formData.commercial_license ? (
@@ -968,7 +968,7 @@ const JoinAsFoodSellerPage = () => {
                     ) : (
                       <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-[#FF6B00] transition-colors">
                         <Upload size={32} className="mx-auto text-gray-400 mb-2" />
-                        <span className="text-sm text-gray-600">اضغط لرفع صورة الرخصة</span>
+                        <span className="text-sm text-gray-600">اضغط لرفع صورة الرخصة الصحية</span>
                       </div>
                     )}
                     <input
@@ -979,7 +979,7 @@ const JoinAsFoodSellerPage = () => {
                     />
                   </label>
                   <p className="text-xs text-red-500 mt-2 flex items-center gap-1">
-                    ⚠️ الأصناف المختارة تتطلب رخصة أو سجل تجاري
+                    ⚠️ هذا الصنف يتطلب رخصة صحية
                   </p>
                 </div>
               )}
