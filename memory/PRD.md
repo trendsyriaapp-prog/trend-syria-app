@@ -224,6 +224,35 @@
 
 **Recommendation**: Leave these as-is. Refactor only when modifying them.
 
+---
+
+## 🚀 Performance Optimization for Syrian Internet (April 2025) ✅ NEW
+
+### Completed Optimizations:
+- [x] **PWA + Service Worker** - Offline-first caching active
+- [x] **GZip Compression** - Enabled via Cloudflare/Kubernetes
+- [x] **Unused Images Deleted** - Saved ~9.5MB total:
+  - `/app/frontend/public/_backup_unused_images/` (old logos, test icons)
+  - From icons folder: 95 unused icon variations (7.6MB saved)
+- [x] **Nginx Configuration Guide** - `/app/NGINX_SETUP_GUIDE.md`
+- [x] **Production Nginx Config** - `/app/nginx-production.conf`
+
+### Pending (Requires VPS Access):
+- [ ] **Configure Nginx Cache-Control Headers** on production VPS (130.94.57.227)
+  - Use `/app/nginx-production.conf` as template
+  - Follow `/app/NGINX_SETUP_GUIDE.md` for setup instructions
+  - Static files (JS/CSS): 1 year cache
+  - Images: 30 days cache
+  - HTML: No cache (instant updates)
+
+### Current State:
+- Preview environment uses Kubernetes Ingress which sends `cache-control: no-store`
+- After deploying Nginx config on VPS, headers will be:
+  - `cache-control: public, immutable, max-age=31536000` for JS/CSS
+  - `cache-control: public, max-age=2592000` for images
+
+---
+
 ## Notes
 - Always communicate with user in Arabic (العربية)
 - MONGO_URL in preview can be swapped to localhost for testing, but must be reverted
