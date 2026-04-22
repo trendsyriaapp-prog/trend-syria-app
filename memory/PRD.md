@@ -312,6 +312,39 @@
 
 ---
 
+## Location Picker Alert (April 2025) ✅ NEW
+
+### المشكلة:
+- زر تحديد الموقع لم يكن واضحاً أنه إلزامي
+- المستخدمون لا يعلمون لماذا لا يمكنهم إكمال الطلب
+
+### الحل:
+تم إضافة **شريط تنبيه أحمر متحرك** فوق زر تحديد الموقع يظهر:
+```
+⚠️ مطلوب: حدد موقعك لحساب أجرة التوصيل
+لا يمكن إكمال الطلب بدون تحديد الموقع على الخريطة
+```
+
+بعد تحديد الموقع، يتحول إلى:
+```
+✓ تم تحديد الموقع
+```
+
+### الصفحات المحدّثة:
+| الصفحة | نوع التحديث |
+|--------|-------------|
+| `GoogleMapsLocationPicker.js` | المكون الرئيسي - يؤثر على جميع الصفحات |
+| `FoodBatchCheckoutPage.js` | تنبيه مخصص |
+| `CartPage.js` | تنبيه مخصص |
+| `FoodCartPage.js` | تنبيه مخصص |
+
+### الصفحات المستفيدة تلقائياً:
+- CheckoutPage.js, FoodCartPage.js, SettingsPage.js
+- DeliveryPages.js, SellerPages.js, JoinAsFoodSellerPage.js
+- FoodStoreDashboard.js
+
+---
+
 ## Notes
 - Always communicate with user in Arabic (العربية)
 - MONGO_URL in preview can be swapped to localhost for testing, but must be reverted

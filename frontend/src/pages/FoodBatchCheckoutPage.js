@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 import axios from 'axios';
 import { 
   ArrowRight, Store, MapPin, Phone, CreditCard, Wallet, 
-  Clock, Loader2, Check, Package, Bike, Plus, Home, AlertCircle, Navigation
+  Clock, Loader2, Check, Package, Bike, Plus, Home, AlertCircle, Navigation, AlertTriangle
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useFoodCart } from '../context/FoodCartContext';
@@ -676,24 +676,39 @@ const FoodBatchCheckoutPage = () => {
                   الموقع على الخريطة * 
                   <span className="text-red-500 text-xs mr-1">(مطلوب لحساب أجرة التوصيل)</span>
                 </label>
+                
+                {/* تنبيه واضح إذا لم يتم تحديد الموقع */}
+                {!newAddress.latitude && !newAddress.longitude && (
+                  <div className="bg-red-50 border-2 border-red-300 rounded-xl p-3 mb-2 flex items-center gap-3 animate-pulse">
+                    <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
+                      <AlertTriangle size={18} className="text-red-600" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-bold text-red-800">⚠️ مطلوب: حدد موقعك</p>
+                      <p className="text-xs text-red-600">لا يمكن إكمال الطلب بدون تحديد الموقع</p>
+                    </div>
+                  </div>
+                )}
+                
                 <button
                   type="button"
                   onClick={() => setShowMapPicker(true)}
-                  className={`w-full border-2 border-dashed rounded-xl px-3 py-3 text-sm flex items-center justify-center gap-2 transition-all ${
+                  className={`w-full border-2 rounded-xl px-3 py-3 text-sm flex items-center justify-center gap-2 transition-all ${
                     newAddress.latitude && newAddress.longitude
                       ? 'border-green-400 bg-green-50 text-green-700'
-                      : 'border-orange-300 bg-orange-50 text-orange-700 hover:bg-orange-100'
+                      : 'border-[#FF6B00] bg-gradient-to-r from-[#FF6B00] to-[#FF8533] text-white font-bold shadow-lg'
                   }`}
+                  data-testid="open-map-button"
                 >
                   {newAddress.latitude && newAddress.longitude ? (
                     <>
-                      <Check size={18} className="text-[#FF6B00]" />
+                      <Check size={18} className="text-green-600" />
                       <span>تم تحديد الموقع ✓</span>
                     </>
                   ) : (
                     <>
-                      <Navigation size={18} />
-                      <span>حدد موقعك على الخريطة</span>
+                      <MapPin size={18} />
+                      <span>📍 اضغط هنا لتحديد موقعك على الخريطة</span>
                     </>
                   )}
                 </button>

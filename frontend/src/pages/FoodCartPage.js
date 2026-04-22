@@ -914,9 +914,9 @@ const FoodCartPage = () => {
                         الموقع محدد على الخريطة
                       </span>
                     ) : (
-                      <span className="text-[10px] text-orange-600 flex items-center gap-1">
-                        <AlertCircle size={12} />
-                        يرجى تحديد الموقع
+                      <span className="text-[10px] text-red-600 flex items-center gap-1 font-bold animate-pulse">
+                        <AlertTriangle size={12} />
+                        ⚠️ يرجى تحديد الموقع
                       </span>
                     )}
                     <button
@@ -927,10 +927,14 @@ const FoodCartPage = () => {
                         setTempLocation({ latitude: addr.latitude || null, longitude: addr.longitude || null });
                         setShowLocationModal(true);
                       }}
-                      className="text-[10px] text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-2 py-1 rounded-full transition-colors flex items-center gap-1"
+                      className={`text-[10px] px-2 py-1 rounded-full transition-colors flex items-center gap-1 ${
+                        addr.latitude 
+                          ? 'text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100'
+                          : 'text-white bg-gradient-to-r from-[#FF6B00] to-[#FF8533] font-bold shadow-md'
+                      }`}
                     >
                       <MapPin size={10} />
-                      {addr.latitude ? 'تعديل الموقع' : 'تحديد الموقع'}
+                      {addr.latitude ? 'تعديل الموقع' : '📍 حدد الموقع'}
                     </button>
                   </div>
                 </div>
