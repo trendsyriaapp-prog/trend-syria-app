@@ -9,7 +9,8 @@ import {
   UtensilsCrossed, SprayCan, ChevronLeft, TrendingUp,
   Package, Star, ShoppingBasket, Apple, Zap, ChevronRight,
   Pill, Car, MapPin, Watch, Gift, Sparkles, Laptop, Footprints,
-  Sofa, Refrigerator, Coffee, Cake, Croissant, GlassWater, Truck
+  Sofa, Refrigerator, Coffee, Cake, Croissant, GlassWater, Truck,
+  Bike, Baby, ToyBrick
 } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
 import FeaturedProducts from '../components/FeaturedProducts';
@@ -28,7 +29,8 @@ const iconMap = {
   Smartphone, Shirt, Home: HomeIcon, Dumbbell, 
   BookOpen, Gamepad2, UtensilsCrossed, SprayCan,
   ShoppingBasket, Apple, Pill, Car, Watch, Gift, Sparkles,
-  Laptop, Footprints, Sofa, Refrigerator, Coffee, Cake, Croissant, GlassWater, Package
+  Laptop, Footprints, Sofa, Refrigerator, Coffee, Cake, Croissant, GlassWater, Package,
+  Bike, Baby, ToyBrick
 };
 
 // مكون Skeleton للمنتجات - ارتفاع ثابت لمنع القفزات

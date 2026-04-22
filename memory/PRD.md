@@ -258,6 +258,30 @@
 
 ---
 
+## Category System Update (April 2025) ✅ NEW
+
+### Completed:
+- [x] **إضافة فئة "دراجات" (Bicycles)** - `id: bicycles`, `icon: Bike`, `order: 12`
+- [x] **إضافة فئة "ألعاب أطفال" (Kids Toys)** - `id: kids_toys`, `icon: ToyBrick`, `order: 13`
+- [x] **فصل "هدايا" عن "ألعاب فيديو"** - كلاهما فئات منفصلة تماماً
+- [x] **28 فئة تسوق + 8 فئات طعام** - إجمالي 36 فئة منظمة
+
+### الفئات الجديدة:
+| الاسم | ID | الأيقونة | الترتيب |
+|-------|-----|---------|---------|
+| دراجات | bicycles | Bike | 12 |
+| ألعاب أطفال | kids_toys | ToyBrick | 13 |
+| مستلزمات أطفال | kids | Baby | 14 |
+| هدايا | gifts | Gift | 17 |
+| ألعاب فيديو | gaming | Gamepad2 | 18 |
+
+### الملفات المحدّثة:
+- `/app/backend/routes/categories.py` - `DEFAULT_CATEGORIES` محدّثة
+- `/app/frontend/src/pages/CategoriesPage.js` - أيقونات Bike, Baby, ToyBrick
+- `/app/frontend/src/pages/HomePage.js` - أيقونات Bike, Baby, ToyBrick
+
+---
+
 ## Notes
 - Always communicate with user in Arabic (العربية)
 - MONGO_URL in preview can be swapped to localhost for testing, but must be reverted

@@ -31,7 +31,7 @@ class CategoryUpdate(BaseModel):
 
 # الفئات الافتراضية - القائمة النهائية المعتمدة
 DEFAULT_CATEGORIES = [
-    # ===== قسم المنتجات (shopping) - 26 صنف =====
+    # ===== قسم المنتجات (shopping) - 28 صنف =====
     {"id": "electronics", "name": "إلكترونيات", "name_en": "Electronics", "icon": "Smartphone", "type": "shopping", "color": "#3B82F6", "order": 1, "is_active": True},
     {"id": "mobiles", "name": "موبايلات", "name_en": "Mobiles", "icon": "Smartphone", "type": "shopping", "color": "#8B5CF6", "order": 2, "is_active": True},
     {"id": "clothes", "name": "ملابس", "name_en": "Clothes", "icon": "Shirt", "type": "shopping", "color": "#EC4899", "order": 3, "is_active": True},
@@ -43,21 +43,23 @@ DEFAULT_CATEGORIES = [
     {"id": "decor", "name": "ديكور", "name_en": "Decor", "icon": "Lamp", "type": "shopping", "color": "#F97316", "order": 9, "is_active": True},
     {"id": "beauty", "name": "تجميل وعناية شخصية", "name_en": "Beauty & Personal Care", "icon": "SprayCan", "type": "shopping", "color": "#EC4899", "order": 10, "is_active": True},
     {"id": "sports", "name": "رياضة", "name_en": "Sports", "icon": "Dumbbell", "type": "shopping", "color": "#EF4444", "order": 11, "is_active": True},
-    {"id": "kids", "name": "أطفال", "name_en": "Kids", "icon": "Baby", "type": "shopping", "color": "#F97316", "order": 12, "is_active": True},
-    {"id": "books", "name": "كتب", "name_en": "Books", "icon": "BookOpen", "type": "shopping", "color": "#78716C", "order": 13, "is_active": True},
-    {"id": "stationery", "name": "قرطاسية", "name_en": "Stationery", "icon": "Pencil", "type": "shopping", "color": "#0284C7", "order": 14, "is_active": True},
-    {"id": "gifts", "name": "هدايا", "name_en": "Gifts", "icon": "Gift", "type": "shopping", "color": "#E11D48", "order": 15, "is_active": True},
-    {"id": "gaming", "name": "ألعاب", "name_en": "Games", "icon": "Gamepad2", "type": "shopping", "color": "#7C3AED", "order": 16, "is_active": True},
-    {"id": "watches", "name": "ساعات يد", "name_en": "Watches", "icon": "Watch", "type": "shopping", "color": "#4F46E5", "order": 17, "is_active": True},
-    {"id": "headphones", "name": "سماعات", "name_en": "Headphones", "icon": "Headphones", "type": "shopping", "color": "#9333EA", "order": 18, "is_active": True},
-    {"id": "bags", "name": "حقائب", "name_en": "Bags", "icon": "Briefcase", "type": "shopping", "color": "#D946EF", "order": 19, "is_active": True},
-    {"id": "eyewear", "name": "نظارات", "name_en": "Eyewear", "icon": "Glasses", "type": "shopping", "color": "#0EA5E9", "order": 20, "is_active": True},
-    {"id": "flowers", "name": "زهور", "name_en": "Flowers", "icon": "Flower2", "type": "shopping", "color": "#F43F5E", "order": 21, "is_active": True},
-    {"id": "medicines", "name": "أدوية", "name_en": "Medicines", "icon": "Pill", "type": "shopping", "color": "#22C55E", "order": 22, "is_active": True},
-    {"id": "car_parts", "name": "قطع غيار سيارات", "name_en": "Car Parts", "icon": "Wrench", "type": "shopping", "color": "#475569", "order": 23, "is_active": True},
-    {"id": "hardware", "name": "خردوات", "name_en": "Hardware", "icon": "Hammer", "type": "shopping", "color": "#78716C", "order": 24, "is_active": True},
-    {"id": "groceries", "name": "مواد غذائية ومعلبات", "name_en": "Groceries & Canned", "icon": "ShoppingBasket", "type": "shopping", "color": "#84CC16", "order": 25, "is_active": True},
-    {"id": "pet_food", "name": "طعام حيوانات", "name_en": "Pet Food", "icon": "PawPrint", "type": "shopping", "color": "#A3E635", "order": 26, "is_active": True},
+    {"id": "bicycles", "name": "دراجات", "name_en": "Bicycles", "icon": "Bike", "type": "shopping", "color": "#0891B2", "order": 12, "is_active": True},
+    {"id": "kids_toys", "name": "ألعاب أطفال", "name_en": "Kids Toys", "icon": "ToyBrick", "type": "shopping", "color": "#F472B6", "order": 13, "is_active": True},
+    {"id": "kids", "name": "مستلزمات أطفال", "name_en": "Kids Supplies", "icon": "Baby", "type": "shopping", "color": "#F97316", "order": 14, "is_active": True},
+    {"id": "books", "name": "كتب", "name_en": "Books", "icon": "BookOpen", "type": "shopping", "color": "#78716C", "order": 15, "is_active": True},
+    {"id": "stationery", "name": "قرطاسية", "name_en": "Stationery", "icon": "Pencil", "type": "shopping", "color": "#0284C7", "order": 16, "is_active": True},
+    {"id": "gifts", "name": "هدايا", "name_en": "Gifts", "icon": "Gift", "type": "shopping", "color": "#E11D48", "order": 17, "is_active": True},
+    {"id": "gaming", "name": "ألعاب فيديو", "name_en": "Video Games", "icon": "Gamepad2", "type": "shopping", "color": "#7C3AED", "order": 18, "is_active": True},
+    {"id": "watches", "name": "ساعات يد", "name_en": "Watches", "icon": "Watch", "type": "shopping", "color": "#4F46E5", "order": 19, "is_active": True},
+    {"id": "headphones", "name": "سماعات", "name_en": "Headphones", "icon": "Headphones", "type": "shopping", "color": "#9333EA", "order": 20, "is_active": True},
+    {"id": "bags", "name": "حقائب", "name_en": "Bags", "icon": "Briefcase", "type": "shopping", "color": "#D946EF", "order": 21, "is_active": True},
+    {"id": "eyewear", "name": "نظارات", "name_en": "Eyewear", "icon": "Glasses", "type": "shopping", "color": "#0EA5E9", "order": 22, "is_active": True},
+    {"id": "flowers", "name": "زهور", "name_en": "Flowers", "icon": "Flower2", "type": "shopping", "color": "#F43F5E", "order": 23, "is_active": True},
+    {"id": "medicines", "name": "أدوية", "name_en": "Medicines", "icon": "Pill", "type": "shopping", "color": "#22C55E", "order": 24, "is_active": True},
+    {"id": "car_parts", "name": "قطع غيار سيارات", "name_en": "Car Parts", "icon": "Wrench", "type": "shopping", "color": "#475569", "order": 25, "is_active": True},
+    {"id": "hardware", "name": "خردوات", "name_en": "Hardware", "icon": "Hammer", "type": "shopping", "color": "#78716C", "order": 26, "is_active": True},
+    {"id": "groceries", "name": "مواد غذائية ومعلبات", "name_en": "Groceries & Canned", "icon": "ShoppingBasket", "type": "shopping", "color": "#84CC16", "order": 27, "is_active": True},
+    {"id": "pet_food", "name": "طعام حيوانات", "name_en": "Pet Food", "icon": "PawPrint", "type": "shopping", "color": "#A3E635", "order": 28, "is_active": True},
     
     # ===== قسم الطعام (food) - 8 أصناف =====
     {"id": "restaurants", "name": "مطاعم", "name_en": "Restaurants", "icon": "UtensilsCrossed", "type": "food", "color": "#FF6B00", "order": 1, "is_active": True},

@@ -7,7 +7,8 @@ import {
   Smartphone, Shirt, Home as HomeIcon, Dumbbell, 
   BookOpen, Gamepad2, UtensilsCrossed, Car, Watch, SprayCan, Pill, 
   ShoppingBasket, Apple, Gift, Sparkles, Laptop, Footprints,
-  Sofa, Refrigerator, Coffee, Cake, Croissant, GlassWater, Package
+  Sofa, Refrigerator, Coffee, Cake, Croissant, GlassWater, Package,
+  Bike, Baby, ToyBrick
 } from 'lucide-react';
 
 const API = process.env.REACT_APP_BACKEND_URL;
@@ -16,7 +17,8 @@ const iconMap = {
   Smartphone, Shirt, Home: HomeIcon, Dumbbell, 
   BookOpen, Gamepad2, UtensilsCrossed, Car, Watch, SprayCan, Pill, 
   ShoppingBasket, Apple, Gift, Sparkles, Laptop, Footprints,
-  Sofa, Refrigerator, Coffee, Cake, Croissant, GlassWater, Package
+  Sofa, Refrigerator, Coffee, Cake, Croissant, GlassWater, Package,
+  Bike, Baby, ToyBrick
 };
 
 // ألوان الأيقونات
@@ -28,8 +30,11 @@ const iconColors = {
   shoes: '#F97316',
   home: '#10B981',
   sports: '#EF4444',
+  bicycles: '#0891B2',
+  kids_toys: '#F472B6',
+  kids: '#F97316',
   books: '#6366F1',
-  gaming: '#8B5CF6',
+  gaming: '#7C3AED',
   beauty: '#F472B6',
   health: '#22C55E',
   automotive: '#64748B',
