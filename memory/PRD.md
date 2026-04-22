@@ -37,7 +37,7 @@
 - [x] Removed hardcoded secrets from test files
 - [x] Created tests/conftest.py and tests/.env.test
 
-### Wallet & Withdrawal System - Updated (April 2025) ✅ NEW
+### Wallet & Withdrawal System - Updated (April 2025)
 - [x] **إضافة خيار الحساب البنكي للسحب** - بجانب شام كاش
 - [x] **إزالة موافقة الأدمن للسحوبات** - الطلبات تُقبل تلقائياً بحالة `ready_for_transfer`
 - [x] **خصم فوري من المحفظة** - المبلغ يُخصم فور إرسال طلب السحب
@@ -45,6 +45,18 @@
 - [x] **فشل الشحن مباشر** - إذا فشل التحقق من الشحن، يفشل الطلب بدون إرساله للأدمن
 - [x] **تحديث لوحة الأدمن** - عرض بيانات الحساب البنكي وزر "تم التحويل"
 - [x] **تحديث واجهة المستخدم** - نموذج السحب يدعم شام كاش والحساب البنكي
+
+### Geographic Restriction System (April 2025) ✅ NEW
+- [x] **نظام التقييد الجغرافي المؤقت** - شاشة اختيار المحافظة والمنطقة عند كل فتح للتطبيق
+- [x] **منفصل تماماً عن Checkout** - لا يتداخل مع عناوين التوصيل أو نظام الطلبات
+- [x] **لوحة إدارة كاملة** - إضافة/إزالة محافظات ومناطق
+- [x] **تفعيل/تعطيل سهل** - يمكن تعطيل النظام من لوحة الإدارة
+- [x] **رسالة حظر ودية** - "نحن نعمل على التوسع! الخدمة ستكون متاحة قريباً"
+- [x] **سهولة الإزالة** - يمكن حذف المكون بالكامل بعد التوسع
+- **الملفات:**
+  - `/app/frontend/src/components/CityRestrictionGate.js` - مكون الحماية
+  - `/app/frontend/src/components/admin/AllowedRegionsTab.js` - لوحة الإدارة
+  - `/app/backend/routes/settings.py` - APIs (allowed-regions endpoints)
 
 ### Delivery System
 - [x] Driver performance tracking
@@ -84,6 +96,7 @@
 
 ### P1 - High Priority
 - [ ] **Sham Cash Integration** - Activate real payment gateway (currently MOCKED)
+- [ ] **SMS OTP Integration** - Activate real SMS for Syrian numbers (currently MOCKED/console)
 - [ ] **Sub-admin Permissions** - Granular roles ("Order Manager", "Product Manager")
 
 ### P2 - Medium Priority
@@ -106,12 +119,25 @@
 - `/app/backend/routes/auth.py` - Authentication & driver registration API
 - `/app/backend/routes/wallet.py` - Wallet and withdrawal APIs
 - `/app/backend/routes/payment.py` - Payment and admin withdrawal APIs
+- `/app/backend/routes/settings.py` - Platform settings including geographic restriction
 - `/app/backend/models/schemas.py` - Data schemas including WithdrawalRequest
+- `/app/frontend/src/components/CityRestrictionGate.js` - Geographic restriction gate (TEMPORARY)
+- `/app/frontend/src/components/admin/AllowedRegionsTab.js` - Admin region management
 - `/app/frontend/src/pages/WalletPage.js` - Seller/Driver wallet page with withdrawal
 - `/app/frontend/src/pages/BuyerWalletPage.js` - Buyer wallet page with top-up
 - `/app/frontend/src/components/admin/AllWithdrawRequestsTab.js` - Admin withdrawal management
 
 ## API Endpoints
+
+### Geographic Restriction APIs (TEMPORARY)
+- `GET /api/settings/allowed-regions` - Get allowed cities/regions (public)
+- `GET /api/settings/allowed-regions/admin` - Get full settings (admin only)
+- `PUT /api/settings/allowed-regions` - Update all settings (admin only)
+- `POST /api/settings/allowed-regions/add-city` - Add new city (admin only)
+- `POST /api/settings/allowed-regions/add-region` - Add region to city (admin only)
+- `DELETE /api/settings/allowed-regions/remove-city/{name}` - Remove city (admin only)
+- `DELETE /api/settings/allowed-regions/remove-region` - Remove region (admin only)
+- `PUT /api/settings/allowed-regions/toggle` - Enable/disable system (admin only)
 
 ### Wallet APIs
 - `GET /api/wallet/balance` - Get wallet balance

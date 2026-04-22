@@ -2520,3 +2520,325 @@ async def init_default_business_categories(user: dict = Depends(get_current_user
     await db.business_categories.insert_many(all_categories)
     
     return {"message": f"تم إنشاء {len(all_categories)} صنف بنجاح"}
+
+
+
+# ============== نظام التقييد الجغرافي المؤقت ==============
+# هذا النظام مؤقت ويمكن إزالته بسهولة بعد التوسع
+# لا يتداخل مع نظام عناوين التوصيل أو الـ Checkout
+
+class AllowedRegion(BaseModel):
+    city: str  # اسم المحافظة
+    regions: list  # قائمة المناطق/الأحياء داخل المحافظة
+
+class AllowedRegionsUpdate(BaseModel):
+    cities: list  # قائمة المحافظات مع مناطقها
+
+@router.get("/allowed-regions")
+async def get_allowed_regions():
+    """
+    جلب المناطق المسموحة (عام - للجميع)
+    يُستخدم من قبل التطبيق للتحقق عند الدخول
+    """
+    settings = await db.settings.find_one({"key": "allowed_regions"}, {"_id": 0})
+    
+    if not settings:
+        # القيم الافتراضية - حلب فقط
+        return {
+            "enabled": True,
+            "cities": [
+                {
+                    "name": "حلب",
+                    "regions": [
+                        "الحمدانية", "الفرقان", "الجميلية", "العزيزية", "السبيل",
+                        "الشيخ مقصود", "الأشرفية", "المحافظة", "باب الفرج", "الجابرية",
+                        "السريان", "المشارقة", "هنانو", "الصاخور", "طريق الباب",
+                        "حي حلب الجديدة", "الشهباء", "الحيدرية", "الميدان", "الكلاسة",
+                        "السكري", "صلاح الدين", "الأنصاري", "الراموسة", "الشيخ سعيد"
+                    ]
+                }
+            ],
+            "blocked_message": "نحن نعمل على التوسع! الخدمة ستكون متاحة في منطقتك قريباً جداً. تابعنا للحصول على آخر التحديثات!"
+        }
+    
+    return {
+        "enabled": settings.get("enabled", True),
+        "cities": settings.get("cities", []),
+        "blocked_message": settings.get("blocked_message", "نحن نعمل على التوسع! الخدمة ستكون متاحة في منطقتك قريباً جداً.")
+    }
+
+@router.get("/allowed-regions/admin")
+async def get_allowed_regions_admin(user: dict = Depends(get_current_user)):
+    """
+    جلب المناطق المسموحة (للمدير فقط - مع تفاصيل إضافية)
+    """
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    settings = await db.settings.find_one({"key": "allowed_regions"}, {"_id": 0})
+    
+    if not settings:
+        return {
+            "enabled": True,
+            "cities": [
+                {
+                    "name": "حلب",
+                    "regions": [
+                        "الحمدانية", "الفرقان", "الجميلية", "العزيزية", "السبيل",
+                        "الشيخ مقصود", "الأشرفية", "المحافظة", "باب الفرج", "الجابرية",
+                        "السريان", "المشارقة", "هنانو", "الصاخور", "طريق الباب",
+                        "حي حلب الجديدة", "الشهباء", "الحيدرية", "الميدان", "الكلاسة",
+                        "السكري", "صلاح الدين", "الأنصاري", "الراموسة", "الشيخ سعيد"
+                    ]
+                }
+            ],
+            "blocked_message": "نحن نعمل على التوسع! الخدمة ستكون متاحة في منطقتك قريباً جداً. تابعنا للحصول على آخر التحديثات!",
+            "updated_at": None,
+            "updated_by": None
+        }
+    
+    return settings
+
+@router.put("/allowed-regions")
+async def update_allowed_regions(
+    data: dict,
+    user: dict = Depends(get_current_user)
+):
+    """
+    تحديث المناطق المسموحة (للمدير فقط)
+    
+    يمكن:
+    - إضافة/إزالة محافظات
+    - إضافة/إزالة مناطق داخل كل محافظة
+    - تفعيل/تعطيل النظام بالكامل
+    - تعديل رسالة الحظر
+    """
+    if user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    update_data = {
+        "key": "allowed_regions",
+        "enabled": data.get("enabled", True),
+        "cities": data.get("cities", []),
+        "blocked_message": data.get("blocked_message", "نحن نعمل على التوسع! الخدمة ستكون متاحة في منطقتك قريباً جداً."),
+        "updated_at": now,
+        "updated_by": user["id"]
+    }
+    
+    await db.settings.update_one(
+        {"key": "allowed_regions"},
+        {"$set": update_data},
+        upsert=True
+    )
+    
+    return {
+        "message": "تم تحديث المناطق المسموحة بنجاح",
+        **update_data
+    }
+
+@router.post("/allowed-regions/add-city")
+async def add_allowed_city(
+    city_name: str,
+    regions: list = [],
+    user: dict = Depends(get_current_user)
+):
+    """
+    إضافة محافظة جديدة للمناطق المسموحة
+    """
+    if user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
+    
+    settings = await db.settings.find_one({"key": "allowed_regions"})
+    cities = settings.get("cities", []) if settings else []
+    
+    # التحقق من عدم وجود المحافظة مسبقاً
+    existing_names = [c["name"] for c in cities]
+    if city_name in existing_names:
+        raise HTTPException(status_code=400, detail="المحافظة موجودة مسبقاً")
+    
+    cities.append({
+        "name": city_name,
+        "regions": regions
+    })
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    await db.settings.update_one(
+        {"key": "allowed_regions"},
+        {
+            "$set": {
+                "cities": cities,
+                "updated_at": now,
+                "updated_by": user["id"]
+            }
+        },
+        upsert=True
+    )
+    
+    return {
+        "message": f"تم إضافة محافظة {city_name} بنجاح",
+        "cities": cities
+    }
+
+@router.post("/allowed-regions/add-region")
+async def add_region_to_city(
+    city_name: str,
+    region_name: str,
+    user: dict = Depends(get_current_user)
+):
+    """
+    إضافة منطقة جديدة لمحافظة موجودة
+    """
+    if user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
+    
+    settings = await db.settings.find_one({"key": "allowed_regions"})
+    cities = settings.get("cities", []) if settings else []
+    
+    # البحث عن المحافظة
+    city_found = False
+    for city in cities:
+        if city["name"] == city_name:
+            city_found = True
+            if region_name in city["regions"]:
+                raise HTTPException(status_code=400, detail="المنطقة موجودة مسبقاً")
+            city["regions"].append(region_name)
+            break
+    
+    if not city_found:
+        raise HTTPException(status_code=404, detail="المحافظة غير موجودة")
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    await db.settings.update_one(
+        {"key": "allowed_regions"},
+        {
+            "$set": {
+                "cities": cities,
+                "updated_at": now,
+                "updated_by": user["id"]
+            }
+        }
+    )
+    
+    return {
+        "message": f"تم إضافة منطقة {region_name} إلى {city_name}",
+        "cities": cities
+    }
+
+@router.delete("/allowed-regions/remove-city/{city_name}")
+async def remove_allowed_city(
+    city_name: str,
+    user: dict = Depends(get_current_user)
+):
+    """
+    إزالة محافظة من المناطق المسموحة
+    """
+    if user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
+    
+    settings = await db.settings.find_one({"key": "allowed_regions"})
+    cities = settings.get("cities", []) if settings else []
+    
+    # إزالة المحافظة
+    new_cities = [c for c in cities if c["name"] != city_name]
+    
+    if len(new_cities) == len(cities):
+        raise HTTPException(status_code=404, detail="المحافظة غير موجودة")
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    await db.settings.update_one(
+        {"key": "allowed_regions"},
+        {
+            "$set": {
+                "cities": new_cities,
+                "updated_at": now,
+                "updated_by": user["id"]
+            }
+        }
+    )
+    
+    return {
+        "message": f"تم إزالة محافظة {city_name}",
+        "cities": new_cities
+    }
+
+@router.delete("/allowed-regions/remove-region")
+async def remove_region_from_city(
+    city_name: str,
+    region_name: str,
+    user: dict = Depends(get_current_user)
+):
+    """
+    إزالة منطقة من محافظة
+    """
+    if user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
+    
+    settings = await db.settings.find_one({"key": "allowed_regions"})
+    cities = settings.get("cities", []) if settings else []
+    
+    # البحث عن المحافظة وإزالة المنطقة
+    region_found = False
+    for city in cities:
+        if city["name"] == city_name:
+            if region_name in city["regions"]:
+                city["regions"].remove(region_name)
+                region_found = True
+            break
+    
+    if not region_found:
+        raise HTTPException(status_code=404, detail="المنطقة غير موجودة")
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    await db.settings.update_one(
+        {"key": "allowed_regions"},
+        {
+            "$set": {
+                "cities": cities,
+                "updated_at": now,
+                "updated_by": user["id"]
+            }
+        }
+    )
+    
+    return {
+        "message": f"تم إزالة منطقة {region_name} من {city_name}",
+        "cities": cities
+    }
+
+@router.put("/allowed-regions/toggle")
+async def toggle_region_restriction(
+    enabled: bool,
+    user: dict = Depends(get_current_user)
+):
+    """
+    تفعيل/تعطيل نظام التقييد الجغرافي
+    عند التعطيل، يمكن لأي شخص استخدام التطبيق بدون اختيار المنطقة
+    """
+    if user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    await db.settings.update_one(
+        {"key": "allowed_regions"},
+        {
+            "$set": {
+                "enabled": enabled,
+                "updated_at": now,
+                "updated_by": user["id"]
+            }
+        },
+        upsert=True
+    )
+    
+    status = "تفعيل" if enabled else "تعطيل"
+    return {
+        "message": f"تم {status} نظام التقييد الجغرافي",
+        "enabled": enabled
+    }

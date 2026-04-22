@@ -25,6 +25,7 @@ import IncomingCallHandler from "./components/voip/IncomingCallHandler";
 import FeedbackButton from "./components/FeedbackButton";
 import ErrorBoundary from "./components/ErrorBoundary";
 import NetworkStatus from "./components/NetworkStatus";
+import CityRestrictionGate from "./components/CityRestrictionGate";
 import { initDB } from "./lib/offlineDB";
 import { App as CapacitorApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
@@ -335,6 +336,8 @@ function App() {
               {showSplash && (
                 <SplashScreen onComplete={() => setShowSplash(false)} />
               )}
+              {/* نظام التقييد الجغرافي المؤقت - يمكن إزالته بسهولة بعد التوسع */}
+              <CityRestrictionGate>
               {/* مؤشر حالة الاتصال */}
               <NetworkStatus />
               <BrowserRouter>
@@ -442,6 +445,7 @@ function App() {
           </ForcePasswordChangeWrapper>
           </ScrollProvider>
         </BrowserRouter>
+        </CityRestrictionGate>
         </WebSocketProvider>
         </FoodCartProvider>
       </CartProvider>

@@ -9,7 +9,7 @@ import logger from '../lib/logger';
 import { 
   Users, Package, ShoppingBag, Clock, AlertTriangle, Bell, 
   ChevronRight, Truck, DollarSign, ShieldCheck, Megaphone, Shield,
-  UtensilsCrossed, Ticket, Flame, Settings, TrendingUp, Home, Flag, Map, BarChart2, Camera, Phone, Store, Trash2, User, Headphones, MessageCircle, MessageSquare, Wrench, LogOut, Wallet, Zap, ShoppingCart, Cloud
+  UtensilsCrossed, Ticket, Flame, Settings, TrendingUp, Home, Flag, Map, BarChart2, Camera, Phone, Store, Trash2, User, Headphones, MessageCircle, MessageSquare, Wrench, LogOut, Wallet, Zap, ShoppingCart, Cloud, MapPin
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
@@ -72,6 +72,7 @@ import ResetDatabaseTab from '../components/admin/ResetDatabaseTab';
 import BusinessCategoriesTab from '../components/admin/BusinessCategoriesTab';
 import ImageMigrationTab from '../components/admin/ImageMigrationTab';
 import RateLimitDashboard from '../components/admin/RateLimitDashboard';
+import AllowedRegionsTab from '../components/admin/AllowedRegionsTab';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -637,7 +638,8 @@ const AdminDashboardPage = () => {
     'all-withdraw-requests': 'جميع طلبات السحب',
     'reset-database': 'مسح قاعدة البيانات',
     'image-migration': 'ترحيل الصور إلى CDN',
-    'rate-limits': 'مراقبة Rate Limiting'
+    'rate-limits': 'مراقبة Rate Limiting',
+    'allowed-regions': 'المناطق المسموحة'
   };
 
   return (
@@ -887,6 +889,9 @@ const AdminDashboardPage = () => {
             )}
             {activeTab === 'rate-limits' && user.user_type === 'admin' && (
               <RateLimitDashboard token={token} />
+            )}
+            {activeTab === 'allowed-regions' && user.user_type === 'admin' && (
+              <AllowedRegionsTab />
             )}
               </>
             )}
@@ -1222,6 +1227,7 @@ const AdminDashboardPage = () => {
                       { icon: Settings, label: 'المنصة', tab: 'settings' },
                       { icon: Home, label: 'أقسام الرئيسية', tab: 'homepage-sections' },
                       { icon: Settings, label: 'الأقسام', tab: 'platform-settings' },
+                      { icon: MapPin, label: 'المناطق المسموحة', tab: 'allowed-regions' },
                       { icon: Camera, label: 'الصور', tab: 'image-settings' },
                       { icon: ShieldCheck, label: 'المدراء', tab: 'sub-admins', badge: subAdmins.length },
                       { icon: Package, label: 'الفئات', tab: 'categories' },
