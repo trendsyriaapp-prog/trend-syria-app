@@ -30,7 +30,7 @@ BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://shopper-suite.previe
 
 # Test credentials
 ADMIN_PHONE = "0945570365"
-ADMIN_PASSWORD = "TrendSyria@2026"
+ADMIN_PASSWORD = os.getenv("TEST_ADMIN_PASSWORD")
 OTP_CODE = "123456"
 
 # Test image (1x1 pixel PNG base64)
@@ -64,7 +64,7 @@ class TestJoinRequestApprovalRejection:
     def create_test_user(self, user_type, phone_suffix):
         """Create a test user and return token"""
         phone = f"09{phone_suffix}"
-        password = "Test@123456"
+        password = os.getenv("TEST_USER_PASSWORD", "Test@123456")
         
         # Register user
         response = self.session.post(f"{BASE_URL}/api/auth/register", json={

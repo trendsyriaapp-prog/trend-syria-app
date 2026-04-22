@@ -184,10 +184,14 @@
 - **localStorage Security**: Auth tokens stored in localStorage (P2 - Deferred). Migration to httpOnly cookies requires significant refactoring.
 
 ## Code Quality Fixes Applied (April 2025)
-- ✅ Replaced Array index as React keys with unique identifiers (AdminPage.js, etc.)
+- ✅ Replaced Array index as React keys with unique identifiers (AdminPage.js, ProductDetailPage.js, JoinAsSellerPage.js)
 - ✅ Replaced `random` module with `secrets` in test files for security-sensitive operations
 - ✅ Fixed f-strings without placeholders (70 auto-fixed)
-- ✅ Test credentials moved to environment variables via conftest.py
+- ✅ Test credentials moved to environment variables via conftest.py and .env.test
+- ✅ Fixed mutable default arguments in Pydantic models (settings.py)
+- ✅ Fixed empty catch blocks with proper error logging (ProductDetailPage.js, OrdersPage.js)
+- ✅ Removed hardcoded secrets from 12+ test files (TrendSyria@2026, Test@123456)
+- ✅ Circular imports avoided via lazy imports (database.py ↔ firebase_admin.py)
 
 ## Notes
 - Always communicate with user in Arabic (العربية)

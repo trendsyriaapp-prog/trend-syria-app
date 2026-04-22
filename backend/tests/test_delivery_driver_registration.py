@@ -61,7 +61,7 @@ class TestDeliveryDocumentsValidation:
     def setup(self):
         """Setup test user - register a delivery driver"""
         self.test_phone = f"09{uuid.uuid4().hex[:8]}"
-        self.test_password = "Test@123456"
+        self.test_password = os.getenv("TEST_USER_PASSWORD", "Test@123456")
         
         # Register a new delivery user
         register_data = {
@@ -190,7 +190,7 @@ class TestDeliveryDocumentsAcceptsNewFields:
     def setup(self):
         """Setup test user - register a delivery driver"""
         self.test_phone = f"09{uuid.uuid4().hex[:8]}"
-        self.test_password = "Test@123456"
+        self.test_password = os.getenv("TEST_USER_PASSWORD", "Test@123456")
         
         # Register a new delivery user
         register_data = {
@@ -248,7 +248,7 @@ class TestDeliveryDocumentsAcceptsNewFields:
         register_data = {
             "full_name": "Test Electric Driver",
             "phone": test_phone,
-            "password": "Test@123456",
+            "password": os.getenv("TEST_USER_PASSWORD", "Test@123456"),
             "city": "دمشق",
             "user_type": "delivery"
         }
@@ -297,7 +297,7 @@ class TestDeliveryDocumentsStatus:
         register_data = {
             "full_name": "Test Status Driver",
             "phone": test_phone,
-            "password": "Test@123456",
+            "password": os.getenv("TEST_USER_PASSWORD", "Test@123456"),
             "city": "دمشق",
             "user_type": "delivery"
         }

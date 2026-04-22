@@ -17,7 +17,7 @@ class TestAdminBrowseAsCustomer:
         """Login as admin and get token"""
         response = requests.post(f"{BASE_URL}/api/auth/login", json={
             "phone": "0945570365",
-            "password": "TrendSyria@2026"
+            "password": os.getenv("TEST_ADMIN_PASSWORD")
         })
         assert response.status_code == 200, f"Failed to login: {response.text}"
         
@@ -177,7 +177,7 @@ class TestWalletPaymentFlow:
         """Login as admin"""
         response = requests.post(f"{BASE_URL}/api/auth/login", json={
             "phone": "0945570365",
-            "password": "TrendSyria@2026"
+            "password": os.getenv("TEST_ADMIN_PASSWORD")
         })
         assert response.status_code == 200, f"Failed to login: {response.text}"
         
@@ -246,7 +246,7 @@ class TestWalletAPIsNoRestriction:
         """Get admin auth headers"""
         response = requests.post(f"{BASE_URL}/api/auth/login", json={
             "phone": "0945570365",
-            "password": "TrendSyria@2026"
+            "password": os.getenv("TEST_ADMIN_PASSWORD")
         })
         if response.status_code != 200:
             pytest.skip("Cannot login as admin")

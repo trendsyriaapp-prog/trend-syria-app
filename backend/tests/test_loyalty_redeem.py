@@ -21,7 +21,7 @@ class TestLoyaltyAPIs:
         # استخدام حساب اختباري
         login_response = self.session.post(f"{BASE_URL}/api/auth/login", json={
             "phone": "0977123456",
-            "password": "Test@123456"
+            "password": os.getenv("TEST_USER_PASSWORD", "Test@123456")
         })
         
         if login_response.status_code == 200:
@@ -53,7 +53,7 @@ class TestLoyaltyAPIs:
                 register_response = self.session.post(f"{BASE_URL}/api/auth/complete-registration", json={
                     "phone": "0977123456",
                     "name": "Test Buyer",
-                    "password": "Test@123456",
+                    "password": os.getenv("TEST_USER_PASSWORD", "Test@123456"),
                     "role": "buyer"
                 })
                 if register_response.status_code == 200:

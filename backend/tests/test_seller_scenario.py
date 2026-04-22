@@ -311,7 +311,7 @@ class TestEdgeCases:
         """Test registering with duplicate phone number"""
         payload = {
             "phone": ADMIN_PHONE,  # Using admin phone which already exists
-            "password": "Test@123456",
+            "password": os.getenv("TEST_USER_PASSWORD", "Test@123456"),
             "full_name": "Duplicate User",
             "city": "دمشق",
             "user_type": "buyer"

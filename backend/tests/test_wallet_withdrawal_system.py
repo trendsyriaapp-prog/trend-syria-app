@@ -20,7 +20,7 @@ class TestWalletWithdrawalSystem:
     def setup(self):
         """Setup test data"""
         self.test_phone = f"09455703{uuid.uuid4().hex[:2]}"
-        self.test_password = "Test@123456"
+        self.test_password = os.getenv("TEST_USER_PASSWORD", "Test@123456")
         self.otp_code = "123456"
         self.seller_token = None
         self.admin_token = None
@@ -30,7 +30,7 @@ class TestWalletWithdrawalSystem:
         # Login as admin
         response = requests.post(f"{BASE_URL}/api/auth/login", json={
             "phone": "0945570365",
-            "password": "Test@123456"
+            "password": os.getenv("TEST_USER_PASSWORD", "Test@123456")
         })
         if response.status_code == 200:
             return response.json().get("token")

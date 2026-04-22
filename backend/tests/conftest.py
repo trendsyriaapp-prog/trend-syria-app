@@ -1,12 +1,18 @@
 # /app/backend/tests/conftest.py
 # إعدادات مشتركة للاختبارات - pytest fixtures
+# ⚠️ الأسرار يجب أن تكون في .env.test (غير مرفوع لـ Git)
 
 import os
 import pytest
+from pathlib import Path
 from dotenv import load_dotenv
 
-# تحميل متغيرات البيئة
-load_dotenv()
+# تحميل متغيرات البيئة من .env.test أولاً
+test_env_path = Path(__file__).parent / '.env.test'
+if test_env_path.exists():
+    load_dotenv(test_env_path)
+else:
+    load_dotenv()
 
 
 # ============== Test Configuration ==============
@@ -26,7 +32,13 @@ def admin_phone():
 @pytest.fixture(scope="session")
 def admin_password():
     """كلمة مرور المدير للاختبار"""
-    return os.getenv("TEST_ADMIN_PASSWORD", "123456")
+    return os.getenv("TEST_ADMIN_PASSWORD")
+
+
+@pytest.fixture(scope="session")
+def test_user_password():
+    """كلمة مرور مستخدم الاختبار"""
+    return os.getenv("TEST_USER_PASSWORD", os.getenv("TEST_ADMIN_PASSWORD"))
 
 
 @pytest.fixture(scope="session")

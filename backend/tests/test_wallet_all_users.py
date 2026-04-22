@@ -17,7 +17,7 @@ class TestWalletAccessAllUsers:
         # Direct login with password
         response = requests.post(f"{BASE_URL}/api/auth/login", json={
             "phone": "0945570365",
-            "password": "TrendSyria@2026"
+            "password": os.getenv("TEST_ADMIN_PASSWORD")
         })
         assert response.status_code == 200, f"Failed to login: {response.text}"
         
@@ -101,7 +101,7 @@ class TestWalletAPIStructure:
         """Get auth token for testing"""
         response = requests.post(f"{BASE_URL}/api/auth/login", json={
             "phone": "0945570365",
-            "password": "TrendSyria@2026"
+            "password": os.getenv("TEST_ADMIN_PASSWORD")
         })
         if response.status_code != 200:
             pytest.skip("Cannot login")
@@ -177,7 +177,7 @@ class TestWalletNoUserTypeRestriction:
         """Get auth token"""
         response = requests.post(f"{BASE_URL}/api/auth/login", json={
             "phone": "0945570365",
-            "password": "TrendSyria@2026"
+            "password": os.getenv("TEST_ADMIN_PASSWORD")
         })
         if response.status_code != 200:
             pytest.skip("Cannot login")

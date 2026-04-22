@@ -214,7 +214,10 @@ const OrdersPage = () => {
     try {
       const stored = localStorage.getItem(cartKey);
       if (stored) currentCart = JSON.parse(stored);
-    } catch (e) {}
+    } catch (e) {
+      // Invalid JSON in localStorage - reset cart
+      console.debug('Failed to parse cart from localStorage:', e.message);
+    }
 
     // إضافة المنتجات للسلة
     for (const item of order.items) {

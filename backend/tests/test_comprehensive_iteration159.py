@@ -12,9 +12,9 @@ BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://shopper-suite.previe
 
 # Test credentials
 ADMIN_PHONE = "0945570365"
-ADMIN_PASSWORD = "TrendSyria@2026"
+ADMIN_PASSWORD = os.getenv("TEST_ADMIN_PASSWORD")
 TEST_SELLER_PHONE = "0945570399"
-TEST_SELLER_PASSWORD = "Test@123456"
+TEST_SELLER_PASSWORD = os.getenv("TEST_USER_PASSWORD", "Test@123456")
 OTP_CODE = "123456"
 
 # Global token cache

@@ -308,7 +308,12 @@ async def update_homepage_sections(
 
 class FeaturedStoresSettings(BaseModel):
     enabled: bool = False
-    store_ids: list = []
+    store_ids: list = None
+    
+    def __init__(self, **data):
+        super().__init__(**data)
+        if self.store_ids is None:
+            self.store_ids = []
 
 @router.get("/featured-stores")
 async def get_featured_stores_settings(user: dict = Depends(get_current_user)):
@@ -1863,8 +1868,13 @@ async def get_driver_cancel_stats(user: dict = Depends(get_current_user)):
 class DriverShortageAlertSettings(BaseModel):
     enabled: bool = False
     min_available_drivers: int = 3
-    monitored_cities: list = []  # فارغ = كل المدن
+    monitored_cities: list = None  # فارغ = كل المدن
     cooldown_minutes: int = 30  # فترة الانتظار بين الإشعارات
+    
+    def __init__(self, **data):
+        super().__init__(**data)
+        if self.monitored_cities is None:
+            self.monitored_cities = []
 
 @router.get("/driver-shortage-alert")
 async def get_driver_shortage_alert_settings(user: dict = Depends(get_current_user)):
@@ -2641,12 +2651,14 @@ async def update_allowed_regions(
 @router.post("/allowed-regions/add-city")
 async def add_allowed_city(
     city_name: str,
-    regions: list = [],
+    regions: list = None,
     user: dict = Depends(get_current_user)
 ):
     """
     إضافة محافظة جديدة للمناطق المسموحة
     """
+    if regions is None:
+        regions = []
     if user["user_type"] != "admin":
         raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
     

@@ -13,7 +13,7 @@ BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://shopper-suite.previe
 
 # Test credentials
 ADMIN_PHONE = "0945570365"
-ADMIN_PASSWORD = "TrendSyria@2026"
+ADMIN_PASSWORD = os.getenv("TEST_ADMIN_PASSWORD")
 DUMMY_OTP = "123456"
 
 # Test data prefixes for cleanup
@@ -60,7 +60,7 @@ class TestAdminPanelWithTestData:
         # Step 1: Register as seller
         register_data = {
             "phone": test_phone,
-            "password": "Test@123456",
+            "password": os.getenv("TEST_USER_PASSWORD", "Test@123456"),
             "full_name": f"{TEST_PREFIX}Seller_{unique_id}",
             "user_type": "seller",
             "city": "دمشق",
@@ -132,7 +132,7 @@ class TestAdminPanelWithTestData:
         # Step 1: Register as food seller
         register_data = {
             "phone": test_phone,
-            "password": "Test@123456",
+            "password": os.getenv("TEST_USER_PASSWORD", "Test@123456"),
             "full_name": f"{TEST_PREFIX}FoodSeller_{unique_id}",
             "user_type": "food_seller",
             "city": "دمشق",
@@ -198,7 +198,7 @@ class TestAdminPanelWithTestData:
         # Step 1: Register as delivery
         register_data = {
             "phone": test_phone,
-            "password": "Test@123456",
+            "password": os.getenv("TEST_USER_PASSWORD", "Test@123456"),
             "full_name": f"{TEST_PREFIX}Driver_{unique_id}",
             "user_type": "delivery",
             "city": "دمشق",

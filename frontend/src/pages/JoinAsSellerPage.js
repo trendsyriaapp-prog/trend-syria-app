@@ -143,7 +143,7 @@ const JoinAsSellerPage = () => {
           <div className="grid grid-cols-4 gap-4">
             {stats.map((stat, i) => (
               <motion.div
-                key={i}
+                key={`stat-${stat.label}-${i}`}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.1 }}
@@ -166,7 +166,7 @@ const JoinAsSellerPage = () => {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {benefits.map((benefit, i) => (
               <motion.div
-                key={i}
+                key={`benefit-${benefit.title}-${i}`}
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: i * 0.05 }}
@@ -192,7 +192,7 @@ const JoinAsSellerPage = () => {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {steps.map((step, i) => (
               <motion.div
-                key={i}
+                key={`step-${step.number}-${i}`}
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: i * 0.1 }}
@@ -223,7 +223,7 @@ const JoinAsSellerPage = () => {
           <div className="space-y-3">
             {faqs.map((faq, i) => (
               <div
-                key={i}
+                key={`faq-${faq.q.slice(0, 20)}-${i}`}
                 className="bg-white rounded-xl border border-gray-200 overflow-hidden"
               >
                 <button

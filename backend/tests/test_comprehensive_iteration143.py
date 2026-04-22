@@ -12,7 +12,7 @@ BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://shopper-suite.previe
 
 # Test Credentials
 ADMIN_PHONE = "0945570365"
-ADMIN_PASSWORD = "TrendSyria@2026"
+ADMIN_PASSWORD = os.getenv("TEST_ADMIN_PASSWORD")
 SELLER_PHONE = "0911111111"
 SELLER_PASSWORD = "Test@123"
 DRIVER_PHONE = "0922222222"

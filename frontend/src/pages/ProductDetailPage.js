@@ -439,7 +439,7 @@ const ReviewCard = ({ review, sellerId, onReplyAdded }) => {
       {review.images && review.images.length > 0 && (
         <div className="flex gap-2 flex-wrap mb-2">
           {review.images.map((img, i) => (
-            <div key={i} className="relative">
+            <div key={`review-img-${img.slice(-15)}-${i}`} className="relative">
               <img
                 src={img}
                 alt="صورة من العميل"
@@ -663,7 +663,7 @@ const SizeGuideModal = ({ isOpen, onClose, sizeType }) => {
               <thead>
                 <tr className="bg-gray-100">
                   {guide.headers.map((header, i) => (
-                    <th key={i} className="py-2 px-2 text-right font-bold text-gray-700 border-b border-gray-200">
+                    <th key={`header-${header}-${i}`} className="py-2 px-2 text-right font-bold text-gray-700 border-b border-gray-200">
                       {header}
                     </th>
                   ))}
@@ -671,10 +671,10 @@ const SizeGuideModal = ({ isOpen, onClose, sizeType }) => {
               </thead>
               <tbody>
                 {guide.rows.map((row, rowIndex) => (
-                  <tr key={rowIndex} className={rowIndex % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                  <tr key={`row-${rowIndex}`} className={rowIndex % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                     {row.map((cell, cellIndex) => (
                       <td 
-                        key={cellIndex} 
+                        key={`cell-${rowIndex}-${cellIndex}`} 
                         className={`py-2 px-2 border-b border-gray-100 ${cellIndex === 0 ? 'font-bold text-[#FF6B00]' : 'text-gray-600'}`}
                       >
                         {cell}
@@ -1042,7 +1042,8 @@ const ProductDetailPage = () => {
           url: shareUrl,
         });
       } catch (error) {
-        // User cancelled or error
+        // User cancelled sharing or share failed - silently ignore
+        console.debug('Share cancelled or failed:', error.message);
       }
     } else {
       // Fallback: copy to clipboard
@@ -1085,9 +1086,9 @@ const ProductDetailPage = () => {
               {product.images?.length > 1 && (
                 <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-10">
                   <div className="flex items-center gap-1.5 bg-black/40 px-2 py-1 rounded-full">
-                    {product.images.map((_, i) => (
+                    {product.images.map((img, i) => (
                       <button
-                        key={i}
+                        key={`img-dot-${i}-${img.slice(-10)}`}
                         onClick={(e) => { e.stopPropagation(); setCurrentImage(i); }}
                         className={`rounded-full transition-all ${
                           currentImage === i 
@@ -1845,9 +1846,9 @@ const ProductDetailPage = () => {
           {product.images.length > 1 && (
             <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10">
               <div className="flex items-center gap-2">
-                {product.images.map((_, i) => (
+                {product.images.map((img, i) => (
                   <button
-                    key={i}
+                    key={`gallery-dot-${i}-${img.slice(-10)}`}
                     onClick={() => setGalleryIndex(i)}
                     className={`rounded-full transition-all ${
                       galleryIndex === i 
@@ -1865,7 +1866,7 @@ const ProductDetailPage = () => {
             <div className="flex justify-center gap-2 overflow-x-auto">
               {product.images.map((img, i) => (
                 <button
-                  key={i}
+                  key={`thumb-${i}-${img.slice(-10)}`}
                   onClick={() => setGalleryIndex(i)}
                   className={`w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 border-2 transition-all ${
                     galleryIndex === i ? 'border-white' : 'border-transparent opacity-60'
