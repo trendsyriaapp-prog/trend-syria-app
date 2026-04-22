@@ -411,3 +411,30 @@
 5. ✅ `ChangePasswordModal.js` - نافذة تغيير كلمة المرور
 6. ✅ `GiftModal.js` - نافذة إرسال هدية
 7. ✅ `ImageSearchModal.js` - نافذة البحث بالصورة
+
+---
+
+## Map Tiles Fix (April 2025) ✅ COMPLETE
+
+### المشكلة:
+- عند تكبير/تصغير الخريطة (zoom)
+- نصف الخريطة يظهر والنصف الآخر أبيض/مختفي (tiles لا تتحمّل)
+- تبدأ بالظهور بعد ~20 ثانية
+
+### السبب:
+- مكتبة Leaflet لا تعرف حجم الخريطة الصحيح داخل Modal/container متغير الحجم
+
+### الحل:
+- تم إضافة مكون `MapResizer` يستدعي `map.invalidateSize()` عند:
+  - فتح الخريطة (بعد 100ms, 300ms, 500ms)
+  - تغيير حجم النافذة
+  - التكبير/التصغير (zoomend)
+  - تحريك الخريطة (moveend)
+
+### المكونات المحدّثة (6 مكونات):
+1. ✅ `FullScreenMapPicker.js` - شاشة الخريطة الرئيسية
+2. ✅ `LocationPickerMap.js` - خريطة اختيار الموقع
+3. ✅ `InteractiveMapPicker.js` - الخريطة التفاعلية
+4. ✅ `FoodMapView.js` - خريطة المطاعم
+5. ✅ `DriverTrackingMap.js` - خريطة تتبع السائق (للعميل)
+6. ✅ `SellerDriverTrackingMap.js` - خريطة تتبع السائق (للبائع)

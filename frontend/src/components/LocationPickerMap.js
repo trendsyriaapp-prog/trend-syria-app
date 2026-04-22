@@ -34,6 +34,51 @@ const MapClickHandler = ({ onLocationSelect }) => {
   return null;
 };
 
+// مكون لإصلاح حجم الخريطة عند فتحها (يحل مشكلة الـ tiles المختفية)
+const MapResizer = () => {
+  const map = useMap();
+  
+  useEffect(() => {
+    // إصلاح حجم الخريطة بعد التحميل
+    const timer1 = setTimeout(() => {
+      map.invalidateSize();
+    }, 100);
+    
+    const timer2 = setTimeout(() => {
+      map.invalidateSize();
+    }, 300);
+    
+    const timer3 = setTimeout(() => {
+      map.invalidateSize();
+    }, 500);
+    
+    // إصلاح عند تغيير حجم النافذة
+    const handleResize = () => {
+      map.invalidateSize();
+    };
+    
+    window.addEventListener('resize', handleResize);
+    
+    // إصلاح عند التكبير/التصغير
+    map.on('zoomend', () => {
+      setTimeout(() => map.invalidateSize(), 100);
+    });
+    
+    map.on('moveend', () => {
+      setTimeout(() => map.invalidateSize(), 100);
+    });
+    
+    return () => {
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+      clearTimeout(timer3);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [map]);
+  
+  return null;
+};
+
 // Component to center map on location
 const MapCenterController = ({ center }) => {
   const map = useMap();
@@ -198,6 +243,7 @@ const LocationPickerMap = ({
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
               attribution='&copy; OpenStreetMap'
             />
+            <MapResizer />
             <MapClickHandler onLocationSelect={handleLocationSelect} />
             <MapCenterController center={[selectedLat, selectedLng]} />
             <Marker position={[selectedLat, selectedLng]} icon={customIcon} />
