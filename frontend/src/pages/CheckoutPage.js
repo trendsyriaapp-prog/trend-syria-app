@@ -11,6 +11,9 @@ import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useToast } from '../hooks/use-toast';
 import GoogleMapsLocationPicker from '../components/GoogleMapsLocationPicker';
+// نظام التقييد الجغرافي المؤقت - للإزالة لاحقاً
+import { checkRegionAllowed } from '../lib/regionService';
+import RegionBlockedModal from '../components/RegionBlockedModal';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -69,6 +72,9 @@ const CheckoutPage = () => {
   const [shippingInfo, setShippingInfo] = useState(null);
   const [sellerShippingDetails, setSellerShippingDetails] = useState([]);
   const [shippingLoading, setShippingLoading] = useState(false);
+
+  // نظام التقييد الجغرافي المؤقت - للإزالة لاحقاً
+  const [regionBlockedModal, setRegionBlockedModal] = useState({ open: false, message: '' });
 
   useEffect(() => {
     if (user) fetchSavedData();
@@ -183,6 +189,18 @@ const CheckoutPage = () => {
       toast({ title: "خطأ", description: "يرجى إكمال بيانات الدفع", variant: "destructive" });
       return;
     }
+
+    // === نظام التقييد الجغرافي المؤقت - للإزالة لاحقاً ===
+    // التحقق من أن المنطقة مسموحة للتوصيل
+    const checkCity = useNewAddress ? newAddress.city : savedAddresses.find(a => a.id === selectedAddressId)?.city;
+    const checkArea = useNewAddress ? newAddress.area : savedAddresses.find(a => a.id === selectedAddressId)?.area;
+    
+    const regionCheck = await checkRegionAllowed(checkCity, checkArea);
+    if (!regionCheck.allowed) {
+      setRegionBlockedModal({ open: true, message: regionCheck.message });
+      return;
+    }
+    // === نهاية التقييد الجغرافي ===
 
     setSubmitting(true);
     try {
@@ -764,6 +782,13 @@ const CheckoutPage = () => {
           <span>يمكنك إلغاء الطلب واسترداد أموالك خلال ساعة من بعد الدفع</span>
         </div>
       </div>
+
+      {/* نظام التقييد الجغرافي المؤقت - للإزالة لاحقاً */}
+      <RegionBlockedModal
+        isOpen={regionBlockedModal.open}
+        onClose={() => setRegionBlockedModal({ open: false, message: '' })}
+        message={regionBlockedModal.message}
+      />
     </div>
   );
 };

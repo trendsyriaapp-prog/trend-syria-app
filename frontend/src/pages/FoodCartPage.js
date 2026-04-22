@@ -14,6 +14,9 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
 import GoogleMapsLocationPicker from '../components/GoogleMapsLocationPicker';
+// نظام التقييد الجغرافي المؤقت - للإزالة لاحقاً
+import { checkRegionAllowed } from '../lib/regionService';
+import RegionBlockedModal from '../components/RegionBlockedModal';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -103,6 +106,9 @@ const FoodCartPage = () => {
   // Modal الخريطة لتحديد الموقع
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [tempLocation, setTempLocation] = useState({ latitude: null, longitude: null });
+  
+  // نظام التقييد الجغرافي المؤقت - للإزالة لاحقاً
+  const [regionBlockedModal, setRegionBlockedModal] = useState({ open: false, message: '' });
   
   // منع تمرير الصفحة الخلفية عند فتح Modal
   useEffect(() => {
@@ -537,6 +543,17 @@ const FoodCartPage = () => {
       });
       return;
     }
+
+    // === نظام التقييد الجغرافي المؤقت - للإزالة لاحقاً ===
+    const checkCity = (useNewAddress || savedAddresses.length === 0) ? newAddress.city : savedAddresses.find(a => a.id === selectedAddressId)?.city;
+    const checkArea = (useNewAddress || savedAddresses.length === 0) ? newAddress.area : savedAddresses.find(a => a.id === selectedAddressId)?.area;
+    
+    const regionCheck = await checkRegionAllowed(checkCity, checkArea);
+    if (!regionCheck.allowed) {
+      setRegionBlockedModal({ open: true, message: regionCheck.message });
+      return;
+    }
+    // === نهاية التقييد الجغرافي ===
 
     setSubmitting(true);
     try {
@@ -1594,6 +1611,13 @@ const FoodCartPage = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* نظام التقييد الجغرافي المؤقت - للإزالة لاحقاً */}
+      <RegionBlockedModal
+        isOpen={regionBlockedModal.open}
+        onClose={() => setRegionBlockedModal({ open: false, message: '' })}
+        message={regionBlockedModal.message}
+      />
     </div>
   );
 };

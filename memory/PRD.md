@@ -46,17 +46,22 @@
 - [x] **تحديث لوحة الأدمن** - عرض بيانات الحساب البنكي وزر "تم التحويل"
 - [x] **تحديث واجهة المستخدم** - نموذج السحب يدعم شام كاش والحساب البنكي
 
-### Geographic Restriction System (April 2025) ✅ NEW
-- [x] **نظام التقييد الجغرافي المؤقت** - شاشة اختيار المحافظة والمنطقة عند كل فتح للتطبيق
-- [x] **منفصل تماماً عن Checkout** - لا يتداخل مع عناوين التوصيل أو نظام الطلبات
+### Geographic Restriction System - Updated (April 2025) ✅ UPDATED
+- [x] **نظام التقييد الجغرافي الاحترافي** - مثل التطبيقات العالمية (أمازون، طلبات)
+- [x] **تصفح حر للجميع** - أي شخص يستطيع تصفح التطبيق بالكامل
+- [x] **التحقق عند الدفع فقط** - المنع يظهر فقط عند إتمام الطلب
+- [x] **رسالة ودية** - "قريباً في منطقتك! نحن نعمل على التوسع"
 - [x] **لوحة إدارة كاملة** - إضافة/إزالة محافظات ومناطق
-- [x] **تفعيل/تعطيل سهل** - يمكن تعطيل النظام من لوحة الإدارة
-- [x] **رسالة حظر ودية** - "نحن نعمل على التوسع! الخدمة ستكون متاحة قريباً"
-- [x] **سهولة الإزالة** - يمكن حذف المكون بالكامل بعد التوسع
+- [x] **سهولة الإزالة لاحقاً** - كل الكود معلّم بتعليقات "للإزالة لاحقاً"
 - **الملفات:**
-  - `/app/frontend/src/components/CityRestrictionGate.js` - مكون الحماية
+  - `/app/frontend/src/lib/regionService.js` - خدمة التحقق من المناطق (جديد)
+  - `/app/frontend/src/components/RegionBlockedModal.js` - نافذة التنبيه (جديد)
+  - `/app/frontend/src/pages/CheckoutPage.js` - التحقق عند الدفع
+  - `/app/frontend/src/pages/FoodCartPage.js` - التحقق للطعام
+  - `/app/frontend/src/pages/FoodBatchCheckoutPage.js` - التحقق للدفع الموحد
   - `/app/frontend/src/components/admin/AllowedRegionsTab.js` - لوحة الإدارة
   - `/app/backend/routes/settings.py` - APIs (allowed-regions endpoints)
+  - `/app/frontend/src/components/CityRestrictionGate.js` - (معطّل، يمكن حذفه)
 
 ### 🔒 httpOnly Cookies Authentication (April 2025) ✅ NEW
 - [x] **تحويل من localStorage إلى httpOnly Cookies** - أمان أعلى ضد هجمات XSS

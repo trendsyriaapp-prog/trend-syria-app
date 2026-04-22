@@ -12,6 +12,9 @@ import { useAuth } from '../context/AuthContext';
 import { useFoodCart } from '../context/FoodCartContext';
 import { useToast } from '../hooks/use-toast';
 import LocationPickerMap from '../components/LocationPickerMap';
+// نظام التقييد الجغرافي المؤقت - للإزالة لاحقاً
+import { checkRegionAllowed } from '../lib/regionService';
+import RegionBlockedModal from '../components/RegionBlockedModal';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -69,6 +72,9 @@ const FoodBatchCheckoutPage = () => {
   
   // ملاحظة لموظف التوصيل (إجبارية)
   const [deliveryNote, setDeliveryNote] = useState('');
+  
+  // نظام التقييد الجغرافي المؤقت - للإزالة لاحقاً
+  const [regionBlockedModal, setRegionBlockedModal] = useState({ open: false, message: '' });
   
   // حساب رسوم التوصيل لكل متجر
   const [deliveryFees, setDeliveryFees] = useState({});
@@ -314,6 +320,14 @@ const FoodBatchCheckoutPage = () => {
       });
       return;
     }
+    
+    // === نظام التقييد الجغرافي المؤقت - للإزالة لاحقاً ===
+    const regionCheck = await checkRegionAllowed(addressData.city, addressData.address?.split(' - ')[0] || '');
+    if (!regionCheck.allowed) {
+      setRegionBlockedModal({ open: true, message: regionCheck.message });
+      return;
+    }
+    // === نهاية التقييد الجغرافي ===
     
     setSubmitting(true);
     
@@ -982,6 +996,13 @@ const FoodBatchCheckoutPage = () => {
         initialLat={newAddress.latitude}
         initialLng={newAddress.longitude}
         title="حدد موقع التوصيل"
+      />
+
+      {/* نظام التقييد الجغرافي المؤقت - للإزالة لاحقاً */}
+      <RegionBlockedModal
+        isOpen={regionBlockedModal.open}
+        onClose={() => setRegionBlockedModal({ open: false, message: '' })}
+        message={regionBlockedModal.message}
       />
     </div>
   );
