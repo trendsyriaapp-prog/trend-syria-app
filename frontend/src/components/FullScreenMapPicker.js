@@ -213,8 +213,7 @@ const FullScreenMapPicker = ({
               <ChevronRight size={24} />
               <span className="text-sm font-medium">رجوع</span>
             </button>
-            <h2 className="text-base font-bold text-gray-900 flex items-center gap-2">
-              <MapPin size={20} className="text-[#FF6B00]" />
+            <h2 className="text-base font-bold text-gray-900">
               {title}
             </h2>
             <div className="w-16"></div>

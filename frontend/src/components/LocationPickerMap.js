@@ -148,12 +148,9 @@ const LocationPickerMap = ({
         {/* Header */}
         <div className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C00] p-4 text-white">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <MapPin size={24} />
-              <div>
-                <h2 className="font-bold text-lg">{title}</h2>
-                <p className="text-sm text-white/80">انقر على الخريطة لتحديد موقعك</p>
-              </div>
+            <div>
+              <h2 className="font-bold text-lg">{title}</h2>
+              <p className="text-sm text-white/80">انقر على الخريطة لتحديد موقعك</p>
             </div>
             <button
               onClick={onClose}

@@ -376,3 +376,17 @@
 ## Notes
 - Always communicate with user in Arabic (العربية)
 - MONGO_URL in preview can be swapped to localhost for testing, but must be reverted
+
+## Map Pin Header Fix (April 2025) ✅
+
+### المشكلة:
+- أيقونة الدبوس (MapPin) كانت تظهر في أعلى شاشة الخريطة (في العنوان)
+- المستخدم يظن أنها يجب أن تكون على الخريطة مما يسبب الإرباك
+
+### الحل:
+- تم إزالة أيقونة الدبوس من عنوان شاشة الخريطة
+- الدبوس الآن يظهر فقط على الخريطة نفسها (حيث يجب أن يكون)
+
+### الملفات المحدّثة:
+- `/app/frontend/src/components/FullScreenMapPicker.js`
+- `/app/frontend/src/components/LocationPickerMap.js`
