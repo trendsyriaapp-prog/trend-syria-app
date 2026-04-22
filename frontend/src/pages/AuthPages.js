@@ -168,11 +168,8 @@ const LoginPage = () => {
   };
 
   const completeLogin = async (data) => {
-    // حفظ التوكن
-    localStorage.setItem('token', data.token);
-    if (data.refresh_token) {
-      localStorage.setItem('refresh_token', data.refresh_token);
-    }
+    // 🔒 النظام يستخدم httpOnly cookies - لا نحفظ token في localStorage
+    // الـ cookies تُدار تلقائياً من الخادم
     localStorage.setItem('user', JSON.stringify(data.user));
     
     // تحديث Context

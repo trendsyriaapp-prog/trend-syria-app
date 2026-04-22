@@ -10,7 +10,7 @@ import os
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
 # Test credentials
-ADMIN_CREDENTIALS = {"phone": "0911111111", "password": "admin123"}
+ADMIN_CREDENTIALS = {"phone": os.getenv("TEST_ADMIN_PHONE", "0911111111"), "password": "admin123"}
 DELIVERY_CREDENTIALS = {"phone": "0900000000", "password": "delivery123"}
 CUSTOMER_CREDENTIALS = {"phone": "0933333333", "password": "user123"}
 

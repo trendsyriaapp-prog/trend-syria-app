@@ -19,7 +19,7 @@ from datetime import datetime, timedelta
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL').rstrip('/')
 
 # Test credentials
-ADMIN_CREDS = {"phone": "0911111111", "password": "admin123"}
+ADMIN_CREDS = {"phone": os.getenv("TEST_ADMIN_PHONE", "0911111111"), "password": "admin123"}
 SELLER_CREDS = {"phone": "0922222222", "password": "seller123"}
 BUYER_CREDS = {"phone": "0933333333", "password": "user123"}
 

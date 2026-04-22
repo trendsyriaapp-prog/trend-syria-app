@@ -290,7 +290,7 @@ class TestTopupSystem:
             headers={"Authorization": f"Bearer {buyer_token}"}
         )
         assert response.status_code == 200
-        print(f"✅ Topup history retrieved")
+        print("✅ Topup history retrieved")
 
 
 class TestOrdersSystem:
@@ -358,7 +358,7 @@ class TestFoodOrdersSystem:
         response = requests.get(f"{BASE_URL}/api/food/categories")
         assert response.status_code == 200, f"Failed to get food categories: {response.text}"
         data = response.json()
-        print(f"✅ Food categories retrieved")
+        print("✅ Food categories retrieved")
 
 
 class TestDeliverySystem:
@@ -417,7 +417,7 @@ class TestAdminPanel:
         )
         assert response.status_code == 200, f"Failed to get dashboard: {response.text}"
         data = response.json()
-        print(f"✅ Dashboard stats retrieved")
+        print("✅ Dashboard stats retrieved")
     
     def test_admin_get_users(self, admin_token):
         """جلب قائمة المستخدمين"""

@@ -44,7 +44,7 @@ class TestSellerReplyFeature:
     def test_1_admin_login(self):
         """Test admin login to ensure API is working"""
         response = self.session.post(f"{BASE_URL}/api/auth/login", json={
-            "phone": "0911111111",
+            "phone": os.getenv("TEST_ADMIN_PHONE", "0911111111"),
             "password": "admin123"
         })
         assert response.status_code == 200, f"Admin login failed: {response.text}"
@@ -193,7 +193,7 @@ class TestSellerReplyIntegration:
     def _login_admin(self):
         """Helper to login as admin"""
         response = self.session.post(f"{BASE_URL}/api/auth/login", json={
-            "phone": "0911111111",
+            "phone": os.getenv("TEST_ADMIN_PHONE", "0911111111"),
             "password": "admin123"
         })
         if response.status_code == 200:

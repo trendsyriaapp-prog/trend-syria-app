@@ -8,6 +8,7 @@ import os
 import uuid
 
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
+ADMIN_PHONE = os.getenv("TEST_ADMIN_PHONE", "0945570365")
 
 class TestAdminBrowseAsCustomer:
     """Test admin can browse as customer - wallet, cart, order, wallet payment"""
@@ -16,7 +17,7 @@ class TestAdminBrowseAsCustomer:
     def admin_auth(self):
         """Login as admin and get token"""
         response = requests.post(f"{BASE_URL}/api/auth/login", json={
-            "phone": "0945570365",
+            "phone": ADMIN_PHONE,
             "password": os.getenv("TEST_ADMIN_PASSWORD")
         })
         assert response.status_code == 200, f"Failed to login: {response.text}"
@@ -176,7 +177,7 @@ class TestWalletPaymentFlow:
     def admin_auth(self):
         """Login as admin"""
         response = requests.post(f"{BASE_URL}/api/auth/login", json={
-            "phone": "0945570365",
+            "phone": ADMIN_PHONE,
             "password": os.getenv("TEST_ADMIN_PASSWORD")
         })
         assert response.status_code == 200, f"Failed to login: {response.text}"
@@ -245,7 +246,7 @@ class TestWalletAPIsNoRestriction:
     def admin_headers(self):
         """Get admin auth headers"""
         response = requests.post(f"{BASE_URL}/api/auth/login", json={
-            "phone": "0945570365",
+            "phone": ADMIN_PHONE,
             "password": os.getenv("TEST_ADMIN_PASSWORD")
         })
         if response.status_code != 200:

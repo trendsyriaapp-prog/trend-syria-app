@@ -23,7 +23,7 @@ DRIVER_CREDENTIALS = {
 }
 
 ADMIN_CREDENTIALS = {
-    "phone": "0911111111", 
+    "phone": os.getenv("TEST_ADMIN_PHONE", "0911111111"), 
     "password": "admin123"
 }
 
