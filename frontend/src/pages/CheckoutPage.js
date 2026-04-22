@@ -457,7 +457,7 @@ const CheckoutPage = () => {
                     type="text"
                     value={newAddress.street_number}
                     onChange={(e) => setNewAddress({ ...newAddress, street_number: e.target.value })}
-                    placeholder="رقم الشارع *"
+                    placeholder="اسم الشارع *"
                     className="w-full bg-white border border-gray-200 rounded-lg py-1.5 px-2 text-[11px] placeholder:text-gray-400"
                     data-testid="new-address-street"
                   />

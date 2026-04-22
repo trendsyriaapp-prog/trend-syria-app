@@ -558,7 +558,7 @@ const SettingsPage = () => {
                   </select>
                   <input type="text" placeholder="المنطقة / الحي *" value={newAddress.area} onChange={(e) => setNewAddress({...newAddress, area: e.target.value})} className={`w-full p-2 border rounded-lg text-xs ${isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-gray-300'}`} required />
                   <div className="grid grid-cols-3 gap-2">
-                    <input type="text" placeholder="رقم الشارع *" value={newAddress.street_number} onChange={(e) => setNewAddress({...newAddress, street_number: e.target.value})} className={`w-full p-2 border rounded-lg text-xs ${isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-gray-300'}`} required />
+                    <input type="text" placeholder="اسم الشارع *" value={newAddress.street_number} onChange={(e) => setNewAddress({...newAddress, street_number: e.target.value})} className={`w-full p-2 border rounded-lg text-xs ${isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-gray-300'}`} required />
                     <input type="text" placeholder="رقم البناء *" value={newAddress.building_number} onChange={(e) => setNewAddress({...newAddress, building_number: e.target.value})} className={`w-full p-2 border rounded-lg text-xs ${isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-gray-300'}`} required />
                     <input type="text" placeholder="رقم المنزل *" value={newAddress.apartment_number} onChange={(e) => setNewAddress({...newAddress, apartment_number: e.target.value})} className={`w-full p-2 border rounded-lg text-xs ${isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-gray-300'}`} required />
                   </div>

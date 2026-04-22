@@ -147,18 +147,18 @@ const AddressPickerModal = ({
               />
             </div>
 
-            {/* رقم الشارع ورقم المحل في صف واحد */}
+            {/* اسم الشارع ورقم المحل في صف واحد */}
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  رقم الشارع
+                  اسم الشارع
                   <span className="text-gray-400 text-xs mr-1">(اختياري)</span>
                 </label>
                 <input
                   type="text"
                   value={address.street_number}
                   onChange={(e) => handleChange('street_number', e.target.value)}
-                  placeholder="مثال: 15"
+                  placeholder="مثال: النصر، بغداد"
                   className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00]"
                 />
               </div>

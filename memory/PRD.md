@@ -293,6 +293,25 @@
 
 ---
 
+## Address Form Fix (April 2025) ✅ NEW
+
+### Completed:
+- [x] **تغيير "رقم الشارع" إلى "اسم الشارع"** - في جميع نماذج العناوين
+- [x] **تحديث الـ placeholders** - من "15" إلى "النصر، بغداد"
+
+### الملفات المحدّثة:
+- `/app/frontend/src/pages/CheckoutPage.js`
+- `/app/frontend/src/pages/FoodCartPage.js`
+- `/app/frontend/src/pages/FoodBatchCheckoutPage.js`
+- `/app/frontend/src/pages/SettingsPage.js`
+- `/app/frontend/src/components/AddressPickerModal.js`
+
+### ملاحظة:
+- اسم الحقل في قاعدة البيانات لا يزال `street_number` (للتوافق مع البيانات القديمة)
+- فقط الـ label والـ placeholder تم تغييرهما للمستخدم
+
+---
+
 ## Notes
 - Always communicate with user in Arabic (العربية)
 - MONGO_URL in preview can be swapped to localhost for testing, but must be reverted
