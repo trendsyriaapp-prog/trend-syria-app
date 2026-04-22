@@ -261,12 +261,14 @@
 ## Category System Update (April 2025) ✅ NEW
 
 ### Completed:
-- [x] **إضافة فئة "دراجات" (Bicycles)** - `id: bicycles`, `icon: Bike`, `order: 12`
-- [x] **إضافة فئة "ألعاب أطفال" (Kids Toys)** - `id: kids_toys`, `icon: ToyBrick`, `order: 13`
-- [x] **فصل "هدايا" عن "ألعاب فيديو"** - كلاهما فئات منفصلة تماماً
+- [x] **إضافة فئة "دراجات" (Bicycles)** - في فئات المنتجات وفئات البائعين
+- [x] **إضافة فئة "ألعاب أطفال" (Kids Toys)** - منفصلة عن الهدايا
+- [x] **فصل "هدايا" عن "ألعاب أطفال"** - كلاهما فئات منفصلة تماماً
 - [x] **28 فئة تسوق + 8 فئات طعام** - إجمالي 36 فئة منظمة
 
-### الفئات الجديدة:
+### الفئات المضافة:
+
+#### فئات المنتجات (Product Categories):
 | الاسم | ID | الأيقونة | الترتيب |
 |-------|-----|---------|---------|
 | دراجات | bicycles | Bike | 12 |
@@ -275,8 +277,17 @@
 | هدايا | gifts | Gift | 17 |
 | ألعاب فيديو | gaming | Gamepad2 | 18 |
 
+#### فئات تسجيل البائعين (Business Categories):
+| الاسم | ID | الأيقونة | الترتيب |
+|-------|-----|---------|---------|
+| دراجات | bicycles | 🚲 | 6 |
+| ألعاب أطفال | kids_toys | 🧸 | 7 |
+| هدايا | gifts | 🎁 | 8 |
+
 ### الملفات المحدّثة:
-- `/app/backend/routes/categories.py` - `DEFAULT_CATEGORIES` محدّثة
+- `/app/backend/routes/categories.py` - `DEFAULT_CATEGORIES` (فئات المنتجات)
+- `/app/backend/server.py` - `sync_business_categories()` (فئات البائعين)
+- `/app/backend/routes/settings.py` - Fallback defaults (فئات البائعين)
 - `/app/frontend/src/pages/CategoriesPage.js` - أيقونات Bike, Baby, ToyBrick
 - `/app/frontend/src/pages/HomePage.js` - أيقونات Bike, Baby, ToyBrick
 
