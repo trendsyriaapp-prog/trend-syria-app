@@ -148,6 +148,48 @@ async def upload_file(
     }
 
 
+@router.post("/upload-public")
+async def upload_public_file(
+    file: UploadFile = File(...),
+    folder: str = Query(default="registration")
+):
+    """
+    Public file upload for registration pages.
+    No authentication required but limited to registration folder.
+    """
+    # Only allow registration-related folders
+    allowed_folders = ["registration", "seller_docs", "delivery_docs"]
+    if folder not in allowed_folders:
+        folder = "registration"
+    
+    # Validate file type
+    allowed_types = ["image/jpeg", "image/png", "image/webp", "image/gif"]
+    if file.content_type not in allowed_types:
+        raise HTTPException(
+            status_code=400, 
+            detail="نوع الملف غير مدعوم. الأنواع المدعومة: JPEG, PNG, WebP, GIF"
+        )
+    
+    # Validate file size (max 5MB for public uploads)
+    content = await file.read()
+    if len(content) > 5 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="حجم الملف كبير جداً (الحد الأقصى 5 ميجا)")
+    
+    # Upload to storage
+    path = upload_image_from_bytes(content, file.content_type, folder=folder)
+    
+    if not path:
+        raise HTTPException(status_code=500, detail="فشل رفع الملف")
+    
+    return {
+        "url": path,
+        "path": path,
+        "original_filename": file.filename,
+        "content_type": file.content_type,
+        "size": len(content)
+    }
+
+
 # ============== Video Upload ==============
 
 @router.post("/upload-video")

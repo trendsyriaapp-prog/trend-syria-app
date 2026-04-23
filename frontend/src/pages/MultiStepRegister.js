@@ -328,64 +328,88 @@ const MultiStepRegister = () => {
     formDataUpload.append('file', file);
     
     try {
-      const res = await axios.post(`${API}/api/upload/image`, formDataUpload, {
+      // استخدام endpoint الرفع العام (لا يتطلب تسجيل دخول)
+      const res = await axios.post(`${API}/api/storage/upload-public?folder=registration`, formDataUpload, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       
+      const imageUrl = res.data.url || res.data.path;
+      
       if (typeof setter === 'function') {
-        setter(res.data.url);
+        setter(imageUrl);
       } else if (fieldName) {
         // للـ objects المتعددة
         if (fieldName.startsWith('seller_')) {
-          setSellerData(prev => ({ ...prev, [fieldName.replace('seller_', '')]: res.data.url }));
+          setSellerData(prev => ({ ...prev, [fieldName.replace('seller_', '')]: imageUrl }));
         } else if (fieldName.startsWith('food_')) {
-          setFoodSellerData(prev => ({ ...prev, [fieldName.replace('food_', '')]: res.data.url }));
+          setFoodSellerData(prev => ({ ...prev, [fieldName.replace('food_', '')]: imageUrl }));
         } else if (fieldName.startsWith('delivery_')) {
-          setDeliveryData(prev => ({ ...prev, [fieldName.replace('delivery_', '')]: res.data.url }));
+          setDeliveryData(prev => ({ ...prev, [fieldName.replace('delivery_', '')]: imageUrl }));
         }
       }
       
       toast({ title: "تم", description: "تم رفع الصورة بنجاح" });
     } catch (error) {
-      toast({ title: "خطأ", description: "فشل رفع الصورة", variant: "destructive" });
+      console.error('Upload error:', error);
+      const msg = error.response?.data?.detail || "فشل رفع الصورة";
+      toast({ title: "خطأ", description: msg, variant: "destructive" });
     }
   };
   
   // مكون رفع الصور
-  const ImageUploader = ({ label, value, onChange, icon: Icon = Camera }) => (
-    <div className="space-y-2">
-      <label className="block text-sm font-medium text-gray-700">{label}</label>
-      <div 
-        className={`relative border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-all
-          ${value ? 'border-green-400 bg-green-50' : 'border-gray-300 hover:border-[#FF6B00]'}`}
-        onClick={() => document.getElementById(`upload-${label}`)?.click()}
-      >
-        {value ? (
-          <div className="relative">
-            <img src={value} alt={label} className="w-full h-32 object-cover rounded-lg" />
-            <div className="absolute top-2 right-2 bg-green-500 text-white p-1 rounded-full">
-              <Check size={16} />
+  const ImageUploader = ({ label, value, onChange, icon: Icon = Camera, fieldId }) => {
+    const inputId = fieldId || `upload-${label.replace(/[\s\/\*]/g, '-')}`;
+    const [uploading, setUploading] = useState(false);
+    
+    const handleFileChange = async (e) => {
+      const file = e.target.files?.[0];
+      if (file) {
+        setUploading(true);
+        try {
+          await onChange(file);
+        } finally {
+          setUploading(false);
+        }
+      }
+    };
+    
+    return (
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-gray-700">{label}</label>
+        <div 
+          className={`relative border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-all
+            ${value ? 'border-green-400 bg-green-50' : 'border-gray-300 hover:border-[#FF6B00]'}`}
+          onClick={() => document.getElementById(inputId)?.click()}
+        >
+          {uploading ? (
+            <div className="py-4">
+              <Loader2 className="w-10 h-10 mx-auto text-[#FF6B00] mb-2 animate-spin" />
+              <p className="text-sm text-gray-500">جاري رفع الصورة...</p>
             </div>
-          </div>
-        ) : (
-          <div className="py-4">
-            <Icon className="w-10 h-10 mx-auto text-gray-400 mb-2" />
-            <p className="text-sm text-gray-500">اضغط لرفع الصورة</p>
-          </div>
-        )}
-        <input
-          id={`upload-${label}`}
-          type="file"
-          accept="image/*"
-          className="hidden"
-          onChange={(e) => {
-            const file = e.target.files?.[0];
-            if (file) onChange(file);
-          }}
-        />
+          ) : value ? (
+            <div className="relative">
+              <img src={value} alt={label} className="w-full h-32 object-cover rounded-lg" />
+              <div className="absolute top-2 right-2 bg-green-500 text-white p-1 rounded-full">
+                <Check size={16} />
+              </div>
+            </div>
+          ) : (
+            <div className="py-4">
+              <Icon className="w-10 h-10 mx-auto text-gray-400 mb-2" />
+              <p className="text-sm text-gray-500">اضغط لرفع الصورة</p>
+            </div>
+          )}
+          <input
+            id={inputId}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleFileChange}
+          />
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
   
   // عرض اختيار نوع الحساب - شريط التبويبات
   const renderAccountTypeSelection = () => (
@@ -632,6 +656,7 @@ const MultiStepRegister = () => {
         value={sellerData.national_id}
         onChange={(file) => handleImageUpload(file, null, 'seller_national_id')}
         icon={FileText}
+        fieldId="seller-national-id"
       />
       
       {/* السجل التجاري - إذا كان مطلوباً */}
@@ -641,6 +666,7 @@ const MultiStepRegister = () => {
           value={sellerData.commercial_reg}
           onChange={(file) => handleImageUpload(file, null, 'seller_commercial_reg')}
           icon={FileText}
+          fieldId="seller-commercial-reg"
         />
       )}
       
