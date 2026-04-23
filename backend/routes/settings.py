@@ -2305,7 +2305,7 @@ async def get_public_business_categories(seller_type: str = None):
                 {"id": "beauty", "name": "مستحضرات تجميل", "icon": "💄", "type": "seller", "order": 4},
                 {"id": "furniture", "name": "أثاث ومفروشات", "icon": "🛋️", "type": "seller", "order": 5},
                 {"id": "bicycles", "name": "دراجات", "icon": "🚲", "type": "seller", "order": 6},
-                {"id": "kids_toys", "name": "ألعاب أطفال", "icon": "🧸", "type": "seller", "order": 7},
+                {"id": "kids_toys", "name": "ألعاب", "icon": "🧸", "type": "seller", "order": 7},
                 {"id": "gifts", "name": "هدايا", "icon": "🎁", "type": "seller", "order": 8},
                 {"id": "books", "name": "كتب وقرطاسية", "icon": "📚", "type": "seller", "order": 9},
                 {"id": "sports", "name": "رياضة ولياقة", "icon": "⚽", "type": "seller", "order": 10},

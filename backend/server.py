@@ -330,7 +330,7 @@ async def sync_business_categories():
         {"id": "beauty", "name": "مستحضرات تجميل", "icon": "💄", "type": "seller", "order": 4, "requires_license": False},
         {"id": "furniture", "name": "أثاث ومفروشات", "icon": "🛋️", "type": "seller", "order": 5, "requires_license": False},
         {"id": "bicycles", "name": "دراجات", "icon": "🚲", "type": "seller", "order": 6, "requires_license": False},
-        {"id": "kids_toys", "name": "ألعاب أطفال", "icon": "🧸", "type": "seller", "order": 7, "requires_license": False},
+        {"id": "kids_toys", "name": "ألعاب", "icon": "🧸", "type": "seller", "order": 7, "requires_license": False},
         {"id": "gifts", "name": "هدايا", "icon": "🎁", "type": "seller", "order": 8, "requires_license": False},
         {"id": "books", "name": "كتب وقرطاسية", "icon": "📚", "type": "seller", "order": 9, "requires_license": False},
         {"id": "sports", "name": "رياضة ولياقة", "icon": "⚽", "type": "seller", "order": 10, "requires_license": False},
