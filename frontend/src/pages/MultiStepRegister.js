@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '../hooks/use-toast';
 import { useAuth } from '../context/AuthContext';
+import { compressDocumentImage } from '../utils/imageCompression';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -320,64 +321,25 @@ const MultiStepRegister = () => {
     }
   };
   
-  // ضغط الصورة قبل الرفع (للإنترنت الضعيف في سوريا)
-  const compressImage = async (file, maxWidth = 800, quality = 0.7) => {
-    return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const img = new Image();
-        img.onload = () => {
-          const canvas = document.createElement('canvas');
-          let width = img.width;
-          let height = img.height;
-          
-          // تصغير الأبعاد إذا كانت كبيرة
-          if (width > maxWidth) {
-            height = (height * maxWidth) / width;
-            width = maxWidth;
-          }
-          
-          canvas.width = width;
-          canvas.height = height;
-          
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0, width, height);
-          
-          canvas.toBlob(
-            (blob) => {
-              const compressedFile = new File([blob], file.name, {
-                type: 'image/jpeg',
-                lastModified: Date.now(),
-              });
-              resolve(compressedFile);
-            },
-            'image/jpeg',
-            quality
-          );
-        };
-        img.src = e.target.result;
-      };
-      reader.readAsDataURL(file);
-    });
-  };
-
-  // رفع الصور
+  // رفع الصور مع الضغط
   const handleImageUpload = async (file, setter, fieldName) => {
     if (!file) return;
     
     try {
-      // ضغط الصورة أولاً
-      const compressedFile = await compressImage(file);
+      // ضغط الصورة باستخدام الوظيفة الموجودة
+      const compressedBase64 = await compressDocumentImage(file);
       
-      const formDataUpload = new FormData();
-      formDataUpload.append('file', compressedFile);
-      
-      // استخدام endpoint الرفع العام (لا يتطلب تسجيل دخول)
-      const res = await axios.post(`${API}/api/storage/upload-public?folder=registration`, formDataUpload, {
-        headers: { 'Content-Type': 'multipart/form-data' }
+      // رفع الصورة المضغوطة كـ base64 (endpoint عام لا يتطلب تسجيل دخول)
+      const res = await axios.post(`${API}/api/storage/upload-public-base64`, {
+        images: [compressedBase64],
+        folder: 'registration'
       });
       
-      const imageUrl = res.data.url || res.data.path;
+      const imageUrl = res.data.paths?.[0] || res.data.urls?.[0];
+      
+      if (!imageUrl) {
+        throw new Error('لم يتم الحصول على رابط الصورة');
+      }
       
       if (typeof setter === 'function') {
         setter(imageUrl);

@@ -190,6 +190,51 @@ async def upload_public_file(
     }
 
 
+class PublicBase64Upload(BaseModel):
+    """Model for public base64 image upload"""
+    images: List[str]
+    folder: str = "registration"
+
+
+@router.post("/upload-public-base64")
+async def upload_public_base64(data: PublicBase64Upload):
+    """
+    Public base64 image upload for registration pages.
+    No authentication required but limited to registration folder.
+    Supports compressed base64 images from frontend.
+    """
+    # Only allow registration-related folders
+    allowed_folders = ["registration", "seller_docs", "delivery_docs"]
+    folder = data.folder if data.folder in allowed_folders else "registration"
+    
+    if not data.images:
+        raise HTTPException(status_code=400, detail="لا توجد صور للرفع")
+    
+    if len(data.images) > 5:
+        raise HTTPException(status_code=400, detail="الحد الأقصى 5 صور")
+    
+    paths = []
+    urls = []
+    
+    for img in data.images:
+        if not is_base64_image(img):
+            raise HTTPException(status_code=400, detail="صيغة الصورة غير صحيحة")
+        
+        path = upload_image_from_base64(img, folder=folder)
+        if path:
+            paths.append(path)
+            urls.append(path)
+    
+    if not paths:
+        raise HTTPException(status_code=500, detail="فشل رفع الصور")
+    
+    return {
+        "paths": paths,
+        "urls": urls,
+        "message": f"تم رفع {len(paths)} صورة بنجاح"
+    }
+
+
 # ============== Video Upload ==============
 
 @router.post("/upload-video")
