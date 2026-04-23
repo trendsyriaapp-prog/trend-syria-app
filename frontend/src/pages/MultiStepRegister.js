@@ -379,6 +379,17 @@ const MultiStepRegister = () => {
       }
     };
     
+    // تحويل المسار النسبي إلى رابط كامل
+    const getImageUrl = (path) => {
+      if (!path) return null;
+      if (path.startsWith('http')) return path;
+      if (path.startsWith('data:')) return path;
+      // إذا كان مسار نسبي، أضف رابط الـ API
+      return `${API}/api/storage/serve/${path}`;
+    };
+    
+    const imageUrl = getImageUrl(value);
+    
     return (
       <div className="space-y-2">
         <label className="block text-sm font-medium text-gray-700">{label}</label>
@@ -394,7 +405,15 @@ const MultiStepRegister = () => {
             </div>
           ) : value ? (
             <div className="relative">
-              <img src={value} alt={label} className="w-full h-32 object-cover rounded-lg" />
+              <img 
+                src={imageUrl} 
+                alt={label} 
+                className="w-full h-32 object-cover rounded-lg"
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = '/icons/icon-192.png';
+                }}
+              />
               <div className="absolute top-2 right-2 bg-green-500 text-white p-1 rounded-full">
                 <Check size={16} />
               </div>
