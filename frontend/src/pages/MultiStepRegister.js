@@ -392,83 +392,144 @@ const MultiStepRegister = () => {
     <div className="space-y-4">
       <p className="text-sm text-gray-600 text-center mb-4">اختر نوع حسابك</p>
       
+      {/* الصف الأول: بائع - مشتري */}
       <div className="grid grid-cols-2 gap-3">
         <button
           type="button"
-          onClick={() => setFormData({ ...formData, user_type: 'buyer' })}
-          className={`p-4 rounded-xl border-2 transition-all ${
-            formData.user_type === 'buyer' 
-              ? 'border-[#FF6B00] bg-orange-50' 
-              : 'border-gray-200 hover:border-gray-300'
-          }`}
-        >
-          <ShoppingBag className={`w-8 h-8 mx-auto mb-2 ${formData.user_type === 'buyer' ? 'text-[#FF6B00]' : 'text-gray-400'}`} />
-          <p className={`text-sm font-medium ${formData.user_type === 'buyer' ? 'text-[#FF6B00]' : 'text-gray-600'}`}>مشتري</p>
-        </button>
-        
-        <button
-          type="button"
+          data-testid="account-type-seller"
           onClick={() => setShowSellerType(true)}
-          className={`p-4 rounded-xl border-2 transition-all ${
+          className={`relative p-5 rounded-2xl border-2 transition-all duration-200 ${
             formData.user_type === 'seller' || formData.user_type === 'food_seller'
-              ? 'border-[#FF6B00] bg-orange-50' 
-              : 'border-gray-200 hover:border-gray-300'
+              ? 'border-[#FF6B00] bg-gradient-to-br from-orange-50 to-white shadow-lg shadow-orange-100' 
+              : 'border-gray-200 bg-white hover:border-[#FF6B00]/50 hover:shadow-md'
           }`}
         >
-          <Store className={`w-8 h-8 mx-auto mb-2 ${formData.user_type === 'seller' || formData.user_type === 'food_seller' ? 'text-[#FF6B00]' : 'text-gray-400'}`} />
-          <p className={`text-sm font-medium ${formData.user_type === 'seller' || formData.user_type === 'food_seller' ? 'text-[#FF6B00]' : 'text-gray-600'}`}>بائع</p>
+          {(formData.user_type === 'seller' || formData.user_type === 'food_seller') && (
+            <div className="absolute top-2 left-2 w-5 h-5 bg-[#FF6B00] rounded-full flex items-center justify-center">
+              <Check className="w-3 h-3 text-white" />
+            </div>
+          )}
+          <div className={`w-14 h-14 mx-auto mb-3 rounded-xl flex items-center justify-center ${
+            formData.user_type === 'seller' || formData.user_type === 'food_seller' 
+              ? 'bg-[#FF6B00]/10' 
+              : 'bg-gray-100'
+          }`}>
+            <Store className={`w-7 h-7 ${formData.user_type === 'seller' || formData.user_type === 'food_seller' ? 'text-[#FF6B00]' : 'text-gray-400'}`} />
+          </div>
+          <p className={`text-base font-bold ${formData.user_type === 'seller' || formData.user_type === 'food_seller' ? 'text-[#FF6B00]' : 'text-gray-700'}`}>بائع</p>
+          <p className="text-xs text-gray-400 mt-1">بيع منتجات أو طعام</p>
         </button>
         
         <button
           type="button"
-          onClick={() => setFormData({ ...formData, user_type: 'delivery' })}
-          className={`p-4 rounded-xl border-2 transition-all col-span-2 ${
-            formData.user_type === 'delivery' 
-              ? 'border-[#FF6B00] bg-orange-50' 
-              : 'border-gray-200 hover:border-gray-300'
+          data-testid="account-type-buyer"
+          onClick={() => {
+            setFormData({ ...formData, user_type: 'buyer' });
+            setShowSellerType(false);
+          }}
+          className={`relative p-5 rounded-2xl border-2 transition-all duration-200 ${
+            formData.user_type === 'buyer' 
+              ? 'border-[#FF6B00] bg-gradient-to-br from-orange-50 to-white shadow-lg shadow-orange-100' 
+              : 'border-gray-200 bg-white hover:border-[#FF6B00]/50 hover:shadow-md'
           }`}
         >
-          <Bike className={`w-8 h-8 mx-auto mb-2 ${formData.user_type === 'delivery' ? 'text-[#FF6B00]' : 'text-gray-400'}`} />
-          <p className={`text-sm font-medium ${formData.user_type === 'delivery' ? 'text-[#FF6B00]' : 'text-gray-600'}`}>موظف توصيل</p>
+          {formData.user_type === 'buyer' && (
+            <div className="absolute top-2 left-2 w-5 h-5 bg-[#FF6B00] rounded-full flex items-center justify-center">
+              <Check className="w-3 h-3 text-white" />
+            </div>
+          )}
+          <div className={`w-14 h-14 mx-auto mb-3 rounded-xl flex items-center justify-center ${
+            formData.user_type === 'buyer' ? 'bg-[#FF6B00]/10' : 'bg-gray-100'
+          }`}>
+            <ShoppingBag className={`w-7 h-7 ${formData.user_type === 'buyer' ? 'text-[#FF6B00]' : 'text-gray-400'}`} />
+          </div>
+          <p className={`text-base font-bold ${formData.user_type === 'buyer' ? 'text-[#FF6B00]' : 'text-gray-700'}`}>مشتري</p>
+          <p className="text-xs text-gray-400 mt-1">تسوق وشراء</p>
         </button>
       </div>
+
+      {/* الصف الثاني: موظف توصيل */}
+      <button
+        type="button"
+        data-testid="account-type-delivery"
+        onClick={() => {
+          setFormData({ ...formData, user_type: 'delivery' });
+          setShowSellerType(false);
+        }}
+        className={`relative w-full p-5 rounded-2xl border-2 transition-all duration-200 ${
+          formData.user_type === 'delivery' 
+            ? 'border-[#FF6B00] bg-gradient-to-br from-orange-50 to-white shadow-lg shadow-orange-100' 
+            : 'border-gray-200 bg-white hover:border-[#FF6B00]/50 hover:shadow-md'
+        }`}
+      >
+        {formData.user_type === 'delivery' && (
+          <div className="absolute top-2 left-2 w-5 h-5 bg-[#FF6B00] rounded-full flex items-center justify-center">
+            <Check className="w-3 h-3 text-white" />
+          </div>
+        )}
+        <div className="flex items-center justify-center gap-4">
+          <div className={`w-14 h-14 rounded-xl flex items-center justify-center ${
+            formData.user_type === 'delivery' ? 'bg-[#FF6B00]/10' : 'bg-gray-100'
+          }`}>
+            <Bike className={`w-7 h-7 ${formData.user_type === 'delivery' ? 'text-[#FF6B00]' : 'text-gray-400'}`} />
+          </div>
+          <div className="text-right">
+            <p className={`text-base font-bold ${formData.user_type === 'delivery' ? 'text-[#FF6B00]' : 'text-gray-700'}`}>موظف توصيل</p>
+            <p className="text-xs text-gray-400 mt-1">انضم لفريق التوصيل</p>
+          </div>
+        </div>
+      </button>
       
-      {/* اختيار نوع البائع */}
+      {/* اختيار نوع البائع - يظهر عند اختيار بائع */}
       <AnimatePresence>
         {showSellerType && (
           <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="bg-gray-50 rounded-xl p-4 space-y-3"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="bg-gradient-to-br from-gray-50 to-white rounded-2xl p-4 border border-gray-100 shadow-sm"
           >
-            <p className="text-sm text-gray-600 text-center">اختر نوع البيع</p>
+            <p className="text-sm font-medium text-gray-600 text-center mb-3">اختر نوع البيع</p>
             <div className="grid grid-cols-2 gap-3">
               <button
                 type="button"
+                data-testid="seller-type-products"
                 onClick={() => {
                   setFormData({ ...formData, user_type: 'seller' });
                   setShowSellerType(false);
                 }}
-                className={`p-3 rounded-xl border-2 ${
-                  formData.user_type === 'seller' ? 'border-[#FF6B00] bg-white' : 'border-gray-200 bg-white'
+                className={`p-4 rounded-xl border-2 transition-all duration-200 ${
+                  formData.user_type === 'seller' 
+                    ? 'border-[#FF6B00] bg-white shadow-md' 
+                    : 'border-gray-200 bg-white hover:border-[#FF6B00]/50'
                 }`}
               >
-                <Store className="w-6 h-6 mx-auto mb-1 text-[#FF6B00]" />
-                <p className="text-xs">بائع منتجات</p>
+                <div className={`w-10 h-10 mx-auto mb-2 rounded-lg flex items-center justify-center ${
+                  formData.user_type === 'seller' ? 'bg-[#FF6B00]/10' : 'bg-gray-100'
+                }`}>
+                  <Store className={`w-5 h-5 ${formData.user_type === 'seller' ? 'text-[#FF6B00]' : 'text-gray-400'}`} />
+                </div>
+                <p className={`text-sm font-medium ${formData.user_type === 'seller' ? 'text-[#FF6B00]' : 'text-gray-600'}`}>بائع منتجات</p>
               </button>
               <button
                 type="button"
+                data-testid="seller-type-food"
                 onClick={() => {
                   setFormData({ ...formData, user_type: 'food_seller' });
                   setShowSellerType(false);
                 }}
-                className={`p-3 rounded-xl border-2 ${
-                  formData.user_type === 'food_seller' ? 'border-[#FF6B00] bg-white' : 'border-gray-200 bg-white'
+                className={`p-4 rounded-xl border-2 transition-all duration-200 ${
+                  formData.user_type === 'food_seller' 
+                    ? 'border-[#FF6B00] bg-white shadow-md' 
+                    : 'border-gray-200 bg-white hover:border-[#FF6B00]/50'
                 }`}
               >
-                <Utensils className="w-6 h-6 mx-auto mb-1 text-[#FF6B00]" />
-                <p className="text-xs">مطعم / طعام</p>
+                <div className={`w-10 h-10 mx-auto mb-2 rounded-lg flex items-center justify-center ${
+                  formData.user_type === 'food_seller' ? 'bg-[#FF6B00]/10' : 'bg-gray-100'
+                }`}>
+                  <Utensils className={`w-5 h-5 ${formData.user_type === 'food_seller' ? 'text-[#FF6B00]' : 'text-gray-400'}`} />
+                </div>
+                <p className={`text-sm font-medium ${formData.user_type === 'food_seller' ? 'text-[#FF6B00]' : 'text-gray-600'}`}>مطعم / طعام</p>
               </button>
             </div>
           </motion.div>
