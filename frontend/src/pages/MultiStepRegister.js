@@ -394,18 +394,18 @@ const MultiStepRegister = () => {
       <div className="bg-gray-100 rounded-full p-1 flex">
         <button
           type="button"
-          data-testid="account-type-delivery"
+          data-testid="account-type-buyer"
           onClick={() => {
-            setFormData({ ...formData, user_type: 'delivery' });
+            setFormData({ ...formData, user_type: 'buyer' });
             setShowSellerType(false);
           }}
           className={`flex-1 py-3 px-2 rounded-full text-sm font-medium transition-all ${
-            formData.user_type === 'delivery' 
+            formData.user_type === 'buyer' 
               ? 'bg-[#FF6B00] text-white' 
               : 'text-gray-500'
           }`}
         >
-          موظف توصيل
+          مشتري
         </button>
         
         <button
@@ -423,18 +423,18 @@ const MultiStepRegister = () => {
         
         <button
           type="button"
-          data-testid="account-type-buyer"
+          data-testid="account-type-delivery"
           onClick={() => {
-            setFormData({ ...formData, user_type: 'buyer' });
+            setFormData({ ...formData, user_type: 'delivery' });
             setShowSellerType(false);
           }}
           className={`flex-1 py-3 px-2 rounded-full text-sm font-medium transition-all ${
-            formData.user_type === 'buyer' 
+            formData.user_type === 'delivery' 
               ? 'bg-[#FF6B00] text-white' 
               : 'text-gray-500'
           }`}
         >
-          مشتري
+          موظف توصيل
         </button>
       </div>
       
