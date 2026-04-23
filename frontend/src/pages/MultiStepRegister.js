@@ -387,25 +387,38 @@ const MultiStepRegister = () => {
     </div>
   );
   
-  // عرض اختيار نوع الحساب - التصميم القديم
+  // عرض اختيار نوع الحساب - شريط التبويبات
   const renderAccountTypeSelection = () => (
-    <div className="space-y-3">
-      <p className="text-sm text-gray-600 text-center mb-3">اختر نوع حسابك</p>
-      
-      {/* الصف الأول: بائع - مشتري */}
-      <div className="grid grid-cols-2 gap-3">
+    <div className="space-y-4">
+      {/* شريط التبويبات - 3 خيارات */}
+      <div className="bg-gray-100 rounded-full p-1 flex">
+        <button
+          type="button"
+          data-testid="account-type-delivery"
+          onClick={() => {
+            setFormData({ ...formData, user_type: 'delivery' });
+            setShowSellerType(false);
+          }}
+          className={`flex-1 py-3 px-2 rounded-full text-sm font-medium transition-all ${
+            formData.user_type === 'delivery' 
+              ? 'bg-[#FF6B00] text-white' 
+              : 'text-gray-500'
+          }`}
+        >
+          موظف توصيل
+        </button>
+        
         <button
           type="button"
           data-testid="account-type-seller"
           onClick={() => setShowSellerType(true)}
-          className={`p-4 rounded-xl border-2 transition-all bg-white ${
+          className={`flex-1 py-3 px-2 rounded-full text-sm font-medium transition-all ${
             formData.user_type === 'seller' || formData.user_type === 'food_seller'
-              ? 'border-[#FF6B00] bg-orange-50' 
-              : 'border-gray-200 hover:border-gray-300'
+              ? 'bg-[#FF6B00] text-white' 
+              : 'text-gray-500'
           }`}
         >
-          <Store className={`w-8 h-8 mx-auto mb-2 ${formData.user_type === 'seller' || formData.user_type === 'food_seller' ? 'text-[#FF6B00]' : 'text-gray-400'}`} />
-          <p className={`text-sm font-medium ${formData.user_type === 'seller' || formData.user_type === 'food_seller' ? 'text-[#FF6B00]' : 'text-gray-600'}`}>بائع</p>
+          بائع
         </button>
         
         <button
@@ -415,34 +428,15 @@ const MultiStepRegister = () => {
             setFormData({ ...formData, user_type: 'buyer' });
             setShowSellerType(false);
           }}
-          className={`p-4 rounded-xl border-2 transition-all bg-white ${
+          className={`flex-1 py-3 px-2 rounded-full text-sm font-medium transition-all ${
             formData.user_type === 'buyer' 
-              ? 'border-[#FF6B00] bg-orange-50' 
-              : 'border-gray-200 hover:border-gray-300'
+              ? 'bg-[#FF6B00] text-white' 
+              : 'text-gray-500'
           }`}
         >
-          <ShoppingBag className={`w-8 h-8 mx-auto mb-2 ${formData.user_type === 'buyer' ? 'text-[#FF6B00]' : 'text-gray-400'}`} />
-          <p className={`text-sm font-medium ${formData.user_type === 'buyer' ? 'text-[#FF6B00]' : 'text-gray-600'}`}>مشتري</p>
+          مشتري
         </button>
       </div>
-
-      {/* الصف الثاني: موظف توصيل */}
-      <button
-        type="button"
-        data-testid="account-type-delivery"
-        onClick={() => {
-          setFormData({ ...formData, user_type: 'delivery' });
-          setShowSellerType(false);
-        }}
-        className={`w-full p-4 rounded-xl border-2 transition-all bg-white ${
-          formData.user_type === 'delivery' 
-            ? 'border-[#FF6B00] bg-orange-50' 
-            : 'border-gray-200 hover:border-gray-300'
-        }`}
-      >
-        <Bike className={`w-8 h-8 mx-auto mb-2 ${formData.user_type === 'delivery' ? 'text-[#FF6B00]' : 'text-gray-400'}`} />
-        <p className={`text-sm font-medium ${formData.user_type === 'delivery' ? 'text-[#FF6B00]' : 'text-gray-600'}`}>موظف توصيل</p>
-      </button>
       
       {/* اختيار نوع البائع */}
       <AnimatePresence>
