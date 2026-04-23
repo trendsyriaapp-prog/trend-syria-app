@@ -1015,12 +1015,12 @@ const FoodCartPage = () => {
               
               <div className="grid grid-cols-3 gap-2">
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">رقم الشارع</label>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">اسم الشارع</label>
                   <input
                     type="text"
                     value={newAddress.street_number}
                     onChange={(e) => setNewAddress({ ...newAddress, street_number: e.target.value })}
-                    placeholder="15"
+                    placeholder="النصر"
                     className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm"
                   />
                 </div>

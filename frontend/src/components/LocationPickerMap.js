@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import logger from '../lib/logger';
 import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet';
 import { MapPin, Navigation, X, Check, Loader2 } from 'lucide-react';
@@ -31,6 +31,51 @@ const MapClickHandler = ({ onLocationSelect }) => {
       onLocationSelect(e.latlng.lat, e.latlng.lng);
     },
   });
+  return null;
+};
+
+// مكون لإصلاح حجم الخريطة عند فتحها (يحل مشكلة الـ tiles المختفية)
+const MapResizer = () => {
+  const map = useMap();
+  
+  useEffect(() => {
+    // إصلاح حجم الخريطة بعد التحميل
+    const timer1 = setTimeout(() => {
+      map.invalidateSize();
+    }, 100);
+    
+    const timer2 = setTimeout(() => {
+      map.invalidateSize();
+    }, 300);
+    
+    const timer3 = setTimeout(() => {
+      map.invalidateSize();
+    }, 500);
+    
+    // إصلاح عند تغيير حجم النافذة
+    const handleResize = () => {
+      map.invalidateSize();
+    };
+    
+    window.addEventListener('resize', handleResize);
+    
+    // إصلاح عند التكبير/التصغير
+    map.on('zoomend', () => {
+      setTimeout(() => map.invalidateSize(), 100);
+    });
+    
+    map.on('moveend', () => {
+      setTimeout(() => map.invalidateSize(), 100);
+    });
+    
+    return () => {
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+      clearTimeout(timer3);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [map]);
+  
   return null;
 };
 
@@ -72,6 +117,31 @@ const LocationPickerMap = ({
       setSelectedLng(initialLng);
     }
   }, [isOpen, initialLat, initialLng]);
+
+  // معالج زر الرجوع في الهاتف (Back button)
+  useEffect(() => {
+    if (!isOpen) return;
+
+    // إضافة entry إلى history عند فتح الخريطة
+    const handleBackButton = (e) => {
+      e.preventDefault();
+      onClose();
+    };
+
+    // إضافة state جديد للـ history
+    window.history.pushState({ locationPicker: true }, '');
+    
+    // الاستماع لحدث popstate (زر الرجوع)
+    window.addEventListener('popstate', handleBackButton);
+
+    return () => {
+      window.removeEventListener('popstate', handleBackButton);
+      // إزالة state من history إذا لم يتم الضغط على زر الرجوع
+      if (window.history.state?.locationPicker) {
+        window.history.back();
+      }
+    };
+  }, [isOpen, onClose]);
 
   const handleLocationSelect = (lat, lng) => {
     setSelectedLat(lat);
@@ -148,12 +218,9 @@ const LocationPickerMap = ({
         {/* Header */}
         <div className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C00] p-4 text-white">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <MapPin size={24} />
-              <div>
-                <h2 className="font-bold text-lg">{title}</h2>
-                <p className="text-sm text-white/80">انقر على الخريطة لتحديد موقعك</p>
-              </div>
+            <div>
+              <h2 className="font-bold text-lg">{title}</h2>
+              <p className="text-sm text-white/80">انقر على الخريطة لتحديد موقعك</p>
             </div>
             <button
               onClick={onClose}
@@ -176,6 +243,7 @@ const LocationPickerMap = ({
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
               attribution='&copy; OpenStreetMap'
             />
+            <MapResizer />
             <MapClickHandler onLocationSelect={handleLocationSelect} />
             <MapCenterController center={[selectedLat, selectedLng]} />
             <Marker position={[selectedLat, selectedLng]} icon={customIcon} />

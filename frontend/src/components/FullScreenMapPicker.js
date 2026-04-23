@@ -1,7 +1,7 @@
 // /app/frontend/src/components/FullScreenMapPicker.js
 // خريطة ملء الشاشة لاختيار الموقع
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { MapContainer, TileLayer, Marker, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -111,6 +111,31 @@ const FullScreenMapPicker = ({
     }
   }, [isOpen, currentLocation]);
 
+  // معالج زر الرجوع في الهاتف (Back button)
+  useEffect(() => {
+    if (!isOpen) return;
+
+    // إضافة entry إلى history عند فتح الخريطة
+    const handleBackButton = (e) => {
+      e.preventDefault();
+      onClose();
+    };
+
+    // إضافة state جديد للـ history
+    window.history.pushState({ mapPicker: true }, '');
+    
+    // الاستماع لحدث popstate (زر الرجوع)
+    window.addEventListener('popstate', handleBackButton);
+
+    return () => {
+      window.removeEventListener('popstate', handleBackButton);
+      // إزالة state من history إذا لم يتم الضغط على زر الرجوع
+      if (window.history.state?.mapPicker) {
+        window.history.back();
+      }
+    };
+  }, [isOpen, onClose]);
+
   // الحصول على موقع GPS الحالي
   const getCurrentLocation = () => {
     if (!navigator.geolocation) {
@@ -213,8 +238,7 @@ const FullScreenMapPicker = ({
               <ChevronRight size={24} />
               <span className="text-sm font-medium">رجوع</span>
             </button>
-            <h2 className="text-base font-bold text-gray-900 flex items-center gap-2">
-              <MapPin size={20} className="text-[#FF6B00]" />
+            <h2 className="text-base font-bold text-gray-900">
               {title}
             </h2>
             <div className="w-16"></div>

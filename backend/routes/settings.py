@@ -2299,16 +2299,20 @@ async def get_public_business_categories(seller_type: str = None):
     if not categories:
         if seller_type == "seller":
             categories = [
-                {"id": "clothing", "name": "ملابس وأزياء", "icon": "👕", "type": "seller"},
-                {"id": "electronics", "name": "إلكترونيات", "icon": "📱", "type": "seller"},
-                {"id": "home", "name": "أجهزة منزلية", "icon": "🏠", "type": "seller"},
-                {"id": "beauty", "name": "مستحضرات تجميل", "icon": "💄", "type": "seller"},
-                {"id": "furniture", "name": "أثاث ومفروشات", "icon": "🛋️", "type": "seller"},
-                {"id": "toys", "name": "ألعاب وهدايا", "icon": "🎁", "type": "seller"},
-                {"id": "books", "name": "كتب وقرطاسية", "icon": "📚", "type": "seller"},
-                {"id": "sports", "name": "رياضة ولياقة", "icon": "⚽", "type": "seller"},
-                {"id": "cars", "name": "سيارات وقطع غيار", "icon": "🚗", "type": "seller"},
-                {"id": "other", "name": "أخرى", "icon": "📦", "type": "seller"},
+                {"id": "clothing", "name": "ملابس وأزياء", "icon": "👕", "type": "seller", "order": 1},
+                {"id": "electronics", "name": "إلكترونيات", "icon": "📱", "type": "seller", "order": 2},
+                {"id": "home", "name": "أجهزة منزلية", "icon": "🏠", "type": "seller", "order": 3},
+                {"id": "beauty", "name": "مستحضرات تجميل", "icon": "💄", "type": "seller", "order": 4},
+                {"id": "furniture", "name": "أثاث ومفروشات", "icon": "🛋️", "type": "seller", "order": 5},
+                {"id": "bicycles", "name": "دراجات", "icon": "🚲", "type": "seller", "order": 6},
+                {"id": "kids_toys", "name": "ألعاب أطفال", "icon": "🧸", "type": "seller", "order": 7},
+                {"id": "gifts", "name": "هدايا", "icon": "🎁", "type": "seller", "order": 8},
+                {"id": "books", "name": "كتب وقرطاسية", "icon": "📚", "type": "seller", "order": 9},
+                {"id": "sports", "name": "رياضة ولياقة", "icon": "⚽", "type": "seller", "order": 10},
+                {"id": "cars", "name": "قطع غيار سيارات", "icon": "🚗", "type": "seller", "order": 11},
+                {"id": "hardware", "name": "خردوات", "icon": "🔧", "type": "seller", "order": 12},
+                {"id": "medicines", "name": "أدوية ومستلزمات طبية", "icon": "💊", "type": "seller", "order": 13, "requires_license": True},
+                {"id": "other", "name": "أخرى", "icon": "📦", "type": "seller", "order": 99},
             ]
         elif seller_type == "food_seller":
             categories = [
