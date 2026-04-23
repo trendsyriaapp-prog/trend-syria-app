@@ -1,263 +1,80 @@
-# ترند سورية - Trend Syria E-commerce Platform
+# ترند سوريا - PRD (Product Requirements Document)
 
-## Original Problem Statement
-استكمال تطبيق التجارة الإلكترونية "ترند سوريا" (Trend Syria) للإطلاق الرسمي على متجر Google Play. 
-- تطبيق تجارة إلكترونية متكامل (Android/Capacitor, React, FastAPI, MongoDB)
-- يتطلب تكامل مع الجهاز (Native)، أدوار مستخدمين متعددة، أدوات تحكم وإشراف للإدارة
-- Requires extreme performance optimization for slow Syrian internet networks
-- Moving to self-hosted Riyadh VPS for performance
-
-## Architecture
-- **Frontend**: React + Capacitor (Android)
-- **Backend**: FastAPI (Python)
-- **Database**: MongoDB
-- **Caching**: IndexedDB (Offline-First)
-- **Hosting**: Nginx on Ubuntu 22.04 VPS (Riyadh)
-
-## Completed Features
-
-### Core E-commerce
-- [x] Product catalog with categories
-- [x] Shopping cart & checkout
-- [x] Order tracking system
-- [x] Seller dashboard
-- [x] Admin panel
-
-### Security & Rate Limiting (December 2024)
-- [x] Advanced Rate Limiting System (`core/rate_limiter.py`)
-- [x] Rate Limit Admin Dashboard (`RateLimitDashboard.js`)
-- [x] Security Alerts for brute force detection
-- [x] Push notifications to admins
-
-### Code Quality Fixes (December 2024)
-- [x] Replaced 450+ console.log with production-safe logger.js
-- [x] Fixed insecure `random` → `secrets` module
-- [x] Fixed React Hook dependencies (stale closures)
-- [x] Replaced Array index keys in dynamic lists
-- [x] Removed hardcoded secrets from test files
-- [x] Created tests/conftest.py and tests/.env.test
-
-### Wallet & Withdrawal System - Updated (April 2025)
-- [x] **إضافة خيار الحساب البنكي للسحب** - بجانب شام كاش
-- [x] **إزالة موافقة الأدمن للسحوبات** - الطلبات تُقبل تلقائياً بحالة `ready_for_transfer`
-- [x] **خصم فوري من المحفظة** - المبلغ يُخصم فور إرسال طلب السحب
-- [x] **API جديد لتأكيد التحويل** - `POST /api/payment/admin/withdrawals/{id}/mark-transferred`
-- [x] **فشل الشحن مباشر** - إذا فشل التحقق من الشحن، يفشل الطلب بدون إرساله للأدمن
-- [x] **تحديث لوحة الأدمن** - عرض بيانات الحساب البنكي وزر "تم التحويل"
-- [x] **تحديث واجهة المستخدم** - نموذج السحب يدعم شام كاش والحساب البنكي
-
-### Geographic Restriction System - Updated (April 2025) ✅ UPDATED
-- [x] **نظام التقييد الجغرافي الاحترافي** - مثل التطبيقات العالمية (أمازون، طلبات)
-- [x] **تصفح حر للجميع** - أي شخص يستطيع تصفح التطبيق بالكامل
-- [x] **التحقق عند الدفع فقط** - المنع يظهر فقط عند إتمام الطلب
-- [x] **رسالة ودية** - "قريباً في منطقتك! نحن نعمل على التوسع"
-- [x] **لوحة إدارة كاملة** - إضافة/إزالة محافظات ومناطق
-- [x] **سهولة الإزالة لاحقاً** - كل الكود معلّم بتعليقات "للإزالة لاحقاً"
-- **الملفات:**
-  - `/app/frontend/src/lib/regionService.js` - خدمة التحقق من المناطق (جديد)
-  - `/app/frontend/src/components/RegionBlockedModal.js` - نافذة التنبيه (جديد)
-  - `/app/frontend/src/pages/CheckoutPage.js` - التحقق عند الدفع
-  - `/app/frontend/src/pages/FoodCartPage.js` - التحقق للطعام
-  - `/app/frontend/src/pages/FoodBatchCheckoutPage.js` - التحقق للدفع الموحد
-  - `/app/frontend/src/components/admin/AllowedRegionsTab.js` - لوحة الإدارة
-  - `/app/backend/routes/settings.py` - APIs (allowed-regions endpoints)
-  - `/app/frontend/src/components/CityRestrictionGate.js` - (معطّل، يمكن حذفه)
-
-### 🔒 httpOnly Cookies Authentication (April 2025) ✅ NEW
-- [x] **تحويل من localStorage إلى httpOnly Cookies** - أمان أعلى ضد هجمات XSS
-- [x] **CORS Middleware** - إضافة دعم credentials للـ cookies
-- [x] **Backend يدعم كلا الطريقتين** - Cookie و Authorization header للتوافق
-- [x] **Logout endpoint** - مسح الـ cookies بشكل آمن
-- [x] **AuthContext محدّث** - يستخدم cookies مع `withCredentials: true`
-- **الملفات:**
-  - `/app/backend/core/auth_cookies.py` - نظام الـ cookies الجديد
-  - `/app/backend/core/database.py` - دالة `get_current_user` محدّثة
-  - `/app/backend/server.py` - CORS middleware مع credentials
-  - `/app/frontend/src/context/AuthContext.js` - محدّث للـ cookies
-
-### Delivery System
-- [x] Driver performance tracking
-- [x] Unified map system
-- [x] Order assignment
-
-### Delivery Driver Registration - Syrian Local Requirements (April 2025)
-- [x] إزالة حقل رخصة القيادة نهائياً
-- [x] تغيير "صورة المركبة" إلى "صورة الدراجة" (bike_photo)
-- [x] تغيير "نوع المركبة" إلى "نوع الوقود: بنزين/كهرباء" (fuel_type: petrol/electric)
-- [x] دمج المدينة والعنوان مع تحديد GPS إلزامي
-- [x] إضافة تحذير: "⚠️ موتورات البارت غير مصرح بها إطلاقاً"
-- [x] إضافة ملاحظة عند الصورة الشخصية: "ستظهر صورتك للبائعين والعملاء"
-- [x] جميع الحقول إلزامية
-- [x] تحديث بطاقة مراجعة الطلب في لوحة الإدارة
-- [x] تحديث الصفحة التسويقية والأسئلة الشائعة
-
-### Driver Profile Photo Display (April 2025)
-- [x] إضافة API جديد `GET /api/delivery/profile` لجلب الملف الشخصي مع الصورة
-- [x] عرض الصورة الشخصية في Header صفحة السائق الرئيسية
-- [x] عرض التقييم إلى جانب اسم السائق
-- [x] عدم السماح بتعديل الصورة مباشرة (فقط عبر الدعم)
-- [x] عرض رابط الموقع GPS للمدير عند مراجعة الطلب
-- [x] عرض تاريخ تقديم الطلب للمدير
-
-## Saved for Future (Pending Legal Review)
-
-### نظام الوكلاء (مكاتب الحوالات)
-- **الملف:** `/app/memory/AGENT_SYSTEM_PLAN.md`
-- **الحالة:** محفوظ - ينتظر استشارة محامي
-- **للبدء:** قل "ابدأ ببناء نظام الوكلاء"
-- يشمل: لوحة تحكم الوكيل، إدارة الوكلاء، نظام المحاسبة كل 24 ساعة
+## المعلومات الأساسية
+- **اسم المشروع**: ترند سوريا (Trend Syria)
+- **النوع**: تطبيق تجارة إلكترونية + توصيل طعام
+- **التقنيات**: React, FastAPI, MongoDB, Capacitor (Android)
 
 ---
 
-## In Progress / Upcoming Tasks
+## الميزات المُنجزة
 
-### P1 - High Priority
-- [ ] **Sham Cash Integration** - Activate real payment gateway (currently MOCKED)
-- [ ] **SMS OTP Integration** - Activate real SMS for Syrian numbers (currently MOCKED/console)
-- [ ] **Sub-admin Permissions** - Granular roles ("Order Manager", "Product Manager")
+### نظام المصادقة ✅
+- [x] تسجيل دخول بالهاتف + كلمة مرور
+- [x] تسجيل حساب جديد (مشتري/بائع/بائع طعام/موظف توصيل)
+- [x] **تدفق OTP الجديد**: التحقق من الرقم قبل إنشاء الحساب (23 أبريل 2026)
+  - الخطوة 1: إدخال البيانات → زر "إرسال رمز التحقق"
+  - الخطوة 2: إدخال OTP → زر "إنشاء الحساب"
+- [x] نسيت كلمة المرور مع OTP
+- [x] Cookie-based Authentication (HttpOnly)
+- [x] حماية Brute Force
 
-### P2 - Medium Priority
-- [ ] Secure localStorage → httpOnly cookies (High-risk refactor, deferred)
-- [ ] MongoDB Authentication on Riyadh VPS (Deferred - requires SSH session)
+### صفحات المستخدم ✅
+- [x] الصفحة الرئيسية مع فصل المنتجات عن الطعام
+- [x] البحث والتصفية
+- [x] صفحة المنتج التفصيلية
+- [x] سلة التسوق
+- [x] الطلبات والتتبع
+- [x] المحفظة
 
-### P3 - Low Priority (COMPLETED)
-- [x] Refactor oversized React components (December 2024):
-  - MobileNav.js: 617 → 214 lines ✅
-  - AllPendingJoinRequests.js: 896 → 386 lines ✅
-  - Extracted to: `/components/navigation/` and `/components/admin/join-requests/`
-- [ ] Reactivate ACCESS_BACKGROUND_LOCATION for Capacitor
+### لوحة تحكم البائع ✅
+- [x] إدارة المنتجات
+- [x] إدارة الطلبات
+- [x] تحليلات المبيعات
 
-### P5 - Future
-- [ ] Email login option
-- [ ] Increase Python type hint coverage
+### لوحة تحكم الأدمن ✅
+- [x] إدارة المستخدمين
+- [x] إدارة الفئات
+- [x] إعدادات النظام
 
-## Key Files Reference
-- `/app/backend/core/rate_limiter.py` - Rate limiting logic
-- `/app/backend/routes/auth.py` - Authentication & driver registration API
-- `/app/backend/routes/wallet.py` - Wallet and withdrawal APIs
-- `/app/backend/routes/payment.py` - Payment and admin withdrawal APIs
-- `/app/backend/routes/settings.py` - Platform settings including geographic restriction
-- `/app/backend/models/schemas.py` - Data schemas including WithdrawalRequest
-- `/app/frontend/src/components/CityRestrictionGate.js` - Geographic restriction gate (TEMPORARY)
-- `/app/frontend/src/components/admin/AllowedRegionsTab.js` - Admin region management
-- `/app/frontend/src/pages/WalletPage.js` - Seller/Driver wallet page with withdrawal
-- `/app/frontend/src/pages/BuyerWalletPage.js` - Buyer wallet page with top-up
-- `/app/frontend/src/components/admin/AllWithdrawRequestsTab.js` - Admin withdrawal management
+---
 
-## API Endpoints
+## المهام القادمة (Upcoming)
 
-### Geographic Restriction APIs (TEMPORARY)
-- `GET /api/settings/allowed-regions` - Get allowed cities/regions (public)
-- `GET /api/settings/allowed-regions/admin` - Get full settings (admin only)
-- `PUT /api/settings/allowed-regions` - Update all settings (admin only)
-- `POST /api/settings/allowed-regions/add-city` - Add new city (admin only)
-- `POST /api/settings/allowed-regions/add-region` - Add region to city (admin only)
-- `DELETE /api/settings/allowed-regions/remove-city/{name}` - Remove city (admin only)
-- `DELETE /api/settings/allowed-regions/remove-region` - Remove region (admin only)
-- `PUT /api/settings/allowed-regions/toggle` - Enable/disable system (admin only)
+### P1 - أولوية عالية
+- [ ] تفعيل بوابة Sham Cash الحقيقية (حالياً Mock)
+- [ ] تفعيل SMS OTP للأرقام السورية (حالياً يقبل `123456`)
 
-### Wallet APIs
-- `GET /api/wallet/balance` - Get wallet balance
-- `POST /api/wallet/withdraw` - Request withdrawal (shamcash or bank_account)
-- `GET /api/wallet/withdrawals` - Get withdrawal history
-- `DELETE /api/wallet/withdrawals/{id}` - Cancel withdrawal (if not transferred)
-- `POST /api/wallet/topup/request` - Request top-up
-- `POST /api/wallet/topup/verify` - Verify top-up payment
+### P2 - أولوية متوسطة
+- [ ] صلاحيات دقيقة للمشرفين الفرعيين (مدير طلبات، مدير منتجات)
 
-### Admin Withdrawal APIs
-- `GET /api/payment/admin/withdrawals` - Get all withdrawals
-- `POST /api/payment/admin/withdrawals/{id}/mark-transferred` - Confirm transfer done
-- `POST /api/payment/admin/withdrawals/{id}/approve` - Legacy approve (for old pending requests)
-- `POST /api/payment/admin/withdrawals/{id}/reject` - Reject and refund
+### P5 - مستقبلي
+- [ ] نظام الوكلاء/مكاتب الحوالات للشحن
+- [ ] تسجيل الدخول بالبريد الإلكتروني
 
-### Delivery APIs
-- `GET /api/delivery/fuel-types` - Get available fuel types (petrol, electric)
-- `POST /api/delivery/documents` - Submit driver registration documents
-- `GET /api/delivery/documents/status` - Check registration status
-- `GET /api/delivery/profile` - Get driver profile with personal photo, stats, and rating
+---
 
-## Test Credentials
-- Super Admin: `0945570365` / Password: `TrendSyria@2026`
-- Test Seller: `0945570399` / Password: `Test@123456`
+## Endpoints الجديدة (23 أبريل 2026)
+
+### تسجيل جديد مع OTP
+```
+POST /api/auth/send-registration-otp
+POST /api/auth/verify-otp-only
+POST /api/auth/complete-registration
+POST /api/auth/verify-registration-otp (للمشترين - تدفق مختصر)
+```
+
+---
+
+## ملاحظات هامة
+
+### OTP Mock
+جميع ميزات OTP حالياً تقبل الرمز `123456` للاختبار.
+
+### بيئة Preview vs Production
+- Preview: يتم تطبيق التغييرات مباشرة
+- Production (`trendsyria.app`): يتطلب النشر عبر GitHub
+
+### بيانات الاختبار
+- Super Admin: `0945570365` / `TrendSyria@2026`
 - OTP Test Code: `123456`
-
-## VPS Info
-- **مزود الخدمة**: LightNode (https://console.lightnode.com/)
-- **IP**: `130.94.57.227`
-- **Port**: `2222`
-- **User**: `root`
-- **الموقع**: الرياض، السعودية
-- **SSH Command**: `ssh -p 2222 root@130.94.57.227`
-
-## 3rd Party Integrations
-- Firebase Admin (Push Notifications)
-- UptimeRobot (VPS monitoring)
-- Cloudflare (DNS, SSL, R2 CDN)
-- Sham Cash (MOCKED - pending activation)
-
-## Known Issues
-- Geographic block (Syria) - Users use VPN to access Emergent preview
-- Database shows "disconnected" in preview environment (normal behavior)
-- **localStorage Security**: Auth tokens stored in localStorage (P2 - Deferred). Migration to httpOnly cookies requires significant refactoring.
-
-## Code Quality Fixes Applied (April 2025)
-- ✅ Replaced Array index as React keys with unique identifiers (AdminPage.js, ProductDetailPage.js, JoinAsSellerPage.js)
-- ✅ Replaced `random` module with `secrets` in test files for security-sensitive operations
-- ✅ Fixed f-strings without placeholders (70 auto-fixed)
-- ✅ Test credentials moved to environment variables via conftest.py and .env.test
-- ✅ Fixed mutable default arguments in Pydantic models (settings.py)
-- ✅ Fixed empty catch blocks with proper error logging (ProductDetailPage.js, OrdersPage.js)
-- ✅ Removed hardcoded secrets from 12+ test files (TrendSyria@2026, Test@123456)
-- ✅ Circular imports avoided via lazy imports (database.py ↔ firebase_admin.py)
-- ✅ Created RejectModal.js (was missing, causing build failure)
-- ✅ **localStorage → httpOnly Cookies** - Token authentication now uses secure cookies
-- ✅ **CORS Middleware** - Added with credentials support
-- ✅ **Logout endpoint** - Properly clears authentication cookies
-
-### Remaining Code Quality (Deferred - Low Priority)
-**Note: These items work correctly. Changing them has high risk of breaking functionality.**
-
-- ✅ **Type Hints**: Added to `background_tasks.py`. Other files have adequate coverage.
-- ✅ **Nested Ternaries in SettingsPage.js**: Simplified using `getTabButtonClass()` helper function
-- ⚠️ **Large Components (5 files)**: Working correctly. Splitting now = high risk.
-  - `OrderTrackingMap.js` (468 lines) - Complex map integration
-  - `ProductCard.js` (436 lines) - Many variants and states
-  - `Header.js` (422 lines) - Search, menu, notifications all interconnected
-- ⚠️ **Complex Functions (4 functions)**: Working correctly. Splitting now = high risk.
-  - `send_push_to_admins()` (99 lines) - Logical flow, well-documented
-  - `reject_seller()` (82 lines) - Database operations + notifications
-
-**Recommendation**: Leave these as-is. Refactor only when modifying them.
-
----
-
-## 🚀 Performance Optimization for Syrian Internet (April 2025) ✅ NEW
-
-### Completed Optimizations:
-- [x] **PWA + Service Worker** - Offline-first caching active
-- [x] **GZip Compression** - Enabled via Cloudflare/Kubernetes
-- [x] **Unused Images Deleted** - Saved ~9.5MB total:
-  - `/app/frontend/public/_backup_unused_images/` (old logos, test icons)
-  - From icons folder: 95 unused icon variations (7.6MB saved)
-- [x] **Nginx Configuration Guide** - `/app/NGINX_SETUP_GUIDE.md`
-- [x] **Production Nginx Config** - `/app/nginx-production.conf`
-
-### Pending (Requires VPS Access):
-- [ ] **Configure Nginx Cache-Control Headers** on production VPS (130.94.57.227)
-  - Use `/app/nginx-production.conf` as template
-  - Follow `/app/NGINX_SETUP_GUIDE.md` for setup instructions
-  - Static files (JS/CSS): 1 year cache
-  - Images: 30 days cache
-  - HTML: No cache (instant updates)
-
-### Current State:
-- Preview environment uses Kubernetes Ingress which sends `cache-control: no-store`
-- After deploying Nginx config on VPS, headers will be:
-  - `cache-control: public, immutable, max-age=31536000` for JS/CSS
-  - `cache-control: public, max-age=2592000` for images
-
----
-
-## Notes
-- Always communicate with user in Arabic (العربية)
-- MONGO_URL in preview can be swapped to localhost for testing, but must be reverted

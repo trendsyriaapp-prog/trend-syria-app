@@ -411,6 +411,14 @@ const RegisterPage = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showSellerType, setShowSellerType] = useState(false);
+  
+  // حالات OTP الجديدة
+  const [step, setStep] = useState(1); // 1: بيانات, 2: OTP
+  const [otpSent, setOtpSent] = useState(false);
+  const [registrationId, setRegistrationId] = useState(null);
+  const [otp, setOtp] = useState(['', '', '', '', '', '']);
+  const [otpLoading, setOtpLoading] = useState(false);
+  const otpInputsRef = useRef([]);
 
   // تحميل مسبق للصفحات التالية عند فتح صفحة التسجيل
   useEffect(() => {
@@ -434,10 +442,8 @@ const RegisterPage = () => {
     setShowSellerType(false);
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    // التحقق من الاسم الثلاثي
+  // التحقق من البيانات الأساسية
+  const validateForm = () => {
     const nameParts = formData.full_name.trim().split(' ').filter(p => p.length > 0);
     if (nameParts.length < 3) {
       toast({
@@ -445,35 +451,107 @@ const RegisterPage = () => {
         description: "يرجى إدخال الاسم الثلاثي كاملاً",
         variant: "destructive"
       });
-      return;
+      return false;
     }
 
-    // التحقق من تطابق كلمة السر
+    if (!formData.phone || formData.phone.length < 10) {
+      toast({
+        title: "خطأ",
+        description: "يرجى إدخال رقم هاتف صحيح",
+        variant: "destructive"
+      });
+      return false;
+    }
+
     if (formData.password !== formData.confirmPassword) {
       toast({
         title: "خطأ",
         description: "كلمة المرور وتأكيدها غير متطابقتين",
         variant: "destructive"
       });
-      return;
+      return false;
     }
 
-    // التحقق من طول كلمة السر
     if (formData.password.length < 6) {
       toast({
         title: "خطأ",
         description: "كلمة المرور يجب أن تكون 6 أحرف على الأقل",
         variant: "destructive"
       });
+      return false;
+    }
+
+    return true;
+  };
+
+  // إرسال OTP
+  const sendOTP = async (e) => {
+    e?.preventDefault();
+    if (!validateForm()) return;
+
+    setOtpLoading(true);
+    try {
+      const res = await axios.post(`${API}/api/auth/send-registration-otp`, {
+        phone: formData.phone,
+        full_name: formData.full_name
+      });
+      
+      setRegistrationId(res.data.registration_id);
+      setOtpSent(true);
+      setStep(2);
+      toast({ 
+        title: "تم إرسال رمز التحقق", 
+        description: "تم إرسال رمز التحقق إلى WhatsApp" 
+      });
+    } catch (error) {
+      const msg = error.response?.data?.detail || "فشل إرسال رمز التحقق";
+      toast({ title: "خطأ", description: msg, variant: "destructive" });
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+
+  // معالجة تغيير OTP
+  const handleOtpChange = (index, value) => {
+    if (!/^\d*$/.test(value)) return;
+    const newOtp = [...otp];
+    newOtp[index] = value.slice(-1);
+    setOtp(newOtp);
+    if (value && index < 5) {
+      otpInputsRef.current[index + 1]?.focus();
+    }
+  };
+
+  const handleOtpKeyDown = (index, e) => {
+    if (e.key === 'Backspace' && !otp[index] && index > 0) {
+      otpInputsRef.current[index - 1]?.focus();
+    }
+  };
+
+  // التحقق من OTP وإنشاء الحساب
+  const verifyOTPAndRegister = async () => {
+    const otpCode = otp.join('');
+    if (otpCode.length !== 6) {
+      toast({ title: "خطأ", description: "يرجى إدخال رمز التحقق كاملاً", variant: "destructive" });
       return;
     }
 
     setLoading(true);
-
     try {
-      const res = await register(formData);
+      const registrationData = {
+        registration_id: registrationId,
+        otp: otpCode,
+        ...formData
+      };
+      
+      const res = await axios.post(`${API}/api/auth/verify-registration-otp`, registrationData, {
+        withCredentials: true
+      });
+      
+      localStorage.setItem('user', JSON.stringify(res.data.user));
       toast({ title: "تم التسجيل بنجاح", description: "مرحباً بك في ترند سورية" });
       
+      // توجيه حسب نوع المستخدم
       if (formData.user_type === 'seller') {
         navigate('/seller/documents', { replace: true });
       } else if (formData.user_type === 'food_seller') {
@@ -484,25 +562,97 @@ const RegisterPage = () => {
         navigate('/', { replace: true });
       }
     } catch (error) {
-      const errorMessage = error.response?.data?.detail || "حدث خطأ في التسجيل";
-      let friendlyMessage = errorMessage;
-      
-      // تحويل رسائل الخطأ لرسائل واضحة
-      if (errorMessage.includes("مسجل مسبقاً") || errorMessage.includes("already registered")) {
-        friendlyMessage = "رقم الهاتف مسجل مسبقاً، يرجى تسجيل الدخول بدلاً من إنشاء حساب جديد";
-      } else if (errorMessage.includes("Not Found") || errorMessage === "Not Found") {
-        friendlyMessage = "رقم الهاتف مسجل مسبقاً، يرجى تسجيل الدخول";
-      }
-      
-      toast({
-        title: "خطأ في التسجيل",
-        description: friendlyMessage,
-        variant: "destructive"
-      });
+      const msg = error.response?.data?.detail || "فشل التحقق من الرمز";
+      toast({ title: "خطأ", description: msg, variant: "destructive" });
     } finally {
       setLoading(false);
     }
   };
+
+  // العودة للخطوة السابقة
+  const goBack = () => {
+    setOtpSent(false);
+    setOtp(['', '', '', '', '', '']);
+    setStep(1);
+  };
+
+  // شاشة OTP
+  if (step === 2 && otpSent) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4 py-10 bg-gray-50">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="w-full max-w-md"
+        >
+          <div className="text-center mb-8">
+            <img 
+              src="/images/logo.png" 
+              alt="ترند سوريا" 
+              className="w-20 h-20 object-contain mx-auto mb-4 rounded-2xl"
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = '/icons/icon-192.png';
+              }}
+            />
+            <h1 className="text-2xl font-bold text-gray-900">التحقق من رقم الهاتف</h1>
+            <p className="text-gray-500 mt-2">تم إرسال رمز التحقق إلى WhatsApp</p>
+            <p className="text-[#FF6B00] font-medium mt-1" dir="ltr">{formData.phone}</p>
+          </div>
+
+          <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
+            {/* حقول OTP */}
+            <div className="flex justify-center gap-2 mb-6" dir="ltr">
+              {otp.map((digit, index) => (
+                <input
+                  key={index}
+                  ref={(el) => (otpInputsRef.current[index] = el)}
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={1}
+                  value={digit}
+                  onChange={(e) => handleOtpChange(index, e.target.value)}
+                  onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                  className="w-12 h-14 text-center text-xl font-bold border-2 rounded-xl focus:border-[#FF6B00] focus:outline-none"
+                  data-testid={`otp-input-${index}`}
+                />
+              ))}
+            </div>
+
+            <div className="text-center mb-6">
+              <p className="text-xs text-gray-400">
+                🧪 وضع الاختبار: استخدم الرمز <span className="font-bold text-[#FF6B00]">123456</span>
+              </p>
+            </div>
+
+            <button
+              onClick={verifyOTPAndRegister}
+              disabled={loading || otp.join('').length !== 6}
+              className="w-full bg-[#FF6B00] text-white font-bold py-3 rounded-full hover:bg-[#E65000] disabled:opacity-50 transition-colors"
+              data-testid="verify-otp-btn"
+            >
+              {loading ? 'جاري التحقق...' : 'إنشاء الحساب'}
+            </button>
+
+            <button
+              onClick={sendOTP}
+              disabled={otpLoading}
+              className="w-full py-2 text-[#FF6B00] text-sm mt-4"
+            >
+              {otpLoading ? 'جاري الإرسال...' : 'إعادة إرسال الرمز'}
+            </button>
+
+            <button
+              onClick={goBack}
+              className="w-full py-2 text-gray-500 text-sm mt-2 flex items-center justify-center gap-2"
+            >
+              ← العودة لتعديل البيانات
+            </button>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 py-10 bg-gray-50">
@@ -525,7 +675,7 @@ const RegisterPage = () => {
           <p className="text-gray-500 mt-2">انضم إلى ترند سورية الآن</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
+        <form onSubmit={sendOTP} className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
           {/* Account Type */}
           <div className="flex gap-1 p-1 bg-gray-100 rounded-full mb-4">
             <button
@@ -741,11 +891,11 @@ const RegisterPage = () => {
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={otpLoading}
             className="w-full bg-[#FF6B00] text-white font-bold py-3 rounded-full mt-6 hover:bg-[#E65000] disabled:opacity-50 transition-colors"
             data-testid="register-submit-btn"
           >
-            {loading ? 'جاري التسجيل...' : 'إنشاء الحساب'}
+            {otpLoading ? 'جاري إرسال رمز التحقق...' : 'إرسال رمز التحقق'}
           </button>
 
           {/* Terms Agreement */}

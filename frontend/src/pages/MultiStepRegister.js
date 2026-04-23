@@ -114,21 +114,25 @@ const MultiStepRegister = () => {
     }
   }, [formData.user_type]);
   
+  // حالة التحقق من OTP
+  const [otpVerified, setOtpVerified] = useState(false);
+  
   // تحديد عدد الخطوات حسب نوع المستخدم
+  // التدفق الجديد: بيانات أساسية → OTP → بيانات البائع (إذا كان بائع)
   const getTotalSteps = () => {
     switch (formData.user_type) {
-      case 'buyer': return 2; // بيانات أساسية + OTP
-      case 'seller': return 3; // بيانات أساسية + وثائق + OTP
-      case 'food_seller': return 3; // بيانات أساسية + بيانات المطعم + OTP
-      case 'delivery': return 3; // بيانات أساسية + وثائق + OTP
+      case 'buyer': return 2; // بيانات أساسية + OTP (ينشئ الحساب مباشرة)
+      case 'seller': return 3; // بيانات أساسية + OTP + وثائق البائع
+      case 'food_seller': return 3; // بيانات أساسية + OTP + بيانات المطعم
+      case 'delivery': return 3; // بيانات أساسية + OTP + وثائق التوصيل
       default: return 2;
     }
   };
   
   // التحقق من صحة الخطوة الحالية
   const validateCurrentStep = () => {
+    // الخطوة 1: البيانات الأساسية (لجميع المستخدمين)
     if (step === 1) {
-      // التحقق من البيانات الأساسية
       const nameParts = formData.full_name.trim().split(' ').filter(p => p.length > 0);
       if (nameParts.length < 3) {
         toast({ title: "خطأ", description: "يرجى إدخال الاسم الثلاثي كاملاً", variant: "destructive" });
@@ -149,7 +153,8 @@ const MultiStepRegister = () => {
       return true;
     }
     
-    if (step === 2 && formData.user_type === 'seller') {
+    // الخطوة 3: بيانات البائع (بعد التحقق من OTP)
+    if (step === 3 && formData.user_type === 'seller') {
       if (!sellerData.business_category) {
         toast({ title: "خطأ", description: "يرجى اختيار صنف النشاط التجاري", variant: "destructive" });
         return false;
@@ -170,7 +175,8 @@ const MultiStepRegister = () => {
       return true;
     }
     
-    if (step === 2 && formData.user_type === 'food_seller') {
+    // الخطوة 3: بيانات بائع الطعام
+    if (step === 3 && formData.user_type === 'food_seller') {
       if (!foodSellerData.store_name.trim()) {
         toast({ title: "خطأ", description: "يرجى إدخال اسم المطعم", variant: "destructive" });
         return false;
@@ -186,7 +192,8 @@ const MultiStepRegister = () => {
       return true;
     }
     
-    if (step === 2 && formData.user_type === 'delivery') {
+    // الخطوة 3: بيانات موظف التوصيل
+    if (step === 3 && formData.user_type === 'delivery') {
       if (!deliveryData.national_id.trim()) {
         toast({ title: "خطأ", description: "يرجى إدخال رقم الهوية", variant: "destructive" });
         return false;
@@ -213,21 +220,31 @@ const MultiStepRegister = () => {
   const nextStep = async () => {
     if (!validateCurrentStep()) return;
     
-    const totalSteps = getTotalSteps();
-    
-    // إذا كانت الخطوة الأخيرة قبل OTP
-    if (step === totalSteps - 1) {
+    // الخطوة 1 → إرسال OTP
+    if (step === 1) {
       await sendOTP();
-    } else {
-      setStep(step + 1);
+      return;
     }
+    
+    // الخطوة 3 (بيانات البائع) → إنشاء الحساب
+    if (step === 3) {
+      await completeRegistration();
+      return;
+    }
+    
+    setStep(step + 1);
   };
   
   // الرجوع للخطوة السابقة
   const prevStep = () => {
-    if (otpSent) {
+    if (step === 2 && otpSent) {
+      // من صفحة OTP للخطوة 1
       setOtpSent(false);
       setOtp(['', '', '', '', '', '']);
+      setStep(1);
+    } else if (step === 3) {
+      // من صفحة بيانات البائع للخطوة 2 (OTP)
+      setStep(2);
     } else if (step > 1) {
       setStep(step - 1);
     }
@@ -244,7 +261,7 @@ const MultiStepRegister = () => {
       
       setRegistrationId(res.data.registration_id);
       setOtpSent(true);
-      setStep(getTotalSteps());
+      setStep(2); // الانتقال للخطوة 2 (OTP)
       toast({ 
         title: "تم إرسال رمز التحقق", 
         description: "تم إرسال رمز التحقق إلى WhatsApp" 
@@ -257,7 +274,37 @@ const MultiStepRegister = () => {
     }
   };
   
-  // التحقق من OTP وإنشاء الحساب
+  // التحقق من OTP فقط (للبائعين)
+  const verifyOTPOnly = async () => {
+    const otpCode = otp.join('');
+    if (otpCode.length !== 6) {
+      toast({ title: "خطأ", description: "يرجى إدخال رمز التحقق كاملاً", variant: "destructive" });
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      await axios.post(`${API}/api/auth/verify-otp-only`, {
+        registration_id: registrationId,
+        otp: otpCode,
+        phone: formData.phone
+      });
+      
+      setOtpVerified(true);
+      setStep(3); // الانتقال للخطوة 3 (بيانات البائع)
+      toast({ 
+        title: "تم التحقق بنجاح", 
+        description: "أكمل بياناتك لإنشاء الحساب" 
+      });
+    } catch (error) {
+      const msg = error.response?.data?.detail || "رمز التحقق غير صحيح";
+      toast({ title: "خطأ", description: msg, variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  // التحقق من OTP وإنشاء الحساب (للمشترين فقط)
   const verifyOTPAndRegister = async () => {
     const otpCode = otp.join('');
     if (otpCode.length !== 6) {
@@ -267,37 +314,54 @@ const MultiStepRegister = () => {
     
     setLoading(true);
     try {
-      // تجميع كل البيانات
       const registrationData = {
         registration_id: registrationId,
         otp: otpCode,
-        ...formData,
-        seller_data: formData.user_type === 'seller' ? sellerData : null,
-        food_seller_data: formData.user_type === 'food_seller' ? foodSellerData : null,
-        delivery_data: formData.user_type === 'delivery' ? deliveryData : null
+        ...formData
       };
       
       const res = await axios.post(`${API}/api/auth/verify-registration-otp`, registrationData, {
         withCredentials: true
       });
       
-      // حفظ بيانات المستخدم
       localStorage.setItem('user', JSON.stringify(res.data.user));
-      
       toast({ title: "تم التسجيل بنجاح", description: "مرحباً بك في ترند سورية" });
       
-      // تحديث الـ context وتوجيه المستخدم
       await login(formData.phone, formData.password, true);
-      
-      // توجيه حسب نوع المستخدم
-      if (formData.user_type === 'buyer') {
-        navigate('/', { replace: true });
-      } else {
-        // البائعين والتوصيل يذهبون لصفحة انتظار الموافقة
-        navigate('/pending-approval', { replace: true });
-      }
+      navigate('/', { replace: true });
     } catch (error) {
       const msg = error.response?.data?.detail || "فشل التحقق من الرمز";
+      toast({ title: "خطأ", description: msg, variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  // إكمال التسجيل وإنشاء الحساب (للبائعين بعد التحقق من OTP)
+  const completeRegistration = async () => {
+    if (!validateCurrentStep()) return;
+    
+    setLoading(true);
+    try {
+      const registrationData = {
+        registration_id: registrationId,
+        ...formData,
+        seller_data: formData.user_type === 'seller' ? sellerData : null,
+        food_seller_data: formData.user_type === 'food_seller' ? foodSellerData : null,
+        delivery_data: formData.user_type === 'delivery' ? deliveryData : null
+      };
+      
+      const res = await axios.post(`${API}/api/auth/complete-registration`, registrationData, {
+        withCredentials: true
+      });
+      
+      localStorage.setItem('user', JSON.stringify(res.data.user));
+      toast({ title: "تم التسجيل بنجاح", description: "مرحباً بك في ترند سورية" });
+      
+      await login(formData.phone, formData.password, true);
+      navigate('/pending-approval', { replace: true });
+    } catch (error) {
+      const msg = error.response?.data?.detail || "فشل إنشاء الحساب";
       toast({ title: "خطأ", description: msg, variant: "destructive" });
     } finally {
       setLoading(false);
@@ -813,74 +877,86 @@ const MultiStepRegister = () => {
   );
   
   // شاشة OTP
-  const renderOTPStep = () => (
-    <div className="space-y-6">
-      <div className="text-center">
-        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <Shield className="w-8 h-8 text-green-600" />
+  const renderOTPStep = () => {
+    // للمشترين: زر "إنشاء الحساب"
+    // للبائعين: زر "تحقق" ثم ينتقل لصفحة البيانات
+    const isBuyer = formData.user_type === 'buyer';
+    
+    return (
+      <div className="space-y-6">
+        <div className="text-center">
+          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Shield className="w-8 h-8 text-green-600" />
+          </div>
+          <h3 className="text-lg font-bold text-gray-800">التحقق من رقم الهاتف</h3>
+          <p className="text-sm text-gray-500 mt-2">
+            تم إرسال رمز التحقق إلى WhatsApp
+          </p>
+          <p className="text-[#FF6B00] font-medium mt-1" dir="ltr">{formData.phone}</p>
         </div>
-        <h3 className="text-lg font-bold text-gray-800">التحقق من رقم الهاتف</h3>
-        <p className="text-sm text-gray-500 mt-2">
-          تم إرسال رمز التحقق إلى WhatsApp
-        </p>
-        <p className="text-[#FF6B00] font-medium mt-1" dir="ltr">{formData.phone}</p>
+        
+        {/* حقول OTP */}
+        <div className="flex justify-center gap-2" dir="ltr">
+          {otp.map((digit, index) => (
+            <input
+              key={index}
+              ref={(el) => (otpInputsRef.current[index] = el)}
+              type="text"
+              inputMode="numeric"
+              maxLength={1}
+              value={digit}
+              onChange={(e) => handleOtpChange(index, e.target.value)}
+              onKeyDown={(e) => handleOtpKeyDown(index, e)}
+              className="w-12 h-14 text-center text-xl font-bold border-2 rounded-xl focus:border-[#FF6B00] focus:outline-none"
+            />
+          ))}
+        </div>
+        
+        <div className="text-center">
+          <p className="text-xs text-gray-400">
+            🧪 وضع الاختبار: استخدم الرمز <span className="font-bold text-[#FF6B00]">123456</span>
+          </p>
+        </div>
+        
+        {/* زر التحقق / إنشاء الحساب */}
+        <button
+          onClick={isBuyer ? verifyOTPAndRegister : verifyOTPOnly}
+          disabled={loading || otp.join('').length !== 6}
+          className="w-full py-3.5 bg-gradient-to-r from-[#FF6B00] to-[#FF8533] text-white rounded-xl font-bold disabled:opacity-50"
+        >
+          {loading ? (
+            <Loader2 className="animate-spin mx-auto" size={24} />
+          ) : isBuyer ? (
+            'إنشاء الحساب'
+          ) : (
+            'تحقق'
+          )}
+        </button>
+        
+        <button
+          onClick={sendOTP}
+          disabled={otpLoading}
+          className="w-full py-2 text-[#FF6B00] text-sm"
+        >
+          {otpLoading ? 'جاري الإرسال...' : 'إعادة إرسال الرمز'}
+        </button>
       </div>
-      
-      {/* حقول OTP */}
-      <div className="flex justify-center gap-2" dir="ltr">
-        {otp.map((digit, index) => (
-          <input
-            key={index}
-            ref={(el) => (otpInputsRef.current[index] = el)}
-            type="text"
-            inputMode="numeric"
-            maxLength={1}
-            value={digit}
-            onChange={(e) => handleOtpChange(index, e.target.value)}
-            onKeyDown={(e) => handleOtpKeyDown(index, e)}
-            className="w-12 h-14 text-center text-xl font-bold border-2 rounded-xl focus:border-[#FF6B00] focus:outline-none"
-          />
-        ))}
-      </div>
-      
-      <div className="text-center">
-        <p className="text-xs text-gray-400">
-          🧪 وضع الاختبار: استخدم الرمز <span className="font-bold text-[#FF6B00]">123456</span>
-        </p>
-      </div>
-      
-      <button
-        onClick={verifyOTPAndRegister}
-        disabled={loading || otp.join('').length !== 6}
-        className="w-full py-3.5 bg-gradient-to-r from-[#FF6B00] to-[#FF8533] text-white rounded-xl font-bold disabled:opacity-50"
-      >
-        {loading ? (
-          <Loader2 className="animate-spin mx-auto" size={24} />
-        ) : (
-          'تأكيد وإنشاء الحساب'
-        )}
-      </button>
-      
-      <button
-        onClick={sendOTP}
-        disabled={otpLoading}
-        className="w-full py-2 text-[#FF6B00] text-sm"
-      >
-        {otpLoading ? 'جاري الإرسال...' : 'إعادة إرسال الرمز'}
-      </button>
-    </div>
-  );
+    );
+  };
   
   // عرض الخطوة الحالية
   const renderCurrentStep = () => {
-    if (otpSent) {
+    // الخطوة 2: شاشة OTP (لجميع المستخدمين)
+    if (step === 2 && otpSent) {
       return renderOTPStep();
     }
     
     switch (step) {
       case 1:
+        // الخطوة 1: البيانات الأساسية
         return renderStep1();
-      case 2:
+      case 3:
+        // الخطوة 3: بيانات البائع (بعد التحقق من OTP)
         if (formData.user_type === 'seller') return renderSellerStep();
         if (formData.user_type === 'food_seller') return renderFoodSellerStep();
         if (formData.user_type === 'delivery') return renderDeliveryStep();
@@ -912,26 +988,24 @@ const MultiStepRegister = () => {
           <p className="text-sm text-gray-500 mt-1">انضم إلى ترند سورية الآن</p>
           
           {/* Progress indicator */}
-          {!otpSent && (
-            <div className="flex items-center justify-center gap-2 mt-4">
-              {Array.from({ length: getTotalSteps() }).map((_, i) => (
-                <div
-                  key={i}
-                  className={`h-2 rounded-full transition-all ${
-                    i + 1 === step ? 'w-8 bg-[#FF6B00]' : 
-                    i + 1 < step ? 'w-4 bg-green-500' : 'w-4 bg-gray-200'
-                  }`}
-                />
-              ))}
-            </div>
-          )}
+          <div className="flex items-center justify-center gap-2 mt-4">
+            {Array.from({ length: getTotalSteps() }).map((_, i) => (
+              <div
+                key={i}
+                className={`h-2 rounded-full transition-all ${
+                  i + 1 === step ? 'w-8 bg-[#FF6B00]' : 
+                  i + 1 < step ? 'w-4 bg-green-500' : 'w-4 bg-gray-200'
+                }`}
+              />
+            ))}
+          </div>
         </div>
         
         {/* Form */}
         <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
           <AnimatePresence mode="wait">
             <motion.div
-              key={otpSent ? 'otp' : step}
+              key={step}
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
@@ -941,10 +1015,10 @@ const MultiStepRegister = () => {
             </motion.div>
           </AnimatePresence>
           
-          {/* Navigation buttons */}
-          {!otpSent && (
+          {/* Navigation buttons - الخطوة 1 والخطوة 3 فقط */}
+          {(step === 1 || step === 3) && (
             <div className="flex gap-3 mt-6">
-              {step > 1 && (
+              {step === 3 && (
                 <button
                   onClick={prevStep}
                   className="flex-1 py-3 border border-gray-300 rounded-xl text-gray-700 font-medium flex items-center justify-center gap-2"
@@ -959,10 +1033,12 @@ const MultiStepRegister = () => {
                 disabled={loading || otpLoading}
                 className={`flex-1 py-3 bg-gradient-to-r from-[#FF6B00] to-[#FF8533] text-white rounded-xl font-bold flex items-center justify-center gap-2 disabled:opacity-50`}
               >
-                {otpLoading ? (
+                {otpLoading || loading ? (
                   <Loader2 className="animate-spin" size={20} />
-                ) : step === getTotalSteps() - 1 ? (
+                ) : step === 1 ? (
                   'إرسال رمز التحقق'
+                ) : step === 3 ? (
+                  'إنشاء الحساب'
                 ) : (
                   <>
                     التالي
@@ -973,8 +1049,8 @@ const MultiStepRegister = () => {
             </div>
           )}
           
-          {/* Back button for OTP */}
-          {otpSent && (
+          {/* Back button for OTP step */}
+          {step === 2 && otpSent && (
             <button
               onClick={prevStep}
               className="w-full py-2 text-gray-500 text-sm mt-4 flex items-center justify-center gap-2"
