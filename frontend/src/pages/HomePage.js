@@ -628,10 +628,9 @@ const HomePage = () => {
           
           <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-1">
             {categories
-              .filter(cat => foodEnabled || cat.type !== 'food')
+              .filter(cat => cat.type !== 'food')
               .map((cat, i) => {
               const IconComponent = iconMap[cat.icon] || Smartphone;
-              const isFood = cat.type === 'food';
               return (
                 <motion.div
                   key={cat.id}
@@ -643,18 +642,14 @@ const HomePage = () => {
                   className="flex-shrink-0"
                 >
                   <Link
-                    to={isFood ? `/food?category=${cat.id}` : `/products?category=${cat.id}`}
+                    to={`/products?category=${cat.id}`}
                     className="category-item flex flex-col items-center gap-1 w-[56px]"
                     data-testid={`category-${cat.id}`}
                   >
-                    <div className={`w-10 h-10 rounded-xl bg-white flex items-center justify-center border-2 transition-all duration-300 group shadow-sm ${
-                      isFood 
-                        ? 'border-green-200 hover:border-green-500 hover:bg-green-500 hover:text-white text-green-600' 
-                        : 'border-gray-100 hover:border-[#FF6B00] hover:bg-[#FF6B00] hover:text-white'
-                    }`}>
+                    <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center border-2 transition-all duration-300 group shadow-sm border-gray-100 hover:border-[#FF6B00] hover:bg-[#FF6B00] hover:text-white">
                       <IconComponent size={18} className="group-hover:scale-110 transition-transform" />
                     </div>
-                    <span className={`text-[9px] font-medium text-center leading-tight ${isFood ? 'text-green-600' : 'text-gray-600'}`}>{cat.name}</span>
+                    <span className="text-[9px] font-medium text-center leading-tight text-gray-600">{cat.name}</span>
                   </Link>
                 </motion.div>
               );
