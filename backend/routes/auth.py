@@ -200,6 +200,297 @@ async def register(request: Request, user: UserRegister, response: Response):
         }
     }
 
+
+# ============== تسجيل جديد مع OTP ==============
+
+@router.post("/send-registration-otp")
+@limiter.limit("3/minute")
+async def send_registration_otp(request: Request, data: dict):
+    """
+    الخطوة 1: إرسال OTP للتحقق من الرقم قبل إنشاء الحساب
+    لا يتم إنشاء أي شيء في قاعدة البيانات حتى التحقق من OTP
+    """
+    phone = data.get("phone", "")
+    full_name = data.get("full_name", "")
+    
+    # التحقق من صحة رقم الهاتف
+    if not validate_phone(phone):
+        raise HTTPException(status_code=400, detail="رقم الهاتف غير صحيح")
+    
+    # التحقق من أن الرقم غير مسجل مسبقاً
+    existing = await db.users.find_one({"phone": phone})
+    if existing:
+        raise HTTPException(status_code=400, detail="رقم الهاتف مسجل مسبقاً")
+    
+    # توليد OTP ومعرف التسجيل
+    otp_code = ''.join(secrets.choice(string.digits) for _ in range(6))
+    registration_id = str(uuid.uuid4())
+    
+    # حفظ بيانات التسجيل المؤقتة (تنتهي بعد 10 دقائق)
+    await db.pending_registrations.delete_many({"phone": phone})  # حذف المحاولات السابقة
+    await db.pending_registrations.insert_one({
+        "registration_id": registration_id,
+        "phone": phone,
+        "full_name": sanitize_input(full_name),
+        "otp": otp_code,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "expires_at": (datetime.now(timezone.utc) + timedelta(minutes=10)).isoformat(),
+        "verified": False
+    })
+    
+    # إرسال OTP عبر WhatsApp
+    from services.whatsapp_service import send_otp, TEST_MODE, TEST_OTP_CODE
+    
+    if TEST_MODE:
+        auth_logger.info(f"🧪 TEST MODE: Registration OTP for {phone} is {TEST_OTP_CODE}")
+    else:
+        try:
+            await send_otp(phone, otp_code)
+        except Exception as e:
+            auth_logger.error(f"Failed to send OTP: {e}")
+            # في حالة الفشل، نستمر لأغراض الاختبار
+    
+    return {
+        "message": "تم إرسال رمز التحقق",
+        "registration_id": registration_id,
+        "phone": phone
+    }
+
+
+@router.post("/verify-registration-otp")
+@limiter.limit("5/minute")
+async def verify_registration_otp(request: Request, data: dict, response: Response):
+    """
+    الخطوة 2: التحقق من OTP وإنشاء الحساب
+    يتم إنشاء الحساب فقط بعد التحقق من OTP بنجاح
+    """
+    registration_id = data.get("registration_id", "")
+    otp = data.get("otp", "")
+    
+    # البيانات الأساسية
+    full_name = data.get("full_name", "")
+    phone = data.get("phone", "")
+    password = data.get("password", "")
+    city = data.get("city", "")
+    user_type = data.get("user_type", "buyer")
+    
+    # البيانات الإضافية حسب نوع المستخدم
+    seller_data = data.get("seller_data")
+    food_seller_data = data.get("food_seller_data")
+    delivery_data = data.get("delivery_data")
+    
+    # التحقق من البيانات الأساسية
+    if not all([full_name, phone, password]):
+        raise HTTPException(status_code=400, detail="يرجى إكمال جميع البيانات المطلوبة")
+    
+    if not validate_phone(phone):
+        raise HTTPException(status_code=400, detail="رقم الهاتف غير صحيح")
+    
+    # التحقق من قوة كلمة المرور
+    is_valid, issues = validate_password_strength(password)
+    if not is_valid:
+        raise HTTPException(status_code=400, detail=issues[0])
+    
+    # التحقق من OTP
+    from services.whatsapp_service import TEST_MODE, TEST_OTP_CODE
+    
+    pending = await db.pending_registrations.find_one({
+        "registration_id": registration_id,
+        "phone": phone
+    })
+    
+    if not pending:
+        raise HTTPException(status_code=400, detail="جلسة التسجيل غير صالحة أو منتهية")
+    
+    # التحقق من انتهاء الصلاحية
+    expires_at = datetime.fromisoformat(pending["expires_at"].replace('Z', '+00:00'))
+    if datetime.now(timezone.utc) > expires_at:
+        await db.pending_registrations.delete_one({"registration_id": registration_id})
+        raise HTTPException(status_code=400, detail="انتهت صلاحية رمز التحقق، يرجى إعادة المحاولة")
+    
+    # التحقق من صحة OTP
+    valid_otp = (TEST_MODE and otp == TEST_OTP_CODE) or (otp == pending.get("otp"))
+    if not valid_otp:
+        raise HTTPException(status_code=400, detail="رمز التحقق غير صحيح")
+    
+    # التحقق من أن الرقم غير مسجل (تحقق إضافي)
+    existing = await db.users.find_one({"phone": phone})
+    if existing:
+        await db.pending_registrations.delete_one({"registration_id": registration_id})
+        raise HTTPException(status_code=400, detail="رقم الهاتف مسجل مسبقاً")
+    
+    # === إنشاء الحساب بعد التحقق ===
+    clean_name = sanitize_input(full_name)
+    clean_city = sanitize_input(city) if city else ""
+    user_id = str(uuid.uuid4())
+    
+    # إعداد الأدوار الأولية
+    initial_roles = [user_type]
+    initial_role_status = {
+        user_type: {
+            "status": "active" if user_type == "buyer" else "pending",
+            "added_at": datetime.now(timezone.utc).isoformat()
+        }
+    }
+    
+    user_doc = {
+        "id": user_id,
+        "name": clean_name,
+        "full_name": clean_name,
+        "phone": phone,
+        "password": hash_password_secure(password),
+        "city": clean_city,
+        "user_type": user_type,
+        "roles": initial_roles,
+        "active_role": user_type,
+        "role_status": initial_role_status,
+        "is_verified": True,  # تم التحقق من الرقم
+        "is_approved": user_type == "buyer",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    # إضافة بيانات البائع إذا كان بائع منتجات
+    if user_type == "seller" and seller_data:
+        user_doc["seller_info"] = {
+            "business_category": seller_data.get("business_category", ""),
+            "national_id": seller_data.get("national_id", ""),
+            "commercial_reg": seller_data.get("commercial_reg", ""),
+            "responsibility_accepted": seller_data.get("responsibility_accepted", False),
+            "submitted_at": datetime.now(timezone.utc).isoformat()
+        }
+        user_doc["role_status"]["seller"]["status"] = "pending"
+    
+    # إضافة بيانات بائع الطعام
+    if user_type == "food_seller" and food_seller_data:
+        user_doc["food_seller_info"] = {
+            "restaurant_name": food_seller_data.get("restaurant_name", ""),
+            "business_category": food_seller_data.get("business_category", ""),
+            "logo": food_seller_data.get("logo", ""),
+            "storefront_image": food_seller_data.get("storefront_image", ""),
+            "health_license": food_seller_data.get("health_license", ""),
+            "national_id": food_seller_data.get("national_id", ""),
+            "submitted_at": datetime.now(timezone.utc).isoformat()
+        }
+        user_doc["role_status"]["food_seller"] = {
+            "status": "pending",
+            "added_at": datetime.now(timezone.utc).isoformat()
+        }
+    
+    # إضافة بيانات موظف التوصيل
+    if user_type == "delivery" and delivery_data:
+        user_doc["delivery_info"] = {
+            "personal_photo": delivery_data.get("personal_photo", ""),
+            "national_id": delivery_data.get("national_id", ""),
+            "driving_license": delivery_data.get("driving_license", ""),
+            "vehicle_photo": delivery_data.get("vehicle_photo", ""),
+            "vehicle_type": delivery_data.get("vehicle_type", ""),
+            "submitted_at": datetime.now(timezone.utc).isoformat()
+        }
+        user_doc["role_status"]["delivery"] = {
+            "status": "pending",
+            "added_at": datetime.now(timezone.utc).isoformat()
+        }
+    
+    # حفظ المستخدم في قاعدة البيانات
+    await db.users.insert_one(user_doc)
+    
+    # حذف التسجيل المؤقت
+    await db.pending_registrations.delete_one({"registration_id": registration_id})
+    
+    # إرسال إشعار ترحيبي للمشتري
+    if user_type == "buyer":
+        referral_settings = await db.platform_settings.find_one({"id": "referral"}, {"_id": 0})
+        if referral_settings and referral_settings.get("is_active", True):
+            reward = referral_settings.get("referrer_reward", 10000)
+            await db.notifications.insert_one({
+                "id": str(uuid.uuid4()),
+                "user_id": user_id,
+                "type": "welcome_referral",
+                "title": "🎉 مرحباً بك في ترند سوريا!",
+                "message": f"شارك تطبيقنا مع أصدقائك واكسب {reward:,} ل.س عن كل صديق يسجل ويطلب!",
+                "action_url": "/referrals",
+                "is_read": False,
+                "created_at": datetime.now(timezone.utc).isoformat()
+            })
+    
+    # إنشاء التوكنات
+    access_token = create_access_token(user_id, user_type)
+    refresh_token = create_refresh_token(user_id)
+    
+    # حفظ refresh token
+    await db.refresh_tokens.insert_one({
+        "user_id": user_id,
+        "token": refresh_token,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    # تعيين الكوكيز
+    set_auth_cookies(response, access_token, refresh_token)
+    
+    return {
+        "message": "تم التسجيل بنجاح",
+        "token": access_token,
+        "user": {
+            "id": user_id,
+            "name": clean_name,
+            "full_name": clean_name,
+            "phone": phone,
+            "user_type": user_type,
+            "is_approved": user_doc["is_approved"],
+            "is_verified": True
+        }
+    }
+
+
+@router.post("/resend-registration-otp")
+@limiter.limit("2/minute")
+async def resend_registration_otp(request: Request, data: dict):
+    """
+    إعادة إرسال OTP للتسجيل
+    """
+    registration_id = data.get("registration_id", "")
+    phone = data.get("phone", "")
+    
+    if not registration_id or not phone:
+        raise HTTPException(status_code=400, detail="بيانات غير صالحة")
+    
+    # البحث عن التسجيل المؤقت
+    pending = await db.pending_registrations.find_one({
+        "registration_id": registration_id,
+        "phone": phone
+    })
+    
+    if not pending:
+        raise HTTPException(status_code=400, detail="جلسة التسجيل غير صالحة")
+    
+    # توليد OTP جديد
+    otp_code = ''.join(secrets.choice(string.digits) for _ in range(6))
+    
+    # تحديث OTP وتمديد الصلاحية
+    await db.pending_registrations.update_one(
+        {"registration_id": registration_id},
+        {
+            "$set": {
+                "otp": otp_code,
+                "expires_at": (datetime.now(timezone.utc) + timedelta(minutes=10)).isoformat()
+            }
+        }
+    )
+    
+    # إرسال OTP
+    from services.whatsapp_service import send_otp, TEST_MODE, TEST_OTP_CODE
+    
+    if TEST_MODE:
+        auth_logger.info(f"🧪 TEST MODE: Resend Registration OTP for {phone} is {TEST_OTP_CODE}")
+    else:
+        try:
+            await send_otp(phone, otp_code)
+        except Exception as e:
+            auth_logger.error(f"Failed to resend OTP: {e}")
+    
+    return {"message": "تم إعادة إرسال رمز التحقق"}
+
+
 @router.post("/login")
 @limiter.limit("15/minute")
 async def login(request: Request, credentials: UserLogin, response: Response):
