@@ -199,8 +199,8 @@ const AddressPickerModal = ({
   };
 
   const handleSave = () => {
-    // التحقق من الحقول المطلوبة
-    if (!address.city || !address.area || !address.street) {
+    // التحقق من جميع الحقول المطلوبة
+    if (!address.city || !address.area || !address.street || !address.street_number || !address.building_number) {
       return;
     }
     
@@ -209,8 +209,8 @@ const AddressPickerModal = ({
       address.city,
       address.area,
       address.street,
-      address.street_number ? `رقم ${address.street_number}` : '',
-      address.building_number ? `بناء/محل ${address.building_number}` : ''
+      `شارع ${address.street_number}`,
+      `بناء/محل ${address.building_number}`
     ].filter(Boolean).join('، ');
     
     onSave({
@@ -220,7 +220,7 @@ const AddressPickerModal = ({
     onClose();
   };
 
-  const isValid = address.city && address.area && address.street;
+  const isValid = address.city && address.area && address.street && address.street_number && address.building_number;
 
   if (!isOpen) return null;
 
@@ -312,8 +312,7 @@ const AddressPickerModal = ({
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  اسم الشارع
-                  <span className="text-gray-400 text-xs mr-1">(اختياري)</span>
+                  اسم الشارع *
                 </label>
                 <input
                   type="text"
@@ -321,6 +320,7 @@ const AddressPickerModal = ({
                   onChange={(e) => handleChange('street_number', e.target.value)}
                   placeholder="مثال: النصر، بغداد"
                   className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00]"
+                  data-testid="street-number-input"
                 />
               </div>
               <div>
@@ -347,9 +347,9 @@ const AddressPickerModal = ({
                     address.city,
                     address.area,
                     address.street,
-                    address.street_number ? `رقم ${address.street_number}` : '',
-                    address.building_number ? `بناء/محل ${address.building_number}` : ''
-                  ].filter(Boolean).join('، ')}
+                    `شارع ${address.street_number}`,
+                    `بناء/محل ${address.building_number}`
+                  ].join('، ')}
                 </p>
               </div>
             )}
