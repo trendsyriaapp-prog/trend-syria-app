@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 import axios from 'axios';
 import { 
   ArrowRight, Store, MapPin, Phone, CreditCard, Wallet, 
-  Clock, Loader2, Check, Package, Bike, Plus, Home, AlertCircle, Navigation, AlertTriangle
+  Clock, Loader2, Check, Package, Bike, Plus, Home, AlertCircle, Navigation
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useFoodCart } from '../context/FoodCartContext';
@@ -311,48 +311,6 @@ const FoodBatchCheckoutPage = () => {
       paymentMethod = pay?.type || 'wallet';
     }
     
-    // التحقق من صحة رقم الحساب الجديد
-    if (useNewPayment && newPayment.type !== 'wallet' && newPayment.type !== 'card') {
-      const phone = newPayment.phone?.trim() || '';
-      
-      if (!phone || !newPayment.holder_name?.trim()) {
-        toast({ title: "خطأ", description: "يرجى إكمال بيانات الدفع", variant: "destructive" });
-        return;
-      }
-      
-      if (newPayment.type === 'shamcash') {
-        // شام كاش: رقم سوري يبدأ بـ 09 ويتكون من 10 أرقام
-        if (!phone.startsWith('09')) {
-          toast({ title: "خطأ", description: "رقم شام كاش يجب أن يبدأ بـ 09", variant: "destructive" });
-          return;
-        }
-        if (phone.length !== 10) {
-          toast({ title: "خطأ", description: "رقم شام كاش يجب أن يتكون من 10 أرقام", variant: "destructive" });
-          return;
-        }
-        if (!/^\d+$/.test(phone)) {
-          toast({ title: "خطأ", description: "رقم شام كاش يجب أن يحتوي على أرقام فقط", variant: "destructive" });
-          return;
-        }
-      } else if (newPayment.type === 'bank_account') {
-        // حساب بنكي: رقم IBAN أو رقم حساب (10-34 حرف)
-        if (phone.length < 10) {
-          toast({ title: "خطأ", description: "رقم الحساب البنكي يجب أن يتكون من 10 أحرف على الأقل", variant: "destructive" });
-          return;
-        }
-        if (phone.length > 34) {
-          toast({ title: "خطأ", description: "رقم الحساب البنكي طويل جداً", variant: "destructive" });
-          return;
-        }
-      }
-      
-      // التحقق من اسم صاحب الحساب
-      if (newPayment.holder_name.trim().length < 3) {
-        toast({ title: "خطأ", description: "اسم صاحب الحساب يجب أن يتكون من 3 أحرف على الأقل", variant: "destructive" });
-        return;
-      }
-    }
-    
     // التحقق من الرصيد إذا كان الدفع من المحفظة
     if (paymentMethod === 'wallet' && walletBalance < grandTotal) {
       toast({
@@ -643,12 +601,12 @@ const FoodBatchCheckoutPage = () => {
               
               <div className="grid grid-cols-3 gap-2">
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">اسم الشارع</label>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">رقم الشارع</label>
                   <input
                     type="text"
                     value={newAddress.street_number}
                     onChange={(e) => setNewAddress({ ...newAddress, street_number: e.target.value })}
-                    placeholder="النصر"
+                    placeholder="15"
                     className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm"
                   />
                 </div>
@@ -718,39 +676,24 @@ const FoodBatchCheckoutPage = () => {
                   الموقع على الخريطة * 
                   <span className="text-red-500 text-xs mr-1">(مطلوب لحساب أجرة التوصيل)</span>
                 </label>
-                
-                {/* تنبيه واضح إذا لم يتم تحديد الموقع */}
-                {!newAddress.latitude && !newAddress.longitude && (
-                  <div className="bg-red-50 border-2 border-red-300 rounded-xl p-3 mb-2 flex items-center gap-3 animate-pulse">
-                    <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
-                      <AlertTriangle size={18} className="text-red-600" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-bold text-red-800">⚠️ مطلوب: حدد موقعك</p>
-                      <p className="text-xs text-red-600">لا يمكن إكمال الطلب بدون تحديد الموقع</p>
-                    </div>
-                  </div>
-                )}
-                
                 <button
                   type="button"
                   onClick={() => setShowMapPicker(true)}
-                  className={`w-full border-2 rounded-xl px-3 py-3 text-sm flex items-center justify-center gap-2 transition-all ${
+                  className={`w-full border-2 border-dashed rounded-xl px-3 py-3 text-sm flex items-center justify-center gap-2 transition-all ${
                     newAddress.latitude && newAddress.longitude
                       ? 'border-green-400 bg-green-50 text-green-700'
-                      : 'border-[#FF6B00] bg-gradient-to-r from-[#FF6B00] to-[#FF8533] text-white font-bold shadow-lg'
+                      : 'border-orange-300 bg-orange-50 text-orange-700 hover:bg-orange-100'
                   }`}
-                  data-testid="open-map-button"
                 >
                   {newAddress.latitude && newAddress.longitude ? (
                     <>
-                      <Check size={18} className="text-green-600" />
+                      <Check size={18} className="text-[#FF6B00]" />
                       <span>تم تحديد الموقع ✓</span>
                     </>
                   ) : (
                     <>
-                      <MapPin size={18} />
-                      <span>📍 اضغط هنا لتحديد موقعك على الخريطة</span>
+                      <Navigation size={18} />
+                      <span>حدد موقعك على الخريطة</span>
                     </>
                   )}
                 </button>

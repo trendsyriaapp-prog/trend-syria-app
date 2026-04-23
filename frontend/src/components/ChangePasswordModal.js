@@ -1,7 +1,7 @@
 // /app/frontend/src/components/ChangePasswordModal.js
 // نافذة تغيير كلمة المرور (إجبارية للحسابات الافتراضية)
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Lock, Eye, EyeOff, Shield, AlertTriangle, CheckCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -16,26 +16,6 @@ const ChangePasswordModal = ({ isOpen, onClose, isForced = false }) => {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-
-  // معالج زر الرجوع في الهاتف (Back button) - فقط إذا لم يكن إجبارياً
-  useEffect(() => {
-    if (!isOpen || isForced) return;
-
-    const handleBackButton = (e) => {
-      e.preventDefault();
-      onClose();
-    };
-
-    window.history.pushState({ changePasswordModal: true }, '');
-    window.addEventListener('popstate', handleBackButton);
-
-    return () => {
-      window.removeEventListener('popstate', handleBackButton);
-      if (window.history.state?.changePasswordModal) {
-        window.history.back();
-      }
-    };
-  }, [isOpen, onClose, isForced]);
 
   // التحقق من قوة كلمة المرور
   const getPasswordStrength = (password) => {

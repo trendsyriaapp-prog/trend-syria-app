@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import logger from '../lib/logger';
-import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
 import { Icon } from 'leaflet';
 import axios from 'axios';
 import { Loader2, Navigation, MapPin, Clock, RefreshCw, User } from 'lucide-react';
@@ -30,32 +30,6 @@ const createIcon = (emoji, color) => {
 const driverIcon = createIcon('🏍️', '#f97316');
 const customerIcon = createIcon('🏠', '#22c55e');
 const storeIcon = createIcon('🏪', '#3b82f6');
-
-// مكون لإصلاح حجم الخريطة (يحل مشكلة الـ tiles المختفية)
-const MapResizer = () => {
-  const map = useMap();
-  
-  useEffect(() => {
-    const timer1 = setTimeout(() => map.invalidateSize(), 100);
-    const timer2 = setTimeout(() => map.invalidateSize(), 300);
-    const timer3 = setTimeout(() => map.invalidateSize(), 500);
-    
-    const handleResize = () => map.invalidateSize();
-    window.addEventListener('resize', handleResize);
-    
-    map.on('zoomend', () => setTimeout(() => map.invalidateSize(), 100));
-    map.on('moveend', () => setTimeout(() => map.invalidateSize(), 100));
-    
-    return () => {
-      clearTimeout(timer1);
-      clearTimeout(timer2);
-      clearTimeout(timer3);
-      window.removeEventListener('resize', handleResize);
-    };
-  }, [map]);
-  
-  return null;
-};
 
 /**
  * مكون خريطة تتبع السائق للبائع - نسخة مصغرة
@@ -201,8 +175,6 @@ const SellerDriverTrackingMap = ({ orderId, token, driverName }) => {
           <TileLayer
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
-          
-          <MapResizer />
           
           {/* موقع السائق */}
           <Marker position={driverPos} icon={driverIcon}>

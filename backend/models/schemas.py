@@ -1,7 +1,7 @@
 # /app/backend/models/schemas.py
 # نماذج البيانات (Pydantic Models)
 
-from pydantic import BaseModel, validator
+from pydantic import BaseModel
 from typing import List, Optional
 
 # ============== User Models ==============
@@ -48,38 +48,6 @@ class PaymentAccount(BaseModel):
     account_number: str
     holder_name: str
     bank_name: Optional[str] = None
-    
-    @validator('account_number')
-    def validate_account_number(cls, v, values):
-        payment_type = values.get('type', '')
-        account = v.strip()
-        
-        if payment_type == 'shamcash':
-            # شام كاش: رقم سوري يبدأ بـ 09 ويتكون من 10 أرقام
-            if not account.startswith('09'):
-                raise ValueError('رقم شام كاش يجب أن يبدأ بـ 09')
-            if len(account) != 10:
-                raise ValueError('رقم شام كاش يجب أن يتكون من 10 أرقام')
-            if not account.isdigit():
-                raise ValueError('رقم شام كاش يجب أن يحتوي على أرقام فقط')
-        
-        elif payment_type == 'bank_account':
-            # حساب بنكي: رقم IBAN أو رقم حساب (10-34 حرف)
-            if len(account) < 10:
-                raise ValueError('رقم الحساب البنكي يجب أن يتكون من 10 أحرف على الأقل')
-            if len(account) > 34:
-                raise ValueError('رقم الحساب البنكي طويل جداً')
-        
-        return account
-    
-    @validator('holder_name')
-    def validate_holder_name(cls, v):
-        name = v.strip()
-        if len(name) < 3:
-            raise ValueError('اسم صاحب الحساب يجب أن يتكون من 3 أحرف على الأقل')
-        if len(name) > 100:
-            raise ValueError('اسم صاحب الحساب طويل جداً')
-        return name
 
 class DeliveryDocuments(BaseModel):
     national_id: str  # رقم الهوية الوطنية
@@ -248,38 +216,6 @@ class PaymentMethodCreate(BaseModel):
     phone: str
     holder_name: str
     is_default: bool = False
-    
-    @validator('phone')
-    def validate_phone(cls, v, values):
-        payment_type = values.get('type', '')
-        phone = v.strip()
-        
-        if payment_type == 'shamcash':
-            # شام كاش: رقم سوري يبدأ بـ 09 ويتكون من 10 أرقام
-            if not phone.startswith('09'):
-                raise ValueError('رقم شام كاش يجب أن يبدأ بـ 09')
-            if len(phone) != 10:
-                raise ValueError('رقم شام كاش يجب أن يتكون من 10 أرقام')
-            if not phone.isdigit():
-                raise ValueError('رقم شام كاش يجب أن يحتوي على أرقام فقط')
-        
-        elif payment_type == 'bank_account':
-            # حساب بنكي: رقم IBAN أو رقم حساب (10-34 حرف)
-            if len(phone) < 10:
-                raise ValueError('رقم الحساب البنكي يجب أن يتكون من 10 أحرف على الأقل')
-            if len(phone) > 34:
-                raise ValueError('رقم الحساب البنكي طويل جداً')
-        
-        return phone
-    
-    @validator('holder_name')
-    def validate_holder_name(cls, v):
-        name = v.strip()
-        if len(name) < 3:
-            raise ValueError('اسم صاحب الحساب يجب أن يتكون من 3 أحرف على الأقل')
-        if len(name) > 100:
-            raise ValueError('اسم صاحب الحساب طويل جداً')
-        return name
 
 # ============== Wallet & Withdrawal Models ==============
 
@@ -292,32 +228,6 @@ class WithdrawalRequest(BaseModel):
     bank_name: Optional[str] = None
     account_number: Optional[str] = None
     account_holder: Optional[str] = None
-    
-    @validator('shamcash_phone')
-    def validate_shamcash_phone(cls, v, values):
-        if v is None:
-            return v
-        phone = v.strip()
-        if values.get('withdrawal_method') == 'shamcash':
-            if not phone.startswith('09'):
-                raise ValueError('رقم شام كاش يجب أن يبدأ بـ 09')
-            if len(phone) != 10:
-                raise ValueError('رقم شام كاش يجب أن يتكون من 10 أرقام')
-            if not phone.isdigit():
-                raise ValueError('رقم شام كاش يجب أن يحتوي على أرقام فقط')
-        return phone
-    
-    @validator('account_number')
-    def validate_account_number(cls, v, values):
-        if v is None:
-            return v
-        account = v.strip()
-        if values.get('withdrawal_method') == 'bank_account':
-            if len(account) < 10:
-                raise ValueError('رقم الحساب البنكي يجب أن يتكون من 10 أحرف على الأقل')
-            if len(account) > 34:
-                raise ValueError('رقم الحساب البنكي طويل جداً')
-        return account
 
 
 class TopUpRequestModel(BaseModel):
@@ -329,20 +239,6 @@ class TopUpRequestModel(BaseModel):
     bank_name: Optional[str] = None
     account_number: Optional[str] = None
     sender_name: Optional[str] = None
-    
-    @validator('shamcash_phone')
-    def validate_shamcash_phone(cls, v, values):
-        if v is None:
-            return v
-        phone = v.strip()
-        if values.get('payment_method') == 'shamcash':
-            if not phone.startswith('09'):
-                raise ValueError('رقم شام كاش يجب أن يبدأ بـ 09')
-            if len(phone) != 10:
-                raise ValueError('رقم شام كاش يجب أن يتكون من 10 أرقام')
-            if not phone.isdigit():
-                raise ValueError('رقم شام كاش يجب أن يحتوي على أرقام فقط')
-        return phone
 
 class DeliveryFeesUpdate(BaseModel):
     same_city: int = 3000

@@ -193,48 +193,12 @@ const DeliveryDocuments = () => {
       return;
     }
 
-    // التحقق من صحة رقم الحساب
-    const accountNumber = docs.payment_account_number?.trim() || '';
-    
-    if (docs.payment_account_type === 'shamcash') {
-      // شام كاش: رقم سوري يبدأ بـ 09 ويتكون من 10 أرقام
-      if (!accountNumber.startsWith('09')) {
-        toast({ title: "خطأ", description: "رقم شام كاش يجب أن يبدأ بـ 09", variant: "destructive" });
-        return;
-      }
-      if (accountNumber.length !== 10) {
-        toast({ title: "خطأ", description: "رقم شام كاش يجب أن يتكون من 10 أرقام", variant: "destructive" });
-        return;
-      }
-      if (!/^\d+$/.test(accountNumber)) {
-        toast({ title: "خطأ", description: "رقم شام كاش يجب أن يحتوي على أرقام فقط", variant: "destructive" });
-        return;
-      }
-    }
-
-    if (docs.payment_account_type === 'bank_account') {
-      // حساب بنكي: رقم IBAN أو رقم حساب (10-34 حرف)
-      if (accountNumber.length < 10) {
-        toast({ title: "خطأ", description: "رقم الحساب البنكي يجب أن يتكون من 10 أحرف على الأقل", variant: "destructive" });
-        return;
-      }
-      if (accountNumber.length > 34) {
-        toast({ title: "خطأ", description: "رقم الحساب البنكي طويل جداً", variant: "destructive" });
-        return;
-      }
-      if (!docs.payment_bank_name) {
-        toast({
-          title: "خطأ",
-          description: "يرجى إدخال اسم البنك",
-          variant: "destructive"
-        });
-        return;
-      }
-    }
-    
-    // التحقق من اسم صاحب الحساب
-    if (docs.payment_account_holder?.trim().length < 3) {
-      toast({ title: "خطأ", description: "اسم صاحب الحساب يجب أن يتكون من 3 أحرف على الأقل", variant: "destructive" });
+    if (docs.payment_account_type === 'bank_account' && !docs.payment_bank_name) {
+      toast({
+        title: "خطأ",
+        description: "يرجى إدخال اسم البنك",
+        variant: "destructive"
+      });
       return;
     }
 

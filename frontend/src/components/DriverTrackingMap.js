@@ -42,32 +42,6 @@ const FitBoundsComponent = ({ driverPos, customerPos }) => {
   return null;
 };
 
-// مكون لإصلاح حجم الخريطة (يحل مشكلة الـ tiles المختفية)
-const MapResizer = () => {
-  const map = useMap();
-  
-  useEffect(() => {
-    const timer1 = setTimeout(() => map.invalidateSize(), 100);
-    const timer2 = setTimeout(() => map.invalidateSize(), 300);
-    const timer3 = setTimeout(() => map.invalidateSize(), 500);
-    
-    const handleResize = () => map.invalidateSize();
-    window.addEventListener('resize', handleResize);
-    
-    map.on('zoomend', () => setTimeout(() => map.invalidateSize(), 100));
-    map.on('moveend', () => setTimeout(() => map.invalidateSize(), 100));
-    
-    return () => {
-      clearTimeout(timer1);
-      clearTimeout(timer2);
-      clearTimeout(timer3);
-      window.removeEventListener('resize', handleResize);
-    };
-  }, [map]);
-  
-  return null;
-};
-
 /**
  * مكون خريطة تتبع السائق للعميل
  */
@@ -314,8 +288,6 @@ const DriverTrackingMap = ({ orderId, orderStatus }) => {
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             attribution='&copy; OpenStreetMap'
           />
-          
-          <MapResizer />
           
           {/* تعديل حدود الخريطة لتشمل السائق والعميل */}
           {customerPos && <FitBoundsComponent driverPos={driverPos} customerPos={customerPos} />}

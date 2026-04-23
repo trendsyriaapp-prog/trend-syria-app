@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Minus, Plus, ShoppingCart, Zap, Ruler, Check } from 'lucide-react';
 
@@ -22,26 +22,6 @@ const AddToCartModal = ({
       setQuantity(1);
     }
   }, [isOpen]);
-
-  // معالج زر الرجوع في الهاتف (Back button)
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const handleBackButton = (e) => {
-      e.preventDefault();
-      onClose();
-    };
-
-    window.history.pushState({ addToCartModal: true }, '');
-    window.addEventListener('popstate', handleBackButton);
-
-    return () => {
-      window.removeEventListener('popstate', handleBackButton);
-      if (window.history.state?.addToCartModal) {
-        window.history.back();
-      }
-    };
-  }, [isOpen, onClose]);
 
   const formatPrice = (price) => {
     return new Intl.NumberFormat('ar-SY').format(price) + ' ل.س';

@@ -1,7 +1,7 @@
 // /app/frontend/src/components/GiftModal.js
 // نافذة إرسال منتج كهدية
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 import { Gift, X, Send, User, Phone, MessageSquare, Eye, EyeOff, Truck, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
@@ -24,26 +24,6 @@ const GiftModal = ({ isOpen, onClose, product }) => {
     is_anonymous: false,
     pay_shipping: false
   });
-
-  // معالج زر الرجوع في الهاتف (Back button)
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const handleBackButton = (e) => {
-      e.preventDefault();
-      onClose();
-    };
-
-    window.history.pushState({ giftModal: true }, '');
-    window.addEventListener('popstate', handleBackButton);
-
-    return () => {
-      window.removeEventListener('popstate', handleBackButton);
-      if (window.history.state?.giftModal) {
-        window.history.back();
-      }
-    };
-  }, [isOpen, onClose]);
 
   // البحث عن المستلم عند إدخال رقم الهاتف
   useEffect(() => {

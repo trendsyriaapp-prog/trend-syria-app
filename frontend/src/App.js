@@ -70,8 +70,7 @@ import ProductsPage from "./pages/ProductsPage";
 import ProductDetailPage from "./pages/ProductDetailPage";
 import CategoriesPage from "./pages/CategoriesPage";
 import CartPage from "./pages/CartPage";
-import { LoginPage } from "./pages/AuthPages";
-import MultiStepRegister from "./pages/MultiStepRegister";
+import { LoginPage, RegisterPage } from "./pages/AuthPages";
 
 // ==========================================
 // صفحات ثانوية (Lazy Loading)
@@ -369,7 +368,7 @@ function App() {
                 
                 {/* Auth Routes */}
                 <Route path="/login" element={<LoginPage />} />
-                <Route path="/register" element={<MultiStepRegister />} />
+                <Route path="/register" element={<RegisterPage />} />
                 <Route path="/forgot-password" element={<ForgotPasswordPage />} />
                 
                 {/* Buyer Routes */}

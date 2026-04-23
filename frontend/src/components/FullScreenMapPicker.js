@@ -1,7 +1,7 @@
 // /app/frontend/src/components/FullScreenMapPicker.js
 // خريطة ملء الشاشة لاختيار الموقع
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -37,51 +37,6 @@ const MapUpdater = ({ center }) => {
       map.setView(center, map.getZoom());
     }
   }, [center, map]);
-  return null;
-};
-
-// مكون لإصلاح حجم الخريطة عند فتحها (يحل مشكلة الـ tiles المختفية)
-const MapResizer = () => {
-  const map = useMap();
-  
-  useEffect(() => {
-    // إصلاح حجم الخريطة بعد التحميل
-    const timer1 = setTimeout(() => {
-      map.invalidateSize();
-    }, 100);
-    
-    const timer2 = setTimeout(() => {
-      map.invalidateSize();
-    }, 300);
-    
-    const timer3 = setTimeout(() => {
-      map.invalidateSize();
-    }, 500);
-    
-    // إصلاح عند تغيير حجم النافذة
-    const handleResize = () => {
-      map.invalidateSize();
-    };
-    
-    window.addEventListener('resize', handleResize);
-    
-    // إصلاح عند التكبير/التصغير
-    map.on('zoomend', () => {
-      setTimeout(() => map.invalidateSize(), 100);
-    });
-    
-    map.on('moveend', () => {
-      setTimeout(() => map.invalidateSize(), 100);
-    });
-    
-    return () => {
-      clearTimeout(timer1);
-      clearTimeout(timer2);
-      clearTimeout(timer3);
-      window.removeEventListener('resize', handleResize);
-    };
-  }, [map]);
-  
   return null;
 };
 
@@ -155,31 +110,6 @@ const FullScreenMapPicker = ({
       setMapCenter([currentLocation.latitude, currentLocation.longitude]);
     }
   }, [isOpen, currentLocation]);
-
-  // معالج زر الرجوع في الهاتف (Back button)
-  useEffect(() => {
-    if (!isOpen) return;
-
-    // إضافة entry إلى history عند فتح الخريطة
-    const handleBackButton = (e) => {
-      e.preventDefault();
-      onClose();
-    };
-
-    // إضافة state جديد للـ history
-    window.history.pushState({ mapPicker: true }, '');
-    
-    // الاستماع لحدث popstate (زر الرجوع)
-    window.addEventListener('popstate', handleBackButton);
-
-    return () => {
-      window.removeEventListener('popstate', handleBackButton);
-      // إزالة state من history إذا لم يتم الضغط على زر الرجوع
-      if (window.history.state?.mapPicker) {
-        window.history.back();
-      }
-    };
-  }, [isOpen, onClose]);
 
   // الحصول على موقع GPS الحالي
   const getCurrentLocation = () => {
@@ -283,7 +213,8 @@ const FullScreenMapPicker = ({
               <ChevronRight size={24} />
               <span className="text-sm font-medium">رجوع</span>
             </button>
-            <h2 className="text-base font-bold text-gray-900">
+            <h2 className="text-base font-bold text-gray-900 flex items-center gap-2">
+              <MapPin size={20} className="text-[#FF6B00]" />
               {title}
             </h2>
             <div className="w-16"></div>
@@ -303,7 +234,6 @@ const FullScreenMapPicker = ({
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
             
-            <MapResizer />
             <MapUpdater center={position ? [position.lat, position.lng] : null} />
             <MapEventHandler onLocationChange={handleLocationChange} />
             

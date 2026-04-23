@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapPin, X, Check, Building, Home } from 'lucide-react';
 
@@ -46,26 +46,6 @@ const AddressPickerModal = ({
       });
     }
   }, [initialAddress, isOpen]);
-
-  // معالج زر الرجوع في الهاتف (Back button)
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const handleBackButton = (e) => {
-      e.preventDefault();
-      onClose();
-    };
-
-    window.history.pushState({ addressPicker: true }, '');
-    window.addEventListener('popstate', handleBackButton);
-
-    return () => {
-      window.removeEventListener('popstate', handleBackButton);
-      if (window.history.state?.addressPicker) {
-        window.history.back();
-      }
-    };
-  }, [isOpen, onClose]);
 
   const handleChange = (field, value) => {
     setAddress(prev => ({ ...prev, [field]: value }));
@@ -167,18 +147,18 @@ const AddressPickerModal = ({
               />
             </div>
 
-            {/* اسم الشارع ورقم المحل في صف واحد */}
+            {/* رقم الشارع ورقم المحل في صف واحد */}
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  اسم الشارع
+                  رقم الشارع
                   <span className="text-gray-400 text-xs mr-1">(اختياري)</span>
                 </label>
                 <input
                   type="text"
                   value={address.street_number}
                   onChange={(e) => handleChange('street_number', e.target.value)}
-                  placeholder="مثال: النصر، بغداد"
+                  placeholder="مثال: 15"
                   className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00]"
                 />
               </div>

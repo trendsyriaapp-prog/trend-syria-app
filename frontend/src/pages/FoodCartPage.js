@@ -530,48 +530,6 @@ const FoodCartPage = () => {
     const paymentType = useNewPayment || savedPayments.length === 0 ? newPayment.type : 
                         selectedPaymentId ? savedPayments.find(p => p.id === selectedPaymentId)?.type : 'wallet';
     
-    // التحقق من صحة رقم الحساب الجديد
-    if ((useNewPayment || savedPayments.length === 0) && newPayment.type !== 'wallet' && newPayment.type !== 'card') {
-      const phone = newPayment.phone?.trim() || '';
-      
-      if (!phone || !newPayment.holder_name?.trim()) {
-        toast({ title: "خطأ", description: "يرجى إكمال بيانات الدفع", variant: "destructive" });
-        return;
-      }
-      
-      if (newPayment.type === 'shamcash') {
-        // شام كاش: رقم سوري يبدأ بـ 09 ويتكون من 10 أرقام
-        if (!phone.startsWith('09')) {
-          toast({ title: "خطأ", description: "رقم شام كاش يجب أن يبدأ بـ 09", variant: "destructive" });
-          return;
-        }
-        if (phone.length !== 10) {
-          toast({ title: "خطأ", description: "رقم شام كاش يجب أن يتكون من 10 أرقام", variant: "destructive" });
-          return;
-        }
-        if (!/^\d+$/.test(phone)) {
-          toast({ title: "خطأ", description: "رقم شام كاش يجب أن يحتوي على أرقام فقط", variant: "destructive" });
-          return;
-        }
-      } else if (newPayment.type === 'bank_account') {
-        // حساب بنكي: رقم IBAN أو رقم حساب (10-34 حرف)
-        if (phone.length < 10) {
-          toast({ title: "خطأ", description: "رقم الحساب البنكي يجب أن يتكون من 10 أحرف على الأقل", variant: "destructive" });
-          return;
-        }
-        if (phone.length > 34) {
-          toast({ title: "خطأ", description: "رقم الحساب البنكي طويل جداً", variant: "destructive" });
-          return;
-        }
-      }
-      
-      // التحقق من اسم صاحب الحساب
-      if (newPayment.holder_name.trim().length < 3) {
-        toast({ title: "خطأ", description: "اسم صاحب الحساب يجب أن يتكون من 3 أحرف على الأقل", variant: "destructive" });
-        return;
-      }
-    }
-    
     if (paymentType === 'wallet' && walletBalance < total) {
       toast({ title: "تنبيه", description: "رصيد المحفظة غير كافي", variant: "destructive" });
       return;
@@ -956,9 +914,9 @@ const FoodCartPage = () => {
                         الموقع محدد على الخريطة
                       </span>
                     ) : (
-                      <span className="text-[10px] text-red-600 flex items-center gap-1 font-bold animate-pulse">
-                        <AlertTriangle size={12} />
-                        ⚠️ يرجى تحديد الموقع
+                      <span className="text-[10px] text-orange-600 flex items-center gap-1">
+                        <AlertCircle size={12} />
+                        يرجى تحديد الموقع
                       </span>
                     )}
                     <button
@@ -969,14 +927,10 @@ const FoodCartPage = () => {
                         setTempLocation({ latitude: addr.latitude || null, longitude: addr.longitude || null });
                         setShowLocationModal(true);
                       }}
-                      className={`text-[10px] px-2 py-1 rounded-full transition-colors flex items-center gap-1 ${
-                        addr.latitude 
-                          ? 'text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100'
-                          : 'text-white bg-gradient-to-r from-[#FF6B00] to-[#FF8533] font-bold shadow-md'
-                      }`}
+                      className="text-[10px] text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-2 py-1 rounded-full transition-colors flex items-center gap-1"
                     >
                       <MapPin size={10} />
-                      {addr.latitude ? 'تعديل الموقع' : '📍 حدد الموقع'}
+                      {addr.latitude ? 'تعديل الموقع' : 'تحديد الموقع'}
                     </button>
                   </div>
                 </div>
@@ -1061,12 +1015,12 @@ const FoodCartPage = () => {
               
               <div className="grid grid-cols-3 gap-2">
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">اسم الشارع</label>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">رقم الشارع</label>
                   <input
                     type="text"
                     value={newAddress.street_number}
                     onChange={(e) => setNewAddress({ ...newAddress, street_number: e.target.value })}
-                    placeholder="النصر"
+                    placeholder="15"
                     className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm"
                   />
                 </div>

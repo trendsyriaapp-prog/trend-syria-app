@@ -1,7 +1,7 @@
 // /app/frontend/src/components/ImageSearchModal.js
 // مكون البحث عن المنتجات بالصورة
 
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import logger from '../lib/logger';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -24,26 +24,6 @@ const ImageSearchModal = ({ isOpen, onClose }) => {
   const [error, setError] = useState(null);
   const fileInputRef = useRef(null);
   const cameraInputRef = useRef(null);
-
-  // معالج زر الرجوع في الهاتف (Back button)
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const handleBackButton = (e) => {
-      e.preventDefault();
-      onClose();
-    };
-
-    window.history.pushState({ imageSearchModal: true }, '');
-    window.addEventListener('popstate', handleBackButton);
-
-    return () => {
-      window.removeEventListener('popstate', handleBackButton);
-      if (window.history.state?.imageSearchModal) {
-        window.history.back();
-      }
-    };
-  }, [isOpen, onClose]);
 
   // النصوص حسب اللغة
   const texts = {

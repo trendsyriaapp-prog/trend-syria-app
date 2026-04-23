@@ -314,34 +314,18 @@ const CartPage = () => {
               </div>
               <button
                 onClick={openLocationModal}
-                className={`flex items-center gap-1 text-[10px] px-2 py-1 rounded-full transition-colors ${
-                  customerAddress.latitude 
-                    ? 'text-blue-600 hover:text-blue-800 bg-blue-100 hover:bg-blue-200'
-                    : 'text-white bg-gradient-to-r from-[#FF6B00] to-[#FF8533] font-bold shadow-md'
-                }`}
+                className="flex items-center gap-1 text-[10px] text-blue-600 hover:text-blue-800 bg-blue-100 hover:bg-blue-200 px-2 py-1 rounded-full transition-colors"
                 data-testid="edit-location-btn"
               >
-                {customerAddress.latitude ? (
-                  <>
-                    <Edit3 size={10} />
-                    تعديل الموقع
-                  </>
-                ) : (
-                  <>
-                    <MapPin size={10} />
-                    📍 حدد موقعك
-                  </>
-                )}
+                <Edit3 size={10} />
+                {customerAddress.latitude ? 'تعديل الموقع' : 'تحديد الموقع'}
               </button>
             </div>
             {!customerAddress.latitude && (
-              <div className="bg-red-50 border border-red-300 rounded-lg p-2 mt-2 flex items-center gap-2 animate-pulse">
-                <AlertTriangle size={14} className="text-red-600 flex-shrink-0" />
-                <div>
-                  <p className="text-[10px] text-red-800 font-bold">⚠️ مطلوب: حدد موقعك لحساب أجرة التوصيل</p>
-                  <p className="text-[9px] text-red-600">لا يمكن إكمال الطلب بدون تحديد الموقع</p>
-                </div>
-              </div>
+              <p className="text-[10px] text-orange-600 mt-1 flex items-center gap-1">
+                <AlertTriangle size={10} />
+                يرجى تحديد موقعك على الخريطة لضمان دقة التوصيل
+              </p>
             )}
           </div>
         )}

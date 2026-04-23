@@ -3,7 +3,7 @@
 // يستخدم OpenStreetMap + Leaflet (مجاني)
 
 import { useState, useEffect, lazy, Suspense } from 'react';
-import { MapPin, Loader2, Check, ChevronLeft, AlertTriangle } from 'lucide-react';
+import { MapPin, Loader2, Check, ChevronLeft } from 'lucide-react';
 
 // تحميل الخريطة بشكل كسول لتحسين الأداء
 const FullScreenMapPicker = lazy(() => import('./FullScreenMapPicker'));
@@ -53,6 +53,17 @@ const GoogleMapsLocationPicker = ({
         {label} {required && <span className="text-red-500">*</span>}
       </label>
 
+      {/* تنبيه مخصص */}
+      {warningMessage && !hasLocation && (
+        <div className="bg-amber-50 border-2 border-amber-300 rounded-xl p-3 flex items-start gap-3">
+          <span className="text-xl">⚠️</span>
+          <div>
+            <p className="text-sm font-bold text-amber-800">تنبيه مهم!</p>
+            <p className="text-xs text-amber-700 mt-1">{warningMessage}</p>
+          </div>
+        </div>
+      )}
+
       {/* زر فتح الخريطة أو عرض الموقع المحدد */}
       {hasLocation ? (
         <div className="bg-green-50 border-2 border-green-300 rounded-xl p-4">
@@ -62,7 +73,7 @@ const GoogleMapsLocationPicker = ({
                 <Check className="w-6 h-6 text-green-600" />
               </div>
               <div>
-                <p className="font-bold text-green-800 text-sm">تم تحديد الموقع ✓</p>
+                <p className="font-bold text-green-800 text-sm">تم تحديد الموقع</p>
                 <p className="text-[10px] text-green-600" dir="ltr">
                   {effectiveLocation.latitude.toFixed(6)}, {effectiveLocation.longitude.toFixed(6)}
                 </p>
@@ -79,34 +90,14 @@ const GoogleMapsLocationPicker = ({
           </div>
         </div>
       ) : (
-        <div className="space-y-2">
-          {/* شريط تنبيه واضح فوق الزر */}
-          <div className="bg-red-50 border-2 border-red-300 rounded-xl p-3 flex items-center gap-3 animate-pulse">
-            <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
-              <AlertTriangle className="w-5 h-5 text-red-600" />
-            </div>
-            <div className="flex-1">
-              <p className="text-sm font-bold text-red-800">⚠️ مطلوب: حدد موقعك لحساب أجرة التوصيل</p>
-              <p className="text-xs text-red-600 mt-0.5">لا يمكن إكمال الطلب بدون تحديد الموقع على الخريطة</p>
-            </div>
-          </div>
-          
-          {/* زر فتح الخريطة */}
-          <button
-            type="button"
-            onClick={() => setShowMap(true)}
-            className="w-full flex items-center justify-center gap-3 p-4 bg-gradient-to-r from-[#FF6B00] to-[#FF8533] text-white rounded-xl font-bold text-sm hover:from-[#E65000] hover:to-[#FF6B00] transition-all shadow-lg border-2 border-[#FF6B00]"
-            data-testid="open-map-button"
-          >
-            <MapPin className="w-5 h-5" />
-            <span>📍 اضغط هنا لتحديد موقعك على الخريطة</span>
-          </button>
-          
-          {/* تنبيه إضافي مخصص إذا وُجد */}
-          {warningMessage && (
-            <p className="text-xs text-gray-500 text-center">{warningMessage}</p>
-          )}
-        </div>
+        <button
+          type="button"
+          onClick={() => setShowMap(true)}
+          className="w-full flex items-center justify-center gap-3 p-4 bg-gradient-to-r from-[#FF6B00] to-[#FF8533] text-white rounded-xl font-bold text-sm hover:from-[#E65000] hover:to-[#FF6B00] transition-all shadow-lg"
+        >
+          <MapPin className="w-5 h-5" />
+          <span>فتح الخريطة لتحديد الموقع</span>
+        </button>
       )}
 
       {/* الخريطة بملء الشاشة */}

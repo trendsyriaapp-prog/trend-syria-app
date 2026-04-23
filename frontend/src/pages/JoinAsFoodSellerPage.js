@@ -113,7 +113,7 @@ const JoinAsFoodSellerPage = () => {
     building_number: '',
     logo: '',
     cover_image: '',
-    commercial_license: '', // الرخصة الصحية
+    commercial_license: '', // رخصة المحل / السجل التجاري
     delivery_time: 30,
     minimum_order: 0,
     delivery_fee: 5000,
@@ -293,44 +293,8 @@ const JoinAsFoodSellerPage = () => {
       return;
     }
 
-    // التحقق من صحة رقم الحساب
-    const accountNumber = formData.payment_account_number?.trim() || '';
-    
-    if (formData.payment_account_type === 'shamcash') {
-      // شام كاش: رقم سوري يبدأ بـ 09 ويتكون من 10 أرقام
-      if (!accountNumber.startsWith('09')) {
-        toast({ title: "خطأ", description: "رقم شام كاش يجب أن يبدأ بـ 09", variant: "destructive" });
-        return;
-      }
-      if (accountNumber.length !== 10) {
-        toast({ title: "خطأ", description: "رقم شام كاش يجب أن يتكون من 10 أرقام", variant: "destructive" });
-        return;
-      }
-      if (!/^\d+$/.test(accountNumber)) {
-        toast({ title: "خطأ", description: "رقم شام كاش يجب أن يحتوي على أرقام فقط", variant: "destructive" });
-        return;
-      }
-    }
-
-    if (formData.payment_account_type === 'bank_account') {
-      // حساب بنكي: رقم IBAN أو رقم حساب (10-34 حرف)
-      if (accountNumber.length < 10) {
-        toast({ title: "خطأ", description: "رقم الحساب البنكي يجب أن يتكون من 10 أحرف على الأقل", variant: "destructive" });
-        return;
-      }
-      if (accountNumber.length > 34) {
-        toast({ title: "خطأ", description: "رقم الحساب البنكي طويل جداً", variant: "destructive" });
-        return;
-      }
-      if (!formData.payment_bank_name) {
-        toast({ title: "تنبيه", description: "يرجى إدخال اسم البنك", variant: "destructive" });
-        return;
-      }
-    }
-    
-    // التحقق من اسم صاحب الحساب
-    if (formData.payment_account_holder?.trim().length < 3) {
-      toast({ title: "خطأ", description: "اسم صاحب الحساب يجب أن يتكون من 3 أحرف على الأقل", variant: "destructive" });
+    if (formData.payment_account_type === 'bank_account' && !formData.payment_bank_name) {
+      toast({ title: "تنبيه", description: "يرجى إدخال اسم البنك", variant: "destructive" });
       return;
     }
 
@@ -944,11 +908,11 @@ const JoinAsFoodSellerPage = () => {
                 </label>
               </div>
 
-              {/* الرخصة الصحية - يظهر فقط إذا كانت الأصناف تتطلب رخصة */}
+              {/* رخصة المحل / السجل التجاري - يظهر فقط إذا كانت الأصناف تتطلب رخصة */}
               {requiresLicense() && (
                 <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    📋 الرخصة الصحية *
+                    📋 رخصة المحل / السجل التجاري *
                   </label>
                   <label className="cursor-pointer block">
                     {formData.commercial_license ? (
@@ -968,7 +932,7 @@ const JoinAsFoodSellerPage = () => {
                     ) : (
                       <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-[#FF6B00] transition-colors">
                         <Upload size={32} className="mx-auto text-gray-400 mb-2" />
-                        <span className="text-sm text-gray-600">اضغط لرفع صورة الرخصة الصحية</span>
+                        <span className="text-sm text-gray-600">اضغط لرفع صورة الرخصة</span>
                       </div>
                     )}
                     <input
@@ -979,7 +943,7 @@ const JoinAsFoodSellerPage = () => {
                     />
                   </label>
                   <p className="text-xs text-red-500 mt-2 flex items-center gap-1">
-                    ⚠️ هذا الصنف يتطلب رخصة صحية
+                    ⚠️ الأصناف المختارة تتطلب رخصة أو سجل تجاري
                   </p>
                 </div>
               )}
