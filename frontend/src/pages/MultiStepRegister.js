@@ -321,44 +321,32 @@ const MultiStepRegister = () => {
     }
   };
   
-  // رفع الصور مع الضغط
+  // رفع الصور مع الضغط - حفظ base64 مباشرة
   const handleImageUpload = async (file, setter, fieldName) => {
     if (!file) return;
     
     try {
-      // ضغط الصورة باستخدام الوظيفة الموجودة
+      // ضغط الصورة باستخدام الوظيفة الموجودة - تُرجع base64
       const compressedBase64 = await compressDocumentImage(file);
       
-      // رفع الصورة المضغوطة كـ base64 (endpoint عام لا يتطلب تسجيل دخول)
-      const res = await axios.post(`${API}/api/storage/upload-public-base64`, {
-        images: [compressedBase64],
-        folder: 'registration'
-      });
-      
-      const imageUrl = res.data.paths?.[0] || res.data.urls?.[0];
-      
-      if (!imageUrl) {
-        throw new Error('لم يتم الحصول على رابط الصورة');
-      }
-      
+      // حفظ الـ base64 مباشرة (الـ backend يتوقع base64)
       if (typeof setter === 'function') {
-        setter(imageUrl);
+        setter(compressedBase64);
       } else if (fieldName) {
         // للـ objects المتعددة
         if (fieldName.startsWith('seller_')) {
-          setSellerData(prev => ({ ...prev, [fieldName.replace('seller_', '')]: imageUrl }));
+          setSellerData(prev => ({ ...prev, [fieldName.replace('seller_', '')]: compressedBase64 }));
         } else if (fieldName.startsWith('food_')) {
-          setFoodSellerData(prev => ({ ...prev, [fieldName.replace('food_', '')]: imageUrl }));
+          setFoodSellerData(prev => ({ ...prev, [fieldName.replace('food_', '')]: compressedBase64 }));
         } else if (fieldName.startsWith('delivery_')) {
-          setDeliveryData(prev => ({ ...prev, [fieldName.replace('delivery_', '')]: imageUrl }));
+          setDeliveryData(prev => ({ ...prev, [fieldName.replace('delivery_', '')]: compressedBase64 }));
         }
       }
       
       toast({ title: "تم", description: "تم رفع الصورة بنجاح" });
     } catch (error) {
       console.error('Upload error:', error);
-      const msg = error.response?.data?.detail || "فشل رفع الصورة";
-      toast({ title: "خطأ", description: msg, variant: "destructive" });
+      toast({ title: "خطأ", description: "فشل رفع الصورة", variant: "destructive" });
     }
   };
   
@@ -379,17 +367,6 @@ const MultiStepRegister = () => {
       }
     };
     
-    // تحويل المسار النسبي إلى رابط كامل
-    const getImageUrl = (path) => {
-      if (!path) return null;
-      if (path.startsWith('http')) return path;
-      if (path.startsWith('data:')) return path;
-      // إذا كان مسار نسبي، أضف رابط الـ API
-      return `${API}/api/storage/serve/${path}`;
-    };
-    
-    const imageUrl = getImageUrl(value);
-    
     return (
       <div className="space-y-2">
         <label className="block text-sm font-medium text-gray-700">{label}</label>
@@ -406,13 +383,9 @@ const MultiStepRegister = () => {
           ) : value ? (
             <div className="relative">
               <img 
-                src={imageUrl} 
+                src={value} 
                 alt={label} 
                 className="w-full h-32 object-cover rounded-lg"
-                onError={(e) => {
-                  e.target.onerror = null;
-                  e.target.src = '/icons/icon-192.png';
-                }}
               />
               <div className="absolute top-2 right-2 bg-green-500 text-white p-1 rounded-full">
                 <Check size={16} />
