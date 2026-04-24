@@ -3347,12 +3347,9 @@ async def verify_delivery_code(
 async def report_food_delivery_failed(
     order_id: str, 
     data: FoodDeliveryFailedRequest, 
-    user: dict = Depends(get_current_user)
+    user: dict = Depends(require_delivery_user)
 ) -> dict:
     """تسجيل فشل تسليم طلب طعام - العميل غير متجاوب"""
-    
-    if user.get("user_type") != "delivery":
-        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
     
     order = await db.food_orders.find_one({
         "id": order_id,
