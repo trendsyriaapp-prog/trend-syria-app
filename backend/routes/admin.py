@@ -222,20 +222,14 @@ async def get_platform_status() -> dict:
 # ============== أعداد طلبات الاتصال والطوارئ ==============
 
 @router.get("/call-requests/count")
-async def get_call_requests_count(user: dict = Depends(get_current_user)) -> dict:
+async def get_call_requests_count(user: dict = Depends(require_admin_user)) -> dict:
     """جلب عدد طلبات الاتصال المعلقة"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للإدارة فقط")
-    
     count = await db.call_requests.count_documents({"status": "pending"})
     return {"count": count}
 
 @router.get("/emergency-help/count")
-async def get_emergency_help_count(user: dict = Depends(get_current_user)) -> dict:
+async def get_emergency_help_count(user: dict = Depends(require_admin_user)) -> dict:
     """جلب عدد طلبات الطوارئ المعلقة"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للإدارة فقط")
-    
     count = await db.emergency_help.count_documents({"status": "pending"})
     return {"count": count}
 
@@ -414,10 +408,7 @@ async def get_food_commission_rates_from_db() -> dict:
 # ============== Stats ==============
 
 @router.get("/stats")
-async def get_admin_stats(user: dict = Depends(get_current_user)) -> dict:
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
+async def get_admin_stats(user: dict = Depends(require_admin_user)) -> dict:
     total_users = await db.users.count_documents({"user_type": "buyer"})
     total_sellers = await db.users.count_documents({"user_type": "seller"})
     total_delivery = await db.users.count_documents({"user_type": "delivery"})
@@ -447,12 +438,9 @@ async def get_all_users(
     page: int = Query(1, ge=1, description="رقم الصفحة"),
     limit: int = Query(50, ge=1, le=100, description="عدد النتائج في الصفحة"),
     search: str = Query(None, description="البحث بالاسم أو الهاتف"),
-    user: dict = Depends(get_current_user)
+    user: dict = Depends(require_admin_user)
 ) -> dict:
     """جلب جميع المستخدمين مع Pagination"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     # بناء الاستعلام
     query = {"user_type": "buyer"}
     
@@ -489,11 +477,8 @@ async def get_all_users(
 # ============== Users/Drivers Delete & Ban ==============
 
 @router.delete("/users/{user_id}")
-async def delete_user(user_id: str, user: dict = Depends(get_current_user)) -> dict:
+async def delete_user(user_id: str, user: dict = Depends(require_admin_user)) -> dict:
     """حذف مستخدم أو سائق"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     # لا يمكن حذف الأدمن الرئيسي
     target_user = await db.users.find_one({"id": user_id})
     if not target_user:
@@ -535,11 +520,8 @@ async def delete_user(user_id: str, user: dict = Depends(get_current_user)) -> d
     return {"message": "تم حذف المستخدم بنجاح"}
 
 @router.post("/users/{user_id}/ban")
-async def ban_user(user_id: str, user: dict = Depends(get_current_user)) -> dict:
+async def ban_user(user_id: str, user: dict = Depends(require_admin_user)) -> dict:
     """حظر مستخدم أو سائق"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     target_user = await db.users.find_one({"id": user_id})
     if not target_user:
         raise HTTPException(status_code=404, detail="المستخدم غير موجود")
@@ -560,10 +542,7 @@ async def ban_user(user_id: str, user: dict = Depends(get_current_user)) -> dict
 # ============== Sellers Management ==============
 
 @router.get("/sellers/pending")
-async def get_pending_sellers(user: dict = Depends(get_current_user)) -> list:
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
+async def get_pending_sellers(user: dict = Depends(require_admin_user)) -> list:
     docs = await db.seller_documents.find({"status": "pending"}, {"_id": 0}).to_list(100)
     
     if not docs:
@@ -606,11 +585,8 @@ async def get_pending_sellers(user: dict = Depends(get_current_user)) -> list:
 # ============== سجل الطلبات المرفوضة ==============
 
 @router.get("/rejected-requests")
-async def get_rejected_requests(user: dict = Depends(get_current_user)) -> dict:
+async def get_rejected_requests(user: dict = Depends(require_admin_user)) -> dict:
     """جلب سجل الطلبات المرفوضة (بائعين + سائقين) - حذف تلقائي بعد 30 يوم"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     from datetime import timedelta
     
     # حذف السجلات الأقدم من 30 يوم تلقائياً
@@ -632,11 +608,8 @@ async def get_rejected_requests(user: dict = Depends(get_current_user)) -> dict:
     }
 
 @router.delete("/rejected-requests/{request_id}")
-async def delete_rejected_request(request_id: str, user: dict = Depends(get_current_user)) -> dict:
+async def delete_rejected_request(request_id: str, user: dict = Depends(require_admin_user)) -> dict:
     """حذف سجل طلب مرفوض يدوياً"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     result = await db.rejected_join_requests.delete_one({"id": request_id})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="السجل غير موجود")
@@ -647,11 +620,8 @@ async def delete_rejected_request(request_id: str, user: dict = Depends(get_curr
 # ============== حذف الطلبات المعلقة ==============
 
 @router.delete("/sellers/pending/{seller_id}")
-async def delete_pending_seller(seller_id: str, user: dict = Depends(get_current_user)) -> dict:
+async def delete_pending_seller(seller_id: str, user: dict = Depends(require_admin_user)) -> dict:
     """حذف طلب انضمام بائع معلق نهائياً"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     # حذف وثائق البائع
     result = await db.seller_documents.delete_many({"seller_id": seller_id, "status": "pending"})
     
@@ -669,11 +639,8 @@ async def delete_pending_seller(seller_id: str, user: dict = Depends(get_current
 
 
 @router.delete("/delivery/pending/{driver_id}")
-async def delete_pending_driver(driver_id: str, user: dict = Depends(get_current_user)) -> dict:
+async def delete_pending_driver(driver_id: str, user: dict = Depends(require_admin_user)) -> dict:
     """حذف طلب انضمام سائق معلق نهائياً"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     # حذف وثائق السائق
     result = await db.delivery_documents.delete_many({
         "$or": [{"driver_id": driver_id}, {"delivery_id": driver_id}],
@@ -695,11 +662,8 @@ async def delete_pending_driver(driver_id: str, user: dict = Depends(get_current
 
 
 @router.delete("/products/pending/{product_id}")
-async def delete_pending_product(product_id: str, user: dict = Depends(get_current_user)) -> dict:
+async def delete_pending_product(product_id: str, user: dict = Depends(require_admin_user)) -> dict:
     """حذف منتج معلق نهائياً"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     result = await db.products.delete_one({"id": product_id, "is_approved": False})
     
     if result.deleted_count == 0:
@@ -709,11 +673,8 @@ async def delete_pending_product(product_id: str, user: dict = Depends(get_curre
 
 
 @router.delete("/food-items/pending/{item_id}")
-async def delete_pending_food_item(item_id: str, user: dict = Depends(get_current_user)) -> dict:
+async def delete_pending_food_item(item_id: str, user: dict = Depends(require_admin_user)) -> dict:
     """حذف صنف طعام معلق نهائياً"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     result = await db.food_items.delete_one({"id": item_id, "is_approved": False})
     
     if result.deleted_count == 0:
@@ -728,11 +689,9 @@ async def get_all_sellers(
     limit: int = Query(50, ge=1, le=100, description="عدد النتائج في الصفحة"),
     search: str = Query(None, description="البحث بالاسم أو الهاتف أو اسم المتجر"),
     status: str = Query(None, description="حالة البائع: approved, pending, rejected"),
-    user: dict = Depends(get_current_user)
+    user: dict = Depends(require_admin_user)
 ) -> dict:
     """جلب جميع البائعين مع Pagination"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
     
     # بناء الاستعلام
     query = {"user_type": "seller"}
@@ -808,10 +767,7 @@ async def get_all_sellers(
     }
 
 @router.post("/sellers/{seller_id}/approve")
-async def approve_seller(seller_id: str, user: dict = Depends(get_current_user)) -> dict:
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
+async def approve_seller(seller_id: str, user: dict = Depends(require_admin_user)) -> dict:
     now = get_now()
     
     await db.users.update_one({"id": seller_id}, {"$set": {"is_approved": True}})
@@ -860,11 +816,8 @@ async def approve_seller(seller_id: str, user: dict = Depends(get_current_user))
     return {"message": "تم تفعيل البائع"}
 
 @router.post("/sellers/{seller_id}/reject")
-async def reject_seller(seller_id: str, data: dict = Body(default={}), user: dict = Depends(get_current_user)) -> dict:
+async def reject_seller(seller_id: str, data: dict = Body(default={}), user: dict = Depends(require_admin_user)) -> dict:
     """رفض بائع مع سبب الرفض (اختياري)"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     # سبب الرفض اختياري
     reason = data.get("reason", "").strip() if data else ""
     

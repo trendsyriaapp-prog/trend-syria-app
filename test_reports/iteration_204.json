@@ -1,0 +1,73 @@
+{
+  "summary": "Phase 35 - Verified 16 admin endpoints now use require_admin_user dependency. All 24 tests passed (100% success rate). Refactoring correctly implemented.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_phase35_admin_require_admin_user.py",
+    "/app/test_reports/pytest/phase35_require_admin_user_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "require_admin_user dependency correctly used in 16 endpoints (lines 225, 231, 411, 441, 480, 523, 545, 588, 611, 623, 642, 665, 676, 692, 770, 819)",
+    "require_main_admin dependency correctly used in 2 endpoints (lines 55, 94)",
+    "60 remaining manual permission checks to be replaced in future phases",
+    "All refactored endpoints return correct 401 for unauthenticated requests",
+    "All refactored endpoints return correct 403 for non-admin users"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_phase35_admin_require_admin_user.py"
+  ],
+  "success_rate": {
+    "backend": "100%",
+    "frontend": "N/A - backend only testing"
+  },
+  "test_credentials": {
+    "super_admin": "0945570365 / TrendSyria@2026"
+  },
+  "seed_data_creation": "",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Phase 35 refactoring verified: 16 endpoints now use require_admin_user dependency, 2 use require_main_admin. 60 manual permission checks remain. All admin APIs tested and working correctly.",
+  "mocked_apis": {
+    "has_mocked_apis": true,
+    "mocked_apis_list": ["SMS OTP (123456)", "Sham Cash Payment Gateway"]
+  },
+  "verification_details": {
+    "endpoints_using_require_admin_user": [
+      "GET /api/admin/call-requests/count",
+      "GET /api/admin/emergency-help/count",
+      "GET /api/admin/stats",
+      "GET /api/admin/users",
+      "DELETE /api/admin/users/{user_id}",
+      "POST /api/admin/users/{user_id}/ban",
+      "GET /api/admin/sellers/pending",
+      "GET /api/admin/rejected-requests",
+      "DELETE /api/admin/rejected-requests/{request_id}",
+      "DELETE /api/admin/sellers/pending/{seller_id}",
+      "DELETE /api/admin/delivery/pending/{driver_id}",
+      "DELETE /api/admin/products/pending/{product_id}",
+      "DELETE /api/admin/food-items/pending/{item_id}",
+      "GET /api/admin/sellers/all",
+      "POST /api/admin/sellers/{seller_id}/approve",
+      "POST /api/admin/sellers/{seller_id}/reject"
+    ],
+    "endpoints_using_require_main_admin": [
+      "GET /api/admin/settings",
+      "PUT /api/admin/settings"
+    ],
+    "remaining_manual_checks": 60,
+    "total_endpoints_with_get_current_user": 84
+  },
+  "tests_executed": {
+    "passed": 24,
+    "skipped": 0,
+    "failed": 0
+  }
+}
