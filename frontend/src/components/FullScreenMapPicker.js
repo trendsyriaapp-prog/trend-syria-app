@@ -112,13 +112,19 @@ const FullScreenMapPicker = ({
   }, [isOpen, currentLocation]);
 
   // معالج زر الرجوع في الهاتف (Back button)
+  // نستخدم ref لتتبع حالة التحميل دون إعادة تشغيل useEffect
+  const loadingRef = useRef(loading);
+  useEffect(() => {
+    loadingRef.current = loading;
+  }, [loading]);
+
   useEffect(() => {
     if (!isOpen) return;
 
     // إضافة entry إلى history عند فتح الخريطة
     const handleBackButton = (e) => {
       // تجاهل popstate إذا كنا نجلب الموقع حالياً
-      if (loading) {
+      if (loadingRef.current) {
         e.preventDefault();
         window.history.pushState({ mapPicker: true }, '');
         return;
@@ -135,12 +141,8 @@ const FullScreenMapPicker = ({
 
     return () => {
       window.removeEventListener('popstate', handleBackButton);
-      // إزالة state من history إذا لم يتم الضغط على زر الرجوع
-      if (window.history.state?.mapPicker) {
-        window.history.back();
-      }
     };
-  }, [isOpen, onClose, loading]);
+  }, [isOpen, onClose]);
 
   // الحصول على موقع GPS الحالي
   const getCurrentLocation = () => {
