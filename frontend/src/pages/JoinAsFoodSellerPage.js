@@ -1119,16 +1119,18 @@ const JoinAsFoodSellerPage = () => {
                 {formData.payment_account_type === 'shamcash' && (
                   <div className="space-y-3">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">رقم شام كاش *</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">رقم حساب شام كاش *</label>
                       <input
-                        type="tel"
+                        type="text"
                         value={formData.payment_account_number}
-                        onChange={(e) => setFormData({...formData, payment_account_number: e.target.value})}
-                        placeholder="09XXXXXXXX"
-                        className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-green-500 focus:outline-none"
+                        onChange={(e) => setFormData({...formData, payment_account_number: e.target.value.toLowerCase().replace(/[^a-f0-9]/g, '')})}
+                        placeholder="مثال: 50778ad0f15afe11040f42cfb11efdfd"
+                        className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-green-500 focus:outline-none font-mono text-sm"
                         required
                         dir="ltr"
+                        maxLength={32}
                       />
+                      <p className="text-xs text-gray-500 mt-1">رقم الحساب 32 حرف - يمكنك نسخه من تطبيق شام كاش</p>
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">اسم صاحب الحساب *</label>

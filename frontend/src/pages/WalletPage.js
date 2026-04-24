@@ -45,7 +45,7 @@ const WalletPage = () => {
   
   // طرق السحب المتاحة
   const withdrawalMethods = [
-    { id: 'shamcash', name: 'شام كاش', icon: '💳', placeholder: '09XXXXXXXX' },
+    { id: 'shamcash', name: 'شام كاش', icon: '💳', placeholder: '32 حرف من تطبيق شام كاش' },
     { id: 'bank_account', name: 'حساب بنكي', icon: '🏦', placeholder: '' },
   ];
   

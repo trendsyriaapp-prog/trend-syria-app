@@ -118,8 +118,17 @@ export const useNavConfig = () => {
     const isChatPage = location.pathname.startsWith('/chat/');
     const isFoodStoreDashboard = location.pathname === '/food/dashboard' && user?.user_type === 'food_seller';
     const isSellerDashboard = location.pathname === '/seller/dashboard' && user?.user_type === 'seller';
+    
+    // إخفاء الشريط في صفحات التسجيل والانضمام
+    const isJoinPage = location.pathname.startsWith('/join/');
+    const isSellerDocumentsPage = location.pathname.startsWith('/seller/documents') || 
+                                   location.pathname.startsWith('/seller/pending');
+    const isDeliveryDocumentsPage = location.pathname.startsWith('/delivery/documents') || 
+                                     location.pathname.startsWith('/delivery/pending');
+    const isRegisterPage = location.pathname === '/register';
 
-    return isProductPage || isChatPage || isAdminPage || isFoodStoreDashboard || isSellerDashboard;
+    return isProductPage || isChatPage || isAdminPage || isFoodStoreDashboard || isSellerDashboard || 
+           isJoinPage || isSellerDocumentsPage || isDeliveryDocumentsPage || isRegisterPage;
   }, [location.pathname, isAdminPage, user?.user_type]);
 
   // ألوان مميزة لكل أيقونة

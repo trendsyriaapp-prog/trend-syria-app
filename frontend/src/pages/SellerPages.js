@@ -477,29 +477,35 @@ const SellerDocumentsPage = () => {
                 return null;
               })()}
 
-              {/* تعهد المسؤولية - يظهر فقط إذا كان الصنف لا يتطلب رخصة */}
-              {(() => {
-                const selectedCat = businessCategories.find(c => c.id === businessCategory);
-                const requiresLicense = selectedCat?.requires_license;
-                
-                if (!requiresLicense && businessCategory) {
-                  return (
-                    <div className="bg-amber-50 border-2 border-amber-200 rounded-xl p-3">
-                      <label className="flex items-start gap-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          required
-                          className="w-5 h-5 mt-0.5 text-[#FF6B00] rounded border-gray-300 focus:ring-[#FF6B00]"
-                        />
-                        <span className="text-sm text-amber-800">
-                          أتعهد بأنني مسؤول عن جودة المنتجات التي أبيعها وأنها مطابقة للمواصفات والمعايير المطلوبة
-                        </span>
-                      </label>
-                    </div>
-                  );
-                }
-                return null;
-              })()}
+              {/* تعهد المسؤولية - يظهر لجميع الأصناف */}
+              {businessCategory && (
+                <div className={`border-2 rounded-xl p-3 transition-colors ${
+                  document.getElementById('commitment-checkbox')?.checked 
+                    ? 'bg-green-50 border-green-400' 
+                    : 'bg-red-50 border-red-400'
+                }`}>
+                  <label className="flex items-start gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      id="commitment-checkbox"
+                      required
+                      onChange={(e) => {
+                        // تحديث لون الخلفية عند التحديد
+                        const parent = e.target.closest('div.border-2');
+                        if (e.target.checked) {
+                          parent.className = 'border-2 rounded-xl p-3 transition-colors bg-green-50 border-green-400';
+                        } else {
+                          parent.className = 'border-2 rounded-xl p-3 transition-colors bg-red-50 border-red-400';
+                        }
+                      }}
+                      className="w-5 h-5 mt-0.5 text-green-600 rounded border-red-400 focus:ring-green-500"
+                    />
+                    <span className="text-sm text-gray-800">
+                      <span className="font-bold text-red-600">⚠️ تعهد إلزامي:</span> أتعهد بأنني مسؤول عن جودة المنتجات التي أبيعها وأنها مطابقة للمواصفات والمعايير المطلوبة، وأتحمل كامل المسؤولية القانونية.
+                    </span>
+                  </label>
+                </div>
+              )}
 
               {/* صورة المحل */}
               <ImageUploader
@@ -615,14 +621,14 @@ const SellerDocumentsPage = () => {
                 {paymentAccountType === 'shamcash' && (
                   <div className="space-y-3">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">رقم شام كاش <span className="text-red-500">*</span></label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">رقم حساب شام كاش <span className="text-red-500">*</span></label>
                       <input
-                        type="tel"
+                        type="text"
                         value={paymentAccountNumber}
-                        onChange={(e) => setPaymentAccountNumber(e.target.value)}
-                        placeholder="09XXXXXXXX"
-                        className={`w-full p-3 border-2 rounded-xl focus:outline-none transition-colors ${
-                          paymentAccountNumber && /^09\d{8}$/.test(paymentAccountNumber)
+                        onChange={(e) => setPaymentAccountNumber(e.target.value.toLowerCase().replace(/[^a-f0-9]/g, ''))}
+                        placeholder="مثال: 50778ad0f15afe11040f42cfb11efdfd"
+                        className={`w-full p-3 border-2 rounded-xl focus:outline-none transition-colors font-mono text-sm ${
+                          paymentAccountNumber && /^[a-f0-9]{32}$/.test(paymentAccountNumber)
                             ? 'border-green-500 bg-green-50'
                             : paymentAccountNumber
                               ? 'border-red-400 bg-red-50'
@@ -630,11 +636,12 @@ const SellerDocumentsPage = () => {
                         }`}
                         required
                         dir="ltr"
-                        maxLength={10}
+                        maxLength={32}
                       />
-                      {paymentAccountNumber && !/^09\d{8}$/.test(paymentAccountNumber) && (
-                        <p className="text-xs text-red-500 mt-1">رقم الهاتف يجب أن يبدأ بـ 09 ويكون 10 أرقام</p>
+                      {paymentAccountNumber && !/^[a-f0-9]{32}$/.test(paymentAccountNumber) && (
+                        <p className="text-xs text-red-500 mt-1">رقم الحساب يجب أن يكون 32 حرف (أرقام وحروف a-f)</p>
                       )}
+                      <p className="text-xs text-gray-500 mt-1">يمكنك نسخ الرقم من تطبيق شام كاش</p>
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">اسم صاحب الحساب <span className="text-red-500">*</span></label>
