@@ -1664,14 +1664,7 @@ async def report_false_driver_arrival(
     يُسجل شكوى ويُلغي عداد الانتظار
     """
     store = await get_user_store(user["id"])
-    
-    order = await db.food_orders.find_one({
-        "id": order_id,
-        "store_id": store["id"]
-    }, {"_id": 0})
-    
-    if not order:
-        raise HTTPException(status_code=404, detail="الطلب غير موجود")
+    order = await get_order_for_store(order_id, store["id"])
     
     if not order.get("driver_arrived_at"):
         raise HTTPException(status_code=400, detail="السائق لم يسجل وصوله بعد")
@@ -3032,13 +3025,7 @@ async def driver_arrived_at_store(
     user: dict = Depends(require_delivery_user)
 ) -> dict:
     """تسجيل وصول السائق للمطعم - يبدأ عداد الانتظار (يتطلب موقع GPS)"""
-    order = await db.food_orders.find_one({
-        "id": order_id,
-        "driver_id": user["id"]
-    }, {"_id": 0})
-    
-    if not order:
-        raise HTTPException(status_code=404, detail="الطلب غير موجود أو ليس مخصصاً لك")
+    order = await get_order_for_driver(order_id, user["id"])
     
     # التحقق من أن السائق لم يسجل وصوله بالفعل
     if order.get("driver_arrived_at"):
@@ -3302,13 +3289,10 @@ async def verify_delivery_code(
     user: dict = Depends(require_delivery_user)
 ) -> dict:
     """التحقق من كود التسليم وإتمام الطلب"""
-    order = await db.food_orders.find_one({
-        "id": order_id, 
-        "driver_id": user["id"], 
-        "status": {"$in": ["out_for_delivery", "driver_at_customer"]}
-    })
-    if not order:
-        raise HTTPException(status_code=404, detail="الطلب غير موجود")
+    order = await get_order_for_driver(
+        order_id, user["id"], 
+        statuses=["out_for_delivery", "driver_at_customer"]
+    )
     
     # التحقق من الكود
     if order.get("delivery_code") != data.delivery_code:
@@ -3330,14 +3314,10 @@ async def report_food_delivery_failed(
 ) -> dict:
     """تسجيل فشل تسليم طلب طعام - العميل غير متجاوب"""
     
-    order = await db.food_orders.find_one({
-        "id": order_id,
-        "driver_id": user["id"],
-        "status": {"$in": ["out_for_delivery", "on_the_way", "driver_at_customer"]}
-    })
-    
-    if not order:
-        raise HTTPException(status_code=404, detail="الطلب غير موجود أو ليس مسنداً إليك")
+    order = await get_order_for_driver(
+        order_id, user["id"],
+        statuses=["out_for_delivery", "on_the_way", "driver_at_customer"]
+    )
     
     # التحقق أن السائق وصل للعميل وانتظر
     if not order.get("driver_arrived_at_customer"):
