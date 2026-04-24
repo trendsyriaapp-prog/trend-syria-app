@@ -6,7 +6,6 @@ from typing import Optional, List
 from datetime import datetime, timezone, timedelta
 from pydantic import BaseModel
 import uuid
-import math
 import secrets
 
 from core.database import db, get_current_user, create_notification_for_user
@@ -1801,18 +1800,11 @@ async def get_available_food_orders(
         ).to_list(None)
         stores_map = {s["id"]: s for s in stores_list}
     
-    # دالة حساب المسافة
-    def calculate_distance(lat1, lon1, lat2, lon2) -> dict:
+    # دالة حساب المسافة (تستخدم helper مع معالجة القيم الفارغة)
+    def calculate_distance(lat1, lon1, lat2, lon2) -> float:
         if not all([lat1, lon1, lat2, lon2]):
             return 9999  # مسافة كبيرة للطلبات بدون إحداثيات
-        R = 6371
-        lat1_r, lon1_r = math.radians(lat1), math.radians(lon1)
-        lat2_r, lon2_r = math.radians(lat2), math.radians(lon2)
-        dlat = lat2_r - lat1_r
-        dlon = lon2_r - lon1_r
-        a = math.sin(dlat/2)**2 + math.cos(lat1_r) * math.cos(lat2_r) * math.sin(dlon/2)**2
-        c = 2 * math.asin(math.sqrt(a))
-        return R * c
+        return calculate_distance_km(lat1, lon1, lat2, lon2)
     
     # تجميع الطلبات حسب batch_id
     batched_orders = {}
