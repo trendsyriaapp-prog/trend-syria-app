@@ -58,6 +58,7 @@ import RecordedCallsTab from '../components/admin/RecordedCallsTab';
 import HomepageSectionsTab from '../components/admin/HomepageSectionsTab';
 import PendingFoodItemsTab from '../components/admin/PendingFoodItemsTab';
 import FoodItemsTab from '../components/admin/FoodItemsTab';
+import ErrorLogsTab from '../components/admin/ErrorLogsTab';
 import PaymentSettingsTab from '../components/admin/PaymentSettingsTab';
 import PlatformWalletTab from '../components/admin/PlatformWalletTab';
 import FeedbackTab from '../components/admin/FeedbackTab';
@@ -639,7 +640,8 @@ const AdminDashboardPage = () => {
     'reset-database': 'مسح قاعدة البيانات',
     'image-migration': 'ترحيل الصور إلى CDN',
     'rate-limits': 'مراقبة Rate Limiting',
-    'allowed-regions': 'المناطق المسموحة'
+    'allowed-regions': 'المناطق المسموحة',
+    'error-logs': 'سجل الأخطاء'
   };
 
   return (
@@ -892,6 +894,9 @@ const AdminDashboardPage = () => {
             )}
             {activeTab === 'allowed-regions' && user.user_type === 'admin' && (
               <AllowedRegionsTab />
+            )}
+            {activeTab === 'error-logs' && user.user_type === 'admin' && (
+              <ErrorLogsTab />
             )}
               </>
             )}
@@ -1236,6 +1241,7 @@ const AdminDashboardPage = () => {
                       { icon: Wallet, label: 'محفظة المنصة', tab: 'platform-wallet' },
                       { icon: Cloud, label: 'ترحيل الصور', tab: 'image-migration' },
                       { icon: Shield, label: 'Rate Limiting', tab: 'rate-limits' },
+                      { icon: AlertTriangle, label: 'سجل الأخطاء', tab: 'error-logs' },
                       { icon: Trash2, label: 'مسح البيانات', tab: 'reset-database', danger: true },
                     ].map((item) => (
                       <button key={item.tab} onClick={() => setActiveTab(item.tab)} className={`bg-white p-2 flex flex-col items-center gap-1 hover:bg-gray-50 transition-colors ${item.danger ? 'bg-red-50' : ''}`}>

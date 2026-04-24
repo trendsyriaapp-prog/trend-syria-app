@@ -142,6 +142,7 @@ try:
     from routes.driver_security import router as driver_security_router
     from routes.storage import router as storage_router
     from routes.rate_limits import router as rate_limits_router
+    from routes.error_logs import router as error_logs_router
     logger.info("✅ All routers imported successfully")
 except Exception as e:
     logger.error(f"❌ Failed to import routers: {e}")
@@ -621,6 +622,7 @@ api_router.include_router(feedback_router)
 api_router.include_router(driver_security_router)
 api_router.include_router(storage_router)
 api_router.include_router(rate_limits_router)
+api_router.include_router(error_logs_router)
 
 # ============== Root Endpoint ==============
 

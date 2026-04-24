@@ -3,6 +3,7 @@
 
 import React from 'react';
 import logger from '../lib/logger';
+import { logComponentError } from '../lib/errorLogger';
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -42,6 +43,9 @@ class ErrorBoundary extends React.Component {
     // طباعة في Console
     logger.error('🔴 ErrorBoundary caught error:', error);
     logger.error('📍 Component Stack:', errorInfo.componentStack);
+    
+    // 📊 تسجيل الخطأ في النظام المركزي
+    logComponentError(error, errorInfo, this.props.componentName || window.location.pathname);
     
     // إذا كان ChunkLoadError، إعادة تحميل الصفحة تلقائياً بعد 2 ثانية
     if (isChunkError) {
