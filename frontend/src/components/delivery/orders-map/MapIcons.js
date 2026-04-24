@@ -118,3 +118,6 @@ export const ROUTE_COLORS = {
 
 // إحداثيات دمشق كافتراضي
 export const DEFAULT_CENTER = [33.5138, 36.2765];
+
+// موقع دمشق الافتراضي (صيغة object)
+export const DEFAULT_LOCATION = { latitude: 33.5138, longitude: 36.2765 };

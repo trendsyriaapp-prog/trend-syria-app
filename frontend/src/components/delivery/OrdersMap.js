@@ -18,7 +18,8 @@ import {
   productStoreIcon,
   customerIcon,
   driverIcon,
-  DEFAULT_CENTER
+  DEFAULT_CENTER,
+  DEFAULT_LOCATION
 } from './orders-map/MapIcons';
 
 import {
@@ -30,11 +31,7 @@ import {
 
 import {
   speakInstruction,
-  announceNewOrder,
-  announceOrderAccepted,
-  announceNavigation,
-  announceArrival,
-  announcePriorityOrder
+  announceArrival
 } from './orders-map/VoiceAnnouncements';
 
 // استيراد المكونات UI المُستخرجة
@@ -62,7 +59,6 @@ import {
 // استيراد الـ Hooks المُستخرجة
 import useTheme from './orders-map/hooks/useTheme';
 import usePriorityOrders from './orders-map/hooks/usePriorityOrders';
-import useGPS from './orders-map/hooks/useGPS';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -133,7 +129,7 @@ const OrdersMap = ({
   const [selectedAvailableOrder, setSelectedAvailableOrder] = useState(null); // الطلب المتاح المحدد للـ popup
   
   // 🔊 أصوات الإشعارات المختلفة
-  const { playPriority, playSuccess } = useNotificationSound();
+  const { playSuccess } = useNotificationSound();
   
   // رسالة الخطأ داخل الخريطة
   const [mapError, setMapError] = useState(null);
@@ -564,7 +560,7 @@ const OrdersMap = ({
     // إذا لم يتوفر موقع السائق، استخدم موقع افتراضي (دمشق)
     if (!driverPos || !driverPos.latitude) {
       logger.log('استخدام موقع افتراضي - دمشق');
-      driverPos = { latitude: 33.5138, longitude: 36.2765 };
+      driverPos = DEFAULT_LOCATION;
       setCurrentDriverLocation(driverPos);
     }
 
@@ -795,7 +791,7 @@ const OrdersMap = ({
     // إذا لم يتوفر موقع السائق، استخدم موقع افتراضي (دمشق)
     if (!driverPos || !driverPos.latitude) {
       logger.log('استخدام موقع افتراضي - دمشق');
-      driverPos = { latitude: 33.5138, longitude: 36.2765 };
+      driverPos = DEFAULT_LOCATION;
       setCurrentDriverLocation(driverPos);
     }
 
@@ -1078,18 +1074,16 @@ const OrdersMap = ({
           }
           setGpsError(errorMessage);
           // استخدام موقع افتراضي عند فشل الحصول على الموقع
-          const defaultLocation = { latitude: 33.5138, longitude: 36.2765 };
-          setCurrentDriverLocation(defaultLocation);
-          setMapCenter([defaultLocation.latitude, defaultLocation.longitude]);
+          setCurrentDriverLocation(DEFAULT_LOCATION);
+          setMapCenter(DEFAULT_CENTER);
         },
         { enableHighAccuracy: false, timeout: 30000, maximumAge: 60000 }
       );
     } else {
       setGpsError('المتصفح لا يدعم خدمة الموقع');
       // إذا لم يكن الـ geolocation متاحاً، استخدم موقع افتراضي
-      const defaultLocation = { latitude: 33.5138, longitude: 36.2765 };
-      setCurrentDriverLocation(defaultLocation);
-      setMapCenter([defaultLocation.latitude, defaultLocation.longitude]);
+      setCurrentDriverLocation(DEFAULT_LOCATION);
+      setMapCenter(DEFAULT_CENTER);
     }
   };
 
