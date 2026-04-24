@@ -36,7 +36,16 @@ import {
 } from './orders-map/VoiceAnnouncements';
 
 // استيراد المكونات UI المُستخرجة
-import { MapLayerFilters, MapOrderFilters, StationsSummary, MapErrorToast } from './orders-map/components';
+import { 
+  MapLayerFilters, 
+  MapOrderFilters, 
+  StationsSummary, 
+  MapErrorToast, 
+  NavigationBar,
+  ActivateNavigationButton,
+  MapTopBar,
+  GpsErrorMessage 
+} from './orders-map/components';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -1868,86 +1877,24 @@ const OrdersMap = ({
               onClick={e => e.stopPropagation()}
             >
               {/* Header شريط علوي موحد */}
-              <div className={`flex items-center justify-between px-3 py-2 gap-2 border-b ${
-                currentTheme === 'dark' 
-                  ? 'bg-[#1a1a1a] border-[#333]' 
-                  : 'bg-white border-gray-200'
-              }`}>
-                <div className="flex items-center gap-3 flex-shrink-0">
-                  <button
-                    onClick={() => setIsOpen(false)}
-                    className={`p-2 rounded-lg transition-colors ${
-                      currentTheme === 'dark'
-                        ? 'bg-[#252525] text-white hover:bg-[#333]'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="m12 19 7-7-7-7"/>
-                      <path d="M19 12H5"/>
-                    </svg>
-                  </button>
-                  <span className={`text-sm font-bold whitespace-nowrap ${currentTheme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-                    خريطة الطلبات
-                  </span>
-                  <button
-                    onClick={getDriverLocation}
-                    className="p-2 bg-green-500 text-black rounded-lg font-bold"
-                    title="تحديث موقعي"
-                  >
-                    <Locate size={16} />
-                  </button>
-                  
-                  {/* ⭐ زر تبديل الثيم */}
-                  <button
-                    onClick={() => {
-                      const modes = ['auto', 'light', 'dark'];
-                      const currentIndex = modes.indexOf(themeMode);
-                      const nextMode = modes[(currentIndex + 1) % modes.length];
-                      setThemeMode(nextMode);
-                      // حفظ الإعداد في localStorage
-                      localStorage.setItem('driverThemeMode', nextMode);
-                      // تحديث الثيم الفعلي فوراً
-                      if (nextMode === 'auto') {
-                        const hour = new Date().getHours();
-                        setCurrentTheme((hour >= 6 && hour < 18) ? 'light' : 'dark');
-                      } else {
-                        setCurrentTheme(nextMode);
-                      }
-                    }}
-                    className={`px-4 py-2 rounded-xl font-bold text-sm flex items-center gap-2 z-50 relative transition-all ${
-                      currentTheme === 'dark'
-                        ? 'bg-[#252525] text-white hover:bg-[#333] border border-[#444]'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
-                    }`}
-                    title={`الوضع: ${themeMode === 'auto' ? 'تلقائي' : themeMode === 'light' ? 'فاتح' : 'داكن'}`}
-                  >
-                    {themeMode === 'auto' && '🔄 تلقائي'}
-                    {themeMode === 'light' && '☀️ فاتح'}
-                    {themeMode === 'dark' && '🌙 داكن'}
-                  </button>
-                </div>
-                
-              </div>
+              <MapTopBar
+                onClose={() => setIsOpen(false)}
+                onLocateDriver={getDriverLocation}
+                themeMode={themeMode}
+                setThemeMode={setThemeMode}
+                currentTheme={currentTheme}
+                setCurrentTheme={setCurrentTheme}
+              />
 
               {/* رسالة خطأ GPS */}
-              {gpsError && (
-                <div className="px-4 py-3 bg-red-500/20 border-b border-red-500/30">
-                  <div className="flex items-center justify-between">
-                    <span className="text-red-400 text-sm font-medium">{gpsError}</span>
-                    <button
-                      onClick={() => {
-                        setGpsRequested(false);
-                        setGpsError(null);
-                        getDriverLocation();
-                      }}
-                      className="px-3 py-1 bg-red-500 text-white rounded-lg text-sm font-bold"
-                    >
-                      إعادة المحاولة
-                    </button>
-                  </div>
-                </div>
-              )}
+              <GpsErrorMessage
+                gpsError={gpsError}
+                onRetry={() => {
+                  setGpsRequested(false);
+                  setGpsError(null);
+                  getDriverLocation();
+                }}
+              />
 
               {/* فلاتر الطبقات */}
               <MapLayerFilters
@@ -2090,70 +2037,21 @@ const OrdersMap = ({
               />
 
               {/* ⭐ شريط وضع الملاحة */}
-              {isNavigationMode && (
-                <div className="bg-gradient-to-r from-gray-900 to-gray-800 text-white px-3 py-2">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-                      <span className="text-xs font-bold">وضع الملاحة مفعّل</span>
-                    </div>
-                    <button
-                      onClick={toggleNavigationMode}
-                      className="text-red-400 hover:text-red-300 text-xs"
-                    >
-                      إيقاف ✕
-                    </button>
-                  </div>
-                  
-                  <div className="grid grid-cols-3 gap-2 text-center">
-                    {/* السرعة */}
-                    <div className="bg-gray-700/50 rounded-lg p-2">
-                      <p className="text-[10px] text-gray-400">السرعة</p>
-                      <p className="text-lg font-bold text-green-400">{driverSpeed}</p>
-                      <p className="text-[10px] text-gray-400">كم/س</p>
-                    </div>
-                    
-                    {/* المسافة المتبقية */}
-                    <div className="bg-gray-700/50 rounded-lg p-2">
-                      <p className="text-[10px] text-gray-400">المسافة</p>
-                      <p className="text-lg font-bold text-blue-400">{routeInfo?.distance || '0'}</p>
-                      <p className="text-[10px] text-gray-400">كم</p>
-                    </div>
-                    
-                    {/* وقت الوصول */}
-                    <div className="bg-gray-700/50 rounded-lg p-2">
-                      <p className="text-[10px] text-gray-400">الوصول</p>
-                      <p className="text-lg font-bold text-orange-400">
-                        {estimatedArrival || routeInfo?.duration || '0'}
-                      </p>
-                      <p className="text-[10px] text-gray-400">دقيقة</p>
-                    </div>
-                  </div>
-                  
-                  {/* تحذير الابتعاد عن المسار */}
-                  {distanceFromRoute > 0.05 && (
-                    <div className="mt-2 bg-yellow-500/20 border border-yellow-500/50 rounded-lg p-2 text-center">
-                      <p className="text-yellow-400 text-xs font-bold">
-                        ⚠️ ابتعدت عن المسار ({(distanceFromRoute * 1000).toFixed(0)} متر)
-                      </p>
-                      <p className="text-yellow-300/70 text-[10px]">جاري إعادة حساب المسار...</p>
-                    </div>
-                  )}
-                </div>
-              )}
+              <NavigationBar
+                isNavigationMode={isNavigationMode}
+                toggleNavigationMode={toggleNavigationMode}
+                driverSpeed={driverSpeed}
+                routeInfo={routeInfo}
+                estimatedArrival={estimatedArrival}
+                distanceFromRoute={distanceFromRoute}
+              />
 
               {/* ⭐ زر تفعيل وضع الملاحة (عند وجود مسار) */}
-              {routeCoordinates.length > 0 && !isNavigationMode && (
-                <div className="bg-[#1a1a1a] px-3 py-2 border-t border-[#333]">
-                  <button
-                    onClick={toggleNavigationMode}
-                    className="w-full py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl text-sm font-bold flex items-center justify-center gap-2"
-                  >
-                    <Navigation size={18} />
-                    🚀 تفعيل وضع الملاحة
-                  </button>
-                </div>
-              )}
+              <ActivateNavigationButton
+                hasRoute={routeCoordinates.length > 0}
+                isNavigationMode={isNavigationMode}
+                toggleNavigationMode={toggleNavigationMode}
+              />
 
               {/* زر فتح Google Maps */}
               {activeOrdersCount > 0 && !stepByStepMode && (
