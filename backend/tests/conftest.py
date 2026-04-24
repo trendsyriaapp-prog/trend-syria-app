@@ -15,6 +15,19 @@ else:
     load_dotenv()
 
 
+# ============== Test Constants (للاستيراد المباشر) ==============
+# يمكن استيرادها: from tests.conftest import ADMIN_PASSWORD, API_URL
+
+API_URL = os.getenv("TEST_API_URL", "http://localhost:8001")
+ADMIN_PHONE = os.getenv("TEST_ADMIN_PHONE", "0945570365")
+ADMIN_PASSWORD = os.getenv("TEST_ADMIN_PASSWORD", "TrendSyria@2026")
+TEST_USER_PASSWORD = os.getenv("TEST_USER_PASSWORD", "Test@1234")
+PRODUCT_SELLER_PASSWORD = os.getenv("TEST_SELLER_PASSWORD", "Seller@1234")
+FOOD_SELLER_PASSWORD = os.getenv("TEST_FOOD_SELLER_PASSWORD", "seller123")
+DRIVER_PASSWORD = os.getenv("TEST_DRIVER_PASSWORD", "Driver@1234")
+TEST_OTP = os.getenv("TEST_OTP_CODE", "123456")
+
+
 # ============== Test Configuration ==============
 
 @pytest.fixture(scope="session")
