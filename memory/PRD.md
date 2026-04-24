@@ -41,14 +41,31 @@
 
 ## ما تم إنجازه حديثاً (24 أبريل 2026)
 
+### 🔧 إصلاح أخطاء API 500 ✅ - 24 أبريل 2026
+**المشكلة**: كانت بعض endpoints تُرجع `list` بينما return type هو `dict`، مما يُسبب `ResponseValidationError`.
+
+**الإصلاحات**:
+- `/api/food/products`: يُرجع الآن `{products: [], total: 0}` بدلاً من `[]`
+- `/api/notifications/unread`: يُرجع الآن `{notifications: [], count: 0}`
+- `/api/food/my-items`: يُرجع الآن `{items: [], store_id: null}`
+- `/api/food/my-flash-requests`: يُرجع الآن `{requests: []}`
+- إصلاح return type annotations لـ 9 endpoints إضافية
+
+**تحديث Frontend**: تم تحديث الكود للتعامل مع الـ response الجديد
+
+### 🔄 تطبيق إصلاحات UI على بائع الطعام ✅ - 24 أبريل 2026
+- ✅ **شام كاش**: تحقق من 32 حرف hex (بدلاً من رقم هاتف 09)
+- ✅ **التعهد**: يظهر دائماً بتنسيق أحمر/أخضر
+- ✅ **رسالة GPS**: إضافة toast "تم تحديد موقعك" في `LocationPickerMap.js`
+
 ### 🗺️ إصلاح زر GPS في نافذة الخريطة ✅ - 24 أبريل 2026
 **المشكلة**: عند الضغط على زر "تحديد موقعي" (GPS) في نافذة اختيار الموقع، كانت النافذة تُغلق ويُحفظ الموقع فوراً.
 **السلوك الصحيح**: يجب أن يُظهر الموقع على الخريطة فقط، وتبقى النافذة مفتوحة حتى يضغط المستخدم على "تأكيد الموقع".
 
-**الإصلاح** في `/frontend/src/components/FullScreenMapPicker.js`:
+**الإصلاح** في `/frontend/src/components/FullScreenMapPicker.js` و `LocationPickerMap.js`:
 - استخدام `loadingRef` بدلاً من `loading` كـ dependency في `useEffect`
 - إزالة `window.history.back()` من cleanup function
-- منع إعادة تشغيل `useEffect` عند تغيير حالة التحميل
+- إضافة رسالة toast عند تحديد الموقع
 
 **نتائج الاختبار**: ✅ 100% نجاح
 
