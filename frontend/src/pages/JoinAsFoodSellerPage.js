@@ -318,17 +318,13 @@ const JoinAsFoodSellerPage = () => {
     const accountNumber = formData.payment_account_number?.trim() || '';
     
     if (formData.payment_account_type === 'shamcash') {
-      // شام كاش: رقم سوري يبدأ بـ 09 ويتكون من 10 أرقام
-      if (!accountNumber.startsWith('09')) {
-        toast({ title: "خطأ", description: "رقم شام كاش يجب أن يبدأ بـ 09", variant: "destructive" });
+      // شام كاش: معرف المحفظة 32 حرف hex
+      if (accountNumber.length !== 32) {
+        toast({ title: "خطأ", description: "معرف محفظة شام كاش يجب أن يتكون من 32 حرف", variant: "destructive" });
         return;
       }
-      if (accountNumber.length !== 10) {
-        toast({ title: "خطأ", description: "رقم شام كاش يجب أن يتكون من 10 أرقام", variant: "destructive" });
-        return;
-      }
-      if (!/^\d+$/.test(accountNumber)) {
-        toast({ title: "خطأ", description: "رقم شام كاش يجب أن يحتوي على أرقام فقط", variant: "destructive" });
+      if (!/^[a-fA-F0-9]+$/.test(accountNumber)) {
+        toast({ title: "خطأ", description: "معرف محفظة شام كاش يجب أن يحتوي على أحرف وأرقام (hex) فقط", variant: "destructive" });
         return;
       }
     }
@@ -1064,21 +1060,33 @@ const JoinAsFoodSellerPage = () => {
                 </div>
               )}
 
-              {/* تعهد المسؤولية - يظهر فقط إذا لم تكن الرخصة مطلوبة */}
-              {!requiresLicense() && (
-                <div className="bg-amber-50 border-2 border-amber-200 rounded-xl p-3">
-                  <label className="flex items-start gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      required
-                      className="w-5 h-5 mt-0.5 text-[#FF6B00] rounded border-gray-300 focus:ring-[#FF6B00]"
-                    />
-                    <span className="text-sm text-amber-800">
-                      أتعهد بأنني مسؤول عن جودة المنتجات والأطعمة التي أقدمها وأنها مطابقة للمعايير الصحية
-                    </span>
-                  </label>
-                </div>
-              )}
+              {/* تعهد المسؤولية - يظهر دائماً */}
+              <div className={`border-2 rounded-xl p-3 transition-colors ${
+                document.getElementById('food-commitment-checkbox')?.checked 
+                  ? 'bg-green-50 border-green-400' 
+                  : 'bg-red-50 border-red-400'
+              }`}>
+                <label className="flex items-start gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    id="food-commitment-checkbox"
+                    required
+                    onChange={(e) => {
+                      // تحديث لون الخلفية عند التحديد
+                      const parent = e.target.closest('div.border-2');
+                      if (e.target.checked) {
+                        parent.className = 'border-2 rounded-xl p-3 transition-colors bg-green-50 border-green-400';
+                      } else {
+                        parent.className = 'border-2 rounded-xl p-3 transition-colors bg-red-50 border-red-400';
+                      }
+                    }}
+                    className="w-5 h-5 mt-0.5 text-green-600 rounded border-red-400 focus:ring-green-500"
+                  />
+                  <span className="text-sm text-gray-800">
+                    <span className="font-bold text-red-600">⚠️ تعهد إلزامي:</span> أتعهد بأنني مسؤول عن جودة المنتجات والأطعمة التي أقدمها وأنها مطابقة للمعايير الصحية، وأتحمل كامل المسؤولية القانونية.
+                  </span>
+                </label>
+              </div>
 
               {/* حساب استلام الأرباح */}
               <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-4 border-2 border-green-200">
