@@ -60,6 +60,7 @@ import {
 
 // استيراد الـ Hooks المُستخرجة
 import useTheme from './orders-map/hooks/useTheme';
+import usePriorityOrders from './orders-map/hooks/usePriorityOrders';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -158,45 +159,18 @@ const OrdersMap = ({
   const [currentInstruction, setCurrentInstruction] = useState(null); // التعليمة الحالية
   const [arrivalAnnouncedFor, setArrivalAnnouncedFor] = useState(null); // تتبع الإعلان عن الوصول لتجنب التكرار
 
-  // ⭐ إشعار الأولوية الذكية
-  const [priorityOrder, setPriorityOrder] = useState(null); // الطلب ذو الأولوية
-  const priorityOrderRef = useRef(null); // ref للحفاظ على القيمة في الـ interval
-  const [priorityCountdown, setPriorityCountdown] = useState(0); // العد التنازلي
-  const [showPriorityPopup, setShowPriorityPopup] = useState(false);
-  const showPriorityPopupRef = useRef(false); // ref للحفاظ على القيمة في الـ interval
-  const [dismissedPriorityUntil, setDismissedPriorityUntil] = useState(0); // وقت إيقاف الإشعارات مؤقتاً
-  
-  // تحميل الطلبات المرفوضة من localStorage عند البدء
-  const [rejectedOrderIds, setRejectedOrderIds] = useState(() => {
-    try {
-      const saved = localStorage.getItem('rejectedOrderIds');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        // تنظيف الطلبات القديمة (أكثر من ساعة)
-        const now = Date.now();
-        const validEntries = parsed.filter(entry => 
-          typeof entry === 'object' && entry.timestamp && (now - entry.timestamp) < 3600000
-        );
-        return validEntries.map(e => e.id);
-      }
-    } catch (e) {
-      logger.log('Error loading rejected orders:', e);
-    }
-    return [];
-  });
-  
-  const [maxLimitOrderIds, setMaxLimitOrderIds] = useState([]); // الطلبات المؤجلة بسبب الحد الأقصى
-  const maxLimitOrderIdsRef = useRef([]); // ref للحفاظ على القيمة الصحيحة في الـ interval
-  const [previousOrderCount, setPreviousOrderCount] = useState(0); // عدد الطلبات السابق لمراقبة التغيير
+  // ⭐ إشعار الأولوية الذكية - استخدام usePriorityOrders hook
+  const {
+    priorityOrder,
+    priorityCountdown,
+    showPriorityPopup,
+    acceptPriorityOrder,
+    rejectPriorityOrder,
+    rejectedOrderIds,
+    maxLimitOrderIds
+  } = usePriorityOrders(activeOrdersCount, onTakeFoodOrder, setMapError);
 
-  // تحديث الـ ref عند تغيير الـ state
-  useEffect(() => {
-    maxLimitOrderIdsRef.current = maxLimitOrderIds;
-  }, [maxLimitOrderIds]);
-
-  // ref للطلبات المرفوضة للحفاظ على القيمة الصحيحة في الـ interval
-  const rejectedOrderIdsRef = useRef([]);
-  useEffect(() => {
+  // المسار الأمثل
     rejectedOrderIdsRef.current = rejectedOrderIds;
   }, [rejectedOrderIds]);
 
