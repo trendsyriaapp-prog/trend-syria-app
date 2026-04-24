@@ -7,3 +7,4 @@ export { default as PriorityPopup } from './PriorityPopup';
 export { default as OrderFilterTabs } from './OrderFilterTabs';
 export { default as RouteInfoCard } from './RouteInfoCard';
 export { default as MapErrorToast } from './MapErrorToast';
+export { default as StationsSummary } from './StationsSummary';
