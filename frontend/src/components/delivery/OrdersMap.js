@@ -24,7 +24,8 @@ import {
 import {
   MapUpdater,
   calculateDistanceKm,
-  calculateDistanceFromRoute
+  calculateDistanceFromRoute,
+  fetchDriverEarnings
 } from './orders-map/MapHelpers';
 
 import {
@@ -466,22 +467,14 @@ const OrdersMap = ({
           const totalDuration = Math.round(route.duration / 60);
           
           // جلب ربح السائق من الـ API
-          let driverEarnings = 0;
-          try {
-            const earningsResponse = await axios.get(`${API}/api/shipping/calculate-driver-earnings`, {
-              params: {
-                store_lat: waypoint[0],
-                store_lon: waypoint[1],
-                customer_lat: end[0],
-                customer_lon: end[1],
-                driver_lat: start[0],
-                driver_lon: start[1]
-              }
-            });
-            driverEarnings = earningsResponse.data.earnings || 0;
-          } catch (err) {
-            logger.error('Error fetching driver earnings:', err);
-          }
+          const driverEarnings = await fetchDriverEarnings({
+            storeLat: waypoint[0],
+            storeLon: waypoint[1],
+            customerLat: end[0],
+            customerLon: end[1],
+            driverLat: start[0],
+            driverLon: start[1]
+          }, API);
           
           // معلومات المسار مع التفاصيل
           setRouteInfo({
@@ -1028,20 +1021,12 @@ const OrdersMap = ({
           const totalDuration = Math.round(route.duration / 60);
           
           // جلب ربح السائق
-          let driverEarnings = 0;
-          try {
-            const earningsResponse = await axios.get(`${API}/api/shipping/calculate-driver-earnings`, {
-              params: {
-                store_lat: storeCoords[0],
-                store_lon: storeCoords[1],
-                customer_lat: customerCoords[0],
-                customer_lon: customerCoords[1]
-              }
-            });
-            driverEarnings = earningsResponse.data.earnings || 0;
-          } catch (err) {
-            logger.error('Error fetching driver earnings:', err);
-          }
+          const driverEarnings = await fetchDriverEarnings({
+            storeLat: storeCoords[0],
+            storeLon: storeCoords[1],
+            customerLat: customerCoords[0],
+            customerLon: customerCoords[1]
+          }, API);
           
           setRouteInfo({
             distance: totalDistance,

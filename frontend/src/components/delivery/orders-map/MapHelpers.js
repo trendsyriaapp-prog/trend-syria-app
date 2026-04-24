@@ -170,3 +170,42 @@ export const decodePolyline = (encoded) => {
 
   return points;
 };
+
+/**
+ * جلب ربح السائق من الـ API
+ * @param {Object} params - الإحداثيات
+ * @param {number} params.storeLat - خط عرض المتجر
+ * @param {number} params.storeLon - خط طول المتجر
+ * @param {number} params.customerLat - خط عرض العميل
+ * @param {number} params.customerLon - خط طول العميل
+ * @param {number} params.driverLat - خط عرض السائق (اختياري)
+ * @param {number} params.driverLon - خط طول السائق (اختياري)
+ * @returns {Promise<number>} ربح السائق
+ */
+export const fetchDriverEarnings = async (params, API) => {
+  try {
+    const { storeLat, storeLon, customerLat, customerLon, driverLat, driverLon } = params;
+    const queryParams = {
+      store_lat: storeLat,
+      store_lon: storeLon,
+      customer_lat: customerLat,
+      customer_lon: customerLon
+    };
+    
+    // إضافة موقع السائق إذا كان متاحاً
+    if (driverLat !== undefined && driverLon !== undefined) {
+      queryParams.driver_lat = driverLat;
+      queryParams.driver_lon = driverLon;
+    }
+    
+    const response = await fetch(`${API}/api/shipping/calculate-driver-earnings?${new URLSearchParams(queryParams)}`);
+    if (response.ok) {
+      const data = await response.json();
+      return data.earnings || 0;
+    }
+    return 0;
+  } catch (error) {
+    console.error('Error fetching driver earnings:', error);
+    return 0;
+  }
+};
