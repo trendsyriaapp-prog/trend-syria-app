@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import logger from '../../lib/logger';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Map, X, Navigation, Phone, PhoneOff, Package, UtensilsCrossed, Locate, Layers, Route } from 'lucide-react';
+import { Map, Navigation, Route } from 'lucide-react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import axios from 'axios';
@@ -155,8 +155,6 @@ const OrdersMap = ({
   const [estimatedArrival, setEstimatedArrival] = useState(null); // وقت الوصول المتوقع
   const [lastPosition, setLastPosition] = useState(null); // آخر موقع للحساب
   const [distanceFromRoute, setDistanceFromRoute] = useState(0); // المسافة عن المسار
-  const [navigationInstructions, setNavigationInstructions] = useState([]); // تعليمات الملاحة
-  const [currentInstruction, setCurrentInstruction] = useState(null); // التعليمة الحالية
   const [arrivalAnnouncedFor, setArrivalAnnouncedFor] = useState(null); // تتبع الإعلان عن الوصول لتجنب التكرار
 
   // ⭐ إشعار الأولوية الذكية - استخدام usePriorityOrders hook
@@ -430,9 +428,6 @@ const OrdersMap = ({
   useEffect(() => {
     calculateOrderedStations();
   }, [activeMyFoodOrders, activeMyOrders]);
-
-  // ألوان المسارات
-  const routeColors = ['#f97316', '#3b82f6', '#22c55e', '#a855f7', '#ef4444', '#eab308'];
 
   // جلب المسار من OSRM (مجاني بدون API Key) مع المسافات المنفصلة والربح
   const fetchRoute = async (start, waypoint, end) => {
