@@ -3187,8 +3187,8 @@ async def get_pickup_code(order_id: str, user: dict = Depends(get_current_user))
     
     # التحقق من أن البائع هو صاحب الطلب
     if user["user_type"] == "seller":
-        store = await db.food_stores.find_one({"owner_id": user["id"]})
-        if not store or store["id"] != order.get("store_id"):
+        store = await get_user_store(user["id"])
+        if store["id"] != order.get("store_id"):
             raise HTTPException(status_code=403, detail="ليس لديك صلاحية لهذا الطلب")
     
     pickup_code = order.get("pickup_code")
@@ -4286,9 +4286,7 @@ async def get_order_driver_status(
     if user["user_type"] not in ["food_seller", "admin"]:
         raise HTTPException(status_code=403, detail="غير مصرح لك")
     
-    store = await db.food_stores.find_one({"owner_id": user["id"]})
-    if not store:
-        raise HTTPException(status_code=404, detail="المتجر غير موجود")
+    store = await get_user_store(user["id"])
     
     order = await db.food_orders.find_one(
         {"id": order_id, "store_id": store["id"]},

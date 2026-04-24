@@ -1,0 +1,149 @@
+{
+  "summary": "Phase 21 refactoring tested successfully. 2 additional usages of db.food_stores.find_one({owner_id}) replaced with get_user_store in get_pickup_code (line 3190) and get_order_driver_status (line 4289). All 16 tests passed. Backend is healthy. File size reduced from 4312 to 4310 lines (-2 lines).",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {
+        "endpoint": "get_seller_food_orders (line 1334)",
+        "issue": "Still uses manual db.food_stores.find_one({owner_id: user[id]})",
+        "priority": "LOW",
+        "note": "Last remaining manual store lookup - could be addressed in future phase"
+      }
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_results": {
+    "pytest_summary": {
+      "total_tests": 16,
+      "passed": 16,
+      "failed": 0,
+      "status": "PASS"
+    },
+    "test_categories": {
+      "backend_health": {
+        "tests": 2,
+        "passed": 2,
+        "details": ["Health endpoint returns healthy", "Food orders router loaded correctly"]
+      },
+      "phase21_helper_exists": {
+        "tests": 3,
+        "passed": 3,
+        "details": [
+          "get_user_store function exists in food_order_helpers.py",
+          "get_user_store implementation is correct (queries food_stores with owner_id)",
+          "get_user_store is imported in food_orders.py"
+        ]
+      },
+      "phase21_helper_usage": {
+        "tests": 2,
+        "passed": 2,
+        "details": [
+          "get_pickup_code uses get_user_store (line 3190)",
+          "get_order_driver_status uses get_user_store (line 4289)"
+        ]
+      },
+      "phase21_total_usages": {
+        "tests": 2,
+        "passed": 2,
+        "details": [
+          "get_user_store is used 8 times in food_orders.py",
+          "1 remaining manual store lookup identified (get_seller_food_orders)"
+        ]
+      },
+      "file_size": {
+        "tests": 1,
+        "passed": 1,
+        "details": ["food_orders.py has 4310 lines (reduced from 4312 in Phase 20)"]
+      },
+      "no_regressions": {
+        "tests": 4,
+        "passed": 4,
+        "details": [
+          "check-distance endpoint works",
+          "my-orders requires auth",
+          "store/orders requires auth",
+          "seller orders requires auth"
+        ]
+      },
+      "phase21_summary": {
+        "tests": 2,
+        "passed": 2,
+        "details": [
+          "All Phase 21 refactoring verified complete",
+          "All 8 endpoints correctly use get_user_store"
+        ]
+      }
+    }
+  },
+  "phase21_refactoring_details": {
+    "helper_used": "get_user_store",
+    "helper_location": "food_order_helpers.py (lines 26-31)",
+    "helper_purpose": "جلب متجر المستخدم مع التحقق من الملكية",
+    "endpoints_updated_in_phase21": [
+      {
+        "endpoint": "get_pickup_code",
+        "route": "/delivery/{order_id}/pickup-code",
+        "line": 3190,
+        "description": "جلب كود الاستلام للبائع"
+      },
+      {
+        "endpoint": "get_order_driver_status",
+        "route": "/store/orders/{order_id}/driver-status",
+        "line": 4289,
+        "description": "جلب حالة السائق للطلب"
+      }
+    ],
+    "all_endpoints_using_get_user_store": [
+      {"endpoint": "get_store_orders", "line": 1432},
+      {"endpoint": "start_order_preparation", "line": 1497},
+      {"endpoint": "update_order_status", "line": 1603},
+      {"endpoint": "cancel_order_by_store", "line": 1674},
+      {"endpoint": "get_pickup_code", "line": 3190},
+      {"endpoint": "report_false_arrival", "line": 3929},
+      {"endpoint": "seller_reject_driver", "line": 4176},
+      {"endpoint": "get_order_driver_status", "line": 4289}
+    ],
+    "total_get_user_store_usages": 8,
+    "remaining_manual_lookups": [
+      {
+        "endpoint": "get_seller_food_orders",
+        "line": 1334,
+        "pattern": "db.food_stores.find_one({owner_id: user[id]})"
+      }
+    ],
+    "file_size_changes": {
+      "food_orders.py": "4312 → 4310 lines (-2 lines)"
+    },
+    "benefit": "استبدال استخدامين إضافيين من db.food_stores.find_one({owner_id}) بـ get_user_store لتحسين قابلية الصيانة"
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_phase21_get_user_store.py",
+    "/app/test_reports/pytest/phase21_get_user_store_results.xml"
+  ],
+  "action_items": [
+    "Consider replacing the last remaining manual store lookup in get_seller_food_orders (line 1334) with get_user_store in future phase"
+  ],
+  "critical_code_review_comments": [
+    "Phase 21 refactoring is clean and follows the established pattern",
+    "Only 1 remaining manual store lookup at line 1334 (get_seller_food_orders)"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_phase21_get_user_store.py"
+  ],
+  "success_rate": {
+    "backend": "100% (16/16 tests passed)",
+    "frontend": "N/A - backend only testing"
+  },
+  "seed_data_creation": "None",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Phase 21 refactoring completed successfully. get_user_store helper is now used in 8 store-related endpoints. food_orders.py is now 4310 lines (reduced from 4312 in Phase 20, -2 lines). Only 1 remaining manual store lookup at line 1334 (get_seller_food_orders) could be addressed in future phase. All tests pass.",
+  "mocked_apis": {
+    "has_mocked_apis": true,
+    "mocked_apis_list": ["SMS OTP (الكود دائماً 123456)", "Sham Cash Payment Gateway"]
+  }
+}
