@@ -145,7 +145,7 @@ const SellerDocumentsPage = () => {
   }, [user, checkStatus, isNewRegistration]);
 
   const handleFileChange = (setter) => async (e) => {
-    const file = e.target.files[0];
+    const file = e.target.files?.[0];
     if (file) {
       try {
         // ضغط الصورة تلقائياً قبل الرفع
@@ -159,6 +159,9 @@ const SellerDocumentsPage = () => {
           variant: "destructive"
         });
       }
+    } else {
+      // إذا لم يتم اختيار ملف (حذف الصورة)
+      setter(null);
     }
   };
 
@@ -316,7 +319,11 @@ const SellerDocumentsPage = () => {
     <div>
       <label className="block text-sm font-medium mb-2 text-gray-700">{label}</label>
       <div 
-        className="border-2 border-dashed border-gray-300 rounded-xl p-4 text-center hover:border-[#FF6B00]/50 transition-colors cursor-pointer bg-gray-50"
+        className={`border-2 border-dashed rounded-xl p-4 text-center transition-colors cursor-pointer ${
+          value 
+            ? 'border-green-400 bg-green-50' 
+            : 'border-red-300 bg-red-50 hover:border-[#FF6B00]/50'
+        }`}
         onClick={() => document.getElementById(inputId).click()}
       >
         {value ? (
@@ -325,15 +332,18 @@ const SellerDocumentsPage = () => {
             <button
               type="button"
               onClick={(e) => { e.stopPropagation(); onChange({ target: { files: [] } }); }}
-              className="absolute top-1 left-1 bg-red-500 text-white p-1 rounded-full text-xs"
+              className="absolute top-1 left-1 bg-red-500 text-white p-1.5 rounded-full text-xs hover:bg-red-600 transition-colors"
             >
               ✕
             </button>
+            <div className="absolute bottom-1 right-1 bg-green-500 text-white p-1 rounded-full">
+              <Check size={14} />
+            </div>
           </div>
         ) : (
           <>
-            <Upload size={24} className="mx-auto mb-2 text-gray-400" />
-            <p className="text-gray-500 text-sm">اضغط للرفع</p>
+            <Upload size={24} className="mx-auto mb-2 text-red-400" />
+            <p className="text-red-500 text-sm">اضغط للرفع (مطلوب)</p>
           </>
         )}
       </div>
@@ -528,7 +538,7 @@ const SellerDocumentsPage = () => {
                   <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
                     <div className="flex items-center gap-2 text-amber-700">
                       <AlertTriangle size={16} />
-                      <span className="text-sm font-medium">على هذا العنوان سيزورك فريق ترند سورية للكشف، وسيظهر للتوصيل</span>
+                      <span className="text-sm font-medium">على هذا العنوان سيزورك فريق ترند سورية للكشف . وسيظهر لموظفين التوصيل</span>
                     </div>
                   </div>
                   

@@ -822,11 +822,11 @@ const MultiStepRegister = () => {
             type="tel"
             value={formData.phone}
             onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-            className="w-full bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 pr-12 focus:border-[#FF6B00] focus:outline-none"
+            className="w-full bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 pr-14 focus:border-[#FF6B00] focus:outline-none"
             placeholder="09xxxxxxxx"
             required
           />
-          <Phone size={20} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" />
+          <Phone size={20} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
         </div>
       </div>
       
@@ -838,14 +838,14 @@ const MultiStepRegister = () => {
             type={showPassword ? 'text' : 'password'}
             value={formData.password}
             onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-            className="w-full bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 pr-12 focus:border-[#FF6B00] focus:outline-none"
+            className="w-full bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 pr-12 pl-12 focus:border-[#FF6B00] focus:outline-none"
             placeholder="******"
             required
           />
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+            className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 z-10"
           >
             {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
           </button>
@@ -861,14 +861,14 @@ const MultiStepRegister = () => {
             type={showConfirmPassword ? 'text' : 'password'}
             value={formData.confirmPassword}
             onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-            className="w-full bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 pr-12 focus:border-[#FF6B00] focus:outline-none"
+            className="w-full bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 pr-12 pl-12 focus:border-[#FF6B00] focus:outline-none"
             placeholder="******"
             required
           />
           <button
             type="button"
             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-            className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+            className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 z-10"
           >
             {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
           </button>

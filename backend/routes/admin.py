@@ -535,7 +535,7 @@ async def ban_user(user_id: str, user: dict = Depends(get_current_user)) -> dict
 # ============== Sellers Management ==============
 
 @router.get("/sellers/pending")
-async def get_pending_sellers(user: dict = Depends(get_current_user)) -> dict:
+async def get_pending_sellers(user: dict = Depends(get_current_user)) -> list:
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
     
@@ -1371,7 +1371,7 @@ async def reject_food_product(product_id: str, data: dict = None, user: dict = D
 # ============== Delivery Management ==============
 
 @router.get("/delivery/pending")
-async def get_pending_delivery(user: dict = Depends(get_current_user)) -> dict:
+async def get_pending_delivery(user: dict = Depends(get_current_user)) -> list:
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
     

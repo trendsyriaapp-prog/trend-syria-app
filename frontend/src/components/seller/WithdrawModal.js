@@ -78,13 +78,12 @@ const WithdrawModal = ({ balance, onClose, onSuccess, token }) => {
             <input
               type="text"
               value={shamcashPhone}
-              onChange={(e) => setShamcashPhone(e.target.value.toLowerCase().replace(/[^a-f0-9]/g, ''))}
+              onChange={(e) => setShamcashPhone(e.target.value)}
               placeholder="مثال: 50778ad0f15afe11040f42cfb11efdfd"
               className="w-full p-3 border border-gray-300 rounded-xl font-mono text-sm"
               required
-              maxLength={32}
             />
-            <p className="text-xs text-gray-400 mt-1">32 حرف - انسخه من تطبيق شام كاش</p>
+            <p className="text-xs text-gray-400 mt-1">انسخ رقم الحساب من تطبيق شام كاش</p>
           </div>
           
           <div className="flex gap-2">
