@@ -281,13 +281,12 @@ const FullScreenMapPicker = ({
             </div>
           )}
 
-          {/* زر GPS - موقعي الحالي */}
+          {/* زر GPS - في الزاوية السفلية اليمنى (مثل خرائط Google) */}
           <button
             type="button"
             onClick={getCurrentLocation}
             disabled={loading}
-            className="absolute top-20 left-4 z-[1002] bg-white p-3 rounded-xl shadow-lg border border-gray-200 hover:bg-gray-50 active:bg-gray-100 transition-all flex items-center gap-2"
-            title="موقعي الحالي"
+            className="absolute bottom-32 right-4 z-[1002] bg-white w-12 h-12 rounded-full shadow-lg border border-gray-200 hover:bg-gray-50 active:bg-gray-100 transition-all flex items-center justify-center"
             data-testid="gps-location-btn"
           >
             {loading ? (
@@ -295,7 +294,6 @@ const FullScreenMapPicker = ({
             ) : (
               <Navigation className="w-6 h-6 text-blue-500" />
             )}
-            <span className="text-sm font-medium text-gray-700">موقعي الحالي</span>
           </button>
 
           {/* مؤشر التحميل */}

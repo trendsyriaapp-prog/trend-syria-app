@@ -515,17 +515,14 @@ const SellerDocumentsPage = () => {
                     <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
                       <MapPin size={16} className="text-green-600" />
                     </div>
-                    <div>
-                      <h3 className="font-bold text-gray-900">عنوان المتجر</h3>
-                      <p className="text-xs text-gray-500">هذا العنوان سيظهر للإدارة عند مراجعة طلبك</p>
-                    </div>
+                    <h3 className="font-bold text-gray-900">عنوان المتجر</h3>
                   </div>
                   
                   {/* تنبيه إلزامي */}
                   <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
                     <div className="flex items-center gap-2 text-amber-700">
                       <AlertTriangle size={16} />
-                      <span className="text-sm font-medium">تحديد الموقع إلزامي لإكمال التسجيل</span>
+                      <span className="text-sm font-medium">سيزورك فريق ترند سورية للكشف، وسيظهر للتوصيل</span>
                     </div>
                   </div>
                   
@@ -570,7 +567,6 @@ const SellerDocumentsPage = () => {
                           setStoreLongitude(null);
                         }
                       }}
-                      warningMessage="يجب أن تكون في موقع المتجر/المحل عند الضغط على 'موقعي الحالي' لتسجيل الموقع الصحيح."
                     />
                   </div>
                 </div>

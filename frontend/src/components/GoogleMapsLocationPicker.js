@@ -28,7 +28,9 @@ const GoogleMapsLocationPicker = ({
   required = true,
   label = "موقع التوصيل",
   warningMessage = null,
-  height = "300px"
+  height = "300px",
+  // نوع الاستخدام (لتخصيص النص)
+  usageType = "delivery" // "delivery" | "store" | "register"
 }) => {
   // تحويل API القديمة للجديدة
   const effectiveLocation = currentLocation || (latitude && longitude ? { latitude, longitude } : null);
@@ -80,32 +82,16 @@ const GoogleMapsLocationPicker = ({
         </div>
       ) : (
         <div className="space-y-2">
-          {/* شريط تنبيه واضح فوق الزر */}
-          <div className="bg-red-50 border-2 border-red-300 rounded-xl p-3 flex items-center gap-3 animate-pulse">
-            <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
-              <AlertTriangle className="w-5 h-5 text-red-600" />
-            </div>
-            <div className="flex-1">
-              <p className="text-sm font-bold text-red-800">⚠️ مطلوب: حدد موقعك لحساب أجرة التوصيل</p>
-              <p className="text-xs text-red-600 mt-0.5">لا يمكن إكمال الطلب بدون تحديد الموقع على الخريطة</p>
-            </div>
-          </div>
-          
-          {/* زر فتح الخريطة */}
+          {/* زر فتح الخريطة - أحمر قبل التحديد */}
           <button
             type="button"
             onClick={() => setShowMap(true)}
-            className="w-full flex items-center justify-center gap-3 p-4 bg-gradient-to-r from-[#FF6B00] to-[#FF8533] text-white rounded-xl font-bold text-sm hover:from-[#E65000] hover:to-[#FF6B00] transition-all shadow-lg border-2 border-[#FF6B00]"
+            className="w-full flex items-center justify-center gap-3 p-4 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl font-bold text-sm hover:from-red-600 hover:to-red-700 transition-all shadow-lg border-2 border-red-500"
             data-testid="open-map-button"
           >
             <MapPin className="w-5 h-5" />
-            <span>📍 اضغط هنا لتحديد موقعك على الخريطة</span>
+            <span>📍 اضغط هنا لتحديد موقعك</span>
           </button>
-          
-          {/* تنبيه إضافي مخصص إذا وُجد */}
-          {warningMessage && (
-            <p className="text-xs text-gray-500 text-center">{warningMessage}</p>
-          )}
         </div>
       )}
 
