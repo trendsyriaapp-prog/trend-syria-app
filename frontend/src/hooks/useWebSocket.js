@@ -1,8 +1,10 @@
 // /app/frontend/src/hooks/useWebSocket.js
 // Hook للاتصال بـ WebSocket - مبسط وموثوق
+// 🔒 يعتمد على Cookies للمصادقة
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import logger from '../lib/logger';
+import { useAuth } from '../context/AuthContext';
 
 const WS_URL = process.env.REACT_APP_BACKEND_URL?.replace('https://', 'wss://').replace('http://', 'ws://') + '/ws';
 
@@ -12,6 +14,7 @@ export const useWebSocket = ({
   onDisconnect,
   autoConnect = true
 } = {}) => {
+  const { user } = useAuth();
   const [isConnected, setIsConnected] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState('disconnected');
   const wsRef = useRef(null);
@@ -37,19 +40,18 @@ export const useWebSocket = ({
     }
   }, []);
 
-  // الاتصال
+  // الاتصال - يستخدم user_id بدلاً من token
   const connect = useCallback(() => {
     cleanup();
-
-    const token = localStorage.getItem('token');
-    if (!token) {
-      logger.log('WebSocket: No token, skipping connection');
+    if (!user?.id) {
+      logger.log('WebSocket: No user, skipping connection');
       return;
     }
 
     try {
       setConnectionStatus('connecting');
-      const ws = new WebSocket(`${WS_URL}?token=${token}`);
+      // 🔒 نستخدم user_id للتعريف - الـ cookie ستُرسل تلقائياً
+      const ws = new WebSocket(`${WS_URL}?user_id=${user.id}`);
       wsRef.current = ws;
 
       ws.onopen = () => {
@@ -125,33 +127,18 @@ export const useWebSocket = ({
     return joinRoom(`order_${orderId}`);
   }, [joinRoom]);
 
-  // الاتصال التلقائي
+  // الاتصال التلقائي عند تغير حالة المستخدم
   useEffect(() => {
     if (autoConnect) {
-      const token = localStorage.getItem('token');
-      if (token) {
+      if (user?.id) {
         connect();
+      } else {
+        disconnect();
       }
     }
 
     return cleanup;
-  }, [autoConnect, connect, cleanup]);
-
-  // الاستماع لتغيرات التوكن
-  useEffect(() => {
-    const handleStorageChange = (e) => {
-      if (e.key === 'token') {
-        if (e.newValue) {
-          connect();
-        } else {
-          disconnect();
-        }
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, [connect, disconnect]);
+  }, [autoConnect, user?.id, connect, cleanup, disconnect]);
 
   return {
     isConnected,

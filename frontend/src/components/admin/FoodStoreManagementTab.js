@@ -35,11 +35,8 @@ export default function FoodStoreManagementTab() {
 
   const fetchStores = async () => {
     setLoading(true);
-    const token = localStorage.getItem('token');
     try {
-      const res = await fetch(`${API}/api/admin/food/stores/with-status`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await fetch(`${API}/api/admin/food/stores/with-status`);
       if (res.ok) {
         setStores(await res.json());
       }
@@ -52,8 +49,6 @@ export default function FoodStoreManagementTab() {
   const handleSuspendStore = async () => {
     if (!suspendModal) return;
     setActionLoading(suspendModal.id);
-    
-    const token = localStorage.getItem('token');
     try {
       const res = await fetch(`${API}/api/admin/food/stores/${suspendModal.id}/suspend`, {
         method: 'POST',
@@ -82,11 +77,9 @@ export default function FoodStoreManagementTab() {
     if (!confirm('هل أنت متأكد من إعادة تفعيل هذا المتجر؟')) return;
     
     setActionLoading(storeId);
-    const token = localStorage.getItem('token');
     try {
       const res = await fetch(`${API}/api/admin/food/stores/${storeId}/activate`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` }
+        method: 'POST'
       });
       if (res.ok) {
         alert('تم تفعيل المتجر بنجاح');
@@ -102,11 +95,9 @@ export default function FoodStoreManagementTab() {
     if (!deleteModal) return;
     
     setActionLoading(deleteModal.id);
-    const token = localStorage.getItem('token');
     try {
       const res = await fetch(`${API}/api/admin/food/stores/${deleteModal.id}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` }
+        method: 'DELETE'
       });
       if (res.ok) {
         alert('تم حذف المتجر نهائياً');

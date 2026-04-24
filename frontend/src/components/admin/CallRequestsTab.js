@@ -30,14 +30,11 @@ const CallRequestsTab = () => {
 
   const fetchRequests = async () => {
     try {
-      const token = localStorage.getItem('token');
       const url = filter === 'pending' 
         ? `${API}/api/call-requests/pending`
         : `${API}/api/call-requests?status=${filter}`;
       
-      const res = await axios.get(url, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await axios.get(url);
       
       setRequests(filter === 'pending' ? res.data.requests : res.data);
     } catch (err) {
@@ -49,10 +46,7 @@ const CallRequestsTab = () => {
 
   const handleTake = async (requestId) => {
     try {
-      const token = localStorage.getItem('token');
-      const res = await axios.post(`${API}/api/call-requests/${requestId}/take`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await axios.post(`${API}/api/call-requests/${requestId}/take`, {});
       
       toast({ title: 'تم استلام الطلب', description: `رقم العميل: ${res.data.customer_phone}` });
       setSelectedRequest(requests.find(r => r.id === requestId));
@@ -64,12 +58,9 @@ const CallRequestsTab = () => {
 
   const handleComplete = async (requestId) => {
     try {
-      const token = localStorage.getItem('token');
       await axios.put(`${API}/api/call-requests/${requestId}`, {
         status: 'completed',
         notes: notes || 'تم التواصل بنجاح'
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
       });
       
       toast({ title: 'تم إكمال الطلب', description: 'تم إشعار السائق' });
@@ -83,12 +74,9 @@ const CallRequestsTab = () => {
 
   const handleCancel = async (requestId) => {
     try {
-      const token = localStorage.getItem('token');
       await axios.put(`${API}/api/call-requests/${requestId}`, {
         status: 'cancelled',
         notes: notes || 'تم إلغاء الطلب'
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
       });
       
       toast({ title: 'تم إلغاء الطلب' });

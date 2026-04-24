@@ -135,8 +135,7 @@ const DeliveryMapPage = () => {
               order_id: order.id,
               driver_lat: driverLat,
               driver_lon: driverLon
-            },
-            { headers: { Authorization: `Bearer ${token}` } }
+            }
           );
           
           const evalData = evalRes.data;
@@ -179,14 +178,10 @@ const DeliveryMapPage = () => {
       // التحقق من نوع الطلب (عادي أم تجميعي)
       if (order.is_batch && order.batch_info?.batch_id) {
         // قبول جميع طلبات الدفعة
-        await axios.post(`${API}/api/food/orders/delivery/batch/${order.batch_info.batch_id}/accept`, {}, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        await axios.post(`${API}/api/food/orders/delivery/batch/${order.batch_info.batch_id}/accept`, {});
       } else {
         // طلب عادي
-        await axios.post(`${API}/api/food/orders/delivery/${order.id}/accept`, {}, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        await axios.post(`${API}/api/food/orders/delivery/${order.id}/accept`, {});
       }
       
       // إغلاق Modal إذا كان مفتوحاً
@@ -194,12 +189,8 @@ const DeliveryMapPage = () => {
       
       // إعادة جلب البيانات
       const [availableFoodRes, myFoodRes] = await Promise.all([
-        axios.get(`${API}/api/food/orders/delivery/available`, {
-          headers: { Authorization: `Bearer ${token}` }
-        }).catch(() => ({ data: { single_orders: [], batch_orders: [] } })),
-        axios.get(`${API}/api/delivery/my-food-orders`, {
-          headers: { Authorization: `Bearer ${token}` }
-        }).catch(() => ({ data: [] }))
+        axios.get(`${API}/api/food/orders/delivery/available`).catch(() => ({ data: { single_orders: [], batch_orders: [] } })),
+        axios.get(`${API}/api/delivery/my-food-orders`).catch(() => ({ data: [] }))
       ]);
       const foodData = availableFoodRes.data || {};
       const singleOrders = foodData.single_orders || [];

@@ -41,6 +41,13 @@
 
 ## ما تم إنجازه حديثاً (24 أبريل 2026)
 
+### 🔒 إصلاح أمني كبير: localStorage → httpOnly Cookies ✅
+- [x] إزالة **108 استخدام** لـ `localStorage.getItem('token')` من **53 ملفاً**
+- [x] تحويل جميع استدعاءات API لاستخدام Cookies تلقائياً (`withCredentials: true`)
+- [x] تعديل WebSocket للعمل مع نظام Cookies الجديد
+- [x] تحديث المكونات التي تستخدم `fetch` لإضافة `credentials: 'include'`
+- [x] إزالة props التوكن غير الضرورية من المكونات الفرعية
+
 ### إصلاح الأخطاء ✅
 - [x] إصلاح خطأ `ReferenceError: step is not defined` في صفحة `/join/delivery`
 
@@ -48,8 +55,7 @@
 - [x] استخراج `FoodItemsGrid` إلى `/components/seller/FoodItemsGrid.js`
 - [x] استخراج `FoodOrdersSection` إلى `/components/seller/FoodOrdersSection.js`
 - [x] استخراج `WithdrawModal` إلى `/components/seller/WithdrawModal.js`
-- [x] تقليل حجم `SellerPages.js` من 2644 سطر إلى 2278 سطر
-- [x] إنشاء دالة `getErrorMessage` المشتركة في `/utils/errorHelpers.js`
+- [x] تقليل حجم `SellerPages.js` من 2644 سطر إلى 2249 سطر
 
 ---
 

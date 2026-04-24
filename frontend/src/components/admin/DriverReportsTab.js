@@ -67,9 +67,7 @@ const DriverReportsTab = () => {
 
   const fetchReports = async () => {
     try {
-      const res = await axios.get(`${API}/api/admin/driver-reports`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await axios.get(`${API}/api/admin/driver-reports`);
       setReports(res.data.reports);
       setStats(res.data.stats);
     } catch (error) {
@@ -84,8 +82,7 @@ const DriverReportsTab = () => {
     try {
       await axios.put(
         `${API}/api/admin/driver-reports/${reportId}?action=${action}&admin_notes=${encodeURIComponent(adminNotes)}`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
+        {}
       );
       await fetchReports();
       setSelectedReport(null);

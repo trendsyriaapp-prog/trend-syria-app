@@ -36,10 +36,7 @@ const AllowedRegionsTab = () => {
 
   const fetchSettings = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${API}/api/settings/allowed-regions/admin`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await axios.get(`${API}/api/settings/allowed-regions/admin`);
       setSettings(response.data);
       setTempMessage(response.data.blocked_message || '');
     } catch (error) {
@@ -58,10 +55,7 @@ const AllowedRegionsTab = () => {
   const toggleSystem = async () => {
     try {
       setSaving(true);
-      const token = localStorage.getItem('token');
-      await axios.put(`${API}/api/settings/allowed-regions/toggle?enabled=${!settings.enabled}`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await axios.put(`${API}/api/settings/allowed-regions/toggle?enabled=${!settings.enabled}`, {});
       setSettings(prev => ({ ...prev, enabled: !prev.enabled }));
       toast({
         title: 'تم',
@@ -85,11 +79,9 @@ const AllowedRegionsTab = () => {
     
     try {
       setSaving(true);
-      const token = localStorage.getItem('token');
       const response = await axios.post(
         `${API}/api/settings/allowed-regions/add-city?city_name=${encodeURIComponent(newCityName.trim())}`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
+        {}
       );
       setSettings(prev => ({ ...prev, cities: response.data.cities }));
       setNewCityName('');
@@ -115,10 +107,8 @@ const AllowedRegionsTab = () => {
     
     try {
       setSaving(true);
-      const token = localStorage.getItem('token');
       const response = await axios.delete(
-        `${API}/api/settings/allowed-regions/remove-city/${encodeURIComponent(cityName)}`,
-        { headers: { Authorization: `Bearer ${token}` } }
+        `${API}/api/settings/allowed-regions/remove-city/${encodeURIComponent(cityName)}`
       );
       setSettings(prev => ({ ...prev, cities: response.data.cities }));
       toast({
@@ -144,11 +134,9 @@ const AllowedRegionsTab = () => {
     
     try {
       setSaving(true);
-      const token = localStorage.getItem('token');
       const response = await axios.post(
         `${API}/api/settings/allowed-regions/add-region?city_name=${encodeURIComponent(cityName)}&region_name=${encodeURIComponent(regionName)}`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
+        {}
       );
       setSettings(prev => ({ ...prev, cities: response.data.cities }));
       setNewRegionInputs(prev => ({ ...prev, [cityName]: '' }));
@@ -172,10 +160,8 @@ const AllowedRegionsTab = () => {
   const removeRegion = async (cityName, regionName) => {
     try {
       setSaving(true);
-      const token = localStorage.getItem('token');
       const response = await axios.delete(
-        `${API}/api/settings/allowed-regions/remove-region?city_name=${encodeURIComponent(cityName)}&region_name=${encodeURIComponent(regionName)}`,
-        { headers: { Authorization: `Bearer ${token}` } }
+        `${API}/api/settings/allowed-regions/remove-region?city_name=${encodeURIComponent(cityName)}&region_name=${encodeURIComponent(regionName)}`
       );
       setSettings(prev => ({ ...prev, cities: response.data.cities }));
       toast({
@@ -198,11 +184,9 @@ const AllowedRegionsTab = () => {
   const saveBlockedMessage = async () => {
     try {
       setSaving(true);
-      const token = localStorage.getItem('token');
       await axios.put(
         `${API}/api/settings/allowed-regions`,
-        { ...settings, blocked_message: tempMessage },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { ...settings, blocked_message: tempMessage }
       );
       setSettings(prev => ({ ...prev, blocked_message: tempMessage }));
       setEditingMessage(false);

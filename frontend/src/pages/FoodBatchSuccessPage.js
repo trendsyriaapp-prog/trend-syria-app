@@ -73,9 +73,7 @@ const FoodBatchSuccessPage = () => {
     
     setCancelling(true);
     try {
-      const res = await axios.post(`${API}/api/food/orders/batch/${batchId}/cancel`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await axios.post(`${API}/api/food/orders/batch/${batchId}/cancel`, {});
       
       // حذف وقت الإنشاء من localStorage
       localStorage.removeItem(`batch_${batchId}_created`);

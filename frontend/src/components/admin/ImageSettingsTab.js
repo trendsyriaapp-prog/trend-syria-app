@@ -32,9 +32,7 @@ const ImageSettingsTab = ({ token }) => {
   const fetchSettings = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${API}/api/settings/images`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await axios.get(`${API}/api/settings/images`);
       setSettings({
         max_images_per_product: res.data.max_images_per_product || 3,
         enable_pro_processing: res.data.enable_pro_processing ?? true,
@@ -61,9 +59,7 @@ const ImageSettingsTab = ({ token }) => {
     setSaving(true);
     setMessage(null);
     try {
-      await axios.post(`${API}/api/settings/images`, settings, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await axios.post(`${API}/api/settings/images`, settings);
       setMessage({ type: 'success', text: 'تم حفظ الإعدادات بنجاح' });
     } catch (error) {
       setMessage({ type: 'error', text: 'فشل حفظ الإعدادات' });

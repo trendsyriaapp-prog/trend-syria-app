@@ -1805,7 +1805,6 @@ const DeliveryDashboard = () => {
             {/* بطاقة التأمين - تظهر فقط إذا كان غير مكتمل */}
             {!securityDepositComplete && (
               <SecurityDepositCard 
-                token={localStorage.getItem('token')}
                 onDepositComplete={() => setSecurityDepositComplete(true)}
               />
             )}
@@ -1994,7 +1993,7 @@ const DeliveryDashboard = () => {
         {/* Earnings Statistics */}
         {activeTab === 'earnings' && (
           <>
-            <EarningsStats token={localStorage.getItem('token')} theme={currentTheme} />
+            <EarningsStats theme={currentTheme} />
             
             {/* سجل معاملات المحفظة */}
             <div className={`rounded-2xl p-4 border mt-4 ${
@@ -2045,7 +2044,7 @@ const DeliveryDashboard = () => {
             </div>
             
             {/* قسم الاستقالة */}
-            <ResignationSection token={localStorage.getItem('token')} theme={currentTheme} />
+            <ResignationSection theme={currentTheme} />
             
             {/* زر تسجيل الخروج */}
             <div className="mt-4">

@@ -45,14 +45,9 @@ const PriceReportsTab = () => {
   const fetchReports = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
       const [reportsRes, statsRes] = await Promise.all([
-        axios.get(`${API}/api/price-reports/admin/all?status=${filter === 'all' ? '' : filter}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        }),
-        axios.get(`${API}/api/price-reports/admin/stats`, {
-          headers: { Authorization: `Bearer ${token}` }
-        })
+        axios.get(`${API}/api/price-reports/admin/all?status=${filter === 'all' ? '' : filter}`),
+        axios.get(`${API}/api/price-reports/admin/stats`)
       ]);
       setReports(reportsRes.data.reports || []);
       setStats(statsRes.data || {});
@@ -65,10 +60,7 @@ const PriceReportsTab = () => {
 
   const fetchSellersWithViolations = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const res = await axios.get(`${API}/api/price-reports/admin/sellers-with-violations`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await axios.get(`${API}/api/price-reports/admin/sellers-with-violations`);
       setSellersWithViolations(res.data.sellers || []);
     } catch (error) {
       logger.error('Error fetching sellers:', error);
@@ -83,13 +75,10 @@ const PriceReportsTab = () => {
   const handleResolve = async (reportId) => {
     setProcessing(reportId);
     try {
-      const token = localStorage.getItem('token');
       await axios.put(`${API}/api/price-reports/admin/${reportId}/resolve`, {
         status: resolutionStatus,
         violation_points: resolutionStatus === 'approved' ? violationPoints : 0,
         admin_notes: adminNotes
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
       });
       
       toast({ title: "تم بنجاح", description: "تم حل البلاغ بنجاح" });
@@ -109,10 +98,7 @@ const PriceReportsTab = () => {
   const handleSuspendSeller = async () => {
     setProcessing(suspendModal.sellerId);
     try {
-      const token = localStorage.getItem('token');
-      await axios.put(`${API}/api/price-reports/admin/seller/${suspendModal.sellerId}/suspend?reason=مخالفة الأسعار`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await axios.put(`${API}/api/price-reports/admin/seller/${suspendModal.sellerId}/suspend?reason=مخالفة الأسعار`, {});
       toast({ title: "تم بنجاح", description: "تم تعليق حساب البائع" });
       setSuspendModal({ isOpen: false, sellerId: null, sellerName: '' });
       await fetchSellersWithViolations();
@@ -126,10 +112,7 @@ const PriceReportsTab = () => {
   const handleUnsuspendSeller = async () => {
     setProcessing(unsuspendModal.sellerId);
     try {
-      const token = localStorage.getItem('token');
-      await axios.put(`${API}/api/price-reports/admin/seller/${unsuspendModal.sellerId}/unsuspend`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await axios.put(`${API}/api/price-reports/admin/seller/${unsuspendModal.sellerId}/unsuspend`, {});
       toast({ title: "تم بنجاح", description: "تم إلغاء تعليق الحساب" });
       setUnsuspendModal({ isOpen: false, sellerId: null });
       await fetchSellersWithViolations();

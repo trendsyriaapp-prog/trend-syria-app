@@ -126,8 +126,6 @@ const RouteProgressBar = ({
         reason: failedReason,
         action: 'return_to_store', // دائماً إرجاع للمتجر
         notes: failedNotes || null
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
       });
 
       toast({ 
@@ -323,9 +321,7 @@ const RouteProgressBar = ({
           const { latitude, longitude } = position.coords;
           const endpoint = `${API}/api/food/orders/delivery/${order.id}/arrived?latitude=${latitude}&longitude=${longitude}`;
           
-          const response = await axios.post(endpoint, {}, {
-            headers: { Authorization: `Bearer ${token}` }
-          });
+          const response = await axios.post(endpoint, {});
 
           if (response.data.success || response.data.message?.includes('تم')) {
             setCheckingLocationFor(null);
@@ -410,9 +406,7 @@ const RouteProgressBar = ({
     if (isFood) {
       try {
         const endpoint = `${API}/api/food/orders/delivery/${order.id}/arrived-customer`;
-        const response = await axios.post(endpoint, {}, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        const response = await axios.post(endpoint, {});
         
         scrollBeforeModalRef.current = window.scrollY;
         setShowDeliveryCodeModal({
@@ -455,9 +449,7 @@ const RouteProgressBar = ({
           const { latitude, longitude } = position.coords;
           const endpoint = `${API}/api/orders/${order.id}/delivery/arrived-customer?latitude=${latitude}&longitude=${longitude}`;
           
-          const response = await axios.post(endpoint, {}, {
-            headers: { Authorization: `Bearer ${token}` }
-          });
+          const response = await axios.post(endpoint, {});
           
           scrollBeforeModalRef.current = window.scrollY;
           setShowDeliveryCodeModal({
@@ -516,9 +508,7 @@ const RouteProgressBar = ({
       
       const payload = isFood ? { code: pickupCode } : { pickup_code: pickupCode };
 
-      await axios.post(endpoint, payload, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await axios.post(endpoint, payload);
 
       toast({ title: "✅ تم الاستلام!", description: "انطلق الآن لتوصيل الطلب للعميل", duration: 3000 });
       setShowPickupCodeModal(null);
@@ -552,9 +542,7 @@ const RouteProgressBar = ({
         ? `${API}/api/food/orders/delivery/${order.id}/verify-code`
         : `${API}/api/delivery/orders/${order.id}/deliver`;
 
-      await axios.post(endpoint, { delivery_code: deliveryCode }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await axios.post(endpoint, { delivery_code: deliveryCode });
 
       toast({ title: "🎉 تم التسليم!", description: "أحسنت! تم توصيل الطلب بنجاح", duration: 3000 });
       setShowDeliveryCodeModal(null);

@@ -758,7 +758,7 @@ const SettingsPage = () => {
         {/* Support Tab */}
         {activeTab === 'support' && (
           <section>
-            <SupportTickets token={localStorage.getItem('token')} />
+            <SupportTickets />
           </section>
         )}
 

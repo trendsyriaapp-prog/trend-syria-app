@@ -7,7 +7,7 @@ import { Shield, AlertTriangle, CheckCircle, CreditCard, Building, Banknote, Sen
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
-export default function SecurityDepositCard({ token, onDepositComplete }) {
+export default function SecurityDepositCard({ onDepositComplete }) {
   const [status, setStatus] = useState(null);
   const [settings, setSettings] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -25,9 +25,7 @@ export default function SecurityDepositCard({ token, onDepositComplete }) {
 
   const fetchStatus = async () => {
     try {
-      const res = await fetch(`${API}/api/driver/security/status`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await fetch(`${API}/api/driver/security/status`, { credentials: 'include' });
       if (res.ok) {
         const data = await res.json();
         setStatus(data);
@@ -40,9 +38,7 @@ export default function SecurityDepositCard({ token, onDepositComplete }) {
     }
     
     try {
-      const res = await fetch(`${API}/api/driver/security/settings`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await fetch(`${API}/api/driver/security/settings`, { credentials: 'include' });
       if (res.ok) {
         setSettings(await res.json());
       }
@@ -55,9 +51,7 @@ export default function SecurityDepositCard({ token, onDepositComplete }) {
 
   const fetchMyRequests = async () => {
     try {
-      const res = await fetch(`${API}/api/driver/security/deposit-requests`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await fetch(`${API}/api/driver/security/deposit-requests`, { credentials: 'include' });
       if (res.ok) {
         setMyRequests(await res.json());
       }
@@ -74,9 +68,9 @@ export default function SecurityDepositCard({ token, onDepositComplete }) {
     try {
       const res = await fetch(`${API}/api/driver/security/deposit`, {
         method: 'POST',
+        credentials: 'include',
         headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           amount: parseInt(depositAmount),

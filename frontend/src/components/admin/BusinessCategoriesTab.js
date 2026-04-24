@@ -49,9 +49,7 @@ const BusinessCategoriesTab = () => {
   const fetchCategories = async () => {
     try {
       setLoading(true);
-      const res = await axios.get(`${API}/api/settings/business-categories`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await axios.get(`${API}/api/settings/business-categories`);
       setCategories(res.data.categories || []);
     } catch (error) {
       logger.error('Error fetching categories:', error);
@@ -68,9 +66,7 @@ const BusinessCategoriesTab = () => {
   const initDefaults = async () => {
     try {
       setSaving(true);
-      await axios.post(`${API}/api/settings/business-categories/init-defaults`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await axios.post(`${API}/api/settings/business-categories/init-defaults`, {});
       toast({ title: "تم", description: "تم إنشاء الأصناف الافتراضية" });
       fetchCategories();
     } catch (error) {
@@ -98,16 +94,14 @@ const BusinessCategoriesTab = () => {
         // تحديث
         await axios.put(
           `${API}/api/settings/business-categories/${editingCategory.id}`,
-          formData,
-          { headers: { Authorization: `Bearer ${token}` } }
+          formData
         );
         toast({ title: "تم", description: "تم تحديث الصنف بنجاح" });
       } else {
         // إنشاء جديد
         await axios.post(
           `${API}/api/settings/business-categories`,
-          { ...formData, type: activeTab },
-          { headers: { Authorization: `Bearer ${token}` } }
+          { ...formData, type: activeTab }
         );
         toast({ title: "تم", description: "تم إنشاء الصنف بنجاح" });
       }
@@ -129,9 +123,7 @@ const BusinessCategoriesTab = () => {
     if (!confirm('هل أنت متأكد من حذف هذا الصنف؟')) return;
     
     try {
-      await axios.delete(`${API}/api/settings/business-categories/${categoryId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await axios.delete(`${API}/api/settings/business-categories/${categoryId}`);
       toast({ title: "تم", description: "تم حذف الصنف" });
       fetchCategories();
     } catch (error) {
@@ -147,8 +139,7 @@ const BusinessCategoriesTab = () => {
     try {
       await axios.put(
         `${API}/api/settings/business-categories/${category.id}`,
-        { is_active: !category.is_active },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { is_active: !category.is_active }
       );
       fetchCategories();
     } catch (error) {

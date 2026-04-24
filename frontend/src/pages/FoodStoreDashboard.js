@@ -77,9 +77,7 @@ const WithdrawForm = ({ balance, onClose, onSuccess, token }) => {
         params.phone = phone;
       }
       
-      await axios.post(`${API}/api/wallet/withdraw`, params, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await axios.post(`${API}/api/wallet/withdraw`, params);
       toast({ title: "تم الإرسال", description: "تم إرسال طلب السحب بنجاح" });
       onSuccess();
     } catch (error) {
@@ -271,8 +269,7 @@ const FoodStoreDashboard = () => {
     try {
       const res = await axios.post(
         `${API}/api/food/stores/${store.id}/toggle-status`,
-        { is_closed: shouldClose, close_reason: reason },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { is_closed: shouldClose, close_reason: reason }
       );
       
       // تحديث حالة المتجر محلياً
@@ -304,9 +301,7 @@ const FoodStoreDashboard = () => {
   const checkDriverArrivingNotifications = async () => {
     if (!token) return;
     try {
-      const res = await axios.get(`${API}/api/notifications/unread`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await axios.get(`${API}/api/notifications/unread`);
       
       const notifications = res.data || [];
       const driverArriving = notifications.find(n => 
@@ -332,12 +327,8 @@ const FoodStoreDashboard = () => {
     if (!token) return;
     try {
       const [balanceRes, transRes] = await Promise.all([
-        axios.get(`${API}/api/wallet/balance`, {
-          headers: { Authorization: `Bearer ${token}` }
-        }),
-        axios.get(`${API}/api/wallet/transactions?limit=20`, {
-          headers: { Authorization: `Bearer ${token}` }
-        })
+        axios.get(`${API}/api/wallet/balance`),
+        axios.get(`${API}/api/wallet/transactions?limit=20`)
       ]);
       setWalletData({
         balance: balanceRes.data.balance || 0,
@@ -354,9 +345,7 @@ const FoodStoreDashboard = () => {
   const handleClearTransactions = async () => {
     setDeletingTransactions(true);
     try {
-      await axios.delete(`${API}/api/wallet/transactions/clear`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await axios.delete(`${API}/api/wallet/transactions/clear`);
       toast({ title: "تم الحذف", description: "تم حذف سجلات المحفظة بنجاح" });
       setWalletData(prev => ({ ...prev, transactions: [] }));
       setShowDeleteConfirm(false);
@@ -389,12 +378,8 @@ const FoodStoreDashboard = () => {
     try {
       // جلب جميع البيانات بالتوازي لتسريع التحميل
       const [storeRes, offersRes] = await Promise.all([
-        axios.get(`${API}/api/food/my-store`, {
-          headers: { Authorization: `Bearer ${token}` }
-        }),
-        axios.get(`${API}/api/food/my-offers`, {
-          headers: { Authorization: `Bearer ${token}` }
-        }).catch(() => ({ data: [] }))
+        axios.get(`${API}/api/food/my-store`),
+        axios.get(`${API}/api/food/my-offers`).catch(() => ({ data: [] }))
       ]);
       
       setStore(storeRes.data.store);
@@ -403,12 +388,8 @@ const FoodStoreDashboard = () => {
       
       // جلب البيانات الثانوية بالتوازي (لا تمنع التحميل إذا فشلت)
       const [commissionRes, flashRes] = await Promise.all([
-        axios.get(`${API}/api/food/my-store/commission`, {
-          headers: { Authorization: `Bearer ${token}` }
-        }).catch(() => ({ data: null })),
-        axios.get(`${API}/api/seller/promotion-settings`, {
-          headers: { Authorization: `Bearer ${token}` }
-        }).catch(() => ({ data: {} }))
+        axios.get(`${API}/api/food/my-store/commission`).catch(() => ({ data: null })),
+        axios.get(`${API}/api/seller/promotion-settings`).catch(() => ({ data: {} }))
       ]);
       
       if (commissionRes.data) {
@@ -434,9 +415,7 @@ const FoodStoreDashboard = () => {
     if (!window.confirm('هل تريد حذف هذا الصنف؟')) return;
     
     try {
-      await axios.delete(`${API}/api/food/products/${productId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await axios.delete(`${API}/api/food/products/${productId}`);
       toast({ title: "تم الحذف", description: "تم حذف الصنف بنجاح" });
       fetchStoreData();
     } catch (error) {
@@ -447,8 +426,7 @@ const FoodStoreDashboard = () => {
   const handleToggleAvailability = async (productId, currentStatus) => {
     try {
       await axios.patch(`${API}/api/food/products/${productId}`, 
-        { is_available: !currentStatus },
-        { headers: { Authorization: `Bearer ${token}` }}
+        { is_available: !currentStatus }
       );
       fetchStoreData();
     } catch (error) {
@@ -1107,9 +1085,7 @@ const StoreSettings = ({ store, token, onUpdate, onSaveSuccess }) => {
       const compressedImage = await compressDocumentImage(file);
       
       // تحديث صورة المتجر
-      await axios.put(`${API}/api/food/my-store`, { logo: compressedImage }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await axios.put(`${API}/api/food/my-store`, { logo: compressedImage });
       
       setStoreLogo(compressedImage);
       toast({ title: "تم", description: "تم تحديث الصورة" });
@@ -1150,9 +1126,7 @@ const StoreSettings = ({ store, token, onUpdate, onSaveSuccess }) => {
     
     setSaving(true);
     try {
-      await axios.put(`${API}/api/food/my-store`, formData, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await axios.put(`${API}/api/food/my-store`, formData);
       toast({ title: "تم الحفظ", description: "تم تحديث المعلومات" });
       onUpdate();
       // إغلاق الإعدادات بعد الحفظ بنجاح
@@ -1493,9 +1467,7 @@ const StoreSettings = ({ store, token, onUpdate, onSaveSuccess }) => {
                 onClick={async () => {
                   setDeletingAccount(true);
                   try {
-                    await axios.delete(`${API}/api/user/account`, {
-                      headers: { Authorization: `Bearer ${token}` }
-                    });
+                    await axios.delete(`${API}/api/user/account`);
                     toast({ title: 'تم حذف الحساب', description: 'نأسف لرؤيتك تغادر!' });
                     logout();
                     navigate('/login');
@@ -1536,8 +1508,7 @@ const OffersTab = ({ offers, products, token, onUpdate, showAddOffer, setShowAdd
   const handleToggleOffer = async (offer) => {
     try {
       await axios.put(`${API}/api/food/offers/${offer.id}`, 
-        { is_active: !offer.is_active },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { is_active: !offer.is_active }
       );
       toast({ 
         title: offer.is_active ? "تم تعطيل العرض" : "تم تفعيل العرض",
@@ -1553,9 +1524,7 @@ const OffersTab = ({ offers, products, token, onUpdate, showAddOffer, setShowAdd
     if (!window.confirm('هل تريد حذف هذا العرض؟')) return;
     
     try {
-      await axios.delete(`${API}/api/food/offers/${offerId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await axios.delete(`${API}/api/food/offers/${offerId}`);
       toast({ title: "تم الحذف", description: "تم حذف العرض" });
       onUpdate();
     } catch (error) {
@@ -1755,8 +1724,6 @@ const OfferModal = ({ offer, products, token, onClose, onSave }) => {
         discount_percentage: formData.discount_percentage ? parseFloat(formData.discount_percentage) : null,
         discount_amount: formData.discount_amount ? parseFloat(formData.discount_amount) : null,
         min_order_amount: formData.min_order_amount ? parseFloat(formData.min_order_amount) : null,
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
       });
       toast({ title: "تم الإنشاء", description: "تم إنشاء العرض بنجاح" });
       onSave();
@@ -2075,15 +2042,11 @@ const ProductModal = ({ store, product, token, commissionInfo, onClose, onSave }
       
       if (product) {
         // Edit existing product
-        await axios.put(`${API}/api/food/products/${product.id}`, submitData, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        await axios.put(`${API}/api/food/products/${product.id}`, submitData);
         toast({ title: "تم التحديث", description: "تم تحديث الصنف بنجاح" });
       } else {
         // Add new product
-        await axios.post(`${API}/api/food/products`, submitData, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        await axios.post(`${API}/api/food/products`, submitData);
         toast({ title: "تمت الإضافة", description: "تم إضافة الصنف بنجاح" });
       }
       onSave();
@@ -2568,8 +2531,7 @@ const StoreOrdersTab = ({ token, onNewOrder }) => {
     try {
       const params = filter !== 'all' ? { status: filter } : {};
       const res = await axios.get(`${API}/api/food/orders/store/orders`, {
-        params,
-        headers: { Authorization: `Bearer ${token}` }
+        params
       });
       setOrders(res.data || []);
     } catch (error) {
@@ -2582,8 +2544,7 @@ const StoreOrdersTab = ({ token, onNewOrder }) => {
   const updateStatus = async (orderId, newStatus) => {
     try {
       await axios.post(`${API}/api/food/orders/store/orders/${orderId}/status`, null, {
-        params: { new_status: newStatus },
-        headers: { Authorization: `Bearer ${token}` }
+        params: { new_status: newStatus }
       });
       // لا نحتاج إشعار نجاح - تغيير الحالة كافٍ
       fetchOrders();
@@ -2598,8 +2559,7 @@ const StoreOrdersTab = ({ token, onNewOrder }) => {
     try {
       const res = await axios.post(
         `${API}/api/food/orders/store/orders/${orderId}/start-preparation`,
-        { preparation_time_minutes: prepTime },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { preparation_time_minutes: prepTime }
       );
       // لا نحتاج إشعار نجاح
       setShowPrepModal(null);
@@ -2655,8 +2615,7 @@ const StoreOrdersTab = ({ token, onNewOrder }) => {
         `${API}/api/food/orders/store/orders/${orderId}/report-false-arrival`,
         null,
         { 
-          params: { reason: 'السائق لم يصل فعلياً' },
-          headers: { Authorization: `Bearer ${token}` } 
+          params: { reason: 'السائق لم يصل فعلياً' } 
         }
       );
       // لا نحتاج إشعار نجاح
@@ -2685,8 +2644,7 @@ const StoreOrdersTab = ({ token, onNewOrder }) => {
     try {
       const res = await axios.post(
         `${API}/api/food/orders/store/orders/${orderId}/request-driver`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
+        {}
       );
       // لا نحتاج إشعار نجاح
       fetchOrders();
@@ -2707,8 +2665,7 @@ const StoreOrdersTab = ({ token, onNewOrder }) => {
     try {
       const res = await axios.post(
         `${API}/api/food/orders/store/orders/${orderId}/set-preparation-time`,
-        { preparation_time_minutes: newPrepTime },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { preparation_time_minutes: newPrepTime }
       );
       
       toast({
@@ -3400,8 +3357,7 @@ const PromoteFoodTab = ({ store, products, token, walletBalance = 0, onPromotion
       setSubmitting(true);
       const res = await axios.post(
         `${API}/api/seller/promote-product`,
-        { product_id: selectedProduct.id, discount_percentage: discount },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { product_id: selectedProduct.id, discount_percentage: discount }
       );
       
       toast({ title: "تم بنجاح! 🚀", description: settings.flashStatus?.status === 'live' 
@@ -3699,15 +3655,9 @@ const FlashSalesTab = ({ store, products, token }) => {
   const fetchData = async () => {
     try {
       const [salesRes, requestsRes, settingsRes] = await Promise.all([
-        axios.get(`${API}/api/food/flash-sales/available`, {
-          headers: { Authorization: `Bearer ${token}` }
-        }),
-        axios.get(`${API}/api/food/my-flash-requests`, {
-          headers: { Authorization: `Bearer ${token}` }
-        }),
-        axios.get(`${API}/api/food/flash-sale-settings`, {
-          headers: { Authorization: `Bearer ${token}` }
-        })
+        axios.get(`${API}/api/food/flash-sales/available`),
+        axios.get(`${API}/api/food/my-flash-requests`),
+        axios.get(`${API}/api/food/flash-sale-settings`)
       ]);
       
       setFlashSales(salesRes.data || []);
@@ -3727,9 +3677,7 @@ const FlashSalesTab = ({ store, products, token }) => {
     setMyRequests(prev => prev.filter(req => req.id !== requestId));
     
     try {
-      const res = await axios.delete(`${API}/api/food/flash-sale-request/${requestId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await axios.delete(`${API}/api/food/flash-sale-request/${requestId}`);
       toast({ 
         title: "تم الإلغاء", 
         description: `تم استرداد ${res.data.refunded?.toLocaleString() || 0} ل.س` 
@@ -3935,8 +3883,6 @@ const JoinFlashSaleModal = ({ flashSale, products, settings, token, onClose, onS
       await axios.post(`${API}/api/food/flash-sale-request`, {
         flash_sale_id: flashSale.id,
         product_ids: selectedProducts
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
       });
       
       toast({ 
@@ -4074,8 +4020,6 @@ const DailyDealRequestModal = ({ product, token, onClose, onSuccess }) => {
         product_id: product.id,
         discount_percentage: discountPercentage,
         message: message
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
       });
 
       toast({ 
@@ -4232,9 +4176,7 @@ const DriverAvailabilityCheck = ({ orderId, token }) => {
   useEffect(() => {
     const checkAvailability = async () => {
       try {
-        const res = await axios.get(`${API}/api/food/orders/check-drivers-availability/${orderId}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        const res = await axios.get(`${API}/api/food/orders/check-drivers-availability/${orderId}`);
         setData(res.data);
       } catch (error) {
         logger.error('Error checking driver availability:', error);

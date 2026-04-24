@@ -48,8 +48,6 @@ const useIncomingCall = () => {
       await axios.post(`${API}/api/voip/call/action`, {
         call_id: call.id,
         action: 'accept'
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
       });
       return true;
     } catch (err) {
@@ -64,8 +62,6 @@ const useIncomingCall = () => {
       await axios.post(`${API}/api/voip/call/action`, {
         call_id: call.id,
         action: 'reject'
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
       });
       setIncomingCall(null);
       return true;

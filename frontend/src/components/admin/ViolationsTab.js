@@ -39,10 +39,7 @@ const ViolationsTab = () => {
   const fetchViolations = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
-      const res = await axios.get(`${API}/api/delivery/admin/violations`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await axios.get(`${API}/api/delivery/admin/violations`);
       setViolations(res.data.violations || []);
       setStats(res.data.stats || {});
     } catch (error) {
@@ -61,10 +58,7 @@ const ViolationsTab = () => {
     
     setProcessing(applyModal.violation.id);
     try {
-      const token = localStorage.getItem('token');
-      await axios.post(`${API}/api/delivery/violations/${applyModal.violation.id}/apply`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await axios.post(`${API}/api/delivery/violations/${applyModal.violation.id}/apply`, {});
       await fetchViolations();
       toast({ title: "تم بنجاح", description: "تم تطبيق المخالفة بنجاح" });
       setApplyModal({ isOpen: false, violation: null });
@@ -80,10 +74,7 @@ const ViolationsTab = () => {
     
     setProcessing(cancelModal.violationId);
     try {
-      const token = localStorage.getItem('token');
-      await axios.post(`${API}/api/delivery/violations/${cancelModal.violationId}/cancel?reason=${encodeURIComponent(cancelReason)}`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await axios.post(`${API}/api/delivery/violations/${cancelModal.violationId}/cancel?reason=${encodeURIComponent(cancelReason)}`, {});
       await fetchViolations();
       toast({ title: "تم بنجاح", description: "تم إلغاء المخالفة" });
       setCancelModal({ isOpen: false, violationId: null });
@@ -99,10 +90,7 @@ const ViolationsTab = () => {
     setCheckModal(false);
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
-      const res = await axios.post(`${API}/api/delivery/check-undelivered-orders`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await axios.post(`${API}/api/delivery/check-undelivered-orders`, {});
       toast({ title: "تم بنجاح", description: res.data.message });
       await fetchViolations();
     } catch (error) {

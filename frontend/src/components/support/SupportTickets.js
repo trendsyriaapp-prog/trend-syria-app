@@ -28,7 +28,7 @@ const STATUS_STYLES = {
   closed: { label: 'مغلقة', color: 'bg-gray-100 text-gray-700', icon: X }
 };
 
-const SupportTickets = ({ token }) => {
+const SupportTickets = () => {
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
@@ -50,9 +50,7 @@ const SupportTickets = ({ token }) => {
 
   const fetchTickets = async () => {
     try {
-      const res = await axios.get(`${API}/api/support/tickets/my`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await axios.get(`${API}/api/support/tickets/my`);
       setTickets(res.data.tickets || []);
     } catch (err) {
       logger.error('Error fetching tickets:', err);
@@ -69,9 +67,7 @@ const SupportTickets = ({ token }) => {
     
     setSending(true);
     try {
-      await axios.post(`${API}/api/support/tickets`, newTicket, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await axios.post(`${API}/api/support/tickets`, newTicket);
       setShowCreate(false);
       setNewTicket({ subject: '', message: '', category: 'general', priority: 'normal' });
       fetchTickets();
@@ -89,15 +85,11 @@ const SupportTickets = ({ token }) => {
     try {
       await axios.post(`${API}/api/support/tickets/${selectedTicket.id}/reply`, {
         message: newMessage.trim()
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
       });
       setNewMessage('');
       
       // Refresh ticket
-      const res = await axios.get(`${API}/api/support/tickets/${selectedTicket.id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await axios.get(`${API}/api/support/tickets/${selectedTicket.id}`);
       setSelectedTicket(res.data);
       fetchTickets();
     } catch (err) {

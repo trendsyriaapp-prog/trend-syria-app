@@ -7,7 +7,7 @@ import { TrendingUp, TrendingDown, DollarSign, Package, Clock, ChevronLeft, Chev
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
-export default function EarningsStats({ token, theme = 'dark' }) {
+export default function EarningsStats({ theme = 'dark' }) {
   const [period, setPeriod] = useState('week');
   const [chartType, setChartType] = useState('daily');
   const [stats, setStats] = useState(null);
@@ -37,9 +37,7 @@ export default function EarningsStats({ token, theme = 'dark' }) {
 
   const fetchStats = async () => {
     try {
-      const res = await fetch(`${API_URL}/api/delivery/earnings/stats?period=${period}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await fetch(`${API_URL}/api/delivery/earnings/stats?period=${period}`, { credentials: 'include' });
       if (res.ok) {
         const data = await res.json();
         setStats(data);
@@ -53,9 +51,7 @@ export default function EarningsStats({ token, theme = 'dark' }) {
 
   const fetchChartData = async () => {
     try {
-      const res = await fetch(`${API_URL}/api/delivery/earnings/chart?chart_type=${chartType}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await fetch(`${API_URL}/api/delivery/earnings/chart?chart_type=${chartType}`, { credentials: 'include' });
       if (res.ok) {
         const data = await res.json();
         setChartData(data);
@@ -67,9 +63,7 @@ export default function EarningsStats({ token, theme = 'dark' }) {
 
   const fetchHistory = async () => {
     try {
-      const res = await fetch(`${API_URL}/api/delivery/earnings/history?page=${historyPage}&limit=10`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await fetch(`${API_URL}/api/delivery/earnings/history?page=${historyPage}&limit=10`, { credentials: 'include' });
       if (res.ok) {
         const data = await res.json();
         setHistory(data.orders);

@@ -74,10 +74,7 @@ const MyOrdersList = ({
   useEffect(() => {
     const fetchTodayEarnings = async () => {
       try {
-        const token = localStorage.getItem('token');
-        const res = await fetch(`${API}/api/delivery/earnings/stats?period=today`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        const res = await fetch(`${API}/api/delivery/earnings/stats?period=today`);
         if (res.ok) {
           const data = await res.json();
           setTodayEarnings({
@@ -196,8 +193,7 @@ const MyOrdersList = ({
             const { latitude, longitude } = position.coords;
             const response = await axios.post(
               `${API}/api/orders/${order.id}/delivery/arrived?latitude=${latitude}&longitude=${longitude}`, 
-              {}, 
-              { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+              {}
             );
             
             setCheckingLocationFor(null);
@@ -265,9 +261,7 @@ const MyOrdersList = ({
           const endpoint = `${API}/api/food/orders/delivery/${order.id}/arrived?latitude=${latitude}&longitude=${longitude}`;
           logger.log('📍 Calling endpoint:', endpoint);
 
-          const response = await axios.post(endpoint, {}, {
-            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-          });
+          const response = await axios.post(endpoint, {});
           
           // ✅ نجح - افتح modal الكود مع الوقت المحدث
           setCheckingLocationFor(null);
@@ -393,9 +387,7 @@ const MyOrdersList = ({
       // طلبات الطعام تستخدم "code" وطلبات المنتجات تستخدم "pickup_code"
       const payload = isFood ? { code: pickupCode } : { pickup_code: pickupCode };
       
-      await axios.post(endpoint, payload, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-      });
+      await axios.post(endpoint, payload);
       
       toast({ title: "تم!", description: "تم تأكيد الاستلام بنجاح" });
       closePickupModal();
@@ -431,9 +423,7 @@ const MyOrdersList = ({
         ? `${API}/api/food/orders/delivery/${showCodeModal.id}/verify-code`
         : `${API}/api/delivery/orders/${showCodeModal.id}/deliver`;
 
-      await axios.post(endpoint, { delivery_code: deliveryCode }, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-      });
+      await axios.post(endpoint, { delivery_code: deliveryCode });
       
       toast({ title: "🎉 تم التسليم!", description: `تمت إضافة ${getDriverEarnings(showCodeModal).toLocaleString()} ل.س لمحفظتك` });
       setShowCodeModal(null);
@@ -465,8 +455,6 @@ const MyOrdersList = ({
         await axios.post(`${API}/api/driver/seller-not-found`, {
           order_id: showHelpModal.id,
           order_type: orderType
-        }, {
-          headers: { Authorization: `Bearer ${token}` }
         });
         
         toast({ 
@@ -479,8 +467,6 @@ const MyOrdersList = ({
           order_id: showHelpModal.id,
           reason: helpReason,
           message: helpMessage
-        }, {
-          headers: { Authorization: `Bearer ${token}` }
         });
         
         toast({ title: "تم!", description: "تم إرسال طلب المساعدة - فريق الدعم سيتواصل معك" });

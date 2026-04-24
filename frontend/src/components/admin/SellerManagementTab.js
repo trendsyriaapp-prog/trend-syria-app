@@ -27,11 +27,8 @@ export default function SellerManagementTab() {
 
   const fetchSellers = async () => {
     setLoading(true);
-    const token = localStorage.getItem('token');
     try {
-      const res = await fetch(`${API}/api/admin/sellers/with-status`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await fetch(`${API}/api/admin/sellers/with-status`);
       if (res.ok) {
         setSellers(await res.json());
       }
@@ -44,8 +41,6 @@ export default function SellerManagementTab() {
   const handleSuspendSeller = async () => {
     if (!suspendModal) return;
     setActionLoading(suspendModal.id);
-    
-    const token = localStorage.getItem('token');
     try {
       const res = await fetch(`${API}/api/admin/sellers/${suspendModal.id}/suspend`, {
         method: 'POST',
@@ -74,11 +69,9 @@ export default function SellerManagementTab() {
     if (!confirm('هل أنت متأكد من إعادة تفعيل هذا البائع؟')) return;
     
     setActionLoading(sellerId);
-    const token = localStorage.getItem('token');
     try {
       const res = await fetch(`${API}/api/admin/sellers/${sellerId}/activate`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` }
+        method: 'POST'
       });
       if (res.ok) {
         alert('تم تفعيل البائع بنجاح');
@@ -94,11 +87,9 @@ export default function SellerManagementTab() {
     if (!deleteModal) return;
     
     setActionLoading(deleteModal.id);
-    const token = localStorage.getItem('token');
     try {
       const res = await fetch(`${API}/api/admin/sellers/${deleteModal.id}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` }
+        method: 'DELETE'
       });
       if (res.ok) {
         alert('تم حذف البائع نهائياً');

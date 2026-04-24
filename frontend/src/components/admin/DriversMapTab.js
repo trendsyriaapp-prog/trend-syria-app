@@ -102,10 +102,7 @@ const DriversMapTab = () => {
   useEffect(() => {
     const fetchCities = async () => {
       try {
-        const token = localStorage.getItem('token');
-        const res = await axios.get(`${API}/api/shipping/cities`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        const res = await axios.get(`${API}/api/shipping/cities`);
         setCities(res.data || []);
       } catch (err) {
         logger.error('Error fetching cities:', err);
@@ -117,14 +114,12 @@ const DriversMapTab = () => {
   // جلب مواقع السائقين
   const fetchDrivers = async () => {
     try {
-      const token = localStorage.getItem('token');
       const params = new URLSearchParams();
       if (selectedCity) params.append('city', selectedCity);
       if (availableOnly) params.append('available_only', 'true');
       
       const res = await axios.get(
-        `${API}/api/delivery/admin/all-drivers-locations?${params}`,
-        { headers: { Authorization: `Bearer ${token}` } }
+        `${API}/api/delivery/admin/all-drivers-locations?${params}`
       );
       
       let filteredDrivers = res.data.drivers || [];

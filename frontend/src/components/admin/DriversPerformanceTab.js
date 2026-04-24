@@ -38,10 +38,7 @@ const DriversPerformanceTab = () => {
 
   const fetchCities = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const res = await axios.get(`${API}/api/shipping/cities`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await axios.get(`${API}/api/shipping/cities`);
       setCities(res.data || []);
     } catch (err) {
       logger.error('Error fetching cities:', err);
@@ -51,13 +48,11 @@ const DriversPerformanceTab = () => {
   const fetchDriversPerformance = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
       const params = new URLSearchParams({ period, sort_by: sortBy });
       if (city) params.append('city', city);
       
       const res = await axios.get(
-        `${API}/api/analytics/drivers-performance?${params}`,
-        { headers: { Authorization: `Bearer ${token}` } }
+        `${API}/api/analytics/drivers-performance?${params}`
       );
       
       setDrivers(res.data.drivers || []);
@@ -72,10 +67,8 @@ const DriversPerformanceTab = () => {
   const fetchDriverDetails = async (driverId) => {
     setLoadingDetails(true);
     try {
-      const token = localStorage.getItem('token');
       const res = await axios.get(
-        `${API}/api/analytics/driver-performance/${driverId}`,
-        { headers: { Authorization: `Bearer ${token}` } }
+        `${API}/api/analytics/driver-performance/${driverId}`
       );
       setDriverDetails(res.data);
     } catch (err) {

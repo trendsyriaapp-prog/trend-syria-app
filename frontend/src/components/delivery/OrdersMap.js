@@ -3254,8 +3254,6 @@ const OrdersMap = ({
                               order_id: selectedOrderForRoute.id,
                               order_type: selectedOrderForRoute.store_id ? 'food' : 'shopping',
                               reason: 'العميل لا يرد على الاتصال'
-                            }, {
-                              headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
                             });
                             alert('✅ تم إرسال طلب للموظف. سيتواصل مع العميل ويبلغك.');
                           } catch (err) {

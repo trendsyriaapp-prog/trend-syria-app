@@ -37,7 +37,6 @@ export default function DriverSecurityTab() {
 
   const fetchData = async () => {
     setLoading(true);
-    const token = localStorage.getItem('token');
     const headers = { Authorization: `Bearer ${token}` };
 
     try {
@@ -59,14 +58,11 @@ export default function DriverSecurityTab() {
   const handleSuspendDriver = async () => {
     if (!suspendModal) return;
     setActionLoading(suspendModal.id);
-    
-    const token = localStorage.getItem('token');
     try {
       const res = await fetch(
         `${API}/api/driver/security/admin/driver/${suspendModal.id}/suspend?reason=${encodeURIComponent(suspendReason)}`,
         {
-          method: 'POST',
-          headers: { Authorization: `Bearer ${token}` }
+          method: 'POST'
         }
       );
       if (res.ok) {
@@ -88,11 +84,9 @@ export default function DriverSecurityTab() {
     if (!confirm('هل أنت متأكد من إعادة تفعيل هذا السائق؟')) return;
     
     setActionLoading(driverId);
-    const token = localStorage.getItem('token');
     try {
       const res = await fetch(`${API}/api/driver/security/admin/driver/${driverId}/activate`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` }
+        method: 'POST'
       });
       if (res.ok) {
         alert('تم تفعيل السائق بنجاح');
@@ -108,11 +102,9 @@ export default function DriverSecurityTab() {
     if (!deleteModal) return;
     
     setActionLoading(deleteModal.id);
-    const token = localStorage.getItem('token');
     try {
       const res = await fetch(`${API}/api/driver/security/admin/driver/${deleteModal.id}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` }
+        method: 'DELETE'
       });
       if (res.ok) {
         alert('تم حذف السائق نهائياً');
@@ -129,11 +121,9 @@ export default function DriverSecurityTab() {
   };
 
   const handleApproveDeposit = async (requestId) => {
-    const token = localStorage.getItem('token');
     try {
       const res = await fetch(`${API}/api/driver/security/admin/approve-deposit/${requestId}`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` }
+        method: 'POST'
       });
       if (res.ok) {
         alert('تم قبول الإيداع بنجاح');
@@ -149,11 +139,9 @@ export default function DriverSecurityTab() {
 
   const handleRejectDeposit = async (requestId) => {
     const reason = prompt('سبب الرفض (اختياري):');
-    const token = localStorage.getItem('token');
     try {
       const res = await fetch(`${API}/api/driver/security/admin/reject-deposit/${requestId}?reason=${encodeURIComponent(reason || '')}`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` }
+        method: 'POST'
       });
       if (res.ok) {
         alert('تم رفض الطلب');
@@ -166,12 +154,9 @@ export default function DriverSecurityTab() {
 
   const handleApproveResignation = async (requestId) => {
     if (!confirm('هل أنت متأكد من الموافقة على الاستقالة؟ سيتم تعطيل حساب السائق.')) return;
-    
-    const token = localStorage.getItem('token');
     try {
       const res = await fetch(`${API}/api/driver/security/admin/approve-resignation/${requestId}`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` }
+        method: 'POST'
       });
       if (res.ok) {
         alert('تمت الموافقة على الاستقالة');
@@ -184,7 +169,6 @@ export default function DriverSecurityTab() {
 
   const handleSaveSettings = async () => {
     setSaving(true);
-    const token = localStorage.getItem('token');
     try {
       const params = new URLSearchParams({
         required_amount: settings.required_amount,
@@ -194,8 +178,7 @@ export default function DriverSecurityTab() {
       });
       
       const res = await fetch(`${API}/api/driver/security/admin/settings?${params}`, {
-        method: 'PUT',
-        headers: { Authorization: `Bearer ${token}` }
+        method: 'PUT'
       });
       
       if (res.ok) {

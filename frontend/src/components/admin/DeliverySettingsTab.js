@@ -162,9 +162,7 @@ const DeliverySettingsTab = () => {
   // حفظ إعدادات حماية العميل
   const saveCustomerProtectionSettings = async () => {
     try {
-      await axios.put(`${API}/api/settings/customer-protection`, customerProtection, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-      });
+      await axios.put(`${API}/api/settings/customer-protection`, customerProtection);
       toast({ title: 'نجاح', description: 'تم حفظ إعدادات حماية العميل بنجاح' });
     } catch (error) {
       toast({ title: 'خطأ', description: 'فشل في حفظ الإعدادات', variant: 'destructive' });
@@ -434,11 +432,8 @@ const DeliverySettingsTab = () => {
   const handleSaveFoodDeliveryLimits = async () => {
     setSaving(true);
     try {
-      const token = localStorage.getItem('token');
       await axios.put(`${API}/api/settings/food-delivery-limits`, {
         max_distance_km: settings.food_orders_max_distance_km || 5
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
       });
       toast({ title: 'نجاح', description: 'تم حفظ إعدادات حدود التوصيل بنجاح' });
     } catch (error) {
@@ -451,10 +446,7 @@ const DeliverySettingsTab = () => {
   // جلب إعدادات ساعات توصيل المنتجات
   const fetchProductDeliveryHours = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const res = await axios.get(`${API}/api/admin/settings/product-delivery-hours`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await axios.get(`${API}/api/admin/settings/product-delivery-hours`);
       if (res.data.settings) {
         setProductDeliveryHours({
           start_hour: res.data.settings.start_hour || 8,
@@ -472,10 +464,7 @@ const DeliverySettingsTab = () => {
   const handleSaveProductDeliveryHours = async () => {
     setSaving(true);
     try {
-      const token = localStorage.getItem('token');
-      await axios.put(`${API}/api/admin/settings/product-delivery-hours`, productDeliveryHours, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await axios.put(`${API}/api/admin/settings/product-delivery-hours`, productDeliveryHours);
       toast({ title: 'نجاح', description: 'تم حفظ ساعات توصيل المنتجات بنجاح' });
     } catch (error) {
       toast({ title: 'خطأ', description: error.response?.data?.detail || 'حدث خطأ', variant: 'destructive' });
@@ -487,10 +476,7 @@ const DeliverySettingsTab = () => {
   // جلب تقرير الطلبات غير المُسلّمة
   const fetchUndeliveredReport = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const res = await axios.get(`${API}/api/admin/delivery/undelivered-report`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await axios.get(`${API}/api/admin/delivery/undelivered-report`);
       setUndeliveredReport(res.data.report);
     } catch (error) {
       logger.error('Error fetching undelivered report:', error);
@@ -502,10 +488,7 @@ const DeliverySettingsTab = () => {
     setProcessUndeliveredModal(false);
     setSaving(true);
     try {
-      const token = localStorage.getItem('token');
-      const res = await axios.post(`${API}/api/admin/delivery/process-undelivered`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await axios.post(`${API}/api/admin/delivery/process-undelivered`, {});
       toast({ title: 'نجاح', description: `تم معالجة ${res.data.deductions.length} طلب. إجمالي الخصم: ${formatPrice(res.data.total_deducted)}` });
       fetchUndeliveredReport();
     } catch (error) {

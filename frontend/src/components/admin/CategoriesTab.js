@@ -58,10 +58,7 @@ const CategoriesTab = () => {
   const fetchSuggestions = async () => {
     setLoadingSuggestions(true);
     try {
-      const token = localStorage.getItem('token');
-      const res = await axios.get(`${API}/api/categories/suggestions/all`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await axios.get(`${API}/api/categories/suggestions/all`);
       setSuggestions(res.data);
     } catch (err) {
       logger.error('Error fetching suggestions:', err);
@@ -73,10 +70,7 @@ const CategoriesTab = () => {
   // قبول اقتراح
   const handleApproveSuggestion = async (suggestionId) => {
     try {
-      const token = localStorage.getItem('token');
-      await axios.post(`${API}/api/categories/suggestions/${suggestionId}/approve`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await axios.post(`${API}/api/categories/suggestions/${suggestionId}/approve`, {});
       toast({ title: 'تم القبول ✅', description: 'تم إنشاء التصنيف الجديد' });
       fetchSuggestions();
       fetchCategories();
@@ -89,10 +83,7 @@ const CategoriesTab = () => {
   const handleRejectSuggestion = async (suggestionId) => {
     const reason = prompt('سبب الرفض (اختياري):');
     try {
-      const token = localStorage.getItem('token');
-      await axios.post(`${API}/api/categories/suggestions/${suggestionId}/reject?reason=${encodeURIComponent(reason || '')}`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await axios.post(`${API}/api/categories/suggestions/${suggestionId}/reject?reason=${encodeURIComponent(reason || '')}`, {});
       toast({ title: 'تم الرفض', description: 'تم رفض الاقتراح وإخطار البائع' });
       fetchSuggestions();
     } catch (err) {
@@ -102,10 +93,7 @@ const CategoriesTab = () => {
 
   const fetchCategories = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const res = await axios.get(`${API}/api/categories?active_only=false`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await axios.get(`${API}/api/categories?active_only=false`);
       setCategories(res.data);
     } catch (err) {
       logger.error('Error fetching categories:', err);
@@ -118,16 +106,11 @@ const CategoriesTab = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const token = localStorage.getItem('token');
       if (editingCategory) {
-        await axios.put(`${API}/api/categories/${editingCategory.id}`, formData, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        await axios.put(`${API}/api/categories/${editingCategory.id}`, formData);
         toast({ title: 'نجاح', description: 'تم تحديث الفئة بنجاح' });
       } else {
-        await axios.post(`${API}/api/categories`, formData, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        await axios.post(`${API}/api/categories`, formData);
         toast({ title: 'نجاح', description: 'تم إنشاء الفئة بنجاح' });
       }
       fetchCategories();
@@ -140,10 +123,7 @@ const CategoriesTab = () => {
   const handleDelete = async () => {
     if (!deleteModal.categoryId) return;
     try {
-      const token = localStorage.getItem('token');
-      await axios.delete(`${API}/api/categories/${deleteModal.categoryId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await axios.delete(`${API}/api/categories/${deleteModal.categoryId}`);
       toast({ title: 'نجاح', description: 'تم حذف الفئة بنجاح' });
       setDeleteModal({ isOpen: false, categoryId: null, name: '' });
       fetchCategories();
@@ -154,10 +134,7 @@ const CategoriesTab = () => {
 
   const handleToggle = async (categoryId) => {
     try {
-      const token = localStorage.getItem('token');
-      await axios.post(`${API}/api/categories/${categoryId}/toggle`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await axios.post(`${API}/api/categories/${categoryId}/toggle`, {});
       fetchCategories();
     } catch (err) {
       toast({ title: 'خطأ', description: 'فشل في تغيير حالة الفئة', variant: 'destructive' });

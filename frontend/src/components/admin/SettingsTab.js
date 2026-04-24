@@ -480,7 +480,6 @@ const DriverCancelSettingsSection = ({ toast }) => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const token = localStorage.getItem('token');
       if (!token) {
         setError('لم يتم العثور على token');
         setLoading(false);
@@ -488,9 +487,7 @@ const DriverCancelSettingsSection = ({ toast }) => {
       }
 
       try {
-        const res = await axios.get(`${API}/api/settings/driver-cancel`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        const res = await axios.get(`${API}/api/settings/driver-cancel`);
         setSettings(res.data);
         setError(null);
       } catch (err) {
@@ -500,9 +497,7 @@ const DriverCancelSettingsSection = ({ toast }) => {
       }
 
       try {
-        const statsRes = await axios.get(`${API}/api/settings/driver-cancel/stats`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        const statsRes = await axios.get(`${API}/api/settings/driver-cancel/stats`);
         setStats(statsRes.data);
       } catch (err) {
         logger.error('Error fetching stats:', err);
@@ -515,10 +510,7 @@ const DriverCancelSettingsSection = ({ toast }) => {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const token = localStorage.getItem('token');
-      await axios.put(`${API}/api/settings/driver-cancel`, settings, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await axios.put(`${API}/api/settings/driver-cancel`, settings);
       toast({ title: "✅ تم الحفظ", description: "تم تحديث إعدادات إلغاء السائق" });
     } catch (err) {
       toast({ title: "خطأ", description: err.response?.data?.detail || "فشل الحفظ", variant: "destructive" });
@@ -684,14 +676,9 @@ const DriverShortageAlertSettings = ({ toast }) => {
   
   const fetchSettings = async () => {
     try {
-      const token = localStorage.getItem('token');
       const [settingsRes, citiesRes] = await Promise.all([
-        axios.get(`${API}/api/settings/driver-shortage-alert`, {
-          headers: { Authorization: `Bearer ${token}` }
-        }),
-        axios.get(`${API}/api/settings/driver-shortage-alert/cities`, {
-          headers: { Authorization: `Bearer ${token}` }
-        })
+        axios.get(`${API}/api/settings/driver-shortage-alert`),
+        axios.get(`${API}/api/settings/driver-shortage-alert/cities`)
       ]);
       
       setShortageAlert(settingsRes.data);
@@ -704,10 +691,7 @@ const DriverShortageAlertSettings = ({ toast }) => {
   const saveSettings = async () => {
     setSaving(true);
     try {
-      const token = localStorage.getItem('token');
-      await axios.put(`${API}/api/settings/driver-shortage-alert`, shortageAlert, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await axios.put(`${API}/api/settings/driver-shortage-alert`, shortageAlert);
       toast({ title: "تم الحفظ", description: "تم تحديث إعدادات إشعارات نقص السائقين" });
     } catch (error) {
       toast({
@@ -851,10 +835,7 @@ const AutoWeatherSettings = ({ toast }) => {
 
   const fetchSettings = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const res = await axios.get(`${API}/api/settings/weather-api`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await axios.get(`${API}/api/settings/weather-api`);
       setSettings(prev => ({
         ...prev,
         ...res.data,
@@ -870,14 +851,11 @@ const AutoWeatherSettings = ({ toast }) => {
   const saveSettings = async () => {
     setSaving(true);
     try {
-      const token = localStorage.getItem('token');
       await axios.put(`${API}/api/settings/weather-api`, {
         enabled: settings.enabled,
         api_key: settings.api_key,
         base_amount: parseInt(settings.base_amount) || 5000,
         monitored_cities: settings.monitored_cities
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
       });
       toast({ title: 'تم الحفظ', description: 'تم تحديث إعدادات الطقس' });
       fetchSettings();
@@ -891,10 +869,7 @@ const AutoWeatherSettings = ({ toast }) => {
   const checkWeatherNow = async () => {
     setChecking(true);
     try {
-      const token = localStorage.getItem('token');
-      const res = await axios.get(`${API}/api/settings/weather-current?city=${settings.monitored_cities[0] || 'دمشق'}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await axios.get(`${API}/api/settings/weather-current?city=${settings.monitored_cities[0] || 'دمشق'}`);
       setCurrentWeather(res.data);
       toast({ title: 'تم الفحص', description: `الطقس في ${res.data.weather?.city}: ${res.data.weather?.condition_ar}` });
     } catch (err) {
@@ -907,10 +882,7 @@ const AutoWeatherSettings = ({ toast }) => {
   const triggerAutoCheck = async () => {
     setChecking(true);
     try {
-      const token = localStorage.getItem('token');
-      const res = await axios.post(`${API}/api/settings/weather-check-now`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await axios.post(`${API}/api/settings/weather-check-now`, {});
       if (res.data.updated) {
         toast({ 
           title: res.data.action === 'activated' ? '⚠️ تم تفعيل رسوم الطقس' : '✅ تم إيقاف رسوم الطقس',

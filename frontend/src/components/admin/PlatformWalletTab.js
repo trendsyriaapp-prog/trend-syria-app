@@ -36,7 +36,6 @@ const PlatformWalletTab = () => {
 
   const fetchData = async () => {
     try {
-      const token = localStorage.getItem('token');
       const headers = { Authorization: `Bearer ${token}` };
       
       const [walletRes, transactionsRes, paymentRes] = await Promise.all([
@@ -81,7 +80,6 @@ const PlatformWalletTab = () => {
 
     setWithdrawing(true);
     try {
-      const token = localStorage.getItem('token');
       await axios.post(
         `${API}/api/admin/platform-wallet/withdraw`,
         null,

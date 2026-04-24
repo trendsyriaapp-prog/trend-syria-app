@@ -137,13 +137,9 @@ const FoodBatchCheckoutPage = () => {
     setLoading(true);
     try {
       const [walletRes, addressesRes, paymentsRes, weatherRes] = await Promise.all([
-        axios.get(`${API}/api/wallet/balance`, {
-          headers: { Authorization: `Bearer ${token}` }
-        }).catch(() => ({ data: { balance: 0 } })),
+        axios.get(`${API}/api/wallet/balance`).catch(() => ({ data: { balance: 0 } })),
         axios.get(`${API}/api/user/addresses`).catch(() => ({ data: [] })),
-        axios.get(`${API}/api/settings/weather-surcharge`, {
-          headers: { Authorization: `Bearer ${token}` }
-        }).catch(() => ({ data: { is_active: false, amount: 0, reason: '' } })),
+        axios.get(`${API}/api/settings/weather-surcharge`).catch(() => ({ data: { is_active: false, amount: 0, reason: '' } })),
         axios.get(`${API}/api/user/payment-methods`).catch(() => ({ data: [] }))
       ]);
       
@@ -360,8 +356,6 @@ const FoodBatchCheckoutPage = () => {
         delivery_longitude: addressData.longitude || null,
         delivery_note: deliveryNote.trim(),
         payment_method: paymentMethod
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
       });
       
       // مسح السلة

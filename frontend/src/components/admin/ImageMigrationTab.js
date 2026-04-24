@@ -29,8 +29,7 @@ const ImageMigrationTab = () => {
     setDiagnosing(true);
     try {
       const res = await axios.get(
-        `${API}/api/storage/diagnose-images`,
-        { headers: { Authorization: `Bearer ${token}` } }
+        `${API}/api/storage/diagnose-images`
       );
       setDiagnosis(res.data);
     } catch (error) {
@@ -52,8 +51,7 @@ const ImageMigrationTab = () => {
     try {
       const res = await axios.post(
         `${API}/api/storage/migrate-batch?limit=${batchSize}`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
+        {}
       );
       
       setLastResult(res.data);

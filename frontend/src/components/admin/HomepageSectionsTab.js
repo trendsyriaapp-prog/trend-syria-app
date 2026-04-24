@@ -93,10 +93,7 @@ const HomepageSectionsTab = () => {
   const saveSections = async () => {
     try {
       setSaving(true);
-      const token = localStorage.getItem('token');
-      await axios.put(`${API}/api/settings/homepage-sections`, sections, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await axios.put(`${API}/api/settings/homepage-sections`, sections);
       toast({ 
         title: "تم الحفظ", 
         description: "تم حفظ إعدادات الأقسام بنجاح" 

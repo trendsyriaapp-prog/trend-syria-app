@@ -14,7 +14,7 @@ import { useToast } from '../../hooks/use-toast';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
-const FoodOffersTab = ({ token }) => {
+const FoodOffersTab = () => {
   const { toast } = useToast();
   const [activeSection, setActiveSection] = useState('offers'); // offers, flash, requests
   const [offers, setOffers] = useState([]);
@@ -29,20 +29,14 @@ const FoodOffersTab = ({ token }) => {
 
   useEffect(() => {
     fetchData();
-  }, [token]);
+  }, []);
 
   const fetchData = async () => {
     try {
       const [offersRes, flashRes, requestsRes] = await Promise.all([
-        axios.get(`${API}/api/admin/food-offers`, {
-          headers: { Authorization: `Bearer ${token}` }
-        }),
-        axios.get(`${API}/api/admin/flash-sales`, {
-          headers: { Authorization: `Bearer ${token}` }
-        }),
-        axios.get(`${API}/api/admin/flash-sale-requests`, {
-          headers: { Authorization: `Bearer ${token}` }
-        })
+        axios.get(`${API}/api/admin/food-offers`),
+        axios.get(`${API}/api/admin/flash-sales`),
+        axios.get(`${API}/api/admin/flash-sale-requests`)
       ]);
       setOffers(offersRes.data || []);
       setFlashSales(flashRes.data || []);
@@ -58,8 +52,7 @@ const FoodOffersTab = ({ token }) => {
   const handleToggleOffer = async (offer) => {
     try {
       await axios.put(`${API}/api/admin/food-offers/${offer.id}`, 
-        { is_active: !offer.is_active },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { is_active: !offer.is_active }
       );
       toast({ title: offer.is_active ? "تم تعطيل العرض" : "تم تفعيل العرض" });
       fetchData();
@@ -73,13 +66,9 @@ const FoodOffersTab = ({ token }) => {
     
     try {
       if (deleteModal.type === 'offer') {
-        await axios.delete(`${API}/api/admin/food-offers/${deleteModal.id}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        await axios.delete(`${API}/api/admin/food-offers/${deleteModal.id}`);
       } else {
-        await axios.delete(`${API}/api/admin/flash-sales/${deleteModal.id}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        await axios.delete(`${API}/api/admin/flash-sales/${deleteModal.id}`);
       }
       toast({ title: "تم الحذف", description: deleteModal.type === 'offer' ? "تم حذف العرض" : "تم حذف الفلاش" });
       setDeleteModal({ isOpen: false, type: null, id: null, name: '' });
@@ -92,8 +81,7 @@ const FoodOffersTab = ({ token }) => {
   const handleToggleFlash = async (flash) => {
     try {
       await axios.put(`${API}/api/admin/flash-sales/${flash.id}`, 
-        { is_active: !flash.is_active },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { is_active: !flash.is_active }
       );
       toast({ title: flash.is_active ? "تم إيقاف الفلاش" : "تم تفعيل الفلاش" });
       fetchData();
@@ -464,9 +452,7 @@ const FlashRequestsSection = ({ requests, stats, token, onUpdate }) => {
   const handleApprove = async (requestId) => {
     setProcessing(requestId);
     try {
-      await axios.put(`${API}/api/admin/flash-sale-requests/${requestId}/approve`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await axios.put(`${API}/api/admin/flash-sale-requests/${requestId}/approve`, {});
       toast({ title: "تمت الموافقة", description: "تمت إضافة المنتجات لعرض الفلاش" });
       onUpdate();
     } catch (error) {
@@ -479,9 +465,7 @@ const FlashRequestsSection = ({ requests, stats, token, onUpdate }) => {
   const handleReject = async (requestId, reason, refund = true) => {
     setProcessing(requestId);
     try {
-      await axios.put(`${API}/api/admin/flash-sale-requests/${requestId}/reject?reason=${encodeURIComponent(reason)}&refund=${refund}`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await axios.put(`${API}/api/admin/flash-sale-requests/${requestId}/reject?reason=${encodeURIComponent(reason)}&refund=${refund}`, {});
       toast({ title: "تم الرفض", description: refund ? "تم رفض الطلب واسترداد الرسوم" : "تم رفض الطلب" });
       setShowRejectModal(null);
       onUpdate();
@@ -497,9 +481,7 @@ const FlashRequestsSection = ({ requests, stats, token, onUpdate }) => {
     
     setProcessing(requestId);
     try {
-      await axios.delete(`${API}/api/admin/flash-sale-requests/${requestId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await axios.delete(`${API}/api/admin/flash-sale-requests/${requestId}`);
       toast({ title: "تم الحذف", description: "تم حذف الطلب بنجاح" });
       onUpdate();
     } catch (error) {
@@ -900,14 +882,10 @@ const FlashSaleModal = ({ flash, token, onClose, onSave }) => {
       };
 
       if (flash?.id) {
-        await axios.put(`${API}/api/admin/flash-sales/${flash.id}`, data, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        await axios.put(`${API}/api/admin/flash-sales/${flash.id}`, data);
         toast({ title: "تم التحديث", description: "تم تحديث عرض الفلاش" });
       } else {
-        await axios.post(`${API}/api/admin/flash-sales`, data, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        await axios.post(`${API}/api/admin/flash-sales`, data);
         toast({ title: "تم الإنشاء", description: "تم إنشاء عرض الفلاش" });
       }
       onSave();

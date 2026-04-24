@@ -44,12 +44,15 @@ async def authenticate_websocket(token: str) -> Optional[dict]:
 @router.websocket("/ws")
 async def websocket_endpoint(
     websocket: WebSocket,
-    token: str = Query(None)
+    token: str = Query(None),
+    user_id: str = Query(None)
 ):
     """
     WebSocket endpoint الرئيسي
     
-    الاتصال: ws://domain/api/ws?token=JWT_TOKEN
+    الاتصال: 
+    - ws://domain/api/ws?token=JWT_TOKEN (الطريقة الأصلية)
+    - ws://domain/api/ws?user_id=USER_ID (مع Cookies)
     
     أنواع الرسائل المستقبلة:
     - {"type": "join_room", "room": "room_name"}
@@ -64,19 +67,27 @@ async def websocket_endpoint(
     - {"type": "notification", ...}
     """
     
-    # التحقق من المصادقة
-    user = await authenticate_websocket(token)
+    user = None
+    
+    # محاولة المصادقة بالـ token أولاً
+    if token:
+        user = await authenticate_websocket(token)
+    
+    # إذا لم ينجح الـ token، نحاول بالـ user_id
+    if not user and user_id:
+        # جلب بيانات المستخدم مباشرة
+        user = await db.users.find_one({"id": user_id}, {"_id": 0, "password": 0})
     
     if not user:
         await websocket.close(code=4001, reason="Unauthorized")
         return
     
-    user_id = user["id"]
+    ws_user_id = user["id"]
     user_type = user.get("user_type", "buyer")
     city = user.get("city", "")
     
     # تحديد الغرف الافتراضية بناءً على نوع المستخدم
-    default_rooms = [f"user_{user_id}"]
+    default_rooms = [f"user_{ws_user_id}"]
     
     if user_type == "delivery":
         # السائق ينضم لغرفة سائقي مدينته
@@ -89,12 +100,12 @@ async def websocket_endpoint(
     
     elif user_type == "seller":
         # البائع ينضم لغرفة متجره
-        store = await db.food_stores.find_one({"owner_id": user_id}, {"_id": 0, "id": 1})
+        store = await db.food_stores.find_one({"owner_id": ws_user_id}, {"_id": 0, "id": 1})
         if store:
             default_rooms.append(f"store_{store['id']}")
     
     # الاتصال
-    await manager.connect(websocket, user_id, default_rooms)
+    await manager.connect(websocket, ws_user_id, default_rooms)
     
     # Heartbeat task
     async def heartbeat():

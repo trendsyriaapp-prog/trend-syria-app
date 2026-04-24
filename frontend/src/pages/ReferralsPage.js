@@ -44,12 +44,8 @@ const ReferralsPage = () => {
       }
 
       const [codeRes, referralsRes] = await Promise.all([
-        axios.get(`${API}/api/referrals/my-code`, {
-          headers: { Authorization: `Bearer ${token}` }
-        }),
-        axios.get(`${API}/api/referrals/my-referrals`, {
-          headers: { Authorization: `Bearer ${token}` }
-        })
+        axios.get(`${API}/api/referrals/my-code`),
+        axios.get(`${API}/api/referrals/my-referrals`)
       ]);
       
       setReferralData(codeRes.data);

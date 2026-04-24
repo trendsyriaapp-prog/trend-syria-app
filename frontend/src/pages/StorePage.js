@@ -46,15 +46,11 @@ const StorePage = () => {
     setFollowLoading(true);
     try {
       if (following) {
-        await axios.delete(`${API}/api/stores/${sellerId}/follow`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        await axios.delete(`${API}/api/stores/${sellerId}/follow`);
         setFollowing(false);
         setStore(prev => ({ ...prev, followers_count: prev.followers_count - 1 }));
       } else {
-        await axios.post(`${API}/api/stores/${sellerId}/follow`, {}, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        await axios.post(`${API}/api/stores/${sellerId}/follow`, {});
         setFollowing(true);
         setStore(prev => ({ ...prev, followers_count: prev.followers_count + 1 }));
       }

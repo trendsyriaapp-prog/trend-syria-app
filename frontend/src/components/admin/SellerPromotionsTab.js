@@ -26,7 +26,6 @@ const SellerPromotionsTab = () => {
   const [promotions, setPromotions] = useState({ active: [], expired: [], stats: {} });
   const [showSettings, setShowSettings] = useState(false);
   const [saving, setSaving] = useState(false);
-  const token = localStorage.getItem('token');
 
   useEffect(() => {
     fetchData();
@@ -61,8 +60,7 @@ const SellerPromotionsTab = () => {
       setSaving(true);
       await axios.put(
         `${API}/api/admin/promotions/settings`,
-        settings,
-        { headers: { Authorization: `Bearer ${token}` } }
+        settings
       );
       
       toast({
@@ -86,8 +84,7 @@ const SellerPromotionsTab = () => {
     
     try {
       await axios.delete(
-        `${API}/api/admin/promotions/${promotionId}`,
-        { headers: { Authorization: `Bearer ${token}` } }
+        `${API}/api/admin/promotions/${promotionId}`
       );
       
       toast({

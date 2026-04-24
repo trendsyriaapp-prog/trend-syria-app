@@ -27,9 +27,7 @@ const FavoritesPage = () => {
     else setLoadingMore(true);
     
     try {
-      const res = await axios.get(`${API}/api/favorites?page=${pageNum}&limit=20`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await axios.get(`${API}/api/favorites?page=${pageNum}&limit=20`);
       
       // دعم الـ API الجديد مع pagination
       const data = res.data.data || res.data;
@@ -71,9 +69,7 @@ const FavoritesPage = () => {
   const handleRemove = async (productId) => {
     setRemoving(productId);
     try {
-      await axios.delete(`${API}/api/favorites/${productId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await axios.delete(`${API}/api/favorites/${productId}`);
       setFavorites(favorites.filter(p => p.id !== productId));
       setTotal(prev => prev - 1);
     } catch (error) {

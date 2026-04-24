@@ -44,9 +44,7 @@ const ChatPage = () => {
           ? `${API}/api/food/orders/${orderId}`
           : `${API}/api/orders/${orderId}`;
         
-        const response = await axios.get(endpoint, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        const response = await axios.get(endpoint);
         
         setOrder(response.data);
         
@@ -75,9 +73,7 @@ const ChatPage = () => {
   // جلب الرسائل
   const fetchMessages = async () => {
     try {
-      const response = await axios.get(`${API}/api/chat/conversation/${orderId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await axios.get(`${API}/api/chat/conversation/${orderId}`);
       setMessages(response.data?.messages || []);
     } catch (error) {
       // لا توجد رسائل سابقة
@@ -108,8 +104,6 @@ const ChatPage = () => {
       await axios.post(`${API}/api/chat/send`, {
         order_id: orderId,
         message: messageText
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
       });
     } catch (error) {
       logger.error('Error sending message:', error);

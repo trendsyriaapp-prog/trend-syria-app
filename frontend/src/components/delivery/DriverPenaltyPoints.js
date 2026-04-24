@@ -31,9 +31,7 @@ const DriverPenaltyPoints = () => {
 
   const fetchPoints = async () => {
     try {
-      const res = await axios.get(`${API}/api/delivery/my-penalty-points`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await axios.get(`${API}/api/delivery/my-penalty-points`);
       setData(res.data);
     } catch (error) {
       logger.error('Error fetching penalty points:', error);

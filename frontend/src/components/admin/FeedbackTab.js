@@ -54,9 +54,7 @@ const FeedbackTab = () => {
       if (filter.status) params.append('status', filter.status);
       if (filter.type) params.append('type', filter.type);
       
-      const res = await axios.get(`${API}/api/feedback/all?${params}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await axios.get(`${API}/api/feedback/all?${params}`);
       setFeedback(res.data.feedback || []);
       setStats(res.data.stats || { total: 0, pending: 0, reviewed: 0 });
     } catch (error) {
@@ -80,8 +78,6 @@ const FeedbackTab = () => {
     try {
       await axios.post(`${API}/api/feedback/${feedbackId}/respond`, {
         response: response.trim()
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
       });
       
       toast({ title: "تم", description: "تم إرسال الرد بنجاح" });
@@ -99,9 +95,7 @@ const FeedbackTab = () => {
     if (!window.confirm('هل تريد حذف هذه الملاحظة؟')) return;
     
     try {
-      await axios.delete(`${API}/api/feedback/${feedbackId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await axios.delete(`${API}/api/feedback/${feedbackId}`);
       toast({ title: "تم", description: "تم الحذف بنجاح" });
       fetchFeedback();
     } catch (error) {

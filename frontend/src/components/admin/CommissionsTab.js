@@ -75,9 +75,7 @@ const CommissionsTab = ({
 
   const fetchFoodCommissions = async () => {
     try {
-      const res = await axios.get(`${API}/api/admin/food/commissions`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await axios.get(`${API}/api/admin/food/commissions`);
       setFoodCommissions(res.data.commissions);
     } catch (error) {
       logger.error('Error fetching food commissions:', error);
@@ -92,9 +90,7 @@ const CommissionsTab = ({
       const updatedCommissions = { ...foodCommissions };
       updatedCommissions[storeType] = parseFloat(tempFoodRate) / 100;
       
-      await axios.put(`${API}/api/admin/food/commissions`, updatedCommissions, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await axios.put(`${API}/api/admin/food/commissions`, updatedCommissions);
       
       setFoodCommissions(updatedCommissions);
       setEditingFoodRate(null);

@@ -124,9 +124,7 @@ const SellerDocumentsPage = () => {
 
   const checkStatus = useCallback(async () => {
     try {
-      const res = await axios.get(`${API}/api/seller/documents/status`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await axios.get(`${API}/api/seller/documents/status`);
       setStatus(res.data.status);
       setRejectionReason(res.data.rejection_reason);
       if (res.data.business_name) {
@@ -271,8 +269,6 @@ const SellerDocumentsPage = () => {
             holder_name: paymentAccountHolder,
             bank_name: paymentAccountType === 'bank_account' ? paymentBankName : null
           }
-        }, {
-          headers: { Authorization: `Bearer ${token}` }
         });
 
         toast({
@@ -783,9 +779,7 @@ const SellerDashboardPage = () => {
     const checkDocumentsStatus = async () => {
       if (user?.user_type === 'seller' && token) {
         try {
-          const res = await axios.get(`${API}/api/seller/documents/status`, {
-            headers: { Authorization: `Bearer ${token}` }
-          });
+          const res = await axios.get(`${API}/api/seller/documents/status`);
           const status = res.data?.status;
           
           if (!status || status === 'not_submitted') {
@@ -867,9 +861,7 @@ const SellerDashboardPage = () => {
   const fetchCommissionInfo = async () => {
     try {
       const endpoint = isFoodSeller ? '/api/food/my-store/commission' : '/api/seller/commission';
-      const res = await axios.get(`${API}${endpoint}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await axios.get(`${API}${endpoint}`);
       setCommissionInfo(res.data);
     } catch (error) {
       logger.log('Commission info not available');
@@ -879,12 +871,8 @@ const SellerDashboardPage = () => {
   const fetchWallet = async () => {
     try {
       const [balanceRes, transRes] = await Promise.all([
-        axios.get(`${API}/api/wallet/balance`, {
-          headers: { Authorization: `Bearer ${token}` }
-        }),
-        axios.get(`${API}/api/wallet/transactions?limit=20`, {
-          headers: { Authorization: `Bearer ${token}` }
-        })
+        axios.get(`${API}/api/wallet/balance`),
+        axios.get(`${API}/api/wallet/transactions?limit=20`)
       ]);
       setWalletBalance(balanceRes.data.balance || 0);
       setPendingBalance(balanceRes.data.pending_balance || 0);
@@ -901,9 +889,7 @@ const SellerDashboardPage = () => {
   const handleClearTransactions = async () => {
     setDeletingTransactions(true);
     try {
-      await axios.delete(`${API}/api/wallet/transactions/clear`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await axios.delete(`${API}/api/wallet/transactions/clear`);
       toast({ title: "تم الحذف", description: "تم حذف سجلات المحفظة بنجاح" });
       setWalletTransactions([]);
       setShowDeleteConfirm(false);
@@ -1069,8 +1055,6 @@ const SellerDashboardPage = () => {
       await axios.put(`${API}/api/products/${editingProduct.id}`, {
         price: parseFloat(editPrice),
         stock: parseInt(editStock)
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
       });
       
       toast({
@@ -1117,9 +1101,7 @@ const SellerDashboardPage = () => {
         'shipped': `/api/orders/${orderId}/seller/shipped`
       };
       
-      const response = await axios.post(`${API}${endpoints[action]}`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await axios.post(`${API}${endpoints[action]}`, {});
       
       // 2. إذا كان الإجراء "shipped"، نحدّث الطلب بكود الاستلام
       if (action === 'shipped' && response.data?.pickup_code) {
@@ -1171,8 +1153,6 @@ const SellerDashboardPage = () => {
     try {
       await axios.put(`${API}/api/products/${productId}`, {
         stock: stockValue
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
       });
       // لا نحتاج إشعار نجاح
     } catch (error) {
@@ -1211,8 +1191,6 @@ const SellerDashboardPage = () => {
     try {
       await axios.put(`${API}/api/food/products/${productId}`, {
         stock: stockValue
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
       });
       // لا نحتاج إشعار نجاح
     } catch (error) {
@@ -1239,8 +1217,6 @@ const SellerDashboardPage = () => {
     try {
       await axios.put(`${API}/api/products/${productId}`, {
         is_available: !currentStatus
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
       });
       // لا نحتاج إشعار نجاح - تغيير الحالة كافٍ
     } catch (error) {
@@ -1273,9 +1249,7 @@ const SellerDashboardPage = () => {
     );
     
     try {
-      await axios.put(`${API}/api/food/products/${itemId}/availability?status=${newStatus}`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await axios.put(`${API}/api/food/products/${itemId}/availability?status=${newStatus}`, {});
       // لا نحتاج إشعار نجاح - تغيير الحالة كافٍ
     } catch (error) {
       // إرجاع الحالة السابقة عند الفشل
@@ -1307,8 +1281,7 @@ const SellerDashboardPage = () => {
     
     try {
       const response = await axios.post(`${API}/api/food/orders/store/orders/${orderId}/status`, null, {
-        params: { new_status: newStatus },
-        headers: { Authorization: `Bearer ${token}` }
+        params: { new_status: newStatus }
       });
       
       // 2. إذا كان الإجراء "ready"، نحدّث الطلب بكود الاستلام
@@ -2169,9 +2142,7 @@ const SellerPendingApproval = () => {
   const checkStatus = async () => {
     setChecking(true);
     try {
-      const res = await axios.get(`${API}/api/seller/documents/status`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await axios.get(`${API}/api/seller/documents/status`);
       const status = res.data?.status;
       
       if (status === 'approved') {

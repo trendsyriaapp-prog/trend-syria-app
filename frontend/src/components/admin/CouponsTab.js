@@ -28,7 +28,7 @@ const COUPON_SCOPES = [
   { id: 'shop', label: 'المتجر العام فقط' }
 ];
 
-const CouponsTab = ({ token }) => {
+const CouponsTab = () => {
   const { toast } = useToast();
   const [coupons, setCoupons] = useState([]);
   const [stats, setStats] = useState({});
@@ -46,8 +46,7 @@ const CouponsTab = ({ token }) => {
   const fetchCoupons = async () => {
     try {
       const res = await axios.get(`${API}/api/coupons/admin/list`, {
-        params: { status: filter },
-        headers: { Authorization: `Bearer ${token}` }
+        params: { status: filter }
       });
       setCoupons(res.data.coupons || []);
       setStats(res.data.stats || {});
@@ -62,9 +61,7 @@ const CouponsTab = ({ token }) => {
     if (!deleteModal.couponId) return;
     
     try {
-      await axios.delete(`${API}/api/coupons/admin/${deleteModal.couponId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await axios.delete(`${API}/api/coupons/admin/${deleteModal.couponId}`);
       toast({ title: "تم الحذف", description: "تم حذف الكوبون بنجاح" });
       setDeleteModal({ isOpen: false, couponId: null, code: '' });
       fetchCoupons();
@@ -77,8 +74,6 @@ const CouponsTab = ({ token }) => {
     try {
       await axios.put(`${API}/api/coupons/admin/${coupon.id}`, {
         is_active: !coupon.is_active
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
       });
       toast({ 
         title: coupon.is_active ? "تم التعطيل" : "تم التفعيل",
@@ -408,14 +403,10 @@ const CouponModal = ({ coupon, token, onClose, onSuccess }) => {
       };
 
       if (coupon) {
-        await axios.put(`${API}/api/coupons/admin/${coupon.id}`, data, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        await axios.put(`${API}/api/coupons/admin/${coupon.id}`, data);
         toast({ title: "تم التحديث", description: "تم تحديث الكوبون بنجاح" });
       } else {
-        await axios.post(`${API}/api/coupons/admin/create`, data, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        await axios.post(`${API}/api/coupons/admin/create`, data);
         toast({ title: "تم الإنشاء", description: "تم إنشاء الكوبون بنجاح" });
       }
       onSuccess();

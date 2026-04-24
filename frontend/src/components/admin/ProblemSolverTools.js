@@ -25,13 +25,9 @@ const ProblemSolverTools = () => {
   const [reassignForm, setReassignForm] = useState({ order_id: '', new_driver_id: '' });
   const [deleteReviewForm, setDeleteReviewForm] = useState({ review_id: '', reason: '' });
 
-  const token = localStorage.getItem('token');
-
   const fetchAvailableDrivers = async () => {
     try {
-      const res = await axios.get(`${API}/api/admin/available-drivers`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await axios.get(`${API}/api/admin/available-drivers`);
       setAvailableDrivers(res.data.drivers || []);
     } catch (err) {
       logger.error('Error fetching drivers:', err);
@@ -41,9 +37,7 @@ const ProblemSolverTools = () => {
   const searchUserByPhone = async () => {
     if (!searchUser.trim()) return;
     try {
-      const res = await axios.get(`${API}/api/admin/users?search=${searchUser}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await axios.get(`${API}/api/admin/users?search=${searchUser}`);
       const users = res.data.users || [];
       if (users.length > 0) {
         setFoundUser(users[0]);
@@ -69,7 +63,7 @@ const ProblemSolverTools = () => {
         amount: parseFloat(compensationForm.amount),
         reason: compensationForm.reason,
         order_id: compensationForm.order_id || null
-      }, { headers: { Authorization: `Bearer ${token}` } });
+      });
       
       setMessage({ type: 'success', text: res.data.message });
       setCompensationForm({ user_id: '', amount: '', reason: '', order_id: '' });
@@ -94,7 +88,7 @@ const ProblemSolverTools = () => {
         order_id: refundForm.order_id,
         amount: parseFloat(refundForm.amount),
         reason: refundForm.reason
-      }, { headers: { Authorization: `Bearer ${token}` } });
+      });
       
       setMessage({ type: 'success', text: res.data.message });
       setRefundForm({ order_id: '', amount: '', reason: '' });
@@ -117,7 +111,7 @@ const ProblemSolverTools = () => {
       const res = await axios.post(`${API}/api/admin/orders/${reassignForm.order_id}/reassign-driver`, {
         order_id: reassignForm.order_id,
         new_driver_id: reassignForm.new_driver_id || null
-      }, { headers: { Authorization: `Bearer ${token}` } });
+      });
       
       setMessage({ type: 'success', text: res.data.message });
       setReassignForm({ order_id: '', new_driver_id: '' });
@@ -138,8 +132,7 @@ const ProblemSolverTools = () => {
     setLoading(true);
     try {
       const res = await axios.delete(
-        `${API}/api/admin/reviews/${deleteReviewForm.review_id}?reason=${encodeURIComponent(deleteReviewForm.reason || 'مخالفة سياسة الاستخدام')}`,
-        { headers: { Authorization: `Bearer ${token}` } }
+        `${API}/api/admin/reviews/${deleteReviewForm.review_id}?reason=${encodeURIComponent(deleteReviewForm.reason || 'مخالفة سياسة الاستخدام')}`
       );
       
       setMessage({ type: 'success', text: res.data.message });

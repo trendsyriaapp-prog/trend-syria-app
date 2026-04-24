@@ -9,7 +9,7 @@ import { useToast } from '../../hooks/use-toast';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
-const EmergencyHelpTab = ({ token }) => {
+const EmergencyHelpTab = () => {
   const { toast } = useToast();
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -23,8 +23,7 @@ const EmergencyHelpTab = ({ token }) => {
   const fetchRequests = async () => {
     try {
       const res = await axios.get(`${API}/api/support/admin/emergency-help`, {
-        params: { status: filter === 'all' ? null : filter },
-        headers: { Authorization: `Bearer ${token}` }
+        params: { status: filter === 'all' ? null : filter }
       });
       setRequests(res.data.requests || []);
     } catch (err) {
@@ -37,9 +36,7 @@ const EmergencyHelpTab = ({ token }) => {
   const resolveRequest = async (requestId) => {
     setResolving(requestId);
     try {
-      await axios.put(`${API}/api/support/admin/emergency-help/${requestId}/resolve`, null, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await axios.put(`${API}/api/support/admin/emergency-help/${requestId}/resolve`, null);
       
       toast({
         title: "✅ تم حل الطلب",

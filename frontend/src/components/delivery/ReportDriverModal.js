@@ -53,8 +53,6 @@ const ReportDriverModal = ({
         order_id: orderId,
         category,
         details: details.trim()
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
       });
 
       setSubmitted(true);

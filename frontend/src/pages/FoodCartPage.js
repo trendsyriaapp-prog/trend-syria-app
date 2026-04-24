@@ -155,9 +155,7 @@ const FoodCartPage = () => {
         // جلب المحفظة إذا كان المستخدم مسجل
         if (token) {
           try {
-            const walletRes = await axios.get(`${API}/api/wallet/balance`, {
-              headers: { Authorization: `Bearer ${token}` }
-            });
+            const walletRes = await axios.get(`${API}/api/wallet/balance`);
             if (isMounted) setWalletBalance(walletRes.data.balance || 0);
           } catch (e) {}
         }
@@ -396,8 +394,6 @@ const FoodCartPage = () => {
         order_amount: subtotal - offerDiscount,
         order_type: 'food',
         store_id: storeId
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
       });
       
       setAppliedCoupon(res.data);
@@ -461,8 +457,6 @@ const FoodCartPage = () => {
           ...selectedAddr,
           latitude: tempLocation.latitude,
           longitude: tempLocation.longitude
-        }, {
-          headers: { Authorization: `Bearer ${token}` }
         });
         
         // تحديث العناوين المحلية
@@ -637,9 +631,7 @@ const FoodCartPage = () => {
         return;
       }
       
-      const res = await axios.post(`${API}/api/food/orders`, orderData, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await axios.post(`${API}/api/food/orders`, orderData);
 
       // Clear cart
       localStorage.removeItem(`food_cart_${storeId}`);

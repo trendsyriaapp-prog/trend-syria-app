@@ -788,7 +788,7 @@ const AdminDashboardPage = () => {
               <SupportTicketsTab />
             )}
             {activeTab === 'emergency-help' && (
-              <EmergencyHelpTab token={localStorage.getItem('token')} />
+              <EmergencyHelpTab />
             )}
             {activeTab === 'driver-reports' && (
               <DriverReportsTab />
@@ -810,10 +810,10 @@ const AdminDashboardPage = () => {
               <FeaturedStoresTab />
             )}
             {activeTab === 'food-offers' && user.user_type === 'admin' && (
-              <FoodOffersTab token={localStorage.getItem('token')} />
+              <FoodOffersTab />
             )}
             {activeTab === 'coupons' && user.user_type === 'admin' && (
-              <CouponsTab token={localStorage.getItem('token')} />
+              <CouponsTab />
             )}
             {activeTab === 'daily-deals' && user.user_type === 'admin' && (
               <DailyDealsTab />

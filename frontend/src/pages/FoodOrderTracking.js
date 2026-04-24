@@ -76,9 +76,7 @@ const FoodOrderTracking = () => {
 
   const fetchOrder = async () => {
     try {
-      const res = await axios.get(`${API}/api/food/orders/${orderId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await axios.get(`${API}/api/food/orders/${orderId}`);
       setOrder(res.data);
       
       // حساب الوقت المتبقي للإلغاء
@@ -110,9 +108,7 @@ const FoodOrderTracking = () => {
     if (!window.confirm('هل تريد إلغاء الطلب؟')) return;
 
     try {
-      await axios.post(`${API}/api/food/orders/${orderId}/cancel`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await axios.post(`${API}/api/food/orders/${orderId}/cancel`, {});
       toast({ title: "تم الإلغاء", description: "تم إلغاء الطلب واسترجاع المبلغ" });
       fetchOrder();
     } catch (error) {
@@ -506,8 +502,6 @@ const RatingModal = ({ order, token, onClose, onSuccess }) => {
         store_rating: storeRating,
         driver_rating: order.driver_id ? driverRating : null,
         comment
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
       });
       onSuccess();
     } catch (error) {

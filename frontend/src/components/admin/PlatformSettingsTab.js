@@ -50,14 +50,11 @@ const GlobalFreeShippingPromo = () => {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const token = localStorage.getItem('token');
       await axios.put(`${API}/api/settings/global-free-shipping`, {
         is_active: promo.is_active,
         applies_to: promo.applies_to,
         end_date: promo.end_date ? new Date(promo.end_date).toISOString() : null,
         message: promo.message || null
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
       });
       toast({ 
         title: promo.is_active ? "🎉 تم تفعيل العرض" : "تم إلغاء العرض",
@@ -413,10 +410,7 @@ const PlatformClosureSettings = () => {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const token = localStorage.getItem('token');
-      await axios.put(`${API}/api/admin/settings`, settings, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await axios.put(`${API}/api/admin/settings`, settings);
       toast({ 
         title: "تم الحفظ!",
         description: "تم تحديث إعدادات المنصة"
@@ -536,10 +530,7 @@ const ReferralProgramSettings = () => {
 
   const fetchSettings = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const res = await axios.get(`${API}/api/referrals/admin/settings`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await axios.get(`${API}/api/referrals/admin/settings`);
       setSettings({
         is_active: res.data.is_active ?? true,
         referrer_reward: res.data.referrer_reward || 10000,
@@ -556,10 +547,7 @@ const ReferralProgramSettings = () => {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const token = localStorage.getItem('token');
-      await axios.put(`${API}/api/referrals/admin/settings`, settings, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await axios.put(`${API}/api/referrals/admin/settings`, settings);
       toast({ 
         title: "تم الحفظ!",
         description: settings.is_active ? "برنامج الإحالات مفعّل" : "برنامج الإحالات متوقف"
@@ -657,10 +645,7 @@ const ReferralProgramSettings = () => {
               <button
                 onClick={async () => {
                   try {
-                    const token = localStorage.getItem('token');
-                    const res = await axios.post(`${API}/api/referrals/admin/send-reminder`, {}, {
-                      headers: { Authorization: `Bearer ${token}` }
-                    });
+                    const res = await axios.post(`${API}/api/referrals/admin/send-reminder`, {});
                     toast({ 
                       title: "تم الإرسال!",
                       description: `تم إرسال الإشعار لـ ${res.data.users_notified} مستخدم`
@@ -677,10 +662,7 @@ const ReferralProgramSettings = () => {
               <button
                 onClick={async () => {
                   try {
-                    const token = localStorage.getItem('token');
-                    const res = await axios.post(`${API}/api/referrals/admin/send-to-inactive`, {}, {
-                      headers: { Authorization: `Bearer ${token}` }
-                    });
+                    const res = await axios.post(`${API}/api/referrals/admin/send-to-inactive`, {});
                     toast({ 
                       title: "تم الإرسال!",
                       description: `تم إرسال الإشعار لـ ${res.data.users_notified} مستخدم غير نشط`
@@ -739,10 +721,7 @@ const SurgePricingSettings = () => {
 
   const fetchSettings = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const res = await axios.get(`${API}/api/settings/surge-pricing`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await axios.get(`${API}/api/settings/surge-pricing`);
       setSettings({
         is_active: res.data.is_active ?? false,
         multiplier: res.data.multiplier || 1.5,
@@ -762,10 +741,7 @@ const SurgePricingSettings = () => {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const token = localStorage.getItem('token');
-      const res = await axios.put(`${API}/api/settings/surge-pricing`, settings, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await axios.put(`${API}/api/settings/surge-pricing`, settings);
       toast({ 
         title: settings.is_active ? "⚡ تم تفعيل التسعير الديناميكي" : "تم الإيقاف",
         description: res.data.example ? `مثال: ${res.data.example.original_fee.toLocaleString()} → ${res.data.example.surge_fee.toLocaleString()} ل.س` : ""
@@ -959,7 +935,6 @@ const DriverCancelSettings = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const token = localStorage.getItem('token');
       if (!token) {
         setError('لم يتم العثور على token');
         setLoading(false);
@@ -968,9 +943,7 @@ const DriverCancelSettings = () => {
 
       // Fetch settings
       try {
-        const res = await axios.get(`${API}/api/settings/driver-cancel`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        const res = await axios.get(`${API}/api/settings/driver-cancel`);
         setSettings(res.data);
         setError(null);
       } catch (err) {
@@ -982,9 +955,7 @@ const DriverCancelSettings = () => {
 
       // Fetch stats
       try {
-        const statsRes = await axios.get(`${API}/api/settings/driver-cancel/stats`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        const statsRes = await axios.get(`${API}/api/settings/driver-cancel/stats`);
         setStats(statsRes.data);
       } catch (err) {
         logger.error('Error fetching stats:', err);
@@ -997,10 +968,7 @@ const DriverCancelSettings = () => {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const token = localStorage.getItem('token');
-      await axios.put(`${API}/api/settings/driver-cancel`, settings, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await axios.put(`${API}/api/settings/driver-cancel`, settings);
       toast({ title: "✅ تم الحفظ", description: "تم تحديث إعدادات إلغاء السائق" });
     } catch (error) {
       toast({ title: "خطأ", description: error.response?.data?.detail || "فشل الحفظ", variant: "destructive" });
@@ -1243,10 +1211,7 @@ const PlatformSettingsTab = () => {
 
   const fetchSettings = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${API}/api/admin/settings`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await axios.get(`${API}/api/admin/settings`);
       setSettings(response.data);
     } catch (error) {
       logger.error('Error fetching settings:', error);
@@ -1323,10 +1288,7 @@ const PlatformSettingsTab = () => {
   const saveSettings = async () => {
     setSaving(true);
     try {
-      const token = localStorage.getItem('token');
-      await axios.put(`${API}/api/admin/settings`, settings, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await axios.put(`${API}/api/admin/settings`, settings);
       await refreshSettings();
       toast({ title: "تم الحفظ", description: "تم تحديث إعدادات المنصة" });
     } catch (error) {

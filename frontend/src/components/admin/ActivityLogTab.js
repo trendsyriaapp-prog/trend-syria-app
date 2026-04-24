@@ -59,7 +59,6 @@ const ActivityLogTab = () => {
   const fetchLogs = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
       const params = new URLSearchParams({
         page,
         limit: 30,
@@ -68,9 +67,7 @@ const ActivityLogTab = () => {
       if (filter.action_type) params.append('action_type', filter.action_type);
       if (filter.admin_id) params.append('admin_id', filter.admin_id);
       
-      const res = await axios.get(`${API}/api/activity-log/?${params}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await axios.get(`${API}/api/activity-log/?${params}`);
       setLogs(res.data.logs || []);
       setTotalPages(res.data.pages || 1);
     } catch (err) {
@@ -82,10 +79,7 @@ const ActivityLogTab = () => {
 
   const fetchStats = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const res = await axios.get(`${API}/api/activity-log/stats?days=${filter.days}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await axios.get(`${API}/api/activity-log/stats?days=${filter.days}`);
       setStats(res.data);
     } catch (err) {
       logger.error('Error fetching stats:', err);
@@ -94,10 +88,7 @@ const ActivityLogTab = () => {
 
   const fetchAdmins = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const res = await axios.get(`${API}/api/activity-log/admins`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await axios.get(`${API}/api/activity-log/admins`);
       setAdmins(res.data.admins || []);
     } catch (err) {
       logger.error('Error fetching admins:', err);

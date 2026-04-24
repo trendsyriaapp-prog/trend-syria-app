@@ -55,15 +55,12 @@ const SupportTicketsAdmin = () => {
 
   const fetchTickets = async () => {
     try {
-      const token = localStorage.getItem('token');
       const params = new URLSearchParams({ page, limit: 20 });
       if (filter.status) params.append('status', filter.status);
       if (filter.category) params.append('category', filter.category);
       if (filter.priority) params.append('priority', filter.priority);
       
-      const res = await axios.get(`${API}/api/support/admin/tickets?${params}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await axios.get(`${API}/api/support/admin/tickets?${params}`);
       setTickets(res.data.tickets || []);
       setTotalPages(res.data.pages || 1);
     } catch (err) {
@@ -75,10 +72,7 @@ const SupportTicketsAdmin = () => {
 
   const fetchStats = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const res = await axios.get(`${API}/api/support/admin/stats`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await axios.get(`${API}/api/support/admin/stats`);
       setStats(res.data);
     } catch (err) {
       logger.error('Error fetching stats:', err);
@@ -87,10 +81,8 @@ const SupportTicketsAdmin = () => {
 
   const updateStatus = async (ticketId, newStatus) => {
     try {
-      const token = localStorage.getItem('token');
       await axios.put(`${API}/api/support/admin/tickets/${ticketId}/status`, 
-        { status: newStatus },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { status: newStatus }
       );
       fetchTickets();
       fetchStats();
@@ -108,18 +100,14 @@ const SupportTicketsAdmin = () => {
     
     setSending(true);
     try {
-      const token = localStorage.getItem('token');
       await axios.post(`${API}/api/support/tickets/${selectedTicket.id}/reply`, 
-        { message: reply.trim() },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { message: reply.trim() }
       );
       setReply('');
       toast({ title: 'تم بنجاح', description: 'تم إرسال الرد' });
       
       // Refresh ticket
-      const res = await axios.get(`${API}/api/support/tickets/${selectedTicket.id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await axios.get(`${API}/api/support/tickets/${selectedTicket.id}`);
       setSelectedTicket(res.data);
     } catch (err) {
       toast({ title: 'خطأ', description: err.response?.data?.detail || 'حدث خطأ', variant: 'destructive' });

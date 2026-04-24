@@ -22,9 +22,7 @@ const FollowingPage = () => {
     else setLoadingMore(true);
     
     try {
-      const res = await axios.get(`${API}/api/user/following?page=${pageNum}&limit=20`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await axios.get(`${API}/api/user/following?page=${pageNum}&limit=20`);
       
       // دعم الـ API الجديد مع pagination
       const data = res.data.data || res.data;

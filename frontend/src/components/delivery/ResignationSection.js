@@ -7,7 +7,7 @@ import { LogOut, Shield, AlertTriangle, Phone, CheckCircle, Clock, X } from 'luc
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
-export default function ResignationSection({ token, theme }) {
+export default function ResignationSection({ theme }) {
   const [showModal, setShowModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [securityStatus, setSecurityStatus] = useState(null);
@@ -24,17 +24,13 @@ export default function ResignationSection({ token, theme }) {
   const fetchData = async () => {
     try {
       // جلب حالة التأمين
-      const securityRes = await fetch(`${API}/api/driver/security/status`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const securityRes = await fetch(`${API}/api/driver/security/status`, { credentials: 'include' });
       if (securityRes.ok) {
         setSecurityStatus(await securityRes.json());
       }
 
       // جلب طلب الاستقالة إن وجد
-      const requestRes = await fetch(`${API}/api/driver/security/my-resignation`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const requestRes = await fetch(`${API}/api/driver/security/my-resignation`, { credentials: 'include' });
       if (requestRes.ok) {
         const data = await requestRes.json();
         if (data && data.status) {
@@ -56,9 +52,9 @@ export default function ResignationSection({ token, theme }) {
     try {
       const res = await fetch(`${API}/api/driver/security/resign`, {
         method: 'POST',
+        credentials: 'include',
         headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           reason: formData.reason,
@@ -86,8 +82,7 @@ export default function ResignationSection({ token, theme }) {
     setLoading(true);
     try {
       const res = await fetch(`${API}/api/driver/security/resign/cancel`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` }
+        method: 'POST'
       });
       if (res.ok) {
         alert('تم إلغاء طلب الاستقالة');

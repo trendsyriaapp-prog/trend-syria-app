@@ -399,9 +399,7 @@ const FoodPage = () => {
     const fetchFoodFavorites = async () => {
       if (!user || !token) return;
       try {
-        const res = await axios.get(`${API}/api/stores/favorites`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        const res = await axios.get(`${API}/api/stores/favorites`);
         // استخراج IDs المنتجات المفضلة
         const favIds = res.data.map(f => f.product_id);
         setFoodFavorites(favIds);
@@ -427,14 +425,10 @@ const FoodPage = () => {
     
     try {
       if (isFavorite) {
-        await axios.delete(`${API}/api/stores/favorites/${productId}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        await axios.delete(`${API}/api/stores/favorites/${productId}`);
         setFoodFavorites(prev => prev.filter(id => id !== productId));
       } else {
-        await axios.post(`${API}/api/stores/favorites/${productId}`, {}, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        await axios.post(`${API}/api/stores/favorites/${productId}`, {});
         setFoodFavorites(prev => [...prev, productId]);
       }
     } catch (error) {

@@ -69,8 +69,7 @@ export default function RateLimitDashboard({ token }) {
     try {
       await axios.post(
         `${API}/api/rate-limits/unblock`,
-        { ip },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { ip }
       );
       fetchData(true);
     } catch (err) {
@@ -82,8 +81,7 @@ export default function RateLimitDashboard({ token }) {
     try {
       await axios.post(
         `${API}/api/rate-limits/alerts/config`,
-        { enabled: !alertConfig?.enabled },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { enabled: !alertConfig?.enabled }
       );
       fetchData(true);
     } catch (err) {
@@ -96,8 +94,7 @@ export default function RateLimitDashboard({ token }) {
     try {
       const res = await axios.post(
         `${API}/api/rate-limits/test-alert`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
+        {}
       );
       alert(`✅ ${res.data.message}\n${res.data.push_status}`);
     } catch (err) {
@@ -111,8 +108,7 @@ export default function RateLimitDashboard({ token }) {
     try {
       await axios.post(
         `${API}/api/rate-limits/alerts/config`,
-        { [field]: value },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { [field]: value }
       );
       fetchData(true);
     } catch (err) {

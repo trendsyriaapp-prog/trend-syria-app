@@ -426,9 +426,7 @@ const JoinAsFoodSellerPage = () => {
         delete submitData.payment_account_holder;
         delete submitData.payment_bank_name;
         
-        await axios.post(`${API}/api/food/stores`, submitData, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        await axios.post(`${API}/api/food/stores`, submitData);
         
         toast({ 
           title: "تم التسجيل بنجاح! 🎉", 

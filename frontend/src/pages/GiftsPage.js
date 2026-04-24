@@ -79,12 +79,8 @@ const GiftsPage = () => {
     setLoading(true);
     try {
       const [receivedRes, sentRes] = await Promise.all([
-        axios.get(`${API}/api/gifts/received`, {
-          headers: { Authorization: `Bearer ${token}` }
-        }),
-        axios.get(`${API}/api/gifts/sent`, {
-          headers: { Authorization: `Bearer ${token}` }
-        })
+        axios.get(`${API}/api/gifts/received`),
+        axios.get(`${API}/api/gifts/sent`)
       ]);
       setReceivedGifts(receivedRes.data);
       setSentGifts(sentRes.data);
@@ -98,9 +94,7 @@ const GiftsPage = () => {
   // جلب العناوين المحفوظة
   const fetchSavedAddresses = async () => {
     try {
-      const res = await axios.get(`${API}/api/user/addresses`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await axios.get(`${API}/api/user/addresses`);
       
       let addresses = res.data || [];
       
@@ -156,9 +150,7 @@ const GiftsPage = () => {
   const acceptGift = async (giftId) => {
     setProcessingId(giftId);
     try {
-      const response = await axios.post(`${API}/api/gifts/${giftId}/accept`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await axios.post(`${API}/api/gifts/${giftId}/accept`, {});
       
       if (response.data.requires_address) {
         // فتح نافذة إدخال العنوان
@@ -205,8 +197,7 @@ const GiftsPage = () => {
     try {
       const response = await axios.post(
         `${API}/api/gifts/${selectedGift.id}/submit-address`,
-        addressForm,
-        { headers: { Authorization: `Bearer ${token}` } }
+        addressForm
       );
       
       toast({
@@ -274,9 +265,7 @@ const GiftsPage = () => {
   const rejectGift = async (giftId) => {
     setProcessingId(giftId);
     try {
-      await axios.post(`${API}/api/gifts/${giftId}/reject`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await axios.post(`${API}/api/gifts/${giftId}/reject`, {});
       toast({
         title: 'تم رفض الهدية',
         description: 'تم إبلاغ المرسل'
