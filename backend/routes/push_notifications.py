@@ -37,7 +37,7 @@ class TopicSubscription(BaseModel):
 async def register_push_token(
     data: TokenRegistration,
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """تسجيل FCM token للمستخدم"""
     
     try:
@@ -109,7 +109,7 @@ async def register_push_token(
 async def unregister_push_token(
     token: str,
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """إلغاء تسجيل FCM token"""
     
     try:
@@ -134,7 +134,7 @@ async def unregister_push_token(
 async def send_notification_to_user(
     data: SendNotificationRequest,
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """إرسال إشعار لمستخدم محدد (للمدير فقط)"""
     
     if user.get("user_type") != "admin":
@@ -181,7 +181,7 @@ async def send_notification_to_topic(
     data: Optional[dict] = None,
     image: Optional[str] = None,
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """إرسال إشعار لموضوع (للمدير فقط)"""
     
     if user.get("user_type") != "admin":
@@ -203,7 +203,7 @@ async def send_notification_to_topic(
 async def subscribe_user_to_topic(
     data: TopicSubscription,
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """اشتراك المستخدم في موضوع"""
     
     tokens = await db.push_tokens.find(
@@ -223,7 +223,7 @@ async def subscribe_user_to_topic(
 async def unsubscribe_user_from_topic(
     data: TopicSubscription,
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """إلغاء اشتراك المستخدم من موضوع"""
     
     tokens = await db.push_tokens.find(

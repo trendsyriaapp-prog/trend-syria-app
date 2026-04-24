@@ -21,7 +21,7 @@ def hash_password(password: str) -> str:
 # ============== إعدادات المنصة ==============
 
 @router.get("/settings")
-async def get_platform_settings(user: dict = Depends(get_current_user)):
+async def get_platform_settings(user: dict = Depends(get_current_user)) -> dict:
     """جلب إعدادات المنصة"""
     if user["user_type"] != "admin":
         raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
@@ -63,7 +63,7 @@ async def get_platform_settings(user: dict = Depends(get_current_user)):
     return settings
 
 @router.put("/settings")
-async def update_platform_settings(data: dict, user: dict = Depends(get_current_user)):
+async def update_platform_settings(data: dict, user: dict = Depends(get_current_user)) -> dict:
     """تحديث إعدادات المنصة مع إشعارات قابلة للتخصيص"""
     if user["user_type"] != "admin":
         raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
@@ -140,7 +140,7 @@ async def update_platform_settings(data: dict, user: dict = Depends(get_current_
         "notifications_sent": notifications_sent
     }
 
-async def send_platform_activation_notification(platform: str, title: str, message: str):
+async def send_platform_activation_notification(platform: str, title: str, message: str) -> int:
     """إرسال إشعار تفعيل قسم لجميع المستخدمين"""
     now = datetime.now(timezone.utc).isoformat()
     
@@ -174,7 +174,7 @@ async def send_platform_activation_notification(platform: str, title: str, messa
 # ============== حالة المنصة (للعملاء والبائعين) ==============
 
 @router.get("/platform-status")
-async def get_platform_status():
+async def get_platform_status() -> dict:
     """التحقق من حالة المنصة - متاح للجميع"""
     settings = await db.platform_settings.find_one({"id": "main"}, {"_id": 0})
     if not settings:
@@ -197,7 +197,7 @@ async def get_platform_status():
 # ============== أعداد طلبات الاتصال والطوارئ ==============
 
 @router.get("/call-requests/count")
-async def get_call_requests_count(user: dict = Depends(get_current_user)):
+async def get_call_requests_count(user: dict = Depends(get_current_user)) -> dict:
     """جلب عدد طلبات الاتصال المعلقة"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للإدارة فقط")
@@ -206,7 +206,7 @@ async def get_call_requests_count(user: dict = Depends(get_current_user)):
     return {"count": count}
 
 @router.get("/emergency-help/count")
-async def get_emergency_help_count(user: dict = Depends(get_current_user)):
+async def get_emergency_help_count(user: dict = Depends(get_current_user)) -> dict:
     """جلب عدد طلبات الطوارئ المعلقة"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للإدارة فقط")
@@ -216,7 +216,7 @@ async def get_emergency_help_count(user: dict = Depends(get_current_user)):
 
 
 @router.get("/settings/public")
-async def get_public_settings():
+async def get_public_settings() -> dict:
     """جلب الإعدادات العامة (بدون تسجيل دخول)"""
     settings = await db.platform_settings.find_one({"id": "main"}, {"_id": 0})
     
@@ -267,7 +267,7 @@ async def get_public_settings():
 
 # ============== دالة إرسال إشعارات العروض لجميع المستخدمين ==============
 
-async def send_offer_notification_to_all_users(title: str, message: str, offer_type: str, offer_data: dict = None):
+async def send_offer_notification_to_all_users(title: str, message: str, offer_type: str, offer_data: dict = None) -> int:
     """إرسال إشعار عرض لجميع المستخدمين"""
     now = datetime.now(timezone.utc).isoformat()
     
@@ -301,7 +301,7 @@ async def send_offer_notification_to_all_users(title: str, message: str, offer_t
     return len(notifications)
 
 
-async def send_flash_sale_notification_to_sellers(title: str, message: str, flash_sale_id: str, sale_scope: str = "all"):
+async def send_flash_sale_notification_to_sellers(title: str, message: str, flash_sale_id: str, sale_scope: str = "all") -> int:
     """إرسال إشعار عرض فلاش للبائعين فقط لدعوتهم للمشاركة"""
     now = datetime.now(timezone.utc).isoformat()
     
@@ -374,13 +374,13 @@ DEFAULT_FOOD_COMMISSIONS = {
     "default": 0.20,
 }
 
-async def get_commission_rates_from_db():
+async def get_commission_rates_from_db() -> dict:
     rates = await db.commission_rates.find_one({"id": "main"}, {"_id": 0})
     if rates and rates.get("categories"):
         return rates["categories"]
     return DEFAULT_CATEGORY_COMMISSIONS
 
-async def get_food_commission_rates_from_db():
+async def get_food_commission_rates_from_db() -> dict:
     rates = await db.commission_rates.find_one({"id": "food"}, {"_id": 0})
     if rates and rates.get("categories"):
         return rates["categories"]
@@ -389,7 +389,7 @@ async def get_food_commission_rates_from_db():
 # ============== Stats ==============
 
 @router.get("/stats")
-async def get_admin_stats(user: dict = Depends(get_current_user)):
+async def get_admin_stats(user: dict = Depends(get_current_user)) -> dict:
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
     
@@ -423,7 +423,7 @@ async def get_all_users(
     limit: int = Query(50, ge=1, le=100, description="عدد النتائج في الصفحة"),
     search: str = Query(None, description="البحث بالاسم أو الهاتف"),
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """جلب جميع المستخدمين مع Pagination"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -464,7 +464,7 @@ async def get_all_users(
 # ============== Users/Drivers Delete & Ban ==============
 
 @router.delete("/users/{user_id}")
-async def delete_user(user_id: str, user: dict = Depends(get_current_user)):
+async def delete_user(user_id: str, user: dict = Depends(get_current_user)) -> dict:
     """حذف مستخدم أو سائق"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -510,7 +510,7 @@ async def delete_user(user_id: str, user: dict = Depends(get_current_user)):
     return {"message": "تم حذف المستخدم بنجاح"}
 
 @router.post("/users/{user_id}/ban")
-async def ban_user(user_id: str, user: dict = Depends(get_current_user)):
+async def ban_user(user_id: str, user: dict = Depends(get_current_user)) -> dict:
     """حظر مستخدم أو سائق"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -535,7 +535,7 @@ async def ban_user(user_id: str, user: dict = Depends(get_current_user)):
 # ============== Sellers Management ==============
 
 @router.get("/sellers/pending")
-async def get_pending_sellers(user: dict = Depends(get_current_user)):
+async def get_pending_sellers(user: dict = Depends(get_current_user)) -> dict:
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
     
@@ -581,7 +581,7 @@ async def get_pending_sellers(user: dict = Depends(get_current_user)):
 # ============== سجل الطلبات المرفوضة ==============
 
 @router.get("/rejected-requests")
-async def get_rejected_requests(user: dict = Depends(get_current_user)):
+async def get_rejected_requests(user: dict = Depends(get_current_user)) -> dict:
     """جلب سجل الطلبات المرفوضة (بائعين + سائقين) - حذف تلقائي بعد 30 يوم"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -607,7 +607,7 @@ async def get_rejected_requests(user: dict = Depends(get_current_user)):
     }
 
 @router.delete("/rejected-requests/{request_id}")
-async def delete_rejected_request(request_id: str, user: dict = Depends(get_current_user)):
+async def delete_rejected_request(request_id: str, user: dict = Depends(get_current_user)) -> dict:
     """حذف سجل طلب مرفوض يدوياً"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -622,7 +622,7 @@ async def delete_rejected_request(request_id: str, user: dict = Depends(get_curr
 # ============== حذف الطلبات المعلقة ==============
 
 @router.delete("/sellers/pending/{seller_id}")
-async def delete_pending_seller(seller_id: str, user: dict = Depends(get_current_user)):
+async def delete_pending_seller(seller_id: str, user: dict = Depends(get_current_user)) -> dict:
     """حذف طلب انضمام بائع معلق نهائياً"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -644,7 +644,7 @@ async def delete_pending_seller(seller_id: str, user: dict = Depends(get_current
 
 
 @router.delete("/delivery/pending/{driver_id}")
-async def delete_pending_driver(driver_id: str, user: dict = Depends(get_current_user)):
+async def delete_pending_driver(driver_id: str, user: dict = Depends(get_current_user)) -> dict:
     """حذف طلب انضمام سائق معلق نهائياً"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -670,7 +670,7 @@ async def delete_pending_driver(driver_id: str, user: dict = Depends(get_current
 
 
 @router.delete("/products/pending/{product_id}")
-async def delete_pending_product(product_id: str, user: dict = Depends(get_current_user)):
+async def delete_pending_product(product_id: str, user: dict = Depends(get_current_user)) -> dict:
     """حذف منتج معلق نهائياً"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -684,7 +684,7 @@ async def delete_pending_product(product_id: str, user: dict = Depends(get_curre
 
 
 @router.delete("/food-items/pending/{item_id}")
-async def delete_pending_food_item(item_id: str, user: dict = Depends(get_current_user)):
+async def delete_pending_food_item(item_id: str, user: dict = Depends(get_current_user)) -> dict:
     """حذف صنف طعام معلق نهائياً"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -704,7 +704,7 @@ async def get_all_sellers(
     search: str = Query(None, description="البحث بالاسم أو الهاتف أو اسم المتجر"),
     status: str = Query(None, description="حالة البائع: approved, pending, rejected"),
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """جلب جميع البائعين مع Pagination"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -783,7 +783,7 @@ async def get_all_sellers(
     }
 
 @router.post("/sellers/{seller_id}/approve")
-async def approve_seller(seller_id: str, user: dict = Depends(get_current_user)):
+async def approve_seller(seller_id: str, user: dict = Depends(get_current_user)) -> dict:
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
     
@@ -838,7 +838,7 @@ async def approve_seller(seller_id: str, user: dict = Depends(get_current_user))
     return {"message": "تم تفعيل البائع"}
 
 @router.post("/sellers/{seller_id}/reject")
-async def reject_seller(seller_id: str, data: dict = Body(default={}), user: dict = Depends(get_current_user)):
+async def reject_seller(seller_id: str, data: dict = Body(default={}), user: dict = Depends(get_current_user)) -> dict:
     """رفض بائع مع سبب الرفض (اختياري)"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -924,7 +924,7 @@ async def reject_seller(seller_id: str, data: dict = Body(default={}), user: dic
 
 
 @router.post("/sellers/{seller_id}/suspend")
-async def suspend_seller(seller_id: str, data: dict = None, user: dict = Depends(get_current_user)):
+async def suspend_seller(seller_id: str, data: dict = None, user: dict = Depends(get_current_user)) -> dict:
     """إيقاف حساب بائع"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -963,7 +963,7 @@ async def suspend_seller(seller_id: str, data: dict = None, user: dict = Depends
 
 
 @router.post("/sellers/{seller_id}/activate")
-async def activate_seller(seller_id: str, user: dict = Depends(get_current_user)):
+async def activate_seller(seller_id: str, user: dict = Depends(get_current_user)) -> dict:
     """إعادة تفعيل حساب بائع"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -1000,7 +1000,7 @@ async def activate_seller(seller_id: str, user: dict = Depends(get_current_user)
 
 
 @router.delete("/sellers/{seller_id}")
-async def delete_seller(seller_id: str, user: dict = Depends(get_current_user)):
+async def delete_seller(seller_id: str, user: dict = Depends(get_current_user)) -> dict:
     """حذف حساب بائع نهائياً (للأدمن)"""
     if user["user_type"] != "admin":
         raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
@@ -1045,7 +1045,7 @@ async def delete_seller(seller_id: str, user: dict = Depends(get_current_user)):
 
 
 @router.get("/sellers/with-status")
-async def get_all_sellers_with_status(user: dict = Depends(get_current_user)):
+async def get_all_sellers_with_status(user: dict = Depends(get_current_user)) -> dict:
     """جلب جميع البائعين مع حالاتهم"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -1099,7 +1099,7 @@ async def get_all_sellers_with_status(user: dict = Depends(get_current_user)):
 # ============== Products Management ==============
 
 @router.get("/products/pending")
-async def get_pending_products(user: dict = Depends(get_current_user)):
+async def get_pending_products(user: dict = Depends(get_current_user)) -> dict:
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
     
@@ -1137,7 +1137,7 @@ async def get_all_products(
     category: str = Query(None, description="الفئة"),
     status: str = Query(None, description="حالة المنتج: approved, pending, rejected"),
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """جلب جميع المنتجات مع Pagination"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -1180,7 +1180,7 @@ async def get_all_products(
     }
 
 @router.post("/products/{product_id}/approve")
-async def approve_product(product_id: str, user: dict = Depends(get_current_user)):
+async def approve_product(product_id: str, user: dict = Depends(get_current_user)) -> dict:
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
     
@@ -1215,7 +1215,7 @@ async def approve_product(product_id: str, user: dict = Depends(get_current_user
     return {"message": "تم الموافقة على المنتج"}
 
 @router.post("/products/{product_id}/reject")
-async def reject_product(product_id: str, data: dict = None, user: dict = Depends(get_current_user)):
+async def reject_product(product_id: str, data: dict = None, user: dict = Depends(get_current_user)) -> dict:
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
     
@@ -1256,7 +1256,7 @@ async def reject_product(product_id: str, data: dict = None, user: dict = Depend
 # ============== موافقة منتجات الطعام ==============
 
 @router.get("/food-products/pending")
-async def get_pending_food_products(user: dict = Depends(get_current_user)):
+async def get_pending_food_products(user: dict = Depends(get_current_user)) -> dict:
     """جلب منتجات الطعام بانتظار الموافقة"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -1288,7 +1288,7 @@ async def get_pending_food_products(user: dict = Depends(get_current_user)):
     return products
 
 @router.post("/food-products/{product_id}/approve")
-async def approve_food_product(product_id: str, user: dict = Depends(get_current_user)):
+async def approve_food_product(product_id: str, user: dict = Depends(get_current_user)) -> dict:
     """الموافقة على منتج طعام"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -1326,7 +1326,7 @@ async def approve_food_product(product_id: str, user: dict = Depends(get_current
     return {"message": "تم الموافقة على المنتج"}
 
 @router.post("/food-products/{product_id}/reject")
-async def reject_food_product(product_id: str, data: dict = None, user: dict = Depends(get_current_user)):
+async def reject_food_product(product_id: str, data: dict = None, user: dict = Depends(get_current_user)) -> dict:
     """رفض منتج طعام"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -1371,7 +1371,7 @@ async def reject_food_product(product_id: str, data: dict = None, user: dict = D
 # ============== Delivery Management ==============
 
 @router.get("/delivery/pending")
-async def get_pending_delivery(user: dict = Depends(get_current_user)):
+async def get_pending_delivery(user: dict = Depends(get_current_user)) -> dict:
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
     
@@ -1426,7 +1426,7 @@ async def get_all_delivery(
     search: str = Query(None, description="البحث بالاسم أو الهاتف"),
     status: str = Query(None, description="حالة السائق: approved, pending"),
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """جلب جميع السائقين مع Pagination"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -1499,7 +1499,7 @@ async def get_all_delivery(
     }
 
 @router.post("/delivery/{driver_id}/approve")
-async def approve_delivery_driver(driver_id: str, user: dict = Depends(get_current_user)):
+async def approve_delivery_driver(driver_id: str, user: dict = Depends(get_current_user)) -> dict:
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
     
@@ -1567,7 +1567,7 @@ async def approve_delivery_driver(driver_id: str, user: dict = Depends(get_curre
     return {"message": "تم اعتماد موظف التوصيل"}
 
 @router.post("/delivery/{driver_id}/reject")
-async def reject_delivery_driver(driver_id: str, data: dict = Body(default={}), user: dict = Depends(get_current_user)):
+async def reject_delivery_driver(driver_id: str, data: dict = Body(default={}), user: dict = Depends(get_current_user)) -> dict:
     """رفض موظف توصيل مع سبب الرفض (اختياري)"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -1655,7 +1655,7 @@ async def reject_delivery_driver(driver_id: str, data: dict = Body(default={}), 
 # ============== Sub-Admin Management ==============
 
 @router.post("/sub-admins")
-async def create_sub_admin(data: SubAdminCreate, user: dict = Depends(get_current_user)):
+async def create_sub_admin(data: SubAdminCreate, user: dict = Depends(get_current_user)) -> dict:
     if user["user_type"] != "admin":
         raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
     
@@ -1682,7 +1682,7 @@ async def create_sub_admin(data: SubAdminCreate, user: dict = Depends(get_curren
     return {"id": sub_admin_id, "message": "تم إنشاء مساعد المدير بنجاح"}
 
 @router.get("/sub-admins")
-async def get_sub_admins(user: dict = Depends(get_current_user)):
+async def get_sub_admins(user: dict = Depends(get_current_user)) -> dict:
     if user["user_type"] != "admin":
         raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
     
@@ -1694,7 +1694,7 @@ async def get_sub_admins(user: dict = Depends(get_current_user)):
     return sub_admins
 
 @router.delete("/sub-admins/{sub_admin_id}")
-async def delete_sub_admin(sub_admin_id: str, user: dict = Depends(get_current_user)):
+async def delete_sub_admin(sub_admin_id: str, user: dict = Depends(get_current_user)) -> dict:
     if user["user_type"] != "admin":
         raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
     
@@ -1713,7 +1713,7 @@ async def get_all_orders(
     search: str = Query(None, description="البحث برقم الطلب أو الهاتف"),
     status: str = Query(None, description="حالة الطلب"),
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """جلب جميع الطلبات مع Pagination"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -1758,7 +1758,7 @@ async def get_all_orders(
 PLATFORM_WALLET_ID = "platform_admin_wallet"
 
 @router.get("/platform-wallet")
-async def get_platform_wallet(user: dict = Depends(get_current_user)):
+async def get_platform_wallet(user: dict = Depends(get_current_user)) -> dict:
     """جلب محفظة المنصة - للمدير فقط"""
     if user["user_type"] != "admin":
         raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
@@ -1782,7 +1782,7 @@ async def get_platform_wallet(user: dict = Depends(get_current_user)):
 async def get_platform_wallet_transactions(
     user: dict = Depends(get_current_user),
     limit: int = 50
-):
+) -> dict:
     """جلب معاملات محفظة المنصة"""
     if user["user_type"] != "admin":
         raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
@@ -1799,7 +1799,7 @@ async def withdraw_from_platform_wallet(
     amount: int,
     note: str = "",
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """سحب من محفظة المنصة"""
     if user["user_type"] != "admin":
         raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
@@ -1834,7 +1834,7 @@ async def withdraw_from_platform_wallet(
     return {"message": "تم السحب بنجاح", "amount": amount, "new_balance": wallet["balance"] - amount}
 
 @router.get("/commissions")
-async def get_commissions_report(user: dict = Depends(get_current_user)):
+async def get_commissions_report(user: dict = Depends(get_current_user)) -> dict:
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
     
@@ -1901,7 +1901,7 @@ async def get_commissions_report(user: dict = Depends(get_current_user)):
     }
 
 @router.get("/commissions/rates")
-async def get_commission_rates(user: dict = Depends(get_current_user)):
+async def get_commission_rates(user: dict = Depends(get_current_user)) -> dict:
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
     
@@ -1924,7 +1924,7 @@ async def get_commission_rates(user: dict = Depends(get_current_user)):
     }
 
 @router.put("/commissions/rates")
-async def update_commission_rates(rates: dict, user: dict = Depends(get_current_user)):
+async def update_commission_rates(rates: dict, user: dict = Depends(get_current_user)) -> dict:
     if user["user_type"] != "admin":
         raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
     
@@ -1991,7 +1991,7 @@ async def update_commission_rates(rates: dict, user: dict = Depends(get_current_
     return {"message": "تم تحديث نسب العمولات بنجاح", "rates": rates, "notifications_sent": len(changed_categories) > 0}
 
 @router.post("/commissions/rates/category")
-async def add_commission_category(category: str, rate: float, user: dict = Depends(get_current_user)):
+async def add_commission_category(category: str, rate: float, user: dict = Depends(get_current_user)) -> dict:
     if user["user_type"] != "admin":
         raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
     
@@ -2034,7 +2034,7 @@ async def add_commission_category(category: str, rate: float, user: dict = Depen
     return {"message": f"تم إضافة فئة {category} بنسبة {rate * 100:.0f}%"}
 
 @router.delete("/commissions/rates/category/{category}")
-async def delete_commission_category(category: str, user: dict = Depends(get_current_user)):
+async def delete_commission_category(category: str, user: dict = Depends(get_current_user)) -> dict:
     if user["user_type"] != "admin":
         raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
     
@@ -2081,7 +2081,7 @@ async def delete_commission_category(category: str, user: dict = Depends(get_cur
 # ============== Notifications Management ==============
 
 @router.post("/notifications")
-async def create_notification(data: NotificationCreate, user: dict = Depends(get_current_user)):
+async def create_notification(data: NotificationCreate, user: dict = Depends(get_current_user)) -> dict:
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="غير مصرح")
     
@@ -2100,7 +2100,7 @@ async def create_notification(data: NotificationCreate, user: dict = Depends(get
     return {"message": "تم إرسال الإشعار بنجاح", "notification": notification}
 
 @router.get("/notifications")
-async def get_admin_notifications(user: dict = Depends(get_current_user)):
+async def get_admin_notifications(user: dict = Depends(get_current_user)) -> dict:
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="غير مصرح")
     
@@ -2119,7 +2119,7 @@ async def get_admin_notifications(user: dict = Depends(get_current_user)):
     return notifications
 
 @router.delete("/notifications/{notification_id}")
-async def delete_notification(notification_id: str, user: dict = Depends(get_current_user)):
+async def delete_notification(notification_id: str, user: dict = Depends(get_current_user)) -> dict:
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="غير مصرح")
     
@@ -2135,7 +2135,7 @@ async def delete_notification(notification_id: str, user: dict = Depends(get_cur
 # ============== Low Stock Report ==============
 
 @router.get("/products/low-stock")
-async def get_low_stock_products(user: dict = Depends(get_current_user)):
+async def get_low_stock_products(user: dict = Depends(get_current_user)) -> dict:
     """جلب المنتجات ذات المخزون المنخفض"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -2187,7 +2187,7 @@ async def get_low_stock_products(user: dict = Depends(get_current_user)):
 from core.database import create_notification_for_user
 
 @router.get("/driver-reports")
-async def get_driver_reports(user: dict = Depends(get_current_user)):
+async def get_driver_reports(user: dict = Depends(get_current_user)) -> dict:
     """جلب البلاغات الأخلاقية ضد موظفي التوصيل"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -2211,7 +2211,7 @@ async def get_driver_reports(user: dict = Depends(get_current_user)):
     return {"reports": reports, "stats": stats}
 
 @router.put("/driver-reports/{report_id}")
-async def handle_driver_report(report_id: str, action: str, admin_notes: str = "", user: dict = Depends(get_current_user)):
+async def handle_driver_report(report_id: str, action: str, admin_notes: str = "", user: dict = Depends(get_current_user)) -> dict:
     """اتخاذ إجراء بشأن البلاغ"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -2513,7 +2513,7 @@ async def handle_driver_report(report_id: str, action: str, admin_notes: str = "
 # ============== إدارة متاجر الطعام ==============
 
 @router.get("/food/stats")
-async def get_food_admin_stats(user: dict = Depends(get_current_user)):
+async def get_food_admin_stats(user: dict = Depends(get_current_user)) -> dict:
     """إحصائيات متاجر الطعام"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -2546,7 +2546,7 @@ async def get_food_stores_admin(
     status: str = None,
     store_type: str = None,
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """جلب متاجر الطعام للمدير"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -2563,7 +2563,7 @@ async def get_food_stores_admin(
     return stores
 
 @router.post("/food/stores/{store_id}/approve")
-async def approve_food_store(store_id: str, user: dict = Depends(get_current_user)):
+async def approve_food_store(store_id: str, user: dict = Depends(get_current_user)) -> dict:
     """الموافقة على متجر طعام"""
     if user["user_type"] != "admin":
         raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
@@ -2592,7 +2592,7 @@ async def reject_food_store(
     store_id: str, 
     data: dict = None,
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """رفض متجر طعام مع سبب الرفض (اختياري)"""
     if user["user_type"] != "admin":
         raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
@@ -2635,7 +2635,7 @@ async def reject_food_store(
 
 
 @router.delete("/food/stores/pending/{store_id}")
-async def delete_pending_food_store(store_id: str, user: dict = Depends(get_current_user)):
+async def delete_pending_food_store(store_id: str, user: dict = Depends(get_current_user)) -> dict:
     """حذف متجر طعام معلق نهائياً"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -2661,7 +2661,7 @@ async def delete_pending_food_store(store_id: str, user: dict = Depends(get_curr
 
 
 @router.post("/food/stores/{store_id}/suspend")
-async def suspend_food_store(store_id: str, data: dict = None, user: dict = Depends(get_current_user)):
+async def suspend_food_store(store_id: str, data: dict = None, user: dict = Depends(get_current_user)) -> dict:
     """إيقاف متجر طعام"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -2703,7 +2703,7 @@ async def suspend_food_store(store_id: str, data: dict = None, user: dict = Depe
 
 
 @router.post("/food/stores/{store_id}/activate")
-async def activate_food_store(store_id: str, user: dict = Depends(get_current_user)):
+async def activate_food_store(store_id: str, user: dict = Depends(get_current_user)) -> dict:
     """إعادة تفعيل متجر طعام"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -2745,7 +2745,7 @@ async def activate_food_store(store_id: str, user: dict = Depends(get_current_us
 
 
 @router.delete("/food/stores/{store_id}")
-async def delete_food_store(store_id: str, user: dict = Depends(get_current_user)):
+async def delete_food_store(store_id: str, user: dict = Depends(get_current_user)) -> dict:
     """حذف متجر طعام نهائياً"""
     if user["user_type"] != "admin":
         raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
@@ -2786,7 +2786,7 @@ async def delete_food_store(store_id: str, user: dict = Depends(get_current_user
 
 
 @router.get("/food/stores/with-status")
-async def get_food_stores_with_status(user: dict = Depends(get_current_user)):
+async def get_food_stores_with_status(user: dict = Depends(get_current_user)) -> dict:
     """جلب جميع متاجر الطعام مع حالاتها"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -2853,7 +2853,7 @@ async def get_food_stores_with_status(user: dict = Depends(get_current_user)):
 
 
 @router.get("/food/commissions")
-async def get_food_commissions(user: dict = Depends(get_current_user)):
+async def get_food_commissions(user: dict = Depends(get_current_user)) -> dict:
     """جلب عمولات متاجر الطعام"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -2872,7 +2872,7 @@ async def get_food_commissions(user: dict = Depends(get_current_user)):
 async def update_food_commissions(
     commissions: dict,
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """تحديث عمولات متاجر الطعام"""
     if user["user_type"] != "admin":
         raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
@@ -2897,7 +2897,7 @@ async def update_food_commissions(
 async def get_all_food_offers(
     status: str = None,  # all, active, inactive, pending
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """جلب جميع عروض الطعام للمدير"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -2935,7 +2935,7 @@ async def get_all_food_offers(
     return offers
 
 @router.put("/food-offers/{offer_id}/approve")
-async def approve_food_offer(offer_id: str, user: dict = Depends(get_current_user)):
+async def approve_food_offer(offer_id: str, user: dict = Depends(get_current_user)) -> dict:
     """موافقة المدير على عرض"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -2951,7 +2951,7 @@ async def approve_food_offer(offer_id: str, user: dict = Depends(get_current_use
     return {"message": "تمت الموافقة على العرض"}
 
 @router.put("/food-offers/{offer_id}/reject")
-async def reject_food_offer(offer_id: str, data: dict = None, user: dict = Depends(get_current_user)):
+async def reject_food_offer(offer_id: str, data: dict = None, user: dict = Depends(get_current_user)) -> dict:
     """رفض المدير لعرض مع سبب الرفض (اختياري)"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -2996,7 +2996,7 @@ async def reject_food_offer(offer_id: str, data: dict = None, user: dict = Depen
     return {"message": "تم رفض العرض", "reason": reason if reason else None}
 
 @router.put("/food-offers/{offer_id}")
-async def admin_update_food_offer(offer_id: str, update_data: dict, user: dict = Depends(get_current_user)):
+async def admin_update_food_offer(offer_id: str, update_data: dict, user: dict = Depends(get_current_user)) -> dict:
     """تعديل المدير لعرض (تغيير الكميات، التفعيل/التعطيل)"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -3019,7 +3019,7 @@ async def admin_update_food_offer(offer_id: str, update_data: dict, user: dict =
     return {"message": "تم تحديث العرض"}
 
 @router.delete("/food-offers/{offer_id}")
-async def admin_delete_food_offer(offer_id: str, user: dict = Depends(get_current_user)):
+async def admin_delete_food_offer(offer_id: str, user: dict = Depends(get_current_user)) -> dict:
     """حذف المدير لعرض"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -3034,7 +3034,7 @@ async def admin_delete_food_offer(offer_id: str, user: dict = Depends(get_curren
 # ============== إنشاء عرض "اشتري X واحصل على Y" من الأدمن ==============
 
 @router.post("/food-offers/create")
-async def admin_create_food_offer(data: dict, user: dict = Depends(get_current_user)):
+async def admin_create_food_offer(data: dict, user: dict = Depends(get_current_user)) -> dict:
     """إنشاء عرض 'اشتري X واحصل على Y' من الأدمن مباشرة"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -3076,7 +3076,7 @@ async def admin_create_food_offer(data: dict, user: dict = Depends(get_current_u
 
 
 @router.get("/food-stores/list")
-async def get_food_stores_list(user: dict = Depends(get_current_user)):
+async def get_food_stores_list(user: dict = Depends(get_current_user)) -> dict:
     """جلب قائمة متاجر الطعام للاختيار منها"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -3092,7 +3092,7 @@ async def get_food_stores_list(user: dict = Depends(get_current_user)):
 # ============== عروض الفلاش (Flash Sales) ==============
 
 @router.post("/flash-sales")
-async def create_flash_sale(sale_data: dict, user: dict = Depends(get_current_user)):
+async def create_flash_sale(sale_data: dict, user: dict = Depends(get_current_user)) -> dict:
     """إنشاء عرض فلاش محدود الوقت - للمدير فقط"""
     if user["user_type"] != "admin":
         raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
@@ -3151,7 +3151,7 @@ async def create_flash_sale(sale_data: dict, user: dict = Depends(get_current_us
     return sale_doc
 
 @router.get("/flash-sales")
-async def get_all_flash_sales(user: dict = Depends(get_current_user)):
+async def get_all_flash_sales(user: dict = Depends(get_current_user)) -> dict:
     """جلب جميع عروض الفلاش - للمدير"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -3160,7 +3160,7 @@ async def get_all_flash_sales(user: dict = Depends(get_current_user)):
     return sales
 
 @router.put("/flash-sales/{sale_id}")
-async def update_flash_sale(sale_id: str, update_data: dict, user: dict = Depends(get_current_user)):
+async def update_flash_sale(sale_id: str, update_data: dict, user: dict = Depends(get_current_user)) -> dict:
     """تحديث عرض فلاش"""
     if user["user_type"] != "admin":
         raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
@@ -3180,7 +3180,7 @@ async def update_flash_sale(sale_id: str, update_data: dict, user: dict = Depend
     return {"message": "تم تحديث عرض الفلاش"}
 
 @router.delete("/flash-sales/{sale_id}")
-async def delete_flash_sale(sale_id: str, user: dict = Depends(get_current_user)):
+async def delete_flash_sale(sale_id: str, user: dict = Depends(get_current_user)) -> dict:
     """حذف عرض فلاش"""
     if user["user_type"] != "admin":
         raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
@@ -3199,7 +3199,7 @@ async def delete_flash_sale(sale_id: str, user: dict = Depends(get_current_user)
 async def get_flash_sale_requests(
     status: str = None,  # pending, approved, rejected, all
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """جلب طلبات البائعين للانضمام لعروض الفلاش"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -3279,7 +3279,7 @@ async def get_flash_sale_requests(
     return {"requests": requests, "stats": stats}
 
 @router.put("/flash-sale-requests/{request_id}/approve")
-async def approve_flash_sale_request(request_id: str, user: dict = Depends(get_current_user)):
+async def approve_flash_sale_request(request_id: str, user: dict = Depends(get_current_user)) -> dict:
     """موافقة المدير على طلب انضمام لعرض فلاش"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -3344,7 +3344,7 @@ async def reject_flash_sale_request(
     reason: str = "لم يستوفِ الشروط",
     refund: bool = True,
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """رفض طلب انضمام لعرض فلاش مع إمكانية استرداد الرسوم"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -3417,7 +3417,7 @@ async def reject_flash_sale_request(
 
 
 @router.delete("/flash-sale-requests/{request_id}")
-async def delete_flash_sale_request(request_id: str, user: dict = Depends(get_current_user)):
+async def delete_flash_sale_request(request_id: str, user: dict = Depends(get_current_user)) -> dict:
     """حذف طلب انضمام للفلاش (للطلبات اليتيمة أو القديمة)"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -3435,7 +3435,7 @@ async def delete_flash_sale_request(request_id: str, user: dict = Depends(get_cu
 # ============== إعدادات رسوم الفلاش ==============
 
 @router.get("/flash-sale-settings")
-async def get_flash_sale_settings(user: dict = Depends(get_current_user)):
+async def get_flash_sale_settings(user: dict = Depends(get_current_user)) -> dict:
     """جلب إعدادات رسوم الانضمام للفلاش"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -3456,7 +3456,7 @@ async def get_flash_sale_settings(user: dict = Depends(get_current_user)):
     return settings
 
 @router.put("/flash-sale-settings")
-async def update_flash_sale_settings(settings_data: dict, user: dict = Depends(get_current_user)):
+async def update_flash_sale_settings(settings_data: dict, user: dict = Depends(get_current_user)) -> dict:
     """تحديث إعدادات رسوم الفلاش"""
     if user["user_type"] != "admin":
         raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
@@ -3504,7 +3504,7 @@ class ReassignDriverRequest(BaseModel):
 async def compensate_user(
     req: CompensationRequest,
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """إضافة رصيد تعويضي لمستخدم (عميل/سائق/بائع)"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمديرين فقط")
@@ -3592,7 +3592,7 @@ async def admin_delete_review(
     review_id: str,
     reason: str = "مخالفة سياسة الاستخدام",
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """حذف تقييم مسيء أو غير لائق"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمديرين فقط")
@@ -3652,7 +3652,7 @@ async def admin_partial_refund(
     order_id: str,
     req: PartialRefundRequest,
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """استرداد جزئي لمبلغ الطلب"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمديرين فقط")
@@ -3768,7 +3768,7 @@ async def admin_reassign_driver(
     order_id: str,
     req: ReassignDriverRequest,
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """تغيير السائق أو تعيين سائق بديل للطلب"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمديرين فقط")
@@ -3911,7 +3911,7 @@ async def admin_reassign_driver(
 
 # 5️⃣ جلب قائمة السائقين المتاحين
 @router.get("/available-drivers")
-async def get_available_drivers(user: dict = Depends(get_current_user)):
+async def get_available_drivers(user: dict = Depends(get_current_user)) -> dict:
     """جلب قائمة السائقين المتاحين للتعيين"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمديرين فقط")
@@ -3947,7 +3947,7 @@ async def admin_cancel_order(
     order_id: str,
     data: dict = None,
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """إلغاء طلب بواسطة المدير"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمديرين فقط")
@@ -4049,7 +4049,7 @@ async def admin_change_order_status(
     order_id: str,
     data: dict,
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """تغيير حالة الطلب بواسطة المدير"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمديرين فقط")
@@ -4134,7 +4134,7 @@ async def admin_full_refund(
     order_id: str,
     data: dict = None,
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """استرداد كامل المبلغ للعميل"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمديرين فقط")
@@ -4223,7 +4223,7 @@ async def admin_full_refund(
 async def admin_toggle_product_visibility(
     product_id: str,
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """إخفاء/إظهار منتج"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمديرين فقط")
@@ -4274,7 +4274,7 @@ async def admin_toggle_product_visibility(
 async def admin_delete_product(
     product_id: str,
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """حذف منتج نهائياً"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمديرين فقط")
@@ -4330,7 +4330,7 @@ async def admin_delete_product(
 # ============== إدارة أطباق الطعام ==============
 
 @router.get("/food-items/all")
-async def get_all_food_items(user: dict = Depends(get_current_user)):
+async def get_all_food_items(user: dict = Depends(get_current_user)) -> dict:
     """جلب جميع أصناف الطعام"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -4364,7 +4364,7 @@ async def get_all_food_items(user: dict = Depends(get_current_user)):
     return items
 
 @router.delete("/food-items/{item_id}")
-async def delete_food_item(item_id: str, user: dict = Depends(get_current_user)):
+async def delete_food_item(item_id: str, user: dict = Depends(get_current_user)) -> dict:
     """حذف صنف طعام"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -4378,7 +4378,7 @@ async def delete_food_item(item_id: str, user: dict = Depends(get_current_user))
 # ============== إدارة أطباق الطعام المعلقة ==============
 
 @router.get("/food-items/pending")
-async def get_pending_food_items(user: dict = Depends(get_current_user)):
+async def get_pending_food_items(user: dict = Depends(get_current_user)) -> dict:
     """جلب الأطباق المعلقة التي تنتظر الموافقة"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -4412,7 +4412,7 @@ async def get_pending_food_items(user: dict = Depends(get_current_user)):
     return items
 
 @router.get("/food-items/stats")
-async def get_food_items_stats(user: dict = Depends(get_current_user)):
+async def get_food_items_stats(user: dict = Depends(get_current_user)) -> dict:
     """إحصائيات الأطباق"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -4428,7 +4428,7 @@ async def get_food_items_stats(user: dict = Depends(get_current_user)):
     }
 
 @router.post("/food-items/{item_id}/approve")
-async def approve_food_item(item_id: str, user: dict = Depends(get_current_user)):
+async def approve_food_item(item_id: str, user: dict = Depends(get_current_user)) -> dict:
     """الموافقة على طبق جديد"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -4471,7 +4471,7 @@ async def reject_food_item(
     item_id: str, 
     data: dict = None, 
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """رفض طبق مع سبب الرفض (اختياري)"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -4511,7 +4511,7 @@ async def reject_food_item(
 # ============== إدارة الترويجات ==============
 
 @router.get("/promotions/settings")
-async def get_promotion_settings(user: dict = Depends(get_current_user)):
+async def get_promotion_settings(user: dict = Depends(get_current_user)) -> dict:
     """جلب إعدادات الترويج"""
     if user["user_type"] != "admin":
         raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
@@ -4550,7 +4550,7 @@ async def get_promotion_settings(user: dict = Depends(get_current_user)):
     return settings
 
 @router.put("/promotions/settings")
-async def update_promotion_settings(data: dict, user: dict = Depends(get_current_user)):
+async def update_promotion_settings(data: dict, user: dict = Depends(get_current_user)) -> dict:
     """تحديث إعدادات الترويج"""
     if user["user_type"] != "admin":
         raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
@@ -4592,7 +4592,7 @@ async def update_promotion_settings(data: dict, user: dict = Depends(get_current
     return {"message": "تم تحديث إعدادات الترويج بنجاح", "settings": update}
 
 @router.get("/promotions/all")
-async def get_all_promotions(user: dict = Depends(get_current_user)):
+async def get_all_promotions(user: dict = Depends(get_current_user)) -> dict:
     """جلب جميع الترويجات النشطة والمنتهية"""
     if user["user_type"] != "admin":
         raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
@@ -4625,7 +4625,7 @@ async def get_all_promotions(user: dict = Depends(get_current_user)):
     }
 
 @router.delete("/promotions/{promotion_id}")
-async def cancel_promotion(promotion_id: str, user: dict = Depends(get_current_user)):
+async def cancel_promotion(promotion_id: str, user: dict = Depends(get_current_user)) -> dict:
     """إلغاء ترويج (بدون استرداد)"""
     if user["user_type"] != "admin":
         raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
@@ -4658,7 +4658,7 @@ async def cancel_promotion(promotion_id: str, user: dict = Depends(get_current_u
 # ============== Database Reset (للأدمن الرئيسي فقط) ==============
 
 @router.post("/reset-database")
-async def reset_database(data: dict, user: dict = Depends(get_current_user)):
+async def reset_database(data: dict, user: dict = Depends(get_current_user)) -> dict:
     """مسح قاعدة البيانات - للأدمن الرئيسي فقط"""
     
     # التحقق من أن المستخدم هو الأدمن الرئيسي فقط (ليس sub_admin)

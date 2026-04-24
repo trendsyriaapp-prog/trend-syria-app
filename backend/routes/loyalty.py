@@ -44,7 +44,7 @@ class RedeemPointsRequest(BaseModel):
 @router.get("/points")
 async def get_loyalty_points(
     current_user: dict = Depends(get_current_user)
-):
+) -> dict:
     """الحصول على نقاط الولاء الحالية"""
     
     user_id = current_user.get("id")
@@ -92,7 +92,7 @@ async def get_loyalty_points(
 async def get_points_history(
     current_user: dict = Depends(get_current_user),
     limit: int = 20
-):
+) -> dict:
     """سجل معاملات النقاط"""
     
     user_id = current_user.get("id")
@@ -109,7 +109,7 @@ async def get_points_history(
 async def redeem_points(
     data: RedeemPointsRequest,
     current_user: dict = Depends(get_current_user)
-):
+) -> dict:
     """استبدال النقاط بخصم"""
     
     user_id = current_user.get("id")
@@ -195,13 +195,13 @@ async def redeem_points(
 
 # مستويات الولاء
 @router.get("/tiers")
-async def get_loyalty_tiers():
+async def get_loyalty_tiers() -> dict:
     """الحصول على مستويات الولاء"""
     return LOYALTY_TIERS
 
 # إعدادات نظام الولاء
 @router.get("/settings")
-async def get_loyalty_settings():
+async def get_loyalty_settings() -> dict:
     """إعدادات نظام الولاء"""
     return {
         "points_per_1000_syp": POINTS_PER_1000_SYP,
@@ -211,7 +211,7 @@ async def get_loyalty_settings():
     }
 
 # === دالة مساعدة لإضافة النقاط (تُستدعى من orders.py) ===
-async def add_loyalty_points(user_id: str, order_total: float, order_id: str):
+async def add_loyalty_points(user_id: str, order_total: float, order_id: str) -> int:
     """إضافة نقاط ولاء بعد إتمام الطلب"""
     
     # جلب أو إنشاء سجل الولاء

@@ -50,7 +50,7 @@ NEARBY_CITIES = {
     "القنيطرة": ["دمشق", "ريف دمشق", "درعا"],
 }
 
-async def get_shipping_settings():
+async def get_shipping_settings() -> dict:
     """جلب إعدادات الشحن من قاعدة البيانات"""
     settings = await db.platform_settings.find_one({"id": "main"}, {"_id": 0})
     
@@ -70,7 +70,7 @@ async def get_shipping_settings():
         "free_threshold": DEFAULT_FREE_SHIPPING_THRESHOLD
     }
 
-async def get_distance_delivery_settings():
+async def get_distance_delivery_settings() -> dict:
     """جلب إعدادات التوصيل بالمسافة"""
     settings = await db.platform_settings.find_one({"id": "main"}, {"_id": 0})
     
@@ -79,7 +79,7 @@ async def get_distance_delivery_settings():
     
     return DEFAULT_DISTANCE_DELIVERY
 
-async def get_driver_earnings_settings():
+async def get_driver_earnings_settings() -> dict:
     """جلب إعدادات أرباح السائق"""
     settings = await db.platform_settings.find_one({"id": "main"}, {"_id": 0})
     
@@ -235,7 +235,7 @@ async def api_calculate_driver_earnings(
     customer_lon: float,
     driver_lat: float = None,
     driver_lon: float = None
-):
+) -> dict:
     """
     API لحساب أرباح السائق المتوقعة
     """
@@ -254,7 +254,7 @@ async def calculate_shipping_by_distance(
     customer_lon: float,
     order_total: float = 0,
     order_type: str = "food"
-):
+) -> dict:
     """
     حساب رسوم التوصيل بناءً على المسافة بين المتجر والعميل
     """
@@ -270,7 +270,7 @@ SHIPPING_COSTS = DEFAULT_SHIPPING_COSTS.copy()
 FREE_SHIPPING_THRESHOLD = DEFAULT_FREE_SHIPPING_THRESHOLD
 
 @router.get("/calculate")
-async def calculate_shipping(product_id: str, customer_city: str, order_total: float = 0):
+async def calculate_shipping(product_id: str, customer_city: str, order_total: float = 0) -> dict:
     # جلب الإعدادات الديناميكية
     settings = await get_shipping_settings()
     shipping_costs = {"same_city": settings["same_city"], "nearby": settings["nearby"], "far": settings["far"]}
@@ -335,7 +335,7 @@ async def calculate_shipping(product_id: str, customer_city: str, order_total: f
     }
 
 @router.get("/info")
-async def get_shipping_info():
+async def get_shipping_info() -> dict:
     """جلب معلومات الشحن العامة"""
     settings = await get_shipping_settings()
     return {
@@ -347,7 +347,7 @@ async def get_shipping_info():
     }
 
 @router.get("/cart")
-async def calculate_cart_shipping(customer_city: str, user: dict = Depends(get_current_user)):
+async def calculate_cart_shipping(customer_city: str, user: dict = Depends(get_current_user)) -> dict:
     # جلب الإعدادات الديناميكية
     settings = await get_shipping_settings()
     shipping_costs = {"same_city": settings["same_city"], "nearby": settings["nearby"], "far": settings["far"]}
@@ -463,7 +463,7 @@ async def calculate_cart_shipping(customer_city: str, user: dict = Depends(get_c
     }
 
 @router.get("/cities")
-async def get_cities():
+async def get_cities() -> list:
     return [
         "دمشق", "ريف دمشق", "حلب", "حمص", "حماة", 
         "اللاذقية", "طرطوس", "درعا", "السويداء", 
@@ -471,7 +471,7 @@ async def get_cities():
     ]
 
 @router.get("/cart/detailed")
-async def calculate_cart_shipping_detailed(customer_city: str, user: dict = Depends(get_current_user)):
+async def calculate_cart_shipping_detailed(customer_city: str, user: dict = Depends(get_current_user)) -> dict:
     """
     حساب تفاصيل الشحن لكل بائع على حدة
     يُظهر للعميل تكلفة الشحن لكل متجر بشكل منفصل

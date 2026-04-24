@@ -35,7 +35,7 @@ class GiftShippingAddress(BaseModel):
     notes: Optional[str] = ""
 
 @router.post("/send")
-async def send_gift(gift: GiftRequest, user: dict = Depends(get_current_user)):
+async def send_gift(gift: GiftRequest, user: dict = Depends(get_current_user)) -> dict:
     """إرسال منتج كهدية"""
     
     # التحقق من المنتج
@@ -90,7 +90,7 @@ async def send_gift(gift: GiftRequest, user: dict = Depends(get_current_user)):
     }
 
 @router.get("/sent")
-async def get_sent_gifts(user: dict = Depends(get_current_user)):
+async def get_sent_gifts(user: dict = Depends(get_current_user)) -> dict:
     """الهدايا المُرسلة"""
     gifts = await db.gifts.find(
         {"sender_id": user["id"]},
@@ -100,7 +100,7 @@ async def get_sent_gifts(user: dict = Depends(get_current_user)):
     return gifts
 
 @router.get("/received")
-async def get_received_gifts(user: dict = Depends(get_current_user)):
+async def get_received_gifts(user: dict = Depends(get_current_user)) -> dict:
     """الهدايا المُستلمة - مع إخفاء تفاصيل المنتج حتى التسليم الفعلي"""
     gifts = await db.gifts.find(
         {"$or": [
@@ -150,7 +150,7 @@ async def get_received_gifts(user: dict = Depends(get_current_user)):
     return result
 
 @router.post("/{gift_id}/accept")
-async def accept_gift(gift_id: str, user: dict = Depends(get_current_user)):
+async def accept_gift(gift_id: str, user: dict = Depends(get_current_user)) -> dict:
     """قبول الهدية - المرحلة الأولى (تحويل لـ pending_address)"""
     gift = await db.gifts.find_one({"id": gift_id}, {"_id": 0})
     if not gift:
@@ -182,7 +182,7 @@ async def accept_gift(gift_id: str, user: dict = Depends(get_current_user)):
 
 
 @router.post("/{gift_id}/submit-address")
-async def submit_gift_address(gift_id: str, address: GiftShippingAddress, user: dict = Depends(get_current_user)):
+async def submit_gift_address(gift_id: str, address: GiftShippingAddress, user: dict = Depends(get_current_user)) -> dict:
     """إكمال استلام الهدية مع عنوان الشحن"""
     gift = await db.gifts.find_one({"id": gift_id}, {"_id": 0})
     if not gift:
@@ -305,7 +305,7 @@ async def submit_gift_address(gift_id: str, address: GiftShippingAddress, user: 
 
 
 @router.get("/{gift_id}/details")
-async def get_gift_details(gift_id: str, user: dict = Depends(get_current_user)):
+async def get_gift_details(gift_id: str, user: dict = Depends(get_current_user)) -> dict:
     """جلب تفاصيل هدية محددة"""
     gift = await db.gifts.find_one({"id": gift_id}, {"_id": 0})
     if not gift:
@@ -339,7 +339,7 @@ async def get_gift_details(gift_id: str, user: dict = Depends(get_current_user))
     return gift
 
 @router.post("/{gift_id}/reject")
-async def reject_gift(gift_id: str, user: dict = Depends(get_current_user)):
+async def reject_gift(gift_id: str, user: dict = Depends(get_current_user)) -> dict:
     """رفض الهدية"""
     gift = await db.gifts.find_one({"id": gift_id}, {"_id": 0})
     if not gift:

@@ -52,7 +52,7 @@ def calculate_ad_cost(ad_type: str, duration: str, prices: dict) -> float:
 
 # الحصول على أسعار الإعلانات
 @router.get("/prices")
-async def get_ad_prices():
+async def get_ad_prices() -> dict:
     """الحصول على أسعار الإعلانات"""
     settings = await db.settings.find_one({"type": "ad_settings"})
     if settings and "prices" in settings:
@@ -61,7 +61,7 @@ async def get_ad_prices():
 
 # الإعلانات النشطة للعرض على الصفحة الرئيسية
 @router.get("/active")
-async def get_active_ads():
+async def get_active_ads() -> dict:
     """جلب البانرات والإعلانات النشطة للصفحة الرئيسية"""
     now = datetime.now()
     
@@ -110,7 +110,7 @@ async def get_active_ads():
 async def create_ad(
     data: CreateAdRequest,
     current_user: dict = Depends(get_current_user)
-):
+) -> dict:
     """إنشاء إعلان جديد للمنتج"""
     
     # التحقق من أن المستخدم بائع
@@ -204,7 +204,7 @@ async def create_ad(
 @router.get("/my-ads")
 async def get_my_ads(
     current_user: dict = Depends(get_current_user)
-):
+) -> dict:
     """الحصول على إعلانات البائع"""
     
     if current_user.get("user_type") != "seller":
@@ -249,7 +249,7 @@ async def get_my_ads(
 @router.get("/featured-products")
 async def get_featured_products(
     limit: int = 10
-):
+) -> list:
     """الحصول على المنتجات المميزة النشطة"""
     
     now = datetime.utcnow()
@@ -305,7 +305,7 @@ async def get_featured_products(
 @router.get("/banners")
 async def get_active_banners(
     limit: int = 5
-):
+) -> list:
     """الحصول على البانرات الإعلانية النشطة"""
     
     now = datetime.utcnow()
@@ -355,7 +355,7 @@ async def get_active_banners(
 @router.post("/click/{ad_id}")
 async def record_ad_click(
     ad_id: str
-):
+) -> dict:
     """تسجيل نقرة على الإعلان"""
     
     await db.ads.update_one(
@@ -372,7 +372,7 @@ async def record_ad_click(
 async def get_all_ads_admin(
     status: Optional[str] = None,
     current_user: dict = Depends(get_current_user)
-):
+) -> dict:
     """الحصول على جميع الإعلانات (للمدير)"""
     
     if current_user.get("user_type") != "admin":
@@ -405,7 +405,7 @@ async def get_all_ads_admin(
 async def update_ad_prices(
     prices: dict,
     current_user: dict = Depends(get_current_user)
-):
+) -> dict:
     """تحديث أسعار الإعلانات (للمدير)"""
     
     if current_user.get("user_type") != "admin":
@@ -423,7 +423,7 @@ async def update_ad_prices(
 @router.get("/admin/stats")
 async def get_ads_stats(
     current_user: dict = Depends(get_current_user)
-):
+) -> dict:
     """إحصائيات الإعلانات (للمدير)"""
     
     if current_user.get("user_type") != "admin":
@@ -474,7 +474,7 @@ async def get_ads_stats(
 @router.get("/my-analytics")
 async def get_seller_ad_analytics(
     current_user: dict = Depends(get_current_user)
-):
+) -> dict:
     """تقارير أداء إعلانات البائع"""
     
     if current_user.get("user_type") != "seller":

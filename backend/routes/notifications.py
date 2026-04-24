@@ -42,7 +42,7 @@ ADMIN_NOTIFICATION_TYPES = [
 async def get_notifications(
     user: dict = Depends(get_current_user),
     context: Optional[str] = Query(None, description="seller, delivery, customer, or admin")
-):
+) -> dict:
     """جلب الإشعارات مع إمكانية الفلترة حسب السياق"""
     user_type = user.get("user_type", "buyer")
     target_role = user_type + "s" if not user_type.endswith("s") else user_type
@@ -108,7 +108,7 @@ async def get_notifications(
 
 
 @router.get("/unread")
-async def get_unread_notifications(user: dict = Depends(get_current_user)):
+async def get_unread_notifications(user: dict = Depends(get_current_user)) -> dict:
     """جلب الإشعارات غير المقروءة للمستخدم"""
     # Get user's read notifications
     user_reads = await db.notification_reads.find(
@@ -143,7 +143,7 @@ async def get_unread_notifications(user: dict = Depends(get_current_user)):
 
 
 @router.post("/{notification_id}/read")
-async def mark_notification_read(notification_id: str, user: dict = Depends(get_current_user)):
+async def mark_notification_read(notification_id: str, user: dict = Depends(get_current_user)) -> dict:
     await db.notification_reads.update_one(
         {"user_id": user["id"], "notification_id": notification_id},
         {"$set": {
@@ -159,7 +159,7 @@ async def mark_notification_read(notification_id: str, user: dict = Depends(get_
 async def mark_all_notifications_read(
     user: dict = Depends(get_current_user),
     context: Optional[str] = Query(default=None)
-):
+) -> dict:
     """تحديد جميع الإشعارات كمقروءة"""
     user_type = user.get("user_type", "buyer")
     target_role = user_type + "s" if not user_type.endswith("s") else user_type
@@ -220,7 +220,7 @@ class FCMTokenRequest(BaseModel):
     fcm_token: str
 
 @router.post("/fcm-token")
-async def save_fcm_token(data: FCMTokenRequest, user: dict = Depends(get_current_user)):
+async def save_fcm_token(data: FCMTokenRequest, user: dict = Depends(get_current_user)) -> dict:
     """حفظ FCM Token للمستخدم"""
     await db.fcm_tokens.update_one(
         {"user_id": user["id"]},
@@ -234,7 +234,7 @@ async def save_fcm_token(data: FCMTokenRequest, user: dict = Depends(get_current
     return {"message": "تم حفظ التوكن"}
 
 @router.delete("/fcm-token")
-async def remove_fcm_token(user: dict = Depends(get_current_user)):
+async def remove_fcm_token(user: dict = Depends(get_current_user)) -> dict:
     """إزالة FCM Token للمستخدم"""
     await db.fcm_tokens.delete_one({"user_id": user["id"]})
     return {"message": "تم إزالة التوكن"}
@@ -255,7 +255,7 @@ class PushNotificationRequest(BaseModel):
     image: str = None
 
 @router.post("/push/send")
-async def send_push_notification_admin(data: PushNotificationRequest, user: dict = Depends(get_current_user)):
+async def send_push_notification_admin(data: PushNotificationRequest, user: dict = Depends(get_current_user)) -> dict:
     """إرسال إشعار Push من الأدمن"""
     if user.get("user_type") not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="غير مصرح")
@@ -335,7 +335,7 @@ async def send_push_notification_admin(data: PushNotificationRequest, user: dict
         raise HTTPException(status_code=500, detail=f"خطأ في إرسال الإشعارات: {str(e)}")
 
 @router.post("/push/test")
-async def test_push_notification(user: dict = Depends(get_current_user)):
+async def test_push_notification(user: dict = Depends(get_current_user)) -> dict:
     """إرسال إشعار تجريبي للمستخدم الحالي"""
     try:
         # جلب توكن المستخدم
@@ -362,7 +362,7 @@ async def test_push_notification(user: dict = Depends(get_current_user)):
         raise HTTPException(status_code=500, detail=f"خطأ: {str(e)}")
 
 @router.get("/push/stats")
-async def get_push_stats(user: dict = Depends(get_current_user)):
+async def get_push_stats(user: dict = Depends(get_current_user)) -> dict:
     """إحصائيات إشعارات Push"""
     if user.get("user_type") not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="غير مصرح")

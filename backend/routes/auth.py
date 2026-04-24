@@ -74,7 +74,7 @@ async def check_new_device(user_id: str, device_id: str, user_type: str) -> bool
     return True  # جهاز جديد
 
 
-async def add_trusted_device(user_id: str, device_id: str, device_name: str = None, ip_address: str = None):
+async def add_trusted_device(user_id: str, device_id: str, device_name: str = None, ip_address: str = None) -> None:
     """
     إضافة جهاز للقائمة الموثوقة بعد التحقق
     """
@@ -104,7 +104,7 @@ def mask_phone(phone: str) -> str:
 
 @router.post("/register")
 @limiter.limit("3/minute")
-async def register(request: Request, user: UserRegister, response: Response):
+async def register(request: Request, user: UserRegister, response: Response) -> dict:
     """
     تسجيل مستخدم جديد
     🔒 يُرسل Token في httpOnly Cookie للأمان
@@ -205,7 +205,7 @@ async def register(request: Request, user: UserRegister, response: Response):
 
 @router.post("/send-registration-otp")
 @limiter.limit("3/minute")
-async def send_registration_otp(request: Request, data: dict):
+async def send_registration_otp(request: Request, data: dict) -> dict:
     """
     الخطوة 1: إرسال OTP للتحقق من الرقم قبل إنشاء الحساب
     لا يتم إنشاء أي شيء في قاعدة البيانات حتى التحقق من OTP
@@ -259,7 +259,7 @@ async def send_registration_otp(request: Request, data: dict):
 
 @router.post("/verify-otp-only")
 @limiter.limit("5/minute")
-async def verify_otp_only(request: Request, data: dict):
+async def verify_otp_only(request: Request, data: dict) -> dict:
     """
     التحقق من OTP فقط بدون إنشاء الحساب
     يُستخدم للتحقق من الرقم قبل إكمال بيانات البائع
@@ -314,7 +314,7 @@ async def verify_otp_only(request: Request, data: dict):
 
 @router.post("/complete-registration")
 @limiter.limit("5/minute")
-async def complete_registration(request: Request, data: dict, response: Response):
+async def complete_registration(request: Request, data: dict, response: Response) -> dict:
     """
     إكمال التسجيل وإنشاء الحساب بعد التحقق من OTP
     يتطلب أن يكون OTP قد تم التحقق منه مسبقاً
@@ -492,7 +492,7 @@ async def complete_registration(request: Request, data: dict, response: Response
 
 @router.post("/verify-registration-otp")
 @limiter.limit("5/minute")
-async def verify_registration_otp(request: Request, data: dict, response: Response):
+async def verify_registration_otp(request: Request, data: dict, response: Response) -> dict:
     """
     الخطوة 2: التحقق من OTP وإنشاء الحساب (للمشترين فقط - تدفق مختصر)
     يتم إنشاء الحساب فقط بعد التحقق من OTP بنجاح
@@ -677,7 +677,7 @@ async def verify_registration_otp(request: Request, data: dict, response: Respon
 
 @router.post("/resend-registration-otp")
 @limiter.limit("2/minute")
-async def resend_registration_otp(request: Request, data: dict):
+async def resend_registration_otp(request: Request, data: dict) -> dict:
     """
     إعادة إرسال OTP للتسجيل
     """
@@ -726,7 +726,7 @@ async def resend_registration_otp(request: Request, data: dict):
 
 @router.post("/login")
 @limiter.limit("15/minute")
-async def login(request: Request, credentials: UserLogin, response: Response):
+async def login(request: Request, credentials: UserLogin, response: Response) -> dict:
     """
     تسجيل الدخول - مع معالجة أخطاء شاملة
     🔒 يُرسل Token في httpOnly Cookie للأمان
@@ -929,7 +929,7 @@ async def login(request: Request, credentials: UserLogin, response: Response):
         raise HTTPException(status_code=500, detail=f"خطأ غير متوقع: {str(e)[:200]}")
 
 @router.post("/logout")
-async def logout(request: Request, response: Response):
+async def logout(request: Request, response: Response) -> dict:
     """
     🔒 تسجيل الخروج - مسح Cookies المصادقة
     """
@@ -950,7 +950,7 @@ async def logout(request: Request, response: Response):
     return {"message": "تم تسجيل الخروج بنجاح"}
 
 @router.post("/reset-brute-force")
-async def reset_brute_force_locks(user: dict = Depends(get_current_user)):
+async def reset_brute_force_locks(user: dict = Depends(get_current_user)) -> dict:
     """🔒 إعادة تعيين أقفال brute force - للأدمن فقط"""
     if user["user_type"] != "admin":
         raise HTTPException(status_code=403, detail="للإدارة فقط")
@@ -961,7 +961,7 @@ async def reset_brute_force_locks(user: dict = Depends(get_current_user)):
 
 @router.post("/verify-device-otp")
 @limiter.limit("5/minute")
-async def verify_device_otp(request: Request, data: DeviceOTPVerify):
+async def verify_device_otp(request: Request, data: DeviceOTPVerify) -> dict:
     """
     🔐 التحقق من OTP للجهاز الجديد
     بعد التحقق، يتم إضافة الجهاز للقائمة الموثوقة وإرجاع التوكن
@@ -1087,7 +1087,7 @@ async def verify_device_otp(request: Request, data: DeviceOTPVerify):
 
 @router.post("/resend-device-otp")
 @limiter.limit("2/minute")
-async def resend_device_otp(request: Request, phone: str, device_id: str):
+async def resend_device_otp(request: Request, phone: str, device_id: str) -> dict:
     """
     إعادة إرسال OTP للجهاز
     """
@@ -1131,7 +1131,7 @@ async def resend_device_otp(request: Request, phone: str, device_id: str):
 
 
 @router.get("/trusted-devices")
-async def get_trusted_devices(user: dict = Depends(get_current_user)):
+async def get_trusted_devices(user: dict = Depends(get_current_user)) -> dict:
     """
     جلب قائمة الأجهزة الموثوقة للمستخدم
     """
@@ -1144,7 +1144,7 @@ async def get_trusted_devices(user: dict = Depends(get_current_user)):
 
 
 @router.delete("/trusted-devices/{device_id}")
-async def remove_trusted_device(device_id: str, user: dict = Depends(get_current_user)):
+async def remove_trusted_device(device_id: str, user: dict = Depends(get_current_user)) -> dict:
     """
     إزالة جهاز من القائمة الموثوقة
     """
@@ -1159,7 +1159,7 @@ async def remove_trusted_device(device_id: str, user: dict = Depends(get_current
     return {"message": "تم إزالة الجهاز بنجاح"}
 
 @router.post("/refresh")
-async def refresh_token(request: Request):
+async def refresh_token(request: Request) -> dict:
     """🔒 تجديد التوكن"""
     auth_header = request.headers.get("Authorization", "")
     if not auth_header.startswith("Bearer "):
@@ -1199,7 +1199,7 @@ async def refresh_token(request: Request):
     }
 
 @router.get("/me")
-async def get_me(user: dict = Depends(get_current_user)):
+async def get_me(user: dict = Depends(get_current_user)) -> dict:
     return {
         "id": user["id"],
         "name": user.get("full_name", user.get("name", "")),
@@ -1212,7 +1212,7 @@ async def get_me(user: dict = Depends(get_current_user)):
     }
 
 @router.get("/lookup/{phone}")
-async def lookup_user_by_phone(phone: str, user: dict = Depends(get_current_user)):
+async def lookup_user_by_phone(phone: str, user: dict = Depends(get_current_user)) -> dict:
     """البحث عن مستخدم برقم الهاتف - للتحقق قبل إرسال هدية"""
     # تنظيف رقم الهاتف
     clean_phone = sanitize_input(phone)
@@ -1247,7 +1247,7 @@ async def lookup_user_by_phone(phone: str, user: dict = Depends(get_current_user
 seller_router = APIRouter(prefix="/seller", tags=["Seller"])
 
 @seller_router.post("/documents")
-async def upload_seller_documents(docs: SellerDocuments, user: dict = Depends(get_current_user)):
+async def upload_seller_documents(docs: SellerDocuments, user: dict = Depends(get_current_user)) -> dict:
     if user["user_type"] not in ["seller", "food_seller"]:
         raise HTTPException(status_code=403, detail="للبائعين فقط")
     
@@ -1350,7 +1350,7 @@ async def upload_seller_documents(docs: SellerDocuments, user: dict = Depends(ge
     return {"message": "تم رفع المستندات بنجاح، سيتم مراجعتها قريباً"}
 
 @seller_router.get("/seller-types")
-async def get_seller_types():
+async def get_seller_types() -> dict:
     """جلب أنواع البائعين المتاحة للتسجيل"""
     return {
         "seller_types": [
@@ -1372,7 +1372,7 @@ async def get_seller_types():
     }
 
 @seller_router.get("/documents/status")
-async def get_documents_status(user: dict = Depends(get_current_user)):
+async def get_documents_status(user: dict = Depends(get_current_user)) -> dict:
     doc = await db.seller_documents.find_one({"seller_id": user["id"]}, {"_id": 0})
     if not doc:
         return {"status": "not_submitted"}
@@ -1389,7 +1389,7 @@ async def get_documents_status(user: dict = Depends(get_current_user)):
 delivery_auth_router = APIRouter(prefix="/delivery", tags=["Delivery Auth"])
 
 @delivery_auth_router.post("/documents")
-async def upload_delivery_documents(docs: DeliveryDocuments, user: dict = Depends(get_current_user)):
+async def upload_delivery_documents(docs: DeliveryDocuments, user: dict = Depends(get_current_user)) -> dict:
     if user["user_type"] != "delivery":
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
     
@@ -1488,7 +1488,7 @@ async def upload_delivery_documents(docs: DeliveryDocuments, user: dict = Depend
     return {"message": "تم رفع المستندات بنجاح، سيتم مراجعتها قريباً"}
 
 @delivery_auth_router.get("/documents/status")
-async def get_delivery_documents_status(user: dict = Depends(get_current_user)):
+async def get_delivery_documents_status(user: dict = Depends(get_current_user)) -> dict:
     if user["user_type"] != "delivery":
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
     
@@ -1506,7 +1506,7 @@ async def get_delivery_documents_status(user: dict = Depends(get_current_user)):
     }
 
 @delivery_auth_router.get("/profile")
-async def get_delivery_profile(user: dict = Depends(get_current_user)):
+async def get_delivery_profile(user: dict = Depends(get_current_user)) -> dict:
     """
     جلب ملف السائق الشخصي بما في ذلك الصورة الشخصية
     هذا الـ endpoint يُستخدم في صفحة السائق الرئيسية
@@ -1565,7 +1565,7 @@ async def get_delivery_profile(user: dict = Depends(get_current_user)):
     }
 
 @delivery_auth_router.get("/fuel-types")
-async def get_fuel_types():
+async def get_fuel_types() -> dict:
     """جلب أنواع الوقود المتاحة للتسجيل"""
     return {
         "fuel_types": [
@@ -1610,7 +1610,7 @@ class PaymentAccountUpdate(BaseModel):
     is_default: bool = False
 
 @router.get("/seller/store-settings")
-async def get_store_settings(user: dict = Depends(get_current_user)):
+async def get_store_settings(user: dict = Depends(get_current_user)) -> dict:
     """جلب إعدادات المتجر للبائع"""
     if user["user_type"] != "seller":
         raise HTTPException(status_code=403, detail="للبائعين فقط")
@@ -1632,7 +1632,7 @@ async def get_store_settings(user: dict = Depends(get_current_user)):
     }
 
 @router.put("/seller/store-settings")
-async def update_store_settings(settings: StoreSettingsUpdate, user: dict = Depends(get_current_user)):
+async def update_store_settings(settings: StoreSettingsUpdate, user: dict = Depends(get_current_user)) -> dict:
     """تحديث إعدادات المتجر للبائع"""
     if user["user_type"] != "seller":
         raise HTTPException(status_code=403, detail="للبائعين فقط")
@@ -1666,7 +1666,7 @@ async def update_store_settings(settings: StoreSettingsUpdate, user: dict = Depe
 # ============================================
 
 @router.get("/seller/payment-accounts")
-async def get_seller_payment_accounts(user: dict = Depends(get_current_user)):
+async def get_seller_payment_accounts(user: dict = Depends(get_current_user)) -> dict:
     """جلب حسابات الاستلام المالي للبائع"""
     if user["user_type"] != "seller":
         raise HTTPException(status_code=403, detail="للبائعين فقط")
@@ -1679,7 +1679,7 @@ async def get_seller_payment_accounts(user: dict = Depends(get_current_user)):
     return accounts
 
 @router.post("/seller/payment-accounts")
-async def add_seller_payment_account(account: PaymentAccountUpdate, user: dict = Depends(get_current_user)):
+async def add_seller_payment_account(account: PaymentAccountUpdate, user: dict = Depends(get_current_user)) -> dict:
     """إضافة حساب استلام مالي جديد للبائع"""
     if user["user_type"] != "seller":
         raise HTTPException(status_code=403, detail="للبائعين فقط")
@@ -1722,7 +1722,7 @@ async def add_seller_payment_account(account: PaymentAccountUpdate, user: dict =
     return new_account
 
 @router.put("/seller/payment-accounts/{account_id}")
-async def update_seller_payment_account(account_id: str, account: PaymentAccountUpdate, user: dict = Depends(get_current_user)):
+async def update_seller_payment_account(account_id: str, account: PaymentAccountUpdate, user: dict = Depends(get_current_user)) -> dict:
     """تحديث حساب استلام مالي للبائع"""
     if user["user_type"] != "seller":
         raise HTTPException(status_code=403, detail="للبائعين فقط")
@@ -1758,7 +1758,7 @@ async def update_seller_payment_account(account_id: str, account: PaymentAccount
     return {"message": "تم تحديث الحساب بنجاح"}
 
 @router.delete("/seller/payment-accounts/{account_id}")
-async def delete_seller_payment_account(account_id: str, user: dict = Depends(get_current_user)):
+async def delete_seller_payment_account(account_id: str, user: dict = Depends(get_current_user)) -> dict:
     """حذف حساب استلام مالي للبائع"""
     if user["user_type"] != "seller":
         raise HTTPException(status_code=403, detail="للبائعين فقط")
@@ -1774,7 +1774,7 @@ async def delete_seller_payment_account(account_id: str, user: dict = Depends(ge
     return {"message": "تم حذف الحساب بنجاح"}
 
 @router.post("/seller/payment-accounts/{account_id}/default")
-async def set_default_payment_account(account_id: str, user: dict = Depends(get_current_user)):
+async def set_default_payment_account(account_id: str, user: dict = Depends(get_current_user)) -> dict:
     """تعيين حساب كافتراضي"""
     if user["user_type"] != "seller":
         raise HTTPException(status_code=403, detail="للبائعين فقط")
@@ -1814,7 +1814,7 @@ class DeliverySettingsUpdate(BaseModel):
     home_longitude: Optional[float] = None
 
 @router.get("/delivery/settings")
-async def get_delivery_settings(user: dict = Depends(get_current_user)):
+async def get_delivery_settings(user: dict = Depends(get_current_user)) -> dict:
     """جلب إعدادات موظف التوصيل"""
     if user["user_type"] != "delivery":
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
@@ -1843,7 +1843,7 @@ async def get_delivery_settings(user: dict = Depends(get_current_user)):
     }
 
 @router.put("/delivery/settings")
-async def update_delivery_settings(settings: DeliverySettingsUpdate, user: dict = Depends(get_current_user)):
+async def update_delivery_settings(settings: DeliverySettingsUpdate, user: dict = Depends(get_current_user)) -> dict:
     """تحديث إعدادات موظف التوصيل (باستثناء نوع الوقود - يتطلب تواصل مع الدعم)"""
     if user["user_type"] != "delivery":
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
@@ -1872,7 +1872,7 @@ async def update_delivery_settings(settings: DeliverySettingsUpdate, user: dict 
 # ============================================
 
 @router.get("/delivery/payment-accounts")
-async def get_delivery_payment_accounts(user: dict = Depends(get_current_user)):
+async def get_delivery_payment_accounts(user: dict = Depends(get_current_user)) -> dict:
     """جلب حسابات الاستلام المالي لموظف التوصيل"""
     if user["user_type"] != "delivery":
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
@@ -1885,7 +1885,7 @@ async def get_delivery_payment_accounts(user: dict = Depends(get_current_user)):
     return accounts
 
 @router.post("/delivery/payment-accounts")
-async def add_delivery_payment_account(account: PaymentAccountUpdate, user: dict = Depends(get_current_user)):
+async def add_delivery_payment_account(account: PaymentAccountUpdate, user: dict = Depends(get_current_user)) -> dict:
     """إضافة حساب استلام مالي جديد لموظف التوصيل"""
     if user["user_type"] != "delivery":
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
@@ -1925,7 +1925,7 @@ async def add_delivery_payment_account(account: PaymentAccountUpdate, user: dict
     return new_account
 
 @router.put("/delivery/payment-accounts/{account_id}")
-async def update_delivery_payment_account(account_id: str, account: PaymentAccountUpdate, user: dict = Depends(get_current_user)):
+async def update_delivery_payment_account(account_id: str, account: PaymentAccountUpdate, user: dict = Depends(get_current_user)) -> dict:
     """تحديث حساب استلام مالي لموظف التوصيل"""
     if user["user_type"] != "delivery":
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
@@ -1960,7 +1960,7 @@ async def update_delivery_payment_account(account_id: str, account: PaymentAccou
     return {"message": "تم تحديث الحساب بنجاح"}
 
 @router.delete("/delivery/payment-accounts/{account_id}")
-async def delete_delivery_payment_account(account_id: str, user: dict = Depends(get_current_user)):
+async def delete_delivery_payment_account(account_id: str, user: dict = Depends(get_current_user)) -> dict:
     """حذف حساب استلام مالي لموظف التوصيل"""
     if user["user_type"] != "delivery":
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
@@ -1976,7 +1976,7 @@ async def delete_delivery_payment_account(account_id: str, user: dict = Depends(
     return {"message": "تم حذف الحساب بنجاح"}
 
 @router.post("/delivery/payment-accounts/{account_id}/default")
-async def set_default_delivery_payment_account(account_id: str, user: dict = Depends(get_current_user)):
+async def set_default_delivery_payment_account(account_id: str, user: dict = Depends(get_current_user)) -> dict:
     """تعيين حساب كافتراضي لموظف التوصيل"""
     if user["user_type"] != "delivery":
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
@@ -2006,12 +2006,12 @@ async def set_default_delivery_payment_account(account_id: str, user: dict = Dep
 # 🔐 استعادة كلمة المرور
 # ============================================
 
-def generate_reset_token():
+def generate_reset_token() -> str:
     """توليد رمز إعادة تعيين كلمة المرور"""
     return ''.join(secrets.token_urlsafe(24))
 
 
-def generate_sms_code():
+def generate_sms_code() -> str:
     """توليد كود SMS من 6 أرقام"""
     return ''.join(''.join(secrets.choice(string.digits) for _ in range(6)))
 
@@ -2048,7 +2048,7 @@ async def send_sms(phone: str, message: str) -> dict:
 
 @router.post("/send-sms-code")
 @limiter.limit("3/minute")
-async def send_sms_code(request: Request, data: ForgotPasswordRequest):
+async def send_sms_code(request: Request, data: ForgotPasswordRequest) -> dict:
     """
     إرسال كود التحقق عبر SMS
     """
@@ -2101,7 +2101,7 @@ async def send_sms_code(request: Request, data: ForgotPasswordRequest):
 
 @router.post("/verify-sms-code")
 @limiter.limit("5/minute")
-async def verify_sms_code(request: Request):
+async def verify_sms_code(request: Request) -> dict:
     """
     التحقق من كود SMS
     """
@@ -2170,7 +2170,7 @@ async def verify_sms_code(request: Request):
 
 @router.post("/forgot-password")
 @limiter.limit("3/minute")
-async def forgot_password(request: Request, data: ForgotPasswordRequest):
+async def forgot_password(request: Request, data: ForgotPasswordRequest) -> dict:
     """
     الخطوة الأولى: التحقق من وجود رقم الهاتف
     """
@@ -2197,7 +2197,7 @@ async def forgot_password(request: Request, data: ForgotPasswordRequest):
 
 @router.post("/verify-identity")
 @limiter.limit("5/minute")
-async def verify_identity(request: Request, data: VerifyIdentityRequest):
+async def verify_identity(request: Request, data: VerifyIdentityRequest) -> dict:
     """
     الخطوة الثانية: التحقق من الهوية عبر رقم الطوارئ أو الاسم الثلاثي
     """
@@ -2287,7 +2287,7 @@ async def verify_identity(request: Request, data: VerifyIdentityRequest):
 
 @router.post("/reset-password")
 @limiter.limit("3/minute")
-async def reset_password(request: Request, data: ResetPasswordRequest):
+async def reset_password(request: Request, data: ResetPasswordRequest) -> dict:
     """
     الخطوة الثالثة: إعادة تعيين كلمة المرور
     """
@@ -2346,7 +2346,7 @@ class ChangePasswordRequest(BaseModel):
 
 @router.post("/change-password")
 @limiter.limit("5/minute")
-async def change_password(request: Request, data: ChangePasswordRequest, user: dict = Depends(get_current_user)):
+async def change_password(request: Request, data: ChangePasswordRequest, user: dict = Depends(get_current_user)) -> dict:
     """
     تغيير كلمة المرور للمستخدم المسجل
     يُستخدم أيضاً عند إجبار تغيير كلمة المرور الافتراضية
@@ -2398,7 +2398,7 @@ async def change_password(request: Request, data: ChangePasswordRequest, user: d
 
 
 @router.put("/user/emergency-phone")
-async def update_emergency_phone(request: Request, user: dict = Depends(get_current_user)):
+async def update_emergency_phone(request: Request, user: dict = Depends(get_current_user)) -> dict:
     """تحديث رقم الطوارئ للمستخدم"""
     body = await request.json()
     emergency_phone = body.get("emergency_phone", "")
@@ -2415,7 +2415,7 @@ async def update_emergency_phone(request: Request, user: dict = Depends(get_curr
 
 
 @router.get("/user/emergency-phone")
-async def get_emergency_phone(user: dict = Depends(get_current_user)):
+async def get_emergency_phone(user: dict = Depends(get_current_user)) -> dict:
     """جلب رقم الطوارئ للمستخدم"""
     user_data = await db.users.find_one({"id": user["id"]}, {"_id": 0, "emergency_phone": 1})
     return {"emergency_phone": user_data.get("emergency_phone", "")}
@@ -2424,7 +2424,7 @@ async def get_emergency_phone(user: dict = Depends(get_current_user)):
 
 # === Debug: تشخيص مشاكل تسجيل الدخول (للأدمن فقط) ===
 @router.get("/debug/login-check/{phone}")
-async def debug_login_check(phone: str, admin: dict = Depends(get_current_user)):
+async def debug_login_check(phone: str, admin: dict = Depends(get_current_user)) -> dict:
     """
     🔧 تشخيص مشاكل تسجيل الدخول - للأدمن فقط
     يُظهر معلومات عامة فقط لتحديد المشكلة
@@ -2477,7 +2477,7 @@ async def debug_login_check(phone: str, admin: dict = Depends(get_current_user))
 
 # === Admin: تشخيص مشاكل تسجيل الدخول ===
 @router.get("/admin/user-auth-status/{phone}")
-async def get_user_auth_status(phone: str, admin: dict = Depends(get_current_user)):
+async def get_user_auth_status(phone: str, admin: dict = Depends(get_current_user)) -> dict:
     """التحقق من حالة مصادقة مستخدم - للأدمن فقط"""
     if admin.get("user_type") != "admin":
         raise HTTPException(status_code=403, detail="غير مصرح")
@@ -2502,7 +2502,7 @@ async def get_user_auth_status(phone: str, admin: dict = Depends(get_current_use
 
 
 @router.post("/admin/reset-user-password/{phone}")
-async def admin_reset_user_password(phone: str, admin: dict = Depends(get_current_user)):
+async def admin_reset_user_password(phone: str, admin: dict = Depends(get_current_user)) -> dict:
     """إعادة تعيين كلمة مرور مستخدم للقيمة الافتراضية - للأدمن فقط"""
     if admin.get("user_type") != "admin":
         raise HTTPException(status_code=403, detail="غير مصرح")
@@ -2535,7 +2535,7 @@ async def admin_reset_user_password(phone: str, admin: dict = Depends(get_curren
 
 @router.post("/send-whatsapp-otp")
 @limiter.limit("3/minute")
-async def send_whatsapp_otp(request: Request, data: ForgotPasswordRequest):
+async def send_whatsapp_otp(request: Request, data: ForgotPasswordRequest) -> dict:
     """
     إرسال رمز OTP عبر واتساب لاستعادة كلمة المرور
     🧪 في وضع الاختبار: يعيد رسالة نجاح مع إرشاد لاستخدام الرمز 123456
@@ -2596,7 +2596,7 @@ async def send_whatsapp_otp(request: Request, data: ForgotPasswordRequest):
 
 @router.post("/verify-whatsapp-otp")
 @limiter.limit("5/minute")
-async def verify_whatsapp_otp(request: Request, phone: str, otp: str):
+async def verify_whatsapp_otp(request: Request, phone: str, otp: str) -> dict:
     """
     التحقق من رمز OTP المرسل عبر واتساب
     🧪 في وضع الاختبار: يقبل الرمز الثابت 123456
@@ -2696,7 +2696,7 @@ async def verify_whatsapp_otp(request: Request, phone: str, otp: str):
 
 
 @router.get("/whatsapp/status")
-async def check_whatsapp_status():
+async def check_whatsapp_status() -> dict:
     """
     التحقق من حالة اتصال واتساب
     """
@@ -2708,7 +2708,7 @@ async def check_whatsapp_status():
 
 
 @router.delete("/delete-account")
-async def delete_account(user: dict = Depends(get_current_user)):
+async def delete_account(user: dict = Depends(get_current_user)) -> dict:
     """
     حذف حساب المستخدم نهائياً
     """
@@ -2763,7 +2763,7 @@ class SwitchRoleRequest(BaseModel):
 
 
 @router.get("/roles")
-async def get_user_roles(user: dict = Depends(get_current_user)):
+async def get_user_roles(user: dict = Depends(get_current_user)) -> dict:
     """
     جلب أدوار المستخدم الحالي
     """
@@ -2822,7 +2822,7 @@ def get_available_roles(current_roles: list) -> list:
 
 
 @router.post("/roles/add")
-async def add_role_to_user(data: AddRoleRequest, user: dict = Depends(get_current_user)):
+async def add_role_to_user(data: AddRoleRequest, user: dict = Depends(get_current_user)) -> dict:
     """
     إضافة دور جديد للمستخدم (مثل: مشتري يصبح بائع)
     """
@@ -2883,7 +2883,7 @@ async def add_role_to_user(data: AddRoleRequest, user: dict = Depends(get_curren
 
 
 @router.post("/roles/switch")
-async def switch_active_role(data: SwitchRoleRequest, user: dict = Depends(get_current_user)):
+async def switch_active_role(data: SwitchRoleRequest, user: dict = Depends(get_current_user)) -> dict:
     """
     تبديل الدور النشط للمستخدم
     """
@@ -2972,7 +2972,7 @@ def get_role_redirect(role: str) -> str:
 
 
 @router.get("/roles/status/{role}")
-async def get_role_status(role: str, user: dict = Depends(get_current_user)):
+async def get_role_status(role: str, user: dict = Depends(get_current_user)) -> dict:
     """
     جلب حالة دور معين (للتحقق قبل التبديل)
     """

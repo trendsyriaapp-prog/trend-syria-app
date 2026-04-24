@@ -18,7 +18,7 @@ router = APIRouter(prefix="/payment/v2", tags=["Payment V2"])
 # ============== حالة نظام الدفع ==============
 
 @router.get("/status")
-async def get_payment_system_status():
+async def get_payment_system_status() -> dict:
     """
     الحصول على حالة نظام الدفع ومزوديه
     
@@ -67,7 +67,7 @@ async def get_payment_system_status():
 async def get_provider_balance(
     provider: str,
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """جلب رصيد حساب التاجر لمزود معين (للمدير فقط)"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -90,7 +90,7 @@ async def verify_payment(
     order_id: str = Query(..., description="رقم الطلب"),
     transaction_id: str = Query(..., description="رقم العملية من تطبيق الدفع"),
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """
     التحقق من دفع الطلب
     
@@ -163,7 +163,7 @@ async def verify_payment(
         raise HTTPException(status_code=400, detail=e.message)
 
 
-async def _process_successful_payment(order: dict, collection_name: str):
+async def _process_successful_payment(order: dict, collection_name: str) -> None:
     """معالجة الطلب بعد نجاح الدفع"""
     order_id = order["id"]
     
@@ -224,7 +224,7 @@ async def _process_successful_payment(order: dict, collection_name: str):
 async def create_card_payment_session(
     order_id: str = Query(...),
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """
     إنشاء جلسة دفع بالبطاقة البنكية
     
@@ -259,7 +259,7 @@ async def verify_card_payment(
     order_id: str = Query(...),
     session_id: str = Query(...),
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """التحقق من إتمام الدفع بالبطاقة البنكية"""
     order = await db.orders.find_one({"id": order_id, "user_id": user["id"]})
     if not order:
@@ -304,7 +304,7 @@ async def verify_card_payment(
 async def get_payment_instructions(
     payment_method: str,
     order_id: Optional[str] = None
-):
+) -> dict:
     """
     الحصول على تعليمات الدفع للعميل
     
@@ -381,7 +381,7 @@ async def get_payment_instructions(
 # ============== إعدادات الدفع للمدير ==============
 
 @router.get("/admin/settings")
-async def get_payment_settings(user: dict = Depends(get_current_user)):
+async def get_payment_settings(user: dict = Depends(get_current_user)) -> dict:
     """جلب إعدادات الدفع (للمدير)"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -399,7 +399,7 @@ async def get_payment_settings(user: dict = Depends(get_current_user)):
 async def update_payment_settings(
     settings: dict = Body(...),
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """تحديث إعدادات الدفع (للمدير)"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")

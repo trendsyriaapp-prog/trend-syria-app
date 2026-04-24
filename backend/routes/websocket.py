@@ -46,7 +46,7 @@ async def websocket_endpoint(
     websocket: WebSocket,
     token: str = Query(None),
     user_id: str = Query(None)
-):
+) -> dict:
     """
     WebSocket endpoint الرئيسي
     
@@ -108,7 +108,7 @@ async def websocket_endpoint(
     await manager.connect(websocket, ws_user_id, default_rooms)
     
     # Heartbeat task
-    async def heartbeat():
+    async def heartbeat() -> None:
         while True:
             try:
                 await asyncio.sleep(30)
@@ -198,6 +198,6 @@ async def websocket_endpoint(
 
 
 @router.get("/ws/stats")
-async def get_websocket_stats():
+async def get_websocket_stats() -> dict:
     """إحصائيات WebSocket (للمدير)"""
     return manager.get_stats()

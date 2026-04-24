@@ -33,7 +33,7 @@ class BoxPayment(BaseModel):
 # ========== Admin Endpoints ==========
 
 @router.get("/admin/all")
-async def get_all_boxes(admin: dict = Depends(get_current_admin)):
+async def get_all_boxes(admin: dict = Depends(get_current_admin)) -> dict:
     """جلب جميع الصناديق مع حالتها"""
     boxes = await db.delivery_boxes.find({}, {"_id": 0}).to_list(1000)
     
@@ -49,7 +49,7 @@ async def get_all_boxes(admin: dict = Depends(get_current_admin)):
     return {"boxes": boxes, "stats": stats, "settings": BOX_SETTINGS}
 
 @router.post("/admin/add")
-async def add_new_box(box_serial: str, admin: dict = Depends(get_current_admin)):
+async def add_new_box(box_serial: str, admin: dict = Depends(get_current_admin)) -> dict:
     """إضافة صندوق جديد للمخزون"""
     existing = await db.delivery_boxes.find_one({"serial": box_serial})
     if existing:
@@ -73,7 +73,7 @@ async def add_new_box(box_serial: str, admin: dict = Depends(get_current_admin))
     return {"message": "تم إضافة الصندوق بنجاح", "box": box}
 
 @router.post("/admin/assign")
-async def assign_box_to_driver(data: BoxAssignment, admin: dict = Depends(get_current_admin)):
+async def assign_box_to_driver(data: BoxAssignment, admin: dict = Depends(get_current_admin)) -> dict:
     """تعيين صندوق لموظف توصيل"""
     # التحقق من الموظف
     driver = await db.users.find_one({"id": data.delivery_user_id, "user_type": "delivery"})
@@ -149,7 +149,7 @@ async def assign_box_to_driver(data: BoxAssignment, admin: dict = Depends(get_cu
     return {"message": "تم تعيين الصندوق بنجاح", "box_serial": box["serial"]}
 
 @router.post("/admin/record-payment/{driver_id}")
-async def record_box_payment(driver_id: str, payment: BoxPayment, admin: dict = Depends(get_current_admin)):
+async def record_box_payment(driver_id: str, payment: BoxPayment, admin: dict = Depends(get_current_admin)) -> dict:
     """تسجيل دفعة للصندوق"""
     record = await db.driver_box_records.find_one({"driver_id": driver_id, "status": "active"})
     if not record:
@@ -210,7 +210,7 @@ async def record_box_payment(driver_id: str, payment: BoxPayment, admin: dict = 
     return {"message": "تم تسجيل الدفعة بنجاح"}
 
 @router.post("/admin/return/{driver_id}")
-async def return_box(driver_id: str, condition: str = "good", admin: dict = Depends(get_current_admin)):
+async def return_box(driver_id: str, condition: str = "good", admin: dict = Depends(get_current_admin)) -> dict:
     """استرجاع الصندوق من الموظف"""
     record = await db.driver_box_records.find_one({"driver_id": driver_id, "status": "active"})
     if not record:
@@ -262,7 +262,7 @@ async def return_box(driver_id: str, condition: str = "good", admin: dict = Depe
     }
 
 @router.get("/admin/settings")
-async def get_box_settings(admin: dict = Depends(get_current_admin)):
+async def get_box_settings(admin: dict = Depends(get_current_admin)) -> dict:
     """جلب إعدادات الصناديق"""
     settings = await db.platform_settings.find_one({"id": "main"}, {"_id": 0})
     box_settings = settings.get("box_settings", BOX_SETTINGS) if settings else BOX_SETTINGS
@@ -274,7 +274,7 @@ async def update_box_settings(
     monthly_installment: int,
     total_installments: int,
     admin: dict = Depends(get_current_admin)
-):
+) -> dict:
     """تحديث إعدادات الصناديق"""
     await db.platform_settings.update_one(
         {"id": "main"},
@@ -293,7 +293,7 @@ async def update_box_settings(
 # ========== Driver Endpoints ==========
 
 @router.get("/my-box")
-async def get_my_box(user: dict = Depends(get_current_user)):
+async def get_my_box(user: dict = Depends(get_current_user)) -> dict:
     """جلب معلومات صندوق الموظف"""
     if user.get("user_type") != "delivery":
         raise HTTPException(status_code=403, detail="هذه الصفحة لموظفي التوصيل فقط")

@@ -21,7 +21,7 @@ router = APIRouter(prefix="/wallet", tags=["Wallet"])
 # ============== Wallet Balance ==============
 
 @router.get("/balance")
-async def get_wallet_balance(user: dict = Depends(get_current_user)):
+async def get_wallet_balance(user: dict = Depends(get_current_user)) -> dict:
     """الحصول على رصيد المحفظة - متاح لجميع المستخدمين"""
     
     wallet = await db.wallets.find_one({"user_id": user["id"]}, {"_id": 0})
@@ -71,7 +71,7 @@ async def get_wallet_balance(user: dict = Depends(get_current_user)):
 async def get_wallet_transactions(
     user: dict = Depends(get_current_user),
     limit: int = Query(default=50, le=100)
-):
+) -> dict:
     """سجل المعاملات - متاح لجميع المستخدمين"""
     
     # حذف السجلات الأقدم من 3 أشهر تلقائياً
@@ -91,7 +91,7 @@ async def get_wallet_transactions(
 
 
 @router.delete("/transactions/clear")
-async def clear_wallet_transactions(user: dict = Depends(get_current_user)):
+async def clear_wallet_transactions(user: dict = Depends(get_current_user)) -> dict:
     """حذف جميع سجلات المحفظة للمستخدم الحالي - الرصيد لن يتغير"""
     
     result = await db.wallet_transactions.delete_many({"user_id": user["id"]})
@@ -118,7 +118,7 @@ class TopUpRequest(BaseModel):
 async def request_topup(
     data: TopUpRequest,
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """
     طلب شحن رصيد المحفظة - متاح لجميع المستخدمين
     
@@ -166,7 +166,7 @@ async def request_topup(
     }
 
 @router.get("/topup/history")
-async def get_topup_history(user: dict = Depends(get_current_user)):
+async def get_topup_history(user: dict = Depends(get_current_user)) -> dict:
     """سجل طلبات الشحن - متاح لجميع المستخدمين"""
     
     topups = await db.topup_requests.find(
@@ -177,7 +177,7 @@ async def get_topup_history(user: dict = Depends(get_current_user)):
     return topups
 
 @router.delete("/topup/{topup_id}")
-async def cancel_topup(topup_id: str, user: dict = Depends(get_current_user)):
+async def cancel_topup(topup_id: str, user: dict = Depends(get_current_user)) -> dict:
     """إلغاء طلب شحن معلق"""
     topup = await db.topup_requests.find_one({
         "id": topup_id,
@@ -209,7 +209,7 @@ class TopupVerifyRequest(BaseModel):
 async def verify_topup_payment(
     data: TopupVerifyRequest,
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """
     التحقق من تحويل شحن المحفظة برقم العملية
     
@@ -368,7 +368,7 @@ async def verify_topup_payment(
 async def get_all_topup_requests(
     status: Optional[str] = None,
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """جلب جميع طلبات الشحن - للإدارة"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للإدارة فقط")
@@ -385,7 +385,7 @@ async def get_all_topup_requests(
     return topups
 
 @router.post("/admin/topup/{topup_id}/approve")
-async def approve_topup(topup_id: str, user: dict = Depends(get_current_user)):
+async def approve_topup(topup_id: str, user: dict = Depends(get_current_user)) -> dict:
     """الموافقة على طلب شحن - للإدارة"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للإدارة فقط")
@@ -449,7 +449,7 @@ async def reject_topup(
     topup_id: str,
     reason: str = Query(default="لم يتم استلام التحويل"),
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """رفض طلب شحن - للإدارة"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للإدارة فقط")
@@ -500,7 +500,7 @@ class WithdrawRequest(BaseModel):
 async def request_withdrawal(
     data: WithdrawRequest,
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """
     طلب سحب رصيد - بدون موافقة الأدمن
     
@@ -641,7 +641,7 @@ async def request_withdrawal(
     }
 
 @router.get("/withdrawals")
-async def get_withdrawal_history(user: dict = Depends(get_current_user)):
+async def get_withdrawal_history(user: dict = Depends(get_current_user)) -> dict:
     """سجل طلبات السحب"""
     if user["user_type"] not in ["seller", "food_seller", "delivery"]:
         raise HTTPException(status_code=403, detail="للبائعين وموظفي التوصيل فقط")
@@ -654,7 +654,7 @@ async def get_withdrawal_history(user: dict = Depends(get_current_user)):
     return withdrawals
 
 @router.delete("/withdrawals/{withdrawal_id}")
-async def cancel_withdrawal(withdrawal_id: str, user: dict = Depends(get_current_user)):
+async def cancel_withdrawal(withdrawal_id: str, user: dict = Depends(get_current_user)) -> dict:
     """إلغاء طلب سحب - فقط إذا لم يتم التحويل بعد"""
     withdrawal = await db.withdrawal_requests.find_one({
         "id": withdrawal_id,
@@ -703,7 +703,7 @@ async def cancel_withdrawal(withdrawal_id: str, user: dict = Depends(get_current
 # ============== Helper Functions (للاستخدام الداخلي) ==============
 
 async def add_to_wallet(user_id: str, user_type: str, amount: float, 
-                        transaction_type: str, description: str, order_id: str = None):
+                        transaction_type: str, description: str, order_id: str = None) -> dict:
     """إضافة رصيد للمحفظة"""
     # Get or create wallet
     wallet = await db.wallets.find_one({"user_id": user_id})
@@ -747,7 +747,7 @@ async def add_to_wallet(user_id: str, user_type: str, amount: float,
     
     return transaction
 
-async def add_pending_to_wallet(user_id: str, user_type: str, amount: float, order_id: str):
+async def add_pending_to_wallet(user_id: str, user_type: str, amount: float, order_id: str) -> None:
     """إضافة رصيد معلق (حتى تأكيد التسليم)"""
     wallet = await db.wallets.find_one({"user_id": user_id})
     
@@ -780,7 +780,7 @@ async def add_pending_to_wallet(user_id: str, user_type: str, amount: float, ord
         "created_at": datetime.now(timezone.utc).isoformat()
     })
 
-async def confirm_pending_earnings(order_id: str):
+async def confirm_pending_earnings(order_id: str) -> dict:
     """تأكيد الأرباح المعلقة بعد التسليم"""
     pending_records = await db.pending_earnings.find({
         "order_id": order_id,
@@ -864,7 +864,7 @@ async def confirm_pending_earnings(order_id: str):
 # ============== Held Earnings APIs ==============
 
 @router.get("/held-earnings")
-async def get_held_earnings(user: dict = Depends(get_current_user)):
+async def get_held_earnings(user: dict = Depends(get_current_user)) -> dict:
     """جلب الأرباح المعلقة للمستخدم"""
     if user["user_type"] not in ["seller", "food_seller", "delivery"]:
         raise HTTPException(status_code=403, detail="غير مصرح")
@@ -874,7 +874,7 @@ async def get_held_earnings(user: dict = Depends(get_current_user)):
 
 
 @router.get("/hold-settings")
-async def get_hold_settings():
+async def get_hold_settings() -> dict:
     """جلب إعدادات فترة التعليق"""
     from services.earnings_hold import get_hold_settings
     return await get_hold_settings()

@@ -52,7 +52,7 @@ MEDIUM_PROVINCES = {
     "السويداء": ["حمص"],
 }
 
-async def get_delivery_fees():
+async def get_delivery_fees() -> dict:
     """جلب أسعار التوصيل من قاعدة البيانات"""
     settings = await db.platform_settings.find_one({"id": "main"}, {"_id": 0})
     if settings and settings.get("delivery_fees"):
@@ -100,7 +100,7 @@ async def calculate_delivery_fee(seller_city: str, customer_city: str) -> dict:
 async def get_delivery_fee_for_order(
     seller_city: str = Query(...),
     customer_city: str = Query(...)
-):
+) -> dict:
     """حساب أجرة التوصيل لطلب معين"""
     result = await calculate_delivery_fee(seller_city, customer_city)
     return {
@@ -117,7 +117,7 @@ async def checkout_order(
     payment_method: str = Query(default="shamcash"),
     shamcash_phone: str = Query(default=None),
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """إتمام عملية الشراء"""
     
     # Get cart
@@ -276,7 +276,7 @@ async def verify_payment_otp(
     order_id: str = Query(...),
     otp: str = Query(...),
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """التحقق من رمز الدفع"""
     
     order = await db.orders.find_one({"id": order_id, "user_id": user["id"]})
@@ -363,7 +363,7 @@ async def verify_payment_otp(
 async def pay_with_wallet(
     order_id: str = Query(...),
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """الدفع من المحفظة - متاح لجميع المستخدمين"""
     
     # Get order
@@ -458,7 +458,7 @@ async def pay_with_wallet(
     }
 
 @router.post("/confirm-delivery/{order_id}")
-async def confirm_order_delivery(order_id: str, user: dict = Depends(get_current_user)):
+async def confirm_order_delivery(order_id: str, user: dict = Depends(get_current_user)) -> dict:
     """تأكيد تسليم الطلب - ينقل الأرباح من معلق إلى متاح"""
     
     if user["user_type"] != "delivery":
@@ -523,7 +523,7 @@ async def confirm_order_delivery(order_id: str, user: dict = Depends(get_current
 async def get_all_withdrawals(
     status: str = Query(default=None),
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """
     جميع طلبات السحب (للمدير)
     
@@ -547,7 +547,7 @@ async def get_all_withdrawals(
     return withdrawals
 
 @router.post("/admin/withdrawals/{withdrawal_id}/mark-transferred")
-async def mark_withdrawal_transferred(withdrawal_id: str, user: dict = Depends(get_current_user)):
+async def mark_withdrawal_transferred(withdrawal_id: str, user: dict = Depends(get_current_user)) -> dict:
     """
     تأكيد أن التحويل تم فعلياً (للأدمن)
     
@@ -595,7 +595,7 @@ async def mark_withdrawal_transferred(withdrawal_id: str, user: dict = Depends(g
 
 
 @router.post("/admin/withdrawals/{withdrawal_id}/approve")
-async def approve_withdrawal(withdrawal_id: str, user: dict = Depends(get_current_user)):
+async def approve_withdrawal(withdrawal_id: str, user: dict = Depends(get_current_user)) -> dict:
     """
     [للتوافق الخلفي] الموافقة على طلب سحب قديم (pending)
     

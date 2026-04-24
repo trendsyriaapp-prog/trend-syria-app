@@ -66,7 +66,7 @@ DEFAULT_CATEGORY_COMMISSIONS = {
     "default": 0.15,
 }
 
-async def get_commission_rates_from_db():
+async def get_commission_rates_from_db() -> dict:
     rates = await db.commission_rates.find_one({"id": "main"}, {"_id": 0})
     if rates and rates.get("categories"):
         return rates["categories"]
@@ -92,7 +92,7 @@ async def calculate_commission(price: float, category: str) -> dict:
 
 PLATFORM_WALLET_ID = "platform_admin_wallet"
 
-async def get_or_create_platform_wallet():
+async def get_or_create_platform_wallet() -> dict:
     """جلب أو إنشاء محفظة المنصة"""
     wallet = await db.platform_wallet.find_one({"id": PLATFORM_WALLET_ID}, {"_id": 0})
     if not wallet:
@@ -108,7 +108,7 @@ async def get_or_create_platform_wallet():
         await db.platform_wallet.insert_one(wallet)
     return wallet
 
-async def add_commission_to_platform_wallet(order_id: str, commission_amount: float, order_type: str = "products"):
+async def add_commission_to_platform_wallet(order_id: str, commission_amount: float, order_type: str = "products") -> dict:
     """إضافة عمولة لمحفظة المنصة"""
     if commission_amount <= 0:
         return
@@ -141,7 +141,7 @@ async def add_commission_to_platform_wallet(order_id: str, commission_amount: fl
     }
     await db.platform_wallet_transactions.insert_one(transaction)
 
-async def distribute_seller_earnings(order: dict):
+async def distribute_seller_earnings(order: dict) -> None:
     """
     توزيع أرباح البائعين بعد إتمام الطلب
     الأرباح تكون معلقة لمدة 24 ساعة قبل أن تصبح متاحة للسحب
@@ -178,7 +178,7 @@ async def distribute_seller_earnings(order: dict):
 # ============== Orders ==============
 
 @router.post("/orders")
-async def create_order(order: OrderCreate, user: dict = Depends(get_current_user)):
+async def create_order(order: OrderCreate, user: dict = Depends(get_current_user)) -> dict:
     cart = await db.carts.find_one({"user_id": user["id"]})
     if not cart or not cart.get("items"):
         raise HTTPException(status_code=400, detail="السلة فارغة")
@@ -377,7 +377,7 @@ async def create_order(order: OrderCreate, user: dict = Depends(get_current_user
 
 
 @router.post("/orders/{order_id}/cancel")
-async def cancel_product_order(order_id: str, user: dict = Depends(get_current_user)):
+async def cancel_product_order(order_id: str, user: dict = Depends(get_current_user)) -> dict:
     """إلغاء طلب منتجات - مسموح فقط قبل أن يصبح الطلب جاهز للشحن"""
     order = await db.orders.find_one({"id": order_id})
     if not order:
@@ -464,7 +464,7 @@ async def cancel_product_order(order_id: str, user: dict = Depends(get_current_u
 
 
 @router.get("/orders")
-async def get_orders(user: dict = Depends(get_current_user)):
+async def get_orders(user: dict = Depends(get_current_user)) -> dict:
     now = datetime.now(timezone.utc).isoformat()
     
     if user["user_type"] == "seller":
@@ -500,7 +500,7 @@ async def get_orders(user: dict = Depends(get_current_user)):
     return orders
 
 @router.get("/orders/{order_id}")
-async def get_order(order_id: str, user: dict = Depends(get_current_user)):
+async def get_order(order_id: str, user: dict = Depends(get_current_user)) -> dict:
     order = await db.orders.find_one({"id": order_id}, {"_id": 0})
     if not order:
         raise HTTPException(status_code=404, detail="الطلب غير موجود")
@@ -509,7 +509,7 @@ async def get_order(order_id: str, user: dict = Depends(get_current_user)):
     return order
 
 @router.put("/orders/{order_id}/status")
-async def update_order_status(order_id: str, status: str = Query(...), user: dict = Depends(get_current_user)):
+async def update_order_status(order_id: str, status: str = Query(...), user: dict = Depends(get_current_user)) -> dict:
     if user["user_type"] not in ["seller", "admin", "sub_admin", "delivery"]:
         raise HTTPException(status_code=403, detail="غير مصرح")
     
@@ -560,7 +560,7 @@ async def update_order_status(order_id: str, status: str = Query(...), user: dic
 # ============== Payment ==============
 
 @router.post("/payment/shamcash/init")
-async def init_shamcash_payment(order_id: str, user: dict = Depends(get_current_user)):
+async def init_shamcash_payment(order_id: str, user: dict = Depends(get_current_user)) -> dict:
     order = await db.orders.find_one({"id": order_id})
     if not order:
         raise HTTPException(status_code=404, detail="الطلب غير موجود")
@@ -574,7 +574,7 @@ async def init_shamcash_payment(order_id: str, user: dict = Depends(get_current_
     }
 
 @router.post("/payment/shamcash/verify")
-async def verify_shamcash_payment(payment: ShamCashPayment, user: dict = Depends(get_current_user)):
+async def verify_shamcash_payment(payment: ShamCashPayment, user: dict = Depends(get_current_user)) -> dict:
     order = await db.orders.find_one({"id": payment.order_id})
     if not order:
         raise HTTPException(status_code=404, detail="الطلب غير موجود")
@@ -604,14 +604,14 @@ async def verify_shamcash_payment(payment: ShamCashPayment, user: dict = Depends
 # ============== Commission Calculation API ==============
 
 @router.get("/commission/calculate")
-async def calculate_product_commission(price: float, category: str):
+async def calculate_product_commission(price: float, category: str) -> dict:
     result = await calculate_commission(price, category)
     return result
 
 # ============== Order Tracking System ==============
 
 @router.get("/orders/{order_id}/tracking")
-async def get_order_tracking(order_id: str, user: dict = Depends(get_current_user)):
+async def get_order_tracking(order_id: str, user: dict = Depends(get_current_user)) -> dict:
     """الحصول على معلومات تتبع الطلب الكاملة"""
     order = await db.orders.find_one({"id": order_id}, {"_id": 0})
     if not order:
@@ -705,7 +705,7 @@ async def get_order_tracking(order_id: str, user: dict = Depends(get_current_use
     return tracking_info
 
 @router.put("/orders/{order_id}/delivery-note")
-async def update_delivery_note(order_id: str, note: CustomerNoteUpdate, user: dict = Depends(get_current_user)):
+async def update_delivery_note(order_id: str, note: CustomerNoteUpdate, user: dict = Depends(get_current_user)) -> dict:
     """إضافة/تعديل ملاحظة العميل لموظف التوصيل"""
     order = await db.orders.find_one({"id": order_id})
     if not order:
@@ -741,7 +741,7 @@ async def update_delivery_note(order_id: str, note: CustomerNoteUpdate, user: di
 # ============== Seller Order Management ==============
 
 @router.get("/orders/seller/my-orders")
-async def get_seller_orders(user: dict = Depends(get_current_user)):
+async def get_seller_orders(user: dict = Depends(get_current_user)) -> dict:
     """جلب جميع طلبات البائع"""
     if user["user_type"] != "seller":
         raise HTTPException(status_code=403, detail="للبائعين فقط")
@@ -762,7 +762,7 @@ async def get_seller_orders(user: dict = Depends(get_current_user)):
     return orders
 
 @router.post("/orders/{order_id}/seller/confirm")
-async def seller_confirm_order(order_id: str, user: dict = Depends(get_current_user)):
+async def seller_confirm_order(order_id: str, user: dict = Depends(get_current_user)) -> dict:
     """البائع يؤكد استلام الطلب"""
     if user["user_type"] != "seller":
         raise HTTPException(status_code=403, detail="للبائعين فقط")
@@ -814,7 +814,7 @@ async def seller_confirm_order(order_id: str, user: dict = Depends(get_current_u
     return {"message": "تم تأكيد الطلب"}
 
 @router.post("/orders/{order_id}/seller/preparing")
-async def seller_preparing_order(order_id: str, user: dict = Depends(get_current_user)):
+async def seller_preparing_order(order_id: str, user: dict = Depends(get_current_user)) -> dict:
     """البائع يبدأ تحضير الطلب"""
     if user["user_type"] != "seller":
         raise HTTPException(status_code=403, detail="للبائعين فقط")
@@ -868,7 +868,7 @@ async def seller_preparing_order(order_id: str, user: dict = Depends(get_current
     return {"message": "تم تحديث حالة الطلب"}
 
 @router.post("/orders/{order_id}/seller/shipped")
-async def seller_ship_order(order_id: str, tracking_number: Optional[str] = None, user: dict = Depends(get_current_user)):
+async def seller_ship_order(order_id: str, tracking_number: Optional[str] = None, user: dict = Depends(get_current_user)) -> dict:
     """البائع يشحن الطلب - يُنشئ كود استلام للسائق"""
     import secrets
     
@@ -952,7 +952,7 @@ class VerifyProductPickupCode(BaseModel):
     code: str
 
 @router.post("/orders/{order_id}/delivery/verify-pickup")
-async def verify_product_pickup_code(order_id: str, data: VerifyProductPickupCode, user: dict = Depends(get_current_user)):
+async def verify_product_pickup_code(order_id: str, data: VerifyProductPickupCode, user: dict = Depends(get_current_user)) -> dict:
     """التحقق من كود استلام المنتج من البائع"""
     if user["user_type"] != "delivery":
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
@@ -1026,7 +1026,7 @@ async def verify_product_pickup_code(order_id: str, data: VerifyProductPickupCod
     }
 
 @router.get("/orders/{order_id}/seller/pickup-code")
-async def get_seller_pickup_code(order_id: str, user: dict = Depends(get_current_user)):
+async def get_seller_pickup_code(order_id: str, user: dict = Depends(get_current_user)) -> dict:
     """البائع يحصل على كود الاستلام لإعطائه للسائق"""
     if user["user_type"] != "seller":
         raise HTTPException(status_code=403, detail="للبائعين فقط")
@@ -1049,7 +1049,7 @@ async def get_seller_pickup_code(order_id: str, user: dict = Depends(get_current
     }
 
 @router.post("/orders/{order_id}/delivery/accept")
-async def delivery_accept_order(order_id: str, user: dict = Depends(get_current_user)):
+async def delivery_accept_order(order_id: str, user: dict = Depends(get_current_user)) -> dict:
     """موظف التوصيل يقبل الطلب"""
     if user["user_type"] != "delivery":
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
@@ -1126,7 +1126,7 @@ async def delivery_arrived_at_store(
     latitude: float = Query(None, description="خط العرض - إجباري للتحقق من الموقع"),
     longitude: float = Query(None, description="خط الطول - إجباري للتحقق من الموقع"),
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """تسجيل وصول موظف التوصيل للمتجر - لطلبات المنتجات (مع فحص GPS)"""
     if user["user_type"] != "delivery":
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
@@ -1248,7 +1248,7 @@ async def delivery_arrived_at_store(
     }
 
 @router.post("/orders/{order_id}/delivery/pickup")
-async def delivery_pickup_order(order_id: str, user: dict = Depends(get_current_user)):
+async def delivery_pickup_order(order_id: str, user: dict = Depends(get_current_user)) -> dict:
     """موظف التوصيل يستلم الطلب من البائع"""
     if user["user_type"] != "delivery":
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
@@ -1333,7 +1333,7 @@ async def delivery_pickup_order(order_id: str, user: dict = Depends(get_current_
     return {"message": "تم استلام الطلب"}
 
 @router.post("/orders/{order_id}/delivery/on-the-way")
-async def delivery_on_the_way(order_id: str, body: dict = None, user: dict = Depends(get_current_user)):
+async def delivery_on_the_way(order_id: str, body: dict = None, user: dict = Depends(get_current_user)) -> dict:
     """موظف التوصيل في الطريق للعميل"""
     if user["user_type"] != "delivery":
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
@@ -1409,7 +1409,7 @@ async def delivery_arrived_at_customer(
     latitude: float = Query(None, description="خط العرض - إجباري للتحقق من الموقع"),
     longitude: float = Query(None, description="خط الطول - إجباري للتحقق من الموقع"),
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """تسجيل وصول موظف التوصيل للعميل - لطلبات المنتجات (مع فحص GPS)"""
     if user["user_type"] != "delivery":
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
@@ -1529,7 +1529,7 @@ async def verify_shop_delivery_code(
     order_id: str, 
     data: VerifyDeliveryCode, 
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """التحقق من كود التسليم من العميل وإتمام الطلب"""
     if user["user_type"] != "delivery":
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
@@ -1632,7 +1632,7 @@ async def verify_shop_delivery_code(
 
 
 @router.post("/orders/{order_id}/delivery/delivered")
-async def delivery_complete(order_id: str, delivery_photo: Optional[str] = None, user: dict = Depends(get_current_user)):
+async def delivery_complete(order_id: str, delivery_photo: Optional[str] = None, user: dict = Depends(get_current_user)) -> dict:
     """موظف التوصيل يؤكد التسليم - يتطلب كود التسليم أولاً"""
     if user["user_type"] != "delivery":
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
@@ -1765,7 +1765,7 @@ async def delivery_complete(order_id: str, delivery_photo: Optional[str] = None,
 # ============== Seller Commission Info ==============
 
 @router.get("/seller/commission")
-async def get_seller_commission_info(user: dict = Depends(get_current_user)):
+async def get_seller_commission_info(user: dict = Depends(get_current_user)) -> dict:
     """جلب معلومات العمولة للبائع"""
     if user["user_type"] != "seller":
         raise HTTPException(status_code=403, detail="للبائعين فقط")
@@ -1837,7 +1837,7 @@ async def report_delivery_failed(
     order_id: str, 
     data: DeliveryFailedRequest, 
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """تسجيل فشل التسليم - العميل غير متجاوب"""
     
     if user.get("user_type") != "delivery":
@@ -1987,7 +1987,7 @@ class SellerNotFoundRequest(BaseModel):
     order_type: str  # 'food' or 'product'
 
 @router.post("/driver/seller-not-found")
-async def report_seller_not_found(data: SellerNotFoundRequest, user: dict = Depends(get_current_user)):
+async def report_seller_not_found(data: SellerNotFoundRequest, user: dict = Depends(get_current_user)) -> dict:
     """السائق يبلغ أن البائع غير موجود"""
     
     if user.get("user_type") != "delivery":
@@ -2057,7 +2057,7 @@ async def report_seller_not_found(data: SellerNotFoundRequest, user: dict = Depe
 # ============== Flash Sales للبائعين ==============
 
 @router.get("/seller/flash-sales/available")
-async def get_available_flash_sales_for_seller(user: dict = Depends(get_current_user)):
+async def get_available_flash_sales_for_seller(user: dict = Depends(get_current_user)) -> dict:
     """جلب عروض الفلاش المتاحة للانضمام - للبائعين"""
     if user.get("user_type") not in ["seller", "food_seller"]:
         raise HTTPException(status_code=403, detail="غير مصرح")
@@ -2073,7 +2073,7 @@ async def get_available_flash_sales_for_seller(user: dict = Depends(get_current_
     return sales
 
 @router.get("/seller/flash-sale-settings")
-async def get_flash_settings_for_product_seller(user: dict = Depends(get_current_user)):
+async def get_flash_settings_for_product_seller(user: dict = Depends(get_current_user)) -> dict:
     """جلب إعدادات رسوم الانضمام للفلاش"""
     settings = await db.platform_settings.find_one({"id": "flash_sale"}, {"_id": 0})
     
@@ -2091,7 +2091,7 @@ async def get_flash_settings_for_product_seller(user: dict = Depends(get_current
     return settings
 
 @router.get("/seller/my-flash-requests")
-async def get_seller_flash_requests(user: dict = Depends(get_current_user)):
+async def get_seller_flash_requests(user: dict = Depends(get_current_user)) -> dict:
     """جلب طلبات الانضمام للفلاش الخاصة بالبائع"""
     if user.get("user_type") != "seller":
         raise HTTPException(status_code=403, detail="غير مصرح")
@@ -2139,7 +2139,7 @@ async def get_seller_flash_requests(user: dict = Depends(get_current_user)):
     return requests
 
 @router.post("/seller/flash-sale-request")
-async def request_flash_sale_join_for_seller(request_data: dict, user: dict = Depends(get_current_user)):
+async def request_flash_sale_join_for_seller(request_data: dict, user: dict = Depends(get_current_user)) -> dict:
     """طلب الانضمام لعرض فلاش - للبائعين"""
     if user.get("user_type") != "seller":
         raise HTTPException(status_code=403, detail="غير مصرح")
@@ -2227,7 +2227,7 @@ async def request_flash_sale_join_for_seller(request_data: dict, user: dict = De
 # ============== نظام ترويج المنتجات الجديد ==============
 
 @router.get("/seller/promotion-settings")
-async def get_promotion_settings(user: dict = Depends(get_current_user)):
+async def get_promotion_settings(user: dict = Depends(get_current_user)) -> dict:
     """جلب إعدادات الترويج"""
     if user.get("user_type") not in ["seller", "food_seller"]:
         raise HTTPException(status_code=403, detail="غير مصرح")
@@ -2250,7 +2250,7 @@ async def get_promotion_settings(user: dict = Depends(get_current_user)):
     return settings
 
 @router.get("/seller/my-promotions")
-async def get_my_promotions(user: dict = Depends(get_current_user)):
+async def get_my_promotions(user: dict = Depends(get_current_user)) -> dict:
     """جلب ترويجاتي الحالية والسابقة"""
     if user.get("user_type") not in ["seller", "food_seller"]:
         raise HTTPException(status_code=403, detail="غير مصرح")
@@ -2286,7 +2286,7 @@ async def get_my_promotions(user: dict = Depends(get_current_user)):
     }
 
 @router.post("/seller/promote-product")
-async def promote_product(request_data: dict, user: dict = Depends(get_current_user)):
+async def promote_product(request_data: dict, user: dict = Depends(get_current_user)) -> dict:
     """ترويج منتج - يظهر في Flash المجدول"""
     if user.get("user_type") not in ["seller", "food_seller"]:
         raise HTTPException(status_code=403, detail="غير مصرح")
@@ -2422,7 +2422,7 @@ async def promote_product(request_data: dict, user: dict = Depends(get_current_u
     }
 
 @router.get("/promoted-products")
-async def get_promoted_products(product_type: str = "all"):
+async def get_promoted_products(product_type: str = "all") -> dict:
     """جلب المنتجات المروّجة للصفحة الرئيسية - فقط التي بدأت (Flash نشط)"""
     now = datetime.now(timezone.utc).isoformat()
     
@@ -2469,7 +2469,7 @@ async def get_promoted_products(product_type: str = "all"):
 DEFAULT_FLASH_START_HOUR = 13  # 1:00 PM
 DEFAULT_FLASH_DURATION_HOURS = 24
 
-async def get_flash_settings():
+async def get_flash_settings() -> dict:
     """جلب إعدادات Flash من قاعدة البيانات"""
     settings = await db.platform_settings.find_one({"id": "promotions"}, {"_id": 0})
     return {
@@ -2478,7 +2478,7 @@ async def get_flash_settings():
         "allowed_days": settings.get("flash_days", [0, 1, 2, 3, 4, 5, 6]) if settings else [0, 1, 2, 3, 4, 5, 6]
     }
 
-def get_flash_event_times_sync(start_hour=13, duration_hours=24, allowed_days=None):
+def get_flash_event_times_sync(start_hour=13, duration_hours=24, allowed_days=None) -> dict:
     """حساب أوقات حدث Flash الحالي والقادم (متزامن)
     
     Args:
@@ -2503,7 +2503,7 @@ def get_flash_event_times_sync(start_hour=13, duration_hours=24, allowed_days=No
     today_end = today_start + timedelta(hours=duration_hours)
     
     # دالة مساعدة لإيجاد اليوم التالي المسموح
-    def find_next_allowed_day(from_date, allowed_days):
+    def find_next_allowed_day(from_date, allowed_days) -> dict:
         for i in range(1, 8):  # البحث في الأيام السبعة القادمة
             next_date = from_date + timedelta(days=i)
             if next_date.weekday() in allowed_days:
@@ -2584,7 +2584,7 @@ def get_flash_event_times_sync(start_hour=13, duration_hours=24, allowed_days=No
         }
 
 @router.get("/flash/status")
-async def get_flash_status():
+async def get_flash_status() -> dict:
     """حالة حدث Flash الحالي - للعملاء والبائعين"""
     flash_settings = await get_flash_settings()
     event = get_flash_event_times_sync(
@@ -2630,7 +2630,7 @@ async def get_flash_status():
             "allowed_days": event.get("allowed_days", [0, 1, 2, 3, 4, 5, 6])
         }
 
-def format_duration(seconds):
+def format_duration(seconds) -> str:
     """تنسيق المدة بالساعات والدقائق"""
     hours = seconds // 3600
     minutes = (seconds % 3600) // 60

@@ -37,7 +37,7 @@ class CallAction(BaseModel):
 
 # إنشاء مكالمة جديدة
 @router.post("/call/initiate")
-async def initiate_call(data: CallRequest, user: dict = Depends(get_current_user)):
+async def initiate_call(data: CallRequest, user: dict = Depends(get_current_user)) -> dict:
     """بدء مكالمة VoIP - للسائق أو العميل"""
     
     # جلب معلومات الطلب
@@ -130,7 +130,7 @@ async def initiate_call(data: CallRequest, user: dict = Depends(get_current_user
 
 # معالجة إشارات WebRTC
 @router.post("/call/signal")
-async def handle_signal(data: CallSignal, user: dict = Depends(get_current_user)):
+async def handle_signal(data: CallSignal, user: dict = Depends(get_current_user)) -> dict:
     """معالجة إشارات WebRTC (offer, answer, ice-candidate)"""
     
     call = await db.voip_calls.find_one({"id": data.call_id})
@@ -161,7 +161,7 @@ async def handle_signal(data: CallSignal, user: dict = Depends(get_current_user)
 
 # جلب الإشارات المعلقة
 @router.get("/call/{call_id}/signals")
-async def get_pending_signals(call_id: str, user: dict = Depends(get_current_user)):
+async def get_pending_signals(call_id: str, user: dict = Depends(get_current_user)) -> dict:
     """جلب الإشارات المعلقة للمستخدم"""
     
     call = await db.voip_calls.find_one({"id": call_id})
@@ -190,7 +190,7 @@ async def get_pending_signals(call_id: str, user: dict = Depends(get_current_use
 
 # قبول/رفض/إنهاء المكالمة
 @router.post("/call/action")
-async def call_action(data: CallAction, user: dict = Depends(get_current_user)):
+async def call_action(data: CallAction, user: dict = Depends(get_current_user)) -> dict:
     """قبول أو رفض أو إنهاء المكالمة"""
     
     call = await db.voip_calls.find_one({"id": data.call_id})
@@ -260,7 +260,7 @@ async def call_action(data: CallAction, user: dict = Depends(get_current_user)):
 
 # جلب حالة المكالمة
 @router.get("/call/{call_id}")
-async def get_call_status(call_id: str, user: dict = Depends(get_current_user)):
+async def get_call_status(call_id: str, user: dict = Depends(get_current_user)) -> dict:
     """جلب حالة المكالمة الحالية"""
     
     call = await db.voip_calls.find_one({"id": call_id}, {"_id": 0})
@@ -274,7 +274,7 @@ async def get_call_status(call_id: str, user: dict = Depends(get_current_user)):
 
 # جلب المكالمات النشطة للمستخدم
 @router.get("/active-calls")
-async def get_active_calls(user: dict = Depends(get_current_user)):
+async def get_active_calls(user: dict = Depends(get_current_user)) -> dict:
     """جلب المكالمات النشطة للمستخدم"""
     
     calls = await db.voip_calls.find({
@@ -293,7 +293,7 @@ async def get_call_history(
     order_id: Optional[str] = None,
     limit: int = 20,
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """جلب سجل المكالمات"""
     
     query = {
@@ -315,7 +315,7 @@ async def get_call_history(
 
 # التحقق من وجود مكالمة واردة
 @router.get("/incoming-call")
-async def check_incoming_call(user: dict = Depends(get_current_user)):
+async def check_incoming_call(user: dict = Depends(get_current_user)) -> dict:
     """التحقق من وجود مكالمة واردة للمستخدم"""
     
     call = await db.voip_calls.find_one({
@@ -337,7 +337,7 @@ async def upload_recording(
     call_id: str,
     recording: UploadFile = File(...),
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """رفع تسجيل المكالمة بعد انتهائها"""
     
     call = await db.voip_calls.find_one({"id": call_id})
@@ -391,7 +391,7 @@ async def upload_recording(
 
 # جلب تسجيلات المكالمة (للمدير فقط)
 @router.get("/call/{call_id}/recordings")
-async def get_call_recordings(call_id: str, user: dict = Depends(get_current_user)):
+async def get_call_recordings(call_id: str, user: dict = Depends(get_current_user)) -> dict:
     """جلب تسجيلات المكالمة - للمدير فقط"""
     
     # التحقق من صلاحيات المدير
@@ -414,7 +414,7 @@ async def get_call_recordings(call_id: str, user: dict = Depends(get_current_use
 
 # تشغيل/تحميل تسجيل (للمدير فقط)
 @router.get("/recording/{recording_id}/play")
-async def play_recording(recording_id: str, user: dict = Depends(get_current_user)):
+async def play_recording(recording_id: str, user: dict = Depends(get_current_user)) -> dict:
     """تشغيل أو تحميل تسجيل المكالمة - للمدير فقط"""
     
     # التحقق من صلاحيات المدير
@@ -455,7 +455,7 @@ async def get_recorded_calls(
     page: int = 1,
     limit: int = 20,
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """جلب جميع المكالمات التي تحتوي على تسجيلات - للمدير فقط"""
     
     if user.get("user_type") != "admin":
@@ -479,7 +479,7 @@ async def get_recorded_calls(
     }
 
 # حذف التسجيلات المنتهية (مهمة خلفية)
-async def cleanup_expired_recordings():
+async def cleanup_expired_recordings() -> None:
     """حذف التسجيلات التي انتهت صلاحيتها"""
     now = datetime.now(timezone.utc).isoformat()
     
@@ -515,7 +515,7 @@ async def cleanup_expired_recordings():
         )
 
 # تشغيل التنظيف كل 24 ساعة
-async def start_cleanup_task():
+async def start_cleanup_task() -> None:
     while True:
         await asyncio.sleep(86400)  # 24 ساعة
         await cleanup_expired_recordings()

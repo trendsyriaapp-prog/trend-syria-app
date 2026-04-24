@@ -21,7 +21,7 @@ class CallRequestUpdate(BaseModel):
     notes: Optional[str] = None
 
 @router.post("")
-async def create_call_request(data: CallRequestCreate, user: dict = Depends(get_current_user)):
+async def create_call_request(data: CallRequestCreate, user: dict = Depends(get_current_user)) -> dict:
     """إنشاء طلب اتصال جديد - للسائق عندما لا يرد العميل"""
     if user["user_type"] != "delivery":
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
@@ -105,7 +105,7 @@ async def get_call_requests(
     status: Optional[str] = None,
     limit: int = 50,
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """جلب طلبات الاتصال - للموظفين"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للموظفين فقط")
@@ -122,7 +122,7 @@ async def get_call_requests(
     return requests
 
 @router.get("/pending")
-async def get_pending_call_requests(user: dict = Depends(get_current_user)):
+async def get_pending_call_requests(user: dict = Depends(get_current_user)) -> dict:
     """جلب طلبات الاتصال المعلقة - للموظفين"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للموظفين فقط")
@@ -135,7 +135,7 @@ async def get_pending_call_requests(user: dict = Depends(get_current_user)):
     return {"count": len(requests), "requests": requests}
 
 @router.get("/my-requests")
-async def get_my_call_requests(user: dict = Depends(get_current_user)):
+async def get_my_call_requests(user: dict = Depends(get_current_user)) -> dict:
     """جلب طلبات الاتصال الخاصة بالسائق"""
     if user["user_type"] != "delivery":
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
@@ -152,7 +152,7 @@ async def update_call_request(
     request_id: str,
     data: CallRequestUpdate,
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """تحديث حالة طلب الاتصال - للموظفين"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للموظفين فقط")
@@ -198,7 +198,7 @@ async def update_call_request(
     return {"message": "تم تحديث طلب الاتصال"}
 
 @router.post("/{request_id}/take")
-async def take_call_request(request_id: str, user: dict = Depends(get_current_user)):
+async def take_call_request(request_id: str, user: dict = Depends(get_current_user)) -> dict:
     """استلام طلب اتصال - للموظف"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للموظفين فقط")

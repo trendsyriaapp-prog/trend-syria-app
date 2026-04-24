@@ -28,7 +28,7 @@ class ResignationRequest(BaseModel):
 
 # ============== Helper Functions ==============
 
-async def get_security_settings():
+async def get_security_settings() -> dict:
     """جلب إعدادات التأمين"""
     settings = await db.settings.find_one({"type": "driver_security"}, {"_id": 0})
     if not settings:
@@ -44,7 +44,7 @@ async def get_security_settings():
     return settings
 
 
-async def get_driver_security_deposit(driver_id: str):
+async def get_driver_security_deposit(driver_id: str) -> dict:
     """جلب بيانات تأمين السائق"""
     deposit = await db.driver_security_deposits.find_one(
         {"driver_id": driver_id}, 
@@ -65,7 +65,7 @@ async def get_driver_security_deposit(driver_id: str):
     return deposit
 
 
-async def process_auto_deduction(driver_id: str):
+async def process_auto_deduction(driver_id: str) -> dict:
     """معالجة الخصم التلقائي من الأرباح لإكمال التأمين"""
     settings = await get_security_settings()
     
@@ -165,7 +165,7 @@ def _get_status_message(current: int, required: int, status: str) -> str:
 
 
 @router.get("/status")
-async def get_security_deposit_status(user: dict = Depends(get_current_user)):
+async def get_security_deposit_status(user: dict = Depends(get_current_user)) -> dict:
     """حالة تأمين موظف التوصيل"""
     
     if user.get("user_type") != "delivery":
@@ -191,7 +191,7 @@ async def get_security_deposit_status(user: dict = Depends(get_current_user)):
 
 
 @router.get("/settings")
-async def get_security_settings_public(user: dict = Depends(get_current_user)):
+async def get_security_settings_public(user: dict = Depends(get_current_user)) -> dict:
     """إعدادات التأمين (للعرض)"""
     
     if user.get("user_type") != "delivery":
@@ -212,7 +212,7 @@ async def get_security_settings_public(user: dict = Depends(get_current_user)):
 
 
 @router.post("/deposit")
-async def submit_deposit(data: DepositRequest, user: dict = Depends(get_current_user)):
+async def submit_deposit(data: DepositRequest, user: dict = Depends(get_current_user)) -> dict:
     """إيداع مبلغ التأمين"""
     
     if user.get("user_type") != "delivery":
@@ -279,7 +279,7 @@ async def submit_deposit(data: DepositRequest, user: dict = Depends(get_current_
 
 
 @router.get("/deposit-requests")
-async def get_my_deposit_requests(user: dict = Depends(get_current_user)):
+async def get_my_deposit_requests(user: dict = Depends(get_current_user)) -> dict:
     """طلبات الإيداع الخاصة بي"""
     
     if user.get("user_type") != "delivery":
@@ -294,7 +294,7 @@ async def get_my_deposit_requests(user: dict = Depends(get_current_user)):
 
 
 @router.post("/resign")
-async def request_resignation(data: ResignationRequest, user: dict = Depends(get_current_user)):
+async def request_resignation(data: ResignationRequest, user: dict = Depends(get_current_user)) -> dict:
     """طلب استقالة واسترداد التأمين"""
     
     if user.get("user_type") != "delivery":
@@ -376,7 +376,7 @@ async def request_resignation(data: ResignationRequest, user: dict = Depends(get
 
 
 @router.get("/my-resignation")
-async def get_my_resignation(user: dict = Depends(get_current_user)):
+async def get_my_resignation(user: dict = Depends(get_current_user)) -> dict:
     """جلب طلب الاستقالة الحالي للسائق"""
     
     if user.get("user_type") != "delivery":
@@ -391,7 +391,7 @@ async def get_my_resignation(user: dict = Depends(get_current_user)):
 
 
 @router.post("/resign/cancel")
-async def cancel_resignation(user: dict = Depends(get_current_user)):
+async def cancel_resignation(user: dict = Depends(get_current_user)) -> dict:
     """إلغاء طلب الاستقالة"""
     
     if user.get("user_type") != "delivery":
@@ -411,7 +411,7 @@ async def cancel_resignation(user: dict = Depends(get_current_user)):
 # ============== Admin Endpoints ==============
 
 @router.get("/admin/pending-deposits")
-async def get_pending_deposits(user: dict = Depends(get_current_user)):
+async def get_pending_deposits(user: dict = Depends(get_current_user)) -> dict:
     """طلبات الإيداع المعلقة (للأدمن)"""
     
     if user.get("user_type") not in ["admin", "sub_admin"]:
@@ -426,7 +426,7 @@ async def get_pending_deposits(user: dict = Depends(get_current_user)):
 
 
 @router.post("/admin/approve-deposit/{request_id}")
-async def approve_deposit(request_id: str, user: dict = Depends(get_current_user)):
+async def approve_deposit(request_id: str, user: dict = Depends(get_current_user)) -> dict:
     """الموافقة على طلب إيداع (للأدمن)"""
     
     if user.get("user_type") not in ["admin", "sub_admin"]:
@@ -513,7 +513,7 @@ async def approve_deposit(request_id: str, user: dict = Depends(get_current_user
 
 
 @router.post("/admin/reject-deposit/{request_id}")
-async def reject_deposit(request_id: str, reason: str = "", user: dict = Depends(get_current_user)):
+async def reject_deposit(request_id: str, reason: str = "", user: dict = Depends(get_current_user)) -> dict:
     """رفض طلب إيداع (للأدمن)"""
     
     if user.get("user_type") not in ["admin", "sub_admin"]:
@@ -553,7 +553,7 @@ async def reject_deposit(request_id: str, reason: str = "", user: dict = Depends
 
 
 @router.get("/admin/pending-resignations")
-async def get_pending_resignations(user: dict = Depends(get_current_user)):
+async def get_pending_resignations(user: dict = Depends(get_current_user)) -> dict:
     """طلبات الاستقالة المعلقة (للأدمن)"""
     
     if user.get("user_type") not in ["admin", "sub_admin"]:
@@ -568,7 +568,7 @@ async def get_pending_resignations(user: dict = Depends(get_current_user)):
 
 
 @router.post("/admin/approve-resignation/{request_id}")
-async def approve_resignation(request_id: str, user: dict = Depends(get_current_user)):
+async def approve_resignation(request_id: str, user: dict = Depends(get_current_user)) -> dict:
     """الموافقة على طلب استقالة (للأدمن)"""
     
     if user.get("user_type") not in ["admin", "sub_admin"]:
@@ -652,7 +652,7 @@ async def update_security_settings(
     auto_deduct: bool = True,
     min_behavior_points: int = 50,
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """تحديث إعدادات التأمين (للأدمن)"""
     
     if user.get("user_type") not in ["admin", "sub_admin"]:
@@ -678,7 +678,7 @@ async def update_security_settings(
 
 
 @router.get("/admin/all-deposits")
-async def get_all_driver_deposits(user: dict = Depends(get_current_user)):
+async def get_all_driver_deposits(user: dict = Depends(get_current_user)) -> dict:
     """جميع تأمينات السائقين (للأدمن)"""
     
     if user.get("user_type") not in ["admin", "sub_admin"]:
@@ -713,7 +713,7 @@ async def get_all_driver_deposits(user: dict = Depends(get_current_user)):
 # ============== إدارة حسابات السائقين (للأدمن) ==============
 
 @router.post("/admin/driver/{driver_id}/suspend")
-async def suspend_driver(driver_id: str, reason: str = "", user: dict = Depends(get_current_user)):
+async def suspend_driver(driver_id: str, reason: str = "", user: dict = Depends(get_current_user)) -> dict:
     """إيقاف حساب سائق"""
     
     if user.get("user_type") not in ["admin", "sub_admin"]:
@@ -749,7 +749,7 @@ async def suspend_driver(driver_id: str, reason: str = "", user: dict = Depends(
 
 
 @router.post("/admin/driver/{driver_id}/activate")
-async def activate_driver(driver_id: str, user: dict = Depends(get_current_user)):
+async def activate_driver(driver_id: str, user: dict = Depends(get_current_user)) -> dict:
     """إعادة تفعيل حساب سائق"""
     
     if user.get("user_type") not in ["admin", "sub_admin"]:
@@ -783,7 +783,7 @@ async def activate_driver(driver_id: str, user: dict = Depends(get_current_user)
 
 
 @router.delete("/admin/driver/{driver_id}")
-async def delete_driver(driver_id: str, user: dict = Depends(get_current_user)):
+async def delete_driver(driver_id: str, user: dict = Depends(get_current_user)) -> dict:
     """حذف حساب سائق نهائياً"""
     
     if user.get("user_type") != "admin":
@@ -830,7 +830,7 @@ async def delete_driver(driver_id: str, user: dict = Depends(get_current_user)):
 
 
 @router.get("/admin/drivers")
-async def get_all_drivers(user: dict = Depends(get_current_user)):
+async def get_all_drivers(user: dict = Depends(get_current_user)) -> dict:
     """جلب جميع السائقين مع حالاتهم"""
     
     if user.get("user_type") not in ["admin", "sub_admin"]:
@@ -902,7 +902,7 @@ async def get_all_drivers(user: dict = Depends(get_current_user)):
 
 # ============== Hook: Call after adding earnings ==============
 
-async def check_and_deduct_for_security(driver_id: str):
+async def check_and_deduct_for_security(driver_id: str) -> dict:
     """
     يُستدعى بعد إضافة أرباح للسائق
     للتحقق من التأمين وخصم تلقائي إذا لزم

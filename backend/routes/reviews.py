@@ -15,7 +15,7 @@ class SellerReplyCreate(BaseModel):
     reply: str
 
 @router.post("")
-async def create_review(review: ReviewCreate, user: dict = Depends(get_current_user)):
+async def create_review(review: ReviewCreate, user: dict = Depends(get_current_user)) -> dict:
     # Check if user purchased this product
     order = await db.orders.find_one({
         "user_id": user["id"],
@@ -56,12 +56,12 @@ async def create_review(review: ReviewCreate, user: dict = Depends(get_current_u
     return {"message": "تم إضافة التقييم"}
 
 @router.get("/{product_id}")
-async def get_reviews(product_id: str):
+async def get_reviews(product_id: str) -> dict:
     reviews = await db.reviews.find({"product_id": product_id}, {"_id": 0}).to_list(100)
     return reviews
 
 @router.post("/{review_id}/reply")
-async def add_seller_reply(review_id: str, data: SellerReplyCreate, user: dict = Depends(get_current_user)):
+async def add_seller_reply(review_id: str, data: SellerReplyCreate, user: dict = Depends(get_current_user)) -> dict:
     """البائع يرد على تقييم منتجه"""
     # Get the review
     review = await db.reviews.find_one({"id": review_id})
@@ -94,7 +94,7 @@ async def add_seller_reply(review_id: str, data: SellerReplyCreate, user: dict =
     return {"message": "تم إضافة الرد بنجاح"}
 
 @router.delete("/{review_id}/reply")
-async def delete_seller_reply(review_id: str, user: dict = Depends(get_current_user)):
+async def delete_seller_reply(review_id: str, user: dict = Depends(get_current_user)) -> dict:
     """البائع يحذف رده على التقييم"""
     review = await db.reviews.find_one({"id": review_id})
     if not review:
@@ -118,7 +118,7 @@ async def delete_seller_reply(review_id: str, user: dict = Depends(get_current_u
     return {"message": "تم حذف الرد"}
 
 @router.get("/seller/pending")
-async def get_seller_pending_reviews(user: dict = Depends(get_current_user)):
+async def get_seller_pending_reviews(user: dict = Depends(get_current_user)) -> dict:
     """جلب التقييمات التي لم يرد عليها البائع بعد"""
     # Get all seller's products
     products = await db.products.find({"seller_id": user["id"]}, {"id": 1, "name": 1, "images": 1}).to_list(1000)

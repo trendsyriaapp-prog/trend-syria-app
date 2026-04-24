@@ -43,7 +43,7 @@ class DeliveryTimerResponse(BaseModel):
 
 # ================== Helper Functions ==================
 
-async def get_delivery_time_settings(db):
+async def get_delivery_time_settings(db) -> dict:
     """جلب إعدادات وقت التوصيل"""
     settings = await db.settings.find_one({"type": "delivery_time_settings"})
     if settings:
@@ -57,7 +57,7 @@ async def get_delivery_time_settings(db):
         "max_penalty_per_day": 2000
     }
 
-async def get_driver_warnings_today(db, driver_id: str):
+async def get_driver_warnings_today(db, driver_id: str) -> dict:
     """جلب عدد التحذيرات اليوم للسائق"""
     today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
     
@@ -67,7 +67,7 @@ async def get_driver_warnings_today(db, driver_id: str):
     })
     return warnings
 
-async def get_driver_penalties_today(db, driver_id: str):
+async def get_driver_penalties_today(db, driver_id: str) -> dict:
     """جلب مجموع الخصومات اليوم للسائق"""
     today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
     
@@ -93,7 +93,7 @@ async def get_driver_penalties_today(db, driver_id: str):
 # ================== Endpoints ==================
 
 @router.post("/delivery/timer/start")
-async def start_delivery_timer(request: StartDeliveryTimerRequest, driver_id: str = None):
+async def start_delivery_timer(request: StartDeliveryTimerRequest, driver_id: str = None) -> dict:
     """بدء عداد وقت التوصيل عند استلام الطلب"""
     db = get_db()
     
@@ -143,7 +143,7 @@ async def start_delivery_timer(request: StartDeliveryTimerRequest, driver_id: st
     }
 
 @router.get("/delivery/timer/{order_id}")
-async def get_delivery_timer(order_id: str):
+async def get_delivery_timer(order_id: str) -> dict:
     """جلب حالة عداد التوصيل"""
     db = get_db()
     
@@ -174,7 +174,7 @@ async def get_delivery_timer(order_id: str):
     }
 
 @router.post("/delivery/timer/{order_id}/complete")
-async def complete_delivery_timer(order_id: str, driver_id: str = None):
+async def complete_delivery_timer(order_id: str, driver_id: str = None) -> dict:
     """إكمال التوصيل وتسجيل النتيجة"""
     db = get_db()
     
@@ -262,7 +262,7 @@ async def complete_delivery_timer(order_id: str, driver_id: str = None):
     return result
 
 @router.get("/delivery/driver/{driver_id}/stats")
-async def get_driver_delivery_stats(driver_id: str):
+async def get_driver_delivery_stats(driver_id: str) -> dict:
     """جلب إحصائيات السائق لليوم"""
     db = get_db()
     
@@ -308,14 +308,14 @@ async def get_driver_delivery_stats(driver_id: str):
 # ================== Admin Endpoints ==================
 
 @router.get("/admin/delivery-time-settings")
-async def get_admin_delivery_time_settings():
+async def get_admin_delivery_time_settings() -> dict:
     """جلب إعدادات وقت التوصيل للأدمن"""
     db = get_db()
     settings = await get_delivery_time_settings(db)
     return {"success": True, "settings": settings}
 
 @router.put("/admin/delivery-time-settings")
-async def update_admin_delivery_time_settings(settings: DeliveryTimeSettings):
+async def update_admin_delivery_time_settings(settings: DeliveryTimeSettings) -> dict:
     """تحديث إعدادات وقت التوصيل"""
     db = get_db()
     
@@ -338,7 +338,7 @@ async def update_admin_delivery_time_settings(settings: DeliveryTimeSettings):
     }
 
 @router.get("/admin/late-deliveries")
-async def get_admin_late_deliveries(days: int = 7):
+async def get_admin_late_deliveries(days: int = 7) -> dict:
     """جلب تقرير التوصيلات المتأخرة للأدمن"""
     db = get_db()
     
@@ -379,7 +379,7 @@ async def get_admin_late_deliveries(days: int = 7):
     }
 
 @router.get("/admin/driver-penalties")
-async def get_admin_driver_penalties(days: int = 7):
+async def get_admin_driver_penalties(days: int = 7) -> dict:
     """جلب تقرير خصومات السائقين للأدمن"""
     db = get_db()
     

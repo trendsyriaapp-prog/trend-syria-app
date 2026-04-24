@@ -10,7 +10,7 @@ router = APIRouter(prefix="/daily-deals", tags=["Daily Deals"])
 
 
 @router.get("/active")
-async def get_active_daily_deal():
+async def get_active_daily_deal() -> dict:
     """جلب صفقة اليوم النشطة"""
     now = datetime.now(timezone.utc).isoformat()
     
@@ -59,7 +59,7 @@ async def get_active_daily_deal():
 
 
 @router.get("/upcoming")
-async def get_upcoming_deals():
+async def get_upcoming_deals() -> dict:
     """جلب الصفقات القادمة"""
     now = datetime.now(timezone.utc).isoformat()
     
@@ -77,7 +77,7 @@ async def get_upcoming_deals():
 # ============ Admin Endpoints ============
 
 @router.get("/admin/all")
-async def get_all_daily_deals(user: dict = Depends(get_current_user)):
+async def get_all_daily_deals(user: dict = Depends(get_current_user)) -> dict:
     """جلب جميع صفقات اليوم (للمدير)"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -87,7 +87,7 @@ async def get_all_daily_deals(user: dict = Depends(get_current_user)):
 
 
 @router.post("/admin/create")
-async def create_daily_deal(data: dict, user: dict = Depends(get_current_user)):
+async def create_daily_deal(data: dict, user: dict = Depends(get_current_user)) -> dict:
     """إنشاء صفقة يوم جديدة"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -131,7 +131,7 @@ async def create_daily_deal(data: dict, user: dict = Depends(get_current_user)):
     return {"message": "تم إنشاء صفقة اليوم", "deal": deal}
 
 
-async def send_deal_notification(deal: dict):
+async def send_deal_notification(deal: dict) -> dict:
     """إرسال إشعار صفقة اليوم لجميع المستخدمين"""
     now = datetime.now(timezone.utc).isoformat()
     
@@ -164,7 +164,7 @@ async def send_deal_notification(deal: dict):
 
 
 @router.put("/admin/{deal_id}")
-async def update_daily_deal(deal_id: str, data: dict, user: dict = Depends(get_current_user)):
+async def update_daily_deal(deal_id: str, data: dict, user: dict = Depends(get_current_user)) -> dict:
     """تحديث صفقة اليوم"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -191,7 +191,7 @@ async def update_daily_deal(deal_id: str, data: dict, user: dict = Depends(get_c
 
 
 @router.delete("/admin/{deal_id}")
-async def delete_daily_deal(deal_id: str, user: dict = Depends(get_current_user)):
+async def delete_daily_deal(deal_id: str, user: dict = Depends(get_current_user)) -> dict:
     """حذف صفقة اليوم"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -204,7 +204,7 @@ async def delete_daily_deal(deal_id: str, user: dict = Depends(get_current_user)
 
 
 @router.post("/admin/quick-create")
-async def quick_create_daily_deal(data: dict, user: dict = Depends(get_current_user)):
+async def quick_create_daily_deal(data: dict, user: dict = Depends(get_current_user)) -> dict:
     """إنشاء سريع لصفقة اليوم (24 ساعة من الآن)"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -247,7 +247,7 @@ async def quick_create_daily_deal(data: dict, user: dict = Depends(get_current_u
 # ============ طلبات البائعين ============
 
 @router.get("/requests")
-async def get_deal_requests(user: dict = Depends(get_current_user)):
+async def get_deal_requests(user: dict = Depends(get_current_user)) -> dict:
     """جلب طلبات البائعين للمشاركة في صفقات اليوم (للمدير)"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -257,7 +257,7 @@ async def get_deal_requests(user: dict = Depends(get_current_user)):
 
 
 @router.post("/requests/create")
-async def create_deal_request(data: dict, user: dict = Depends(get_current_user)):
+async def create_deal_request(data: dict, user: dict = Depends(get_current_user)) -> dict:
     """إنشاء طلب للمشاركة في صفقات اليوم (للبائعين)"""
     if user["user_type"] not in ["seller", "food_seller"]:
         raise HTTPException(status_code=403, detail="للبائعين فقط")
@@ -342,7 +342,7 @@ async def create_deal_request(data: dict, user: dict = Depends(get_current_user)
 
 
 @router.post("/requests/{request_id}/approve")
-async def approve_deal_request(request_id: str, user: dict = Depends(get_current_user)):
+async def approve_deal_request(request_id: str, user: dict = Depends(get_current_user)) -> dict:
     """قبول طلب بائع (للمدير)"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -399,7 +399,7 @@ async def approve_deal_request(request_id: str, user: dict = Depends(get_current
 
 
 @router.post("/requests/{request_id}/reject")
-async def reject_deal_request(request_id: str, data: dict, user: dict = Depends(get_current_user)):
+async def reject_deal_request(request_id: str, data: dict, user: dict = Depends(get_current_user)) -> dict:
     """رفض طلب بائع (للمدير)"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -442,7 +442,7 @@ async def reject_deal_request(request_id: str, data: dict, user: dict = Depends(
 
 
 @router.delete("/requests/{request_id}")
-async def delete_deal_request(request_id: str, user: dict = Depends(get_current_user)):
+async def delete_deal_request(request_id: str, user: dict = Depends(get_current_user)) -> dict:
     """حذف طلب صفقة (للمدير)"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -456,7 +456,7 @@ async def delete_deal_request(request_id: str, user: dict = Depends(get_current_
 
 
 @router.get("/seller/my-requests")
-async def get_my_deal_requests(user: dict = Depends(get_current_user)):
+async def get_my_deal_requests(user: dict = Depends(get_current_user)) -> dict:
     """جلب طلباتي للمشاركة في صفقات اليوم (للبائع)"""
     if user["user_type"] not in ["seller", "food_seller"]:
         raise HTTPException(status_code=403, detail="للبائعين فقط")

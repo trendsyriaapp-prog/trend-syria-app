@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 # استيراد rembg بشكل كسول
 _rembg_remove = None
 
-def get_rembg_remove():
+def get_rembg_remove() -> dict:
     """استيراد rembg بشكل كسول عند الحاجة"""
     global _rembg_remove
     if _rembg_remove is None:
@@ -577,7 +577,7 @@ async def process_image(
     background: str = Form(default="white"),
     add_shadow: bool = Form(default=True),
     use_premium: bool = Form(default=True)
-):
+) -> dict:
     """
     معالجة صورة المنتج - Remove.bg للجودة الاحترافية
     
@@ -667,7 +667,7 @@ async def process_image_from_url(
     image_url: str,
     background: str = "white",
     add_shadow: bool = True
-):
+) -> dict:
     """
     معالجة صورة من رابط URL
     """
@@ -703,7 +703,7 @@ async def process_image_from_url(
 
 
 @router.get("/backgrounds")
-async def get_available_backgrounds():
+async def get_available_backgrounds() -> dict:
     """
     الحصول على قائمة الخلفيات المتاحة
     """
@@ -736,7 +736,7 @@ async def get_available_backgrounds():
 # ============== PhotoRoom API Endpoints ==============
 
 @router.get("/shadows")
-async def get_available_shadows():
+async def get_available_shadows() -> dict:
     """
     الحصول على أنواع الظلال المتاحة
     """
@@ -752,7 +752,7 @@ async def process_image_with_photoroom(
     shadow_type: str = Form(default="soft"),
     background: str = Form(default="white"),
     use_sandbox: bool = Form(default=False)
-):
+) -> dict:
     """
     معالجة صورة المنتج - تستخدم PhotoRoom أولاً ثم rembg كـ fallback
     
@@ -890,7 +890,7 @@ async def process_image_with_photoroom(
 
 
 @router.get("/status")
-async def get_image_processing_status():
+async def get_image_processing_status() -> dict:
     """
     الحصول على حالة خدمة معالجة الصور
     """
@@ -926,7 +926,7 @@ async def get_image_processing_status():
 
 
 @router.get("/photoroom-credits")
-async def get_photoroom_credits_endpoint():
+async def get_photoroom_credits_endpoint() -> dict:
     """
     الحصول على رصيد PhotoRoom المتبقي - للمدير فقط
     """
@@ -960,7 +960,7 @@ async def process_image_professional(
     background: str = Form(default="white"),
     generate_sizes: bool = Form(default=False),
     output_format: str = Form(default="jpeg")
-):
+) -> dict:
     """
     معالجة صورة المنتج بشكل احترافي - مثل Trendyol
     
@@ -1110,7 +1110,7 @@ async def process_image_professional(
 
 
 @router.post("/analyze")
-async def analyze_image(file: UploadFile = File(...)):
+async def analyze_image(file: UploadFile = File(...)) -> dict:
     """
     تحليل جودة الصورة قبل المعالجة
     """
@@ -1140,7 +1140,7 @@ async def analyze_image(file: UploadFile = File(...)):
 
 
 @router.get("/processing-features")
-async def get_processing_features():
+async def get_processing_features() -> dict:
     """
     الحصول على قائمة ميزات المعالجة المتاحة
     """
@@ -1249,7 +1249,7 @@ async def process_food_image(
     enhance_colors: bool = Form(default=True),
     auto_crop: bool = Form(default=False),
     output_format: str = Form(default="jpeg")
-):
+) -> dict:
     """
     معالجة صور الطعام - تحسين بدون إزالة الخلفية
     
@@ -1323,7 +1323,7 @@ async def process_food_image(
 
 
 @router.get("/settings")
-async def get_image_processing_settings():
+async def get_image_processing_settings() -> dict:
     """
     جلب إعدادات معالجة الصور للبائعين
     """
@@ -1405,7 +1405,7 @@ async def convert_image_to_webp(
     quality: int = Form(default=85),
     max_width: int = Form(default=1200),
     max_height: int = Form(default=1200)
-):
+) -> dict:
     """
     تحويل صورة إلى WebP مع ضغط محسّن
     يقلل حجم الصورة بنسبة 25-35% مع الحفاظ على الجودة
@@ -1454,7 +1454,7 @@ async def optimize_images_batch(
     quality: int = Form(default=85),
     max_width: int = Form(default=1200),
     output_format: str = Form(default="webp")
-):
+) -> dict:
     """
     تحسين مجموعة صور دفعة واحدة
     يدعم WebP و JPEG
@@ -1574,7 +1574,7 @@ async def upload_optimized_image(
     max_width: int = Form(default=1200),
     max_height: int = Form(default=1200),
     quality: int = Form(default=85)
-):
+) -> dict:
     """
     رفع صورة مع تحسين تلقائي
     
@@ -1641,7 +1641,7 @@ async def bulk_upload_optimized(
     files: list[UploadFile] = File(...),
     max_width: int = Form(default=1200),
     quality: int = Form(default=85)
-):
+) -> dict:
     """
     رفع عدة صور مع تحسين تلقائي (حد أقصى 10)
     """

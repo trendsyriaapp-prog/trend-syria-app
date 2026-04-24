@@ -18,7 +18,7 @@ router = APIRouter(prefix="/chatbot", tags=["Chatbot"])
 # دالة للحصول على المستخدم (اختياري - للزوار)
 security = HTTPBearer(auto_error=False)
 
-async def get_optional_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
+async def get_optional_user(credentials: HTTPAuthorizationCredentials = Depends(security)) -> dict:
     """الحصول على المستخدم اختيارياً - يرجع None للزوار"""
     if not credentials:
         return None
@@ -338,7 +338,7 @@ def find_best_response(message: str) -> dict:
 # ============== API Endpoints ==============
 
 @router.post("/send")
-async def send_message(data: ChatMessage, user: dict = Depends(get_optional_user)):
+async def send_message(data: ChatMessage, user: dict = Depends(get_optional_user)) -> dict:
     """إرسال رسالة للشات بوت - متاح للجميع"""
     
     session_id = data.session_id or str(uuid.uuid4())
@@ -376,7 +376,7 @@ async def send_message(data: ChatMessage, user: dict = Depends(get_optional_user
     }
 
 @router.post("/request-support")
-async def request_human_support(data: SupportRequest, user: dict = Depends(get_current_user)):
+async def request_human_support(data: SupportRequest, user: dict = Depends(get_current_user)) -> dict:
     """طلب التحويل لموظف دعم بشري"""
     
     now = datetime.now(timezone.utc).isoformat()
@@ -410,7 +410,7 @@ async def request_human_support(data: SupportRequest, user: dict = Depends(get_c
     }
 
 @router.get("/history")
-async def get_chat_history(session_id: Optional[str] = None, user: dict = Depends(get_current_user)):
+async def get_chat_history(session_id: Optional[str] = None, user: dict = Depends(get_current_user)) -> dict:
     """جلب سجل المحادثة"""
     
     query = {"user_id": user["id"]}
@@ -425,7 +425,7 @@ async def get_chat_history(session_id: Optional[str] = None, user: dict = Depend
     return {"messages": messages}
 
 @router.get("/check-replies/{session_id}")
-async def check_new_replies(session_id: str, last_count: int = 0, user: dict = Depends(get_current_user)):
+async def check_new_replies(session_id: str, last_count: int = 0, user: dict = Depends(get_current_user)) -> dict:
     """التحقق من وجود ردود جديدة من الدعم"""
     
     # جلب جميع الرسائل في هذه الجلسة
@@ -447,7 +447,7 @@ async def check_new_replies(session_id: str, last_count: int = 0, user: dict = D
     }
 
 @router.get("/quick-questions")
-async def get_quick_questions():
+async def get_quick_questions() -> dict:
     """جلب الأسئلة السريعة الشائعة"""
     
     return {
@@ -465,7 +465,7 @@ async def get_quick_questions():
 # ============== Admin Endpoints ==============
 
 @router.get("/admin/support-requests")
-async def get_support_requests(user: dict = Depends(get_current_user)):
+async def get_support_requests(user: dict = Depends(get_current_user)) -> dict:
     """جلب طلبات الدعم للمدير"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -484,7 +484,7 @@ async def get_support_requests(user: dict = Depends(get_current_user)):
     return {"requests": requests, "stats": stats}
 
 @router.put("/admin/support-requests/{request_id}")
-async def update_support_request(request_id: str, status: str, user: dict = Depends(get_current_user)):
+async def update_support_request(request_id: str, status: str, user: dict = Depends(get_current_user)) -> dict:
     """تحديث حالة طلب الدعم"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -510,7 +510,7 @@ async def update_support_request(request_id: str, status: str, user: dict = Depe
 
 
 @router.delete("/admin/support-requests/{request_id}")
-async def delete_support_request(request_id: str, user: dict = Depends(get_current_user)):
+async def delete_support_request(request_id: str, user: dict = Depends(get_current_user)) -> dict:
     """حذف طلب دعم (للمدراء)"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -529,7 +529,7 @@ class AdminReply(BaseModel):
     message: str
 
 @router.post("/admin/reply")
-async def send_admin_reply(data: AdminReply, user: dict = Depends(get_current_user)):
+async def send_admin_reply(data: AdminReply, user: dict = Depends(get_current_user)) -> dict:
     """إرسال رد من المدير للعميل كإشعار ورسالة في الدردشة"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -593,7 +593,7 @@ class SupportRating(BaseModel):
     comment: Optional[str] = None
 
 @router.post("/rate-support")
-async def rate_support_experience(data: SupportRating, user: dict = Depends(get_current_user)):
+async def rate_support_experience(data: SupportRating, user: dict = Depends(get_current_user)) -> dict:
     """تقييم تجربة الدعم من قبل العميل"""
     
     if data.rating < 1 or data.rating > 5:
@@ -628,7 +628,7 @@ async def rate_support_experience(data: SupportRating, user: dict = Depends(get_
     return {"message": "شكراً لتقييمك! نسعى دائماً لتحسين خدماتنا 🙏"}
 
 @router.get("/my-pending-rating")
-async def get_pending_rating(user: dict = Depends(get_current_user)):
+async def get_pending_rating(user: dict = Depends(get_current_user)) -> dict:
     """جلب تذاكر الدعم المحلولة التي لم يتم تقييمها بعد"""
     
     ticket = await db.support_requests.find_one(
@@ -643,7 +643,7 @@ async def get_pending_rating(user: dict = Depends(get_current_user)):
     return {"ticket": ticket}
 
 @router.get("/admin/rating-stats")
-async def get_rating_stats(user: dict = Depends(get_current_user)):
+async def get_rating_stats(user: dict = Depends(get_current_user)) -> dict:
     """إحصائيات تقييمات الدعم للمدير"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -682,7 +682,7 @@ async def get_rating_stats(user: dict = Depends(get_current_user)):
     }
 
 @router.post("/check-rating-reminder")
-async def check_and_send_rating_reminder(user: dict = Depends(get_current_user)):
+async def check_and_send_rating_reminder(user: dict = Depends(get_current_user)) -> dict:
     """التحقق وإرسال تذكير بالتقييم للتذاكر القديمة (أكثر من 24 ساعة)"""
     
     from datetime import timedelta
@@ -731,7 +731,7 @@ async def check_and_send_rating_reminder(user: dict = Depends(get_current_user))
 
 
 @router.get("/admin/analytics")
-async def get_support_analytics(user: dict = Depends(get_current_user)):
+async def get_support_analytics(user: dict = Depends(get_current_user)) -> dict:
     """تحليلات متقدمة للدعم الفني"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")

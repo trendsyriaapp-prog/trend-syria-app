@@ -15,7 +15,7 @@ router = APIRouter(prefix="/referrals", tags=["Referrals"])
 # توليد كود الإحالة
 # ===============================
 
-def generate_referral_code(length=8):
+def generate_referral_code(length=8) -> str:
     """توليد كود إحالة فريد"""
     chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
     return ''.join(secrets.choice(chars) for _ in range(length))
@@ -57,7 +57,7 @@ async def get_or_create_referral_code(user_id: str, user_name: str) -> str:
 # ===============================
 
 @router.get("/my-code")
-async def get_my_referral_code(user: dict = Depends(get_current_user)):
+async def get_my_referral_code(user: dict = Depends(get_current_user)) -> dict:
     """جلب كود الإحالة الخاص بي"""
     code = await get_or_create_referral_code(user["id"], user.get("name", ""))
     
@@ -92,7 +92,7 @@ async def get_my_referral_code(user: dict = Depends(get_current_user)):
 
 
 @router.get("/my-referrals")
-async def get_my_referrals(user: dict = Depends(get_current_user)):
+async def get_my_referrals(user: dict = Depends(get_current_user)) -> dict:
     """جلب قائمة الأشخاص الذين أحلتهم"""
     referrals = await db.referrals.find(
         {"referrer_id": user["id"]},
@@ -103,7 +103,7 @@ async def get_my_referrals(user: dict = Depends(get_current_user)):
 
 
 @router.post("/validate-code")
-async def validate_referral_code(data: dict):
+async def validate_referral_code(data: dict) -> dict:
     """التحقق من صحة كود الإحالة (للتسجيل)"""
     code = data.get("code", "").strip().upper()
     
@@ -126,7 +126,7 @@ async def validate_referral_code(data: dict):
 
 
 @router.post("/apply")
-async def apply_referral(data: dict, user: dict = Depends(get_current_user)):
+async def apply_referral(data: dict, user: dict = Depends(get_current_user)) -> dict:
     """تطبيق كود الإحالة على حساب جديد"""
     code = data.get("code", "").strip().upper()
     
@@ -242,7 +242,7 @@ async def apply_referral(data: dict, user: dict = Depends(get_current_user)):
 # معالجة مكافأة المُحيل عند إتمام طلب
 # ===============================
 
-async def process_referral_reward(user_id: str, order_total: float):
+async def process_referral_reward(user_id: str, order_total: float) -> None:
     """معالجة مكافأة المُحيل عند إتمام أول طلب للمُحال"""
     # البحث عن إحالة معلقة
     referral = await db.referrals.find_one({
@@ -326,7 +326,7 @@ async def process_referral_reward(user_id: str, order_total: float):
 # ===============================
 
 @router.get("/admin/stats")
-async def get_referral_stats(user: dict = Depends(get_current_user)):
+async def get_referral_stats(user: dict = Depends(get_current_user)) -> dict:
     """إحصائيات نظام الإحالات للمدير"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -364,7 +364,7 @@ async def get_referral_stats(user: dict = Depends(get_current_user)):
 
 
 @router.get("/admin/settings")
-async def get_referral_settings(user: dict = Depends(get_current_user)):
+async def get_referral_settings(user: dict = Depends(get_current_user)) -> dict:
     """جلب إعدادات نظام الإحالات"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -385,7 +385,7 @@ async def get_referral_settings(user: dict = Depends(get_current_user)):
 
 
 @router.put("/admin/settings")
-async def update_referral_settings(data: dict, user: dict = Depends(get_current_user)):
+async def update_referral_settings(data: dict, user: dict = Depends(get_current_user)) -> dict:
     """تحديث إعدادات نظام الإحالات"""
     if user["user_type"] != "admin":
         raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
@@ -410,7 +410,7 @@ async def update_referral_settings(data: dict, user: dict = Depends(get_current_
 
 
 @router.get("/status")
-async def get_referral_status():
+async def get_referral_status() -> dict:
     """
     التحقق من حالة تفعيل نظام الإحالات (للواجهة)
     هذا الـ endpoint عام ولا يتطلب تسجيل دخول
@@ -434,7 +434,7 @@ async def get_referral_status():
 
 
 @router.post("/admin/send-reminder")
-async def send_referral_reminder(user: dict = Depends(get_current_user)):
+async def send_referral_reminder(user: dict = Depends(get_current_user)) -> dict:
     """
     إرسال إشعار تذكير ببرنامج الإحالات لجميع المستخدمين
     """
@@ -489,7 +489,7 @@ async def send_referral_reminder(user: dict = Depends(get_current_user)):
 
 
 @router.post("/admin/send-to-inactive")
-async def send_referral_to_inactive_users(user: dict = Depends(get_current_user)):
+async def send_referral_to_inactive_users(user: dict = Depends(get_current_user)) -> dict:
     """
     إرسال إشعار للمستخدمين غير النشطين (لم يطلبوا منذ أسبوع)
     لتشجيعهم على العودة ودعوة أصدقائهم

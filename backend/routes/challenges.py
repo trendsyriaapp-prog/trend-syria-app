@@ -33,7 +33,7 @@ class ChallengeUpdate(BaseModel):
 # ============== Admin Endpoints ==============
 
 @router.post("/admin/create")
-async def create_challenge(challenge: ChallengeCreate, admin: dict = Depends(get_current_admin)):
+async def create_challenge(challenge: ChallengeCreate, admin: dict = Depends(get_current_admin)) -> dict:
     """إنشاء تحدي جديد"""
     
     now = datetime.now(timezone.utc)
@@ -94,7 +94,7 @@ async def create_challenge(challenge: ChallengeCreate, admin: dict = Depends(get
     return {"message": "تم إنشاء التحدي بنجاح", "challenge_id": challenge_doc["id"]}
 
 @router.get("/admin/all")
-async def get_all_challenges(admin: dict = Depends(get_current_admin)):
+async def get_all_challenges(admin: dict = Depends(get_current_admin)) -> dict:
     """جلب جميع التحديات للمدير"""
     challenges = await db.challenges.find({}, {"_id": 0}).sort("created_at", -1).to_list(100)
     
@@ -115,7 +115,7 @@ async def get_all_challenges(admin: dict = Depends(get_current_admin)):
     return {"challenges": challenges, "stats": stats}
 
 @router.put("/admin/{challenge_id}")
-async def update_challenge(challenge_id: str, data: ChallengeUpdate, admin: dict = Depends(get_current_admin)):
+async def update_challenge(challenge_id: str, data: ChallengeUpdate, admin: dict = Depends(get_current_admin)) -> dict:
     """تحديث تحدي"""
     update_data = {k: v for k, v in data.dict().items() if v is not None}
     
@@ -133,7 +133,7 @@ async def update_challenge(challenge_id: str, data: ChallengeUpdate, admin: dict
     return {"message": "تم تحديث التحدي"}
 
 @router.delete("/admin/{challenge_id}")
-async def delete_challenge(challenge_id: str, admin: dict = Depends(get_current_admin)):
+async def delete_challenge(challenge_id: str, admin: dict = Depends(get_current_admin)) -> dict:
     """حذف تحدي"""
     result = await db.challenges.delete_one({"id": challenge_id})
     
@@ -145,7 +145,7 @@ async def delete_challenge(challenge_id: str, admin: dict = Depends(get_current_
 # ============== Driver Endpoints ==============
 
 @router.get("/active")
-async def get_active_challenges(user: dict = Depends(get_current_user)):
+async def get_active_challenges(user: dict = Depends(get_current_user)) -> dict:
     """جلب التحديات النشطة للسائق"""
     if user["user_type"] != "delivery":
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
@@ -198,7 +198,7 @@ async def get_active_challenges(user: dict = Depends(get_current_user)):
     return challenges
 
 @router.post("/claim/{challenge_id}")
-async def claim_challenge_reward(challenge_id: str, user: dict = Depends(get_current_user)):
+async def claim_challenge_reward(challenge_id: str, user: dict = Depends(get_current_user)) -> dict:
     """المطالبة بمكافأة التحدي"""
     if user["user_type"] != "delivery":
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
@@ -272,7 +272,7 @@ async def claim_challenge_reward(challenge_id: str, user: dict = Depends(get_cur
     }
 
 @router.get("/my-history")
-async def get_my_challenge_history(user: dict = Depends(get_current_user)):
+async def get_my_challenge_history(user: dict = Depends(get_current_user)) -> dict:
     """سجل تحدياتي"""
     if user["user_type"] != "delivery":
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")

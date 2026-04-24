@@ -22,7 +22,7 @@ async def log_admin_activity(
     target_name: Optional[str] = None,
     details: Optional[dict] = None,
     ip_address: Optional[str] = None
-):
+) -> dict:
     """تسجيل نشاط مسؤول"""
     
     log_entry = {
@@ -54,7 +54,7 @@ async def get_activity_logs(
     page: int = Query(1, ge=1),
     limit: int = Query(50, ge=1, le=200),
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """جلب سجلات النشاط (للمدراء فقط)"""
     
     if user.get("user_type") not in ["admin", "sub_admin"]:
@@ -93,7 +93,7 @@ async def get_activity_logs(
 async def get_activity_stats(
     days: int = Query(7, ge=1, le=90),
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """إحصائيات النشاط (للمدراء فقط)"""
     
     if user.get("user_type") not in ["admin", "sub_admin"]:
@@ -145,7 +145,7 @@ async def get_activity_stats(
 
 
 @router.get("/admins")
-async def get_admins_list(user: dict = Depends(get_current_user)):
+async def get_admins_list(user: dict = Depends(get_current_user)) -> dict:
     """قائمة المسؤولين للفلترة"""
     
     if user.get("user_type") not in ["admin", "sub_admin"]:
@@ -180,7 +180,7 @@ ACTION_TYPES = {
 
 
 @router.get("/action-types")
-async def get_action_types(user: dict = Depends(get_current_user)):
+async def get_action_types(user: dict = Depends(get_current_user)) -> dict:
     """قائمة أنواع الإجراءات للفلترة"""
     
     if user.get("user_type") not in ["admin", "sub_admin"]:

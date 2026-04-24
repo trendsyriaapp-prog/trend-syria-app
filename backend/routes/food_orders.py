@@ -26,7 +26,7 @@ def get_first_name(full_name: str) -> str:
 
 # ============== حساب المسافة والأجرة بالكيلومتر ==============
 
-async def get_driver_km_settings():
+async def get_driver_km_settings() -> dict:
     """جلب إعدادات أجرة السائق بالكيلومتر"""
     settings = await db.platform_settings.find_one({"id": "main"}, {"_id": 0})
     
@@ -128,7 +128,7 @@ ORDER_STATUSES = {
 
 # ============== إشعارات Push للطلبات العاجلة ==============
 
-async def send_priority_order_push_notification(order: dict):
+async def send_priority_order_push_notification(order: dict) -> dict:
     """
     إرسال إشعار Push للسائقين الذين لديهم طلبات من نفس المطعم
     يُستدعى عندما يصبح طلب جديد ready
@@ -210,7 +210,7 @@ async def send_priority_order_push_notification(order: dict):
 
 PLATFORM_WALLET_ID = "platform_admin_wallet"
 
-async def add_commission_to_platform_wallet_food(order_id: str, commission_amount: float, order_number: str = ""):
+async def add_commission_to_platform_wallet_food(order_id: str, commission_amount: float, order_number: str = "") -> dict:
     """إضافة عمولة طلبات الطعام لمحفظة المنصة"""
     if commission_amount <= 0:
         return
@@ -250,7 +250,7 @@ class DistanceCheckRequest(BaseModel):
     customer_lng: float
 
 @router.get("/check-drivers-availability/{order_id}")
-async def check_drivers_availability_for_order(order_id: str, user: dict = Depends(get_current_user)):
+async def check_drivers_availability_for_order(order_id: str, user: dict = Depends(get_current_user)) -> dict:
     """
     فحص توفر السائقين القريبين للطلب
     يُستخدم من البائع قبل قبول الطلب لمعرفة حالة التوصيل
@@ -406,7 +406,7 @@ async def check_drivers_availability_for_order(order_id: str, user: dict = Depen
         }
 
 @router.post("/check-distance")
-async def check_delivery_distance(data: DistanceCheckRequest):
+async def check_delivery_distance(data: DistanceCheckRequest) -> dict:
     """
     حساب المسافة بين المتجر والعميل وإرجاع تحذير ذكي إذا لزم الأمر
     يُستخدم من الـ Frontend لعرض تحذير قبل الطلب
@@ -527,7 +527,7 @@ class BatchOrderCreate(BaseModel):
 # دوال مساعدة للطلبات التجميعية
 # ===============================
 
-async def check_batch_readiness_and_notify_driver(batch_id: str, ready_order_id: str):
+async def check_batch_readiness_and_notify_driver(batch_id: str, ready_order_id: str) -> dict:
     """
     تحقق من جهوزية جميع طلبات الدفعة وأرسل إشعار للسائق
     مع ترتيب الاستلام الأمثل (الأبعد عن العميل أولاً)
@@ -566,7 +566,7 @@ async def check_batch_readiness_and_notify_driver(batch_id: str, ready_order_id:
         except Exception as e:
             print(f"Push notification error: {e}")
 
-async def calculate_optimal_pickup_order(batch_id: str, driver_lat: float, driver_lng: float):
+async def calculate_optimal_pickup_order(batch_id: str, driver_lat: float, driver_lng: float) -> list:
     """
     حساب ترتيب الاستلام الأمثل للطلب التجميعي
     المنطق: استلم من المتجر الأبعد عن العميل أولاً، والأقرب أخيراً
@@ -574,7 +574,7 @@ async def calculate_optimal_pickup_order(batch_id: str, driver_lat: float, drive
     """
     from math import radians, sin, cos, sqrt, atan2
     
-    def haversine(lat1, lon1, lat2, lon2):
+    def haversine(lat1, lon1, lat2, lon2) -> list:
         R = 6371  # نصف قطر الأرض بالكيلومتر
         dlat = radians(lat2 - lat1)
         dlon = radians(lon2 - lon1)
@@ -641,7 +641,7 @@ async def calculate_optimal_pickup_order(batch_id: str, driver_lat: float, drive
 # ===============================
 
 @router.post("")
-async def create_food_order(order: FoodOrderCreate, user: dict = Depends(get_current_user)):
+async def create_food_order(order: FoodOrderCreate, user: dict = Depends(get_current_user)) -> dict:
     """إنشاء طلب طعام جديد"""
     
     # التحقق من المتجر
@@ -1148,7 +1148,7 @@ async def create_food_order(order: FoodOrderCreate, user: dict = Depends(get_cur
 # ============== الطلبات المجدولة ==============
 
 @router.get("/my-scheduled")
-async def get_my_scheduled_orders(user: dict = Depends(get_current_user)):
+async def get_my_scheduled_orders(user: dict = Depends(get_current_user)) -> dict:
     """جلب طلباتي المجدولة"""
     orders = await db.food_orders.find(
         {
@@ -1163,7 +1163,7 @@ async def get_my_scheduled_orders(user: dict = Depends(get_current_user)):
 
 
 @router.post("/{order_id}/activate-scheduled")
-async def activate_scheduled_order(order_id: str, user: dict = Depends(get_current_user)):
+async def activate_scheduled_order(order_id: str, user: dict = Depends(get_current_user)) -> dict:
     """تفعيل طلب مجدول (تحويله من مجدول إلى معلق)"""
     order = await db.food_orders.find_one({"id": order_id, "customer_id": user["id"]})
     
@@ -1199,7 +1199,7 @@ async def activate_scheduled_order(order_id: str, user: dict = Depends(get_curre
 
 
 @router.delete("/{order_id}/cancel-scheduled")
-async def cancel_scheduled_order(order_id: str, user: dict = Depends(get_current_user)):
+async def cancel_scheduled_order(order_id: str, user: dict = Depends(get_current_user)) -> dict:
     """إلغاء طلب مجدول (مع استرداد المبلغ)"""
     order = await db.food_orders.find_one({"id": order_id, "customer_id": user["id"]})
     
@@ -1252,7 +1252,7 @@ async def cancel_scheduled_order(order_id: str, user: dict = Depends(get_current
 
 
 @router.post("/batch")
-async def create_batch_food_orders(batch: BatchOrderCreate, user: dict = Depends(get_current_user)):
+async def create_batch_food_orders(batch: BatchOrderCreate, user: dict = Depends(get_current_user)) -> dict:
     """إنشاء طلبات طعام مجمعة من متاجر متعددة - دفعة واحدة لسائق واحد"""
     
     if len(batch.orders) == 0:
@@ -1587,7 +1587,7 @@ async def create_batch_food_orders(batch: BatchOrderCreate, user: dict = Depends
 
 
 @router.post("/batch/{batch_id}/cancel")
-async def cancel_batch_orders(batch_id: str, user: dict = Depends(get_current_user)):
+async def cancel_batch_orders(batch_id: str, user: dict = Depends(get_current_user)) -> dict:
     """إلغاء جميع طلبات الدفعة"""
     orders = await db.food_orders.find({"batch_id": batch_id, "customer_id": user["id"]}).to_list(None)
     
@@ -1652,7 +1652,7 @@ async def get_my_food_orders(
     skip: int = 0,
     limit: int = 20,
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """جلب طلبات العميل"""
     query = {"customer_id": user["id"], "order_type": "food"}
     if status:
@@ -1666,7 +1666,7 @@ async def get_my_food_orders(
     return orders
 
 @router.get("/seller")
-async def get_seller_food_orders(user: dict = Depends(get_current_user)):
+async def get_seller_food_orders(user: dict = Depends(get_current_user)) -> dict:
     """جلب طلبات الطعام للبائع"""
     if user.get("user_type") != "food_seller":
         raise HTTPException(status_code=403, detail="غير مصرح لك بالوصول")
@@ -1683,7 +1683,7 @@ async def get_seller_food_orders(user: dict = Depends(get_current_user)):
     return orders or []
 
 @router.get("/{order_id}")
-async def get_food_order(order_id: str, user: dict = Depends(get_current_user)):
+async def get_food_order(order_id: str, user: dict = Depends(get_current_user)) -> dict:
     """جلب تفاصيل طلب"""
     order = await db.food_orders.find_one({"id": order_id}, {"_id": 0})
     if not order:
@@ -1700,7 +1700,7 @@ async def get_food_order(order_id: str, user: dict = Depends(get_current_user)):
     return order
 
 @router.post("/{order_id}/cancel")
-async def cancel_food_order(order_id: str, user: dict = Depends(get_current_user)):
+async def cancel_food_order(order_id: str, user: dict = Depends(get_current_user)) -> dict:
     """إلغاء طلب - مسموح فقط قبل أن يؤكد البائع الطلب"""
     order = await db.food_orders.find_one({"id": order_id})
     if not order:
@@ -1767,7 +1767,7 @@ async def cancel_food_order(order_id: str, user: dict = Depends(get_current_user
 async def get_store_orders(
     status: Optional[str] = None,
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """جلب طلبات المتجر - فقط الطلبات التي انتهت مهلة إلغائها"""
     store = await db.food_stores.find_one({"owner_id": user["id"]})
     if not store:
@@ -1835,7 +1835,7 @@ async def start_order_preparation(
     order_id: str,
     data: PreparationStartRequest,
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """
     بدء تحضير الطلب - للطعام فقط
     يرسل الطلب للسائق الأقرب بعد (وقت_التحضير - 7 دقائق)
@@ -1941,7 +1941,7 @@ async def update_order_status(
     new_status: str,
     note: Optional[str] = None,
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """تحديث حالة الطلب من المتجر أو المدير"""
     # المدير يمكنه تحديث أي طلب
     if user["user_type"] in ["admin", "sub_admin"]:
@@ -2020,7 +2020,7 @@ async def report_false_driver_arrival(
     order_id: str,
     reason: str = "السائق لم يصل فعلياً",
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """
     إبلاغ البائع عن وصول كاذب للسائق
     يُسجل شكوى ويُلغي عداد الانتظار
@@ -2142,7 +2142,7 @@ async def get_available_food_orders(
     driver_lat: float = Query(None, description="خط عرض السائق الحالي"),
     driver_lng: float = Query(None, description="خط طول السائق الحالي"),
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """جلب الطلبات المتاحة للتوصيل - مرتبة حسب القرب من السائق"""
     if user["user_type"] != "delivery":
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
@@ -2186,7 +2186,7 @@ async def get_available_food_orders(
         stores_map = {s["id"]: s for s in stores_list}
     
     # دالة حساب المسافة
-    def calculate_distance(lat1, lon1, lat2, lon2):
+    def calculate_distance(lat1, lon1, lat2, lon2) -> dict:
         if not all([lat1, lon1, lat2, lon2]):
             return 9999  # مسافة كبيرة للطلبات بدون إحداثيات
         import math
@@ -2380,7 +2380,7 @@ async def get_available_food_orders(
 
 
 @router.post("/delivery/batch/{batch_id}/accept")
-async def accept_batch_orders(batch_id: str, user: dict = Depends(get_current_user)):
+async def accept_batch_orders(batch_id: str, user: dict = Depends(get_current_user)) -> dict:
     """قبول جميع طلبات الدفعة - السائق يجب أن يقبل الكل"""
     if user["user_type"] != "delivery":
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
@@ -2472,7 +2472,7 @@ async def get_batch_pickup_plan(
     driver_lat: float = Query(None, description="خط عرض السائق"),
     driver_lng: float = Query(None, description="خط طول السائق"),
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """
     الحصول على خطة الاستلام المثلى للطلب التجميعي
     يرتب المتاجر بحيث يُستلم من الأبعد عن العميل أولاً والأقرب أخيراً
@@ -2562,7 +2562,7 @@ async def get_batch_pickup_plan(
             "⏱️ تحقق من جهوزية كل متجر قبل الذهاب إليه"
         ]
     }
-async def complete_batch_delivery(batch_id: str, user: dict = Depends(get_current_user)):
+async def complete_batch_delivery(batch_id: str, user: dict = Depends(get_current_user)) -> dict:
     """إتمام توصيل جميع طلبات الدفعة"""
     if user["user_type"] != "delivery":
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
@@ -2636,7 +2636,7 @@ async def accept_food_order(
     driver_lat: float = Query(None, description="خط عرض السائق الحالي"),
     driver_lng: float = Query(None, description="خط طول السائق الحالي"),
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """قبول طلب توصيل مع التحقق من الحد الأقصى حسب نوع المتجر (ساخن/طازج أو بارد/جاف)"""
     if user["user_type"] != "delivery":
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
@@ -2693,7 +2693,7 @@ async def accept_food_order(
         raise HTTPException(status_code=404, detail="الطلب غير موجود")
     
     # دالة لإلغاء القفل عند حدوث خطأ
-    async def release_order_lock():
+    async def release_order_lock() -> dict:
         await db.food_orders.update_one(
             {"id": order_id, "driver_id": user["id"]},
             {"$set": {"driver_id": None, "status": "ready"}, "$unset": {"_locking_driver": "", "_locked_at": ""}}
@@ -2988,7 +2988,7 @@ async def accept_food_order(
 class DriverCancelRequest(BaseModel):
     reason: str  # سبب الإلغاء (إجباري)
 
-async def get_driver_cancel_settings():
+async def get_driver_cancel_settings() -> dict:
     """جلب إعدادات إلغاء الطلب للسائق"""
     settings = await db.platform_settings.find_one({"id": "main"}, {"_id": 0})
     
@@ -3006,7 +3006,7 @@ async def get_driver_cancel_settings():
     
     return default_settings
 
-async def calculate_driver_cancel_rate(driver_id: str, lookback: int = 50):
+async def calculate_driver_cancel_rate(driver_id: str, lookback: int = 50) -> dict:
     """حساب نسبة إلغاء السائق"""
     # جلب آخر X طلب تم قبولها
     recent_orders = await db.food_orders.find(
@@ -3028,7 +3028,7 @@ async def calculate_driver_cancel_rate(driver_id: str, lookback: int = 50):
     }
 
 @router.post("/delivery/{order_id}/cancel")
-async def driver_cancel_order(order_id: str, data: DriverCancelRequest, user: dict = Depends(get_current_user)):
+async def driver_cancel_order(order_id: str, data: DriverCancelRequest, user: dict = Depends(get_current_user)) -> dict:
     """
     إلغاء طلب من السائق
     - مسموح فقط خلال فترة زمنية محددة
@@ -3168,7 +3168,7 @@ async def driver_cancel_order(order_id: str, data: DriverCancelRequest, user: di
     }
 
 @router.get("/delivery/my-cancel-rate")
-async def get_my_cancel_rate(user: dict = Depends(get_current_user)):
+async def get_my_cancel_rate(user: dict = Depends(get_current_user)) -> dict:
     """جلب نسبة الإلغاء للسائق"""
     if user["user_type"] != "delivery":
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
@@ -3194,7 +3194,7 @@ class SmartRouteEvaluateRequest(BaseModel):
     driver_lon: float
 
 @router.post("/delivery/smart-route/evaluate")
-async def evaluate_order_for_smart_route(data: SmartRouteEvaluateRequest, user: dict = Depends(get_current_user)):
+async def evaluate_order_for_smart_route(data: SmartRouteEvaluateRequest, user: dict = Depends(get_current_user)) -> dict:
     """
     تقييم ما إذا كان الطلب الجديد على مسار السائق الحالي
     يساعد السائق في اتخاذ قرار قبول الطلب
@@ -3272,7 +3272,7 @@ async def evaluate_order_for_smart_route(data: SmartRouteEvaluateRequest, user: 
     }
 
 @router.get("/delivery/optimize-route")
-async def get_optimized_route(user: dict = Depends(get_current_user)):
+async def get_optimized_route(user: dict = Depends(get_current_user)) -> dict:
     """
     الحصول على الترتيب الأمثل لتوصيل الطلبات الحالية
     """
@@ -3352,7 +3352,7 @@ class VerifyPickupCode(BaseModel):
     code: str
 
 @router.post("/delivery/{order_id}/verify-pickup")
-async def verify_pickup_code(order_id: str, data: VerifyPickupCode, user: dict = Depends(get_current_user)):
+async def verify_pickup_code(order_id: str, data: VerifyPickupCode, user: dict = Depends(get_current_user)) -> dict:
     """التحقق من كود الاستلام من البائع"""
     if user["user_type"] != "delivery":
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
@@ -3417,7 +3417,7 @@ async def start_delivery_to_customer(
     order_id: str, 
     data: StartDeliveryData = None,
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """بدء التوصيل - السائق في الطريق للعميل"""
     if user["user_type"] != "delivery":
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
@@ -3493,7 +3493,7 @@ async def driver_arrived_at_store(
     latitude: float = Query(..., description="خط العرض - إجباري"),
     longitude: float = Query(..., description="خط الطول - إجباري"),
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """تسجيل وصول السائق للمطعم - يبدأ عداد الانتظار (يتطلب موقع GPS)"""
     if user["user_type"] != "delivery":
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
@@ -3600,7 +3600,7 @@ async def driver_arrived_at_store(
 
 
 @router.get("/delivery/{order_id}/waiting-status")
-async def get_waiting_status(order_id: str, user: dict = Depends(get_current_user)):
+async def get_waiting_status(order_id: str, user: dict = Depends(get_current_user)) -> dict:
     """جلب حالة الانتظار والتعويض المتوقع"""
     if user["user_type"] != "delivery":
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
@@ -3636,7 +3636,7 @@ async def get_waiting_status(order_id: str, user: dict = Depends(get_current_use
 
 
 @router.get("/delivery/{order_id}/pickup-code")
-async def get_pickup_code(order_id: str, user: dict = Depends(get_current_user)):
+async def get_pickup_code(order_id: str, user: dict = Depends(get_current_user)) -> dict:
     """جلب كود الاستلام للبائع"""
     # يمكن للبائع أو المشرف فقط رؤية الكود
     if user["user_type"] not in ["seller", "admin"]:
@@ -3666,7 +3666,7 @@ async def get_pickup_code(order_id: str, user: dict = Depends(get_current_user))
 # ============== الأولوية الذكية - طلبات من نفس المطعم ==============
 
 @router.get("/delivery/priority-orders")
-async def get_priority_orders(user: dict = Depends(get_current_user)):
+async def get_priority_orders(user: dict = Depends(get_current_user)) -> dict:
     """جلب الطلبات ذات الأولوية - من نفس المطاعم التي يذهب إليها السائق"""
     if user["user_type"] != "delivery":
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
@@ -3720,7 +3720,7 @@ async def get_priority_orders(user: dict = Depends(get_current_user)):
 # ===============================
 
 @router.post("/delivery/{order_id}/arrived-customer")
-async def delivery_arrived_at_customer(order_id: str, user: dict = Depends(get_current_user)):
+async def delivery_arrived_at_customer(order_id: str, user: dict = Depends(get_current_user)) -> dict:
     """تسجيل وصول موظف التوصيل للعميل - لطلبات الطعام"""
     if user["user_type"] != "delivery":
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
@@ -3789,7 +3789,7 @@ async def verify_delivery_code(
     order_id: str, 
     data: DeliveryCodeVerification, 
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """التحقق من كود التسليم وإتمام الطلب"""
     if user["user_type"] != "delivery":
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
@@ -3823,7 +3823,7 @@ async def report_food_delivery_failed(
     order_id: str, 
     data: FoodDeliveryFailedRequest, 
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """تسجيل فشل تسليم طلب طعام - العميل غير متجاوب"""
     
     if user.get("user_type") != "delivery":
@@ -3978,7 +3978,7 @@ async def report_food_delivery_failed(
     }
 
 @router.post("/delivery/{order_id}/customer-not-responding")
-async def mark_customer_not_responding(order_id: str, user: dict = Depends(get_current_user)):
+async def mark_customer_not_responding(order_id: str, user: dict = Depends(get_current_user)) -> dict:
     """تسجيل أن العميل لا يرد"""
     if user["user_type"] != "delivery":
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
@@ -4048,7 +4048,7 @@ async def mark_customer_not_responding(order_id: str, user: dict = Depends(get_c
     }
 
 @router.post("/delivery/{order_id}/leave-at-door")
-async def leave_order_at_door(order_id: str, user: dict = Depends(get_current_user)):
+async def leave_order_at_door(order_id: str, user: dict = Depends(get_current_user)) -> dict:
     """ترك الطلب عند الباب بعد انتهاء وقت الانتظار"""
     if user["user_type"] != "delivery":
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
@@ -4090,7 +4090,7 @@ async def leave_order_at_door(order_id: str, user: dict = Depends(get_current_us
     return {"message": "تم ترك الطلب عند الباب وإتمام التسليم"}
 
 
-async def complete_delivery_and_pay_driver(order: dict, driver: dict, note: str):
+async def complete_delivery_and_pay_driver(order: dict, driver: dict, note: str) -> None:
     """إتمام التسليم وإضافة الأجرة لمحفظة السائق (مع التعليق)"""
     now = datetime.now(timezone.utc)
     
@@ -4262,7 +4262,7 @@ async def complete_delivery_and_pay_driver(order: dict, driver: dict, note: str)
             print(f"🔓 إشعار فك القفل للسائق {driver['id']}: {pending_product_orders} طلب منتجات")
 
 
-async def add_driver_earnings_food(driver: dict, amount: float, order: dict):
+async def add_driver_earnings_food(driver: dict, amount: float, order: dict) -> None:
     """
     إضافة أجرة توصيل طلب الطعام للسائق (معلقة لمدة ساعة واحدة)
     """
@@ -4285,7 +4285,7 @@ async def add_driver_earnings_food(driver: dict, amount: float, order: dict):
         logging.error(f"Error checking security deposit: {e}")
 
 
-async def add_seller_earnings_food(seller_id: str, amount: float, order: dict):
+async def add_seller_earnings_food(seller_id: str, amount: float, order: dict) -> None:
     """
     إضافة أرباح بائع الطعام (معلقة لمدة ساعة واحدة)
     """
@@ -4307,20 +4307,20 @@ async def add_seller_earnings_food(seller_id: str, amount: float, order: dict):
 
 # === Legacy Functions (للتوافق الخلفي) ===
 
-async def add_earnings_directly(driver: dict, amount: float, order: dict, user_type: str):
+async def add_earnings_directly(driver: dict, amount: float, order: dict, user_type: str) -> None:
     """إضافة أرباح مباشرة بدون تعليق (Fallback) - استخدم add_driver_earnings_food بدلاً منها"""
     # إعادة توجيه للدالة الجديدة
     await add_driver_earnings_food(driver, amount, order)
 
 
-async def add_seller_earnings_directly(seller_id: str, amount: float, order: dict):
+async def add_seller_earnings_directly(seller_id: str, amount: float, order: dict) -> None:
     """إضافة أرباح البائع مباشرة - استخدم add_seller_earnings_food بدلاً منها"""
     # إعادة توجيه للدالة الجديدة
     await add_seller_earnings_food(seller_id, amount, order)
 
 
 @router.post("/delivery/{order_id}/complete")
-async def complete_food_delivery(order_id: str, user: dict = Depends(get_current_user)):
+async def complete_food_delivery(order_id: str, user: dict = Depends(get_current_user)) -> dict:
     """إتمام التوصيل (الطريقة القديمة - للتوافق)"""
     if user["user_type"] != "delivery":
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
@@ -4354,7 +4354,7 @@ async def complete_food_delivery(order_id: str, user: dict = Depends(get_current
     return {"message": "تم إتمام التوصيل بنجاح"}
 
 @router.get("/delivery/my-deliveries")
-async def get_my_food_deliveries(user: dict = Depends(get_current_user)):
+async def get_my_food_deliveries(user: dict = Depends(get_current_user)) -> dict:
     """جلب طلبات التوصيل الخاصة بي"""
     if user["user_type"] != "delivery":
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
@@ -4375,7 +4375,7 @@ async def get_my_food_deliveries(user: dict = Depends(get_current_user)):
 # ===============================
 
 @router.post("/{order_id}/rate")
-async def rate_food_order(order_id: str, rating_data: dict, user: dict = Depends(get_current_user)):
+async def rate_food_order(order_id: str, rating_data: dict, user: dict = Depends(get_current_user)) -> dict:
     """تقييم طلب الطعام (المتجر وموظف التوصيل)"""
     order = await db.food_orders.find_one({"id": order_id, "customer_id": user["id"]})
     if not order:
@@ -4478,7 +4478,7 @@ async def get_store_reviews(
     store_id: str,
     skip: int = 0,
     limit: int = 20
-):
+) -> dict:
     """جلب تقييمات متجر"""
     reviews = await db.food_reviews.find(
         {"store_id": store_id},
@@ -4522,7 +4522,7 @@ async def admin_cancel_order_with_penalty(
     order_id: str, 
     request: AdminCancelRequest,
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """إلغاء طلب من الأدمن مع خصم من السائق (بعد الاستلام)"""
     if user["user_type"] != "admin":
         raise HTTPException(status_code=403, detail="للمديرين فقط")
@@ -4650,7 +4650,7 @@ async def admin_cancel_order_with_penalty(
 
 
 @router.get("/admin/support-phone")
-async def get_support_phone():
+async def get_support_phone() -> dict:
     """جلب رقم الدعم"""
     setting = await db.settings.find_one({"key": "support_phone"})
     return {"phone": setting["value"] if setting else "0911111111"}
@@ -4676,7 +4676,7 @@ class SetPreparationTimeData(BaseModel):
 async def request_driver_for_order(
     order_id: str,
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """
     البائع يطلب سائق للطلب
     - يُرسل إشعار لجميع السائقين المتاحين
@@ -4796,7 +4796,7 @@ async def request_driver_for_order(
 async def driver_accept_order(
     order_id: str,
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """
     السائق يقبل الطلب
     - يُحسب وقت وصول السائق للمتجر
@@ -4908,7 +4908,7 @@ async def driver_accept_order(
 async def driver_reject_order(
     order_id: str,
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """السائق يرفض الطلب"""
     if user["user_type"] != "delivery":
         raise HTTPException(status_code=403, detail="غير مصرح لك")
@@ -4934,7 +4934,7 @@ async def set_order_preparation_time(
     order_id: str,
     data: SetPreparationTimeData,
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """
     البائع يحدد وقت تحضير الطلب بعد قبول السائق
     - يتم إشعار السائق بوقت جاهزية الطلب
@@ -5055,7 +5055,7 @@ async def set_order_preparation_time(
 async def get_order_driver_status(
     order_id: str,
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """جلب حالة السائق للطلب"""
     if user["user_type"] not in ["food_seller", "admin"]:
         raise HTTPException(status_code=403, detail="غير مصرح لك")

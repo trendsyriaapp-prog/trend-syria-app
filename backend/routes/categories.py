@@ -70,7 +70,7 @@ DEFAULT_CATEGORIES = [
     {"id": "dairy", "name": "ألبان وأجبان", "name_en": "Dairy", "icon": "Milk", "type": "food", "color": "#FBBF24", "order": 8, "is_active": True},
 ]
 
-async def init_default_categories():
+async def init_default_categories() -> None:
     """تهيئة الفئات الافتراضية إذا لم تكن موجودة"""
     count = await db.categories.count_documents({})
     if count == 0:
@@ -86,7 +86,7 @@ async def init_default_categories():
         print("✅ تم إنشاء الفئات الافتراضية مع التنظيم الهرمي")
 
 @router.get("")
-async def get_categories(type: Optional[str] = None, active_only: bool = True, parent_only: bool = False, parent_id: Optional[str] = None):
+async def get_categories(type: Optional[str] = None, active_only: bool = True, parent_only: bool = False, parent_id: Optional[str] = None) -> dict:
     """جلب جميع الفئات"""
     # تهيئة الفئات الافتراضية إذا لم تكن موجودة
     count = await db.categories.count_documents({})
@@ -107,7 +107,7 @@ async def get_categories(type: Optional[str] = None, active_only: bool = True, p
     return categories
 
 @router.get("/hierarchical")
-async def get_categories_hierarchical(type: Optional[str] = None):
+async def get_categories_hierarchical(type: Optional[str] = None) -> dict:
     """جلب الفئات بشكل هرمي (رئيسية مع فرعياتها)"""
     count = await db.categories.count_documents({})
     if count == 0:
@@ -133,17 +133,17 @@ async def get_categories_hierarchical(type: Optional[str] = None):
     return result
 
 @router.get("/shopping")
-async def get_shopping_categories():
+async def get_shopping_categories() -> dict:
     """جلب فئات التسوق فقط"""
     return await get_categories(type="shopping")
 
 @router.get("/food")
-async def get_food_categories():
+async def get_food_categories() -> dict:
     """جلب فئات الطعام فقط"""
     return await get_categories(type="food")
 
 @router.get("/force-reset-2025")
-async def force_reset_categories_endpoint():
+async def force_reset_categories_endpoint() -> dict:
     """إعادة ضبط الفئات"""
     try:
         await db.categories.delete_many({})
@@ -162,7 +162,7 @@ async def force_reset_categories_endpoint():
         return {"success": False, "error": str(e)}
 
 @router.get("/{category_id}")
-async def get_category(category_id: str):
+async def get_category(category_id: str) -> dict:
     """جلب فئة محددة"""
     category = await db.categories.find_one({"id": category_id}, {"_id": 0})
     if not category:
@@ -170,7 +170,7 @@ async def get_category(category_id: str):
     return category
 
 @router.post("")
-async def create_category(category: CategoryCreate, user: dict = Depends(get_current_user)):
+async def create_category(category: CategoryCreate, user: dict = Depends(get_current_user)) -> dict:
     """إنشاء فئة جديدة (للأدمن فقط)"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="غير مصرح")
@@ -203,7 +203,7 @@ async def create_category(category: CategoryCreate, user: dict = Depends(get_cur
     return {"message": "تم إنشاء الفئة بنجاح", "category": {k: v for k, v in new_category.items() if k != "_id"}}
 
 @router.put("/{category_id}")
-async def update_category(category_id: str, category: CategoryUpdate, user: dict = Depends(get_current_user)):
+async def update_category(category_id: str, category: CategoryUpdate, user: dict = Depends(get_current_user)) -> dict:
     """تحديث فئة (للأدمن فقط)"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="غير مصرح")
@@ -224,7 +224,7 @@ async def update_category(category_id: str, category: CategoryUpdate, user: dict
     return {"message": "تم تحديث الفئة بنجاح", "category": updated}
 
 @router.delete("/{category_id}")
-async def delete_category(category_id: str, user: dict = Depends(get_current_user)):
+async def delete_category(category_id: str, user: dict = Depends(get_current_user)) -> dict:
     """حذف فئة (للأدمن فقط)"""
     if user["user_type"] != "admin":
         raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
@@ -245,7 +245,7 @@ async def delete_category(category_id: str, user: dict = Depends(get_current_use
     return {"message": "تم حذف الفئة بنجاح"}
 
 @router.post("/{category_id}/toggle")
-async def toggle_category(category_id: str, user: dict = Depends(get_current_user)):
+async def toggle_category(category_id: str, user: dict = Depends(get_current_user)) -> dict:
     """تفعيل/تعطيل فئة"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="غير مصرح")
@@ -265,7 +265,7 @@ async def toggle_category(category_id: str, user: dict = Depends(get_current_use
     return {"message": f"تم {'تفعيل' if new_status else 'تعطيل'} الفئة", "is_active": new_status}
 
 @router.put("/reorder")
-async def reorder_categories(orders: List[dict], user: dict = Depends(get_current_user)):
+async def reorder_categories(orders: List[dict], user: dict = Depends(get_current_user)) -> dict:
     """إعادة ترتيب الفئات"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="غير مصرح")
@@ -295,7 +295,7 @@ class CategorySuggestion(BaseModel):
     type: str = "shopping"  # shopping أو food
 
 @router.post("/suggest")
-async def suggest_category(suggestion: CategorySuggestion, user: dict = Depends(get_current_user)):
+async def suggest_category(suggestion: CategorySuggestion, user: dict = Depends(get_current_user)) -> dict:
     """اقتراح تصنيف جديد من البائع"""
     
     # التحقق من أن المستخدم بائع
@@ -352,7 +352,7 @@ async def suggest_category(suggestion: CategorySuggestion, user: dict = Depends(
     }
 
 @router.get("/suggestions/my")
-async def get_my_suggestions(user: dict = Depends(get_current_user)):
+async def get_my_suggestions(user: dict = Depends(get_current_user)) -> dict:
     """جلب اقتراحات البائع"""
     
     suggestions = await db.category_suggestions.find(
@@ -363,7 +363,7 @@ async def get_my_suggestions(user: dict = Depends(get_current_user)):
     return suggestions
 
 @router.get("/suggestions/all")
-async def get_all_suggestions(status: Optional[str] = None, user: dict = Depends(get_current_user)):
+async def get_all_suggestions(status: Optional[str] = None, user: dict = Depends(get_current_user)) -> dict:
     """جلب جميع اقتراحات التصنيفات (للأدمن)"""
     
     if user["user_type"] not in ["admin", "sub_admin"]:
@@ -381,7 +381,7 @@ async def get_all_suggestions(status: Optional[str] = None, user: dict = Depends
     return suggestions
 
 @router.post("/suggestions/{suggestion_id}/approve")
-async def approve_suggestion(suggestion_id: str, user: dict = Depends(get_current_user)):
+async def approve_suggestion(suggestion_id: str, user: dict = Depends(get_current_user)) -> dict:
     """قبول اقتراح تصنيف وإنشاءه"""
     
     if user["user_type"] not in ["admin", "sub_admin"]:
@@ -451,7 +451,7 @@ async def approve_suggestion(suggestion_id: str, user: dict = Depends(get_curren
     }
 
 @router.post("/suggestions/{suggestion_id}/reject")
-async def reject_suggestion(suggestion_id: str, reason: Optional[str] = None, user: dict = Depends(get_current_user)):
+async def reject_suggestion(suggestion_id: str, reason: Optional[str] = None, user: dict = Depends(get_current_user)) -> dict:
     """رفض اقتراح تصنيف"""
     
     if user["user_type"] not in ["admin", "sub_admin"]:

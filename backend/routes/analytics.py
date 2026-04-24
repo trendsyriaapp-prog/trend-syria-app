@@ -9,7 +9,7 @@ from core.database import db, get_current_user
 router = APIRouter(prefix="/analytics", tags=["Analytics"])
 
 @router.get("/dashboard")
-async def get_dashboard_analytics(user: dict = Depends(get_current_user)):
+async def get_dashboard_analytics(user: dict = Depends(get_current_user)) -> dict:
     """إحصائيات لوحة التحكم الرئيسية"""
     if user.get("user_type") not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدير فقط")
@@ -124,7 +124,7 @@ async def get_dashboard_analytics(user: dict = Depends(get_current_user)):
     }
 
 @router.get("/sales-chart")
-async def get_sales_chart(days: int = 7, user: dict = Depends(get_current_user)):
+async def get_sales_chart(days: int = 7, user: dict = Depends(get_current_user)) -> dict:
     """بيانات مخطط المبيعات"""
     if user.get("user_type") not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدير فقط")
@@ -169,7 +169,7 @@ async def get_sales_chart(days: int = 7, user: dict = Depends(get_current_user))
     return chart_data
 
 @router.get("/top-products")
-async def get_top_products(limit: int = 10, user: dict = Depends(get_current_user)):
+async def get_top_products(limit: int = 10, user: dict = Depends(get_current_user)) -> dict:
     """أكثر المنتجات مبيعاً"""
     if user.get("user_type") not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدير فقط")
@@ -193,7 +193,7 @@ async def get_top_products(limit: int = 10, user: dict = Depends(get_current_use
     return products
 
 @router.get("/top-sellers")
-async def get_top_sellers(limit: int = 10, user: dict = Depends(get_current_user)):
+async def get_top_sellers(limit: int = 10, user: dict = Depends(get_current_user)) -> dict:
     """أفضل البائعين"""
     if user.get("user_type") not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدير فقط")
@@ -238,7 +238,7 @@ async def get_top_sellers(limit: int = 10, user: dict = Depends(get_current_user
     return result
 
 @router.get("/categories-stats")
-async def get_categories_stats(user: dict = Depends(get_current_user)):
+async def get_categories_stats(user: dict = Depends(get_current_user)) -> dict:
     """إحصائيات حسب الفئات"""
     if user.get("user_type") not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدير فقط")
@@ -277,7 +277,7 @@ async def get_categories_stats(user: dict = Depends(get_current_user)):
     } for stat in stats]
 
 @router.get("/recent-orders")
-async def get_recent_orders(limit: int = 10, user: dict = Depends(get_current_user)):
+async def get_recent_orders(limit: int = 10, user: dict = Depends(get_current_user)) -> dict:
     """آخر الطلبات"""
     if user.get("user_type") not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدير فقط")
@@ -290,7 +290,7 @@ async def get_recent_orders(limit: int = 10, user: dict = Depends(get_current_us
     return orders
 
 @router.get("/peak-hours")
-async def get_peak_hours(user: dict = Depends(get_current_user)):
+async def get_peak_hours(user: dict = Depends(get_current_user)) -> dict:
     """أوقات الذروة للطلبات"""
     if user.get("user_type") not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدير فقط")
@@ -326,7 +326,7 @@ async def get_peak_hours(user: dict = Depends(get_current_user)):
         return []
 
 @router.get("/wallet-stats")
-async def get_wallet_stats(user: dict = Depends(get_current_user)):
+async def get_wallet_stats(user: dict = Depends(get_current_user)) -> dict:
     """إحصائيات المحفظة"""
     if user.get("user_type") not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدير فقط")
@@ -364,7 +364,7 @@ async def get_drivers_performance(
     period: str = "week",  # day, week, month, all
     sort_by: str = "orders_count",  # orders_count, avg_time, rating, acceptance_rate
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """إحصائيات أداء جميع السائقين"""
     if user.get("user_type") not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدير فقط")
@@ -627,7 +627,7 @@ async def get_drivers_performance(
 async def get_single_driver_performance(
     driver_id: str,
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """إحصائيات أداء سائق محدد"""
     if user.get("user_type") not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدير فقط")
@@ -740,7 +740,7 @@ async def get_single_driver_performance(
 async def get_seller_analytics(
     period: str = "week",  # today, week, month, all
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """تحليلات مفصلة للبائع"""
     if user.get("user_type") not in ["seller", "food_seller"]:
         raise HTTPException(status_code=403, detail="للبائعين فقط")

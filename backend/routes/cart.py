@@ -10,7 +10,7 @@ from models.schemas import CartItem
 router = APIRouter(prefix="/cart", tags=["Cart"])
 
 @router.get("")
-async def get_cart(user: dict = Depends(get_current_user)):
+async def get_cart(user: dict = Depends(get_current_user)) -> dict:
     cart = await db.carts.find_one({"user_id": user["id"]}, {"_id": 0})
     if not cart or not cart.get("items"):
         return {"items": [], "total": 0}
@@ -56,7 +56,7 @@ async def get_cart(user: dict = Depends(get_current_user)):
     return {"items": items_with_products, "total": total}
 
 @router.post("/add")
-async def add_to_cart(item: CartItem, user: dict = Depends(get_current_user)):
+async def add_to_cart(item: CartItem, user: dict = Depends(get_current_user)) -> dict:
     product = await db.products.find_one({"id": item.product_id, "is_active": True, "is_approved": True})
     if not product:
         raise HTTPException(status_code=404, detail="المنتج غير موجود")
@@ -77,7 +77,7 @@ async def add_to_cart(item: CartItem, user: dict = Depends(get_current_user)):
     cart = await db.carts.find_one({"user_id": user["id"]})
     
     # إنشاء مفتاح فريد للعنصر (منتج + مقاس + وزن)
-    def items_match(cart_item):
+    def items_match(cart_item) -> dict:
         return (cart_item["product_id"] == item.product_id and 
                 cart_item.get("selected_size") == item.selected_size and
                 cart_item.get("selected_weight") == item.selected_weight)
@@ -139,7 +139,7 @@ async def add_to_cart(item: CartItem, user: dict = Depends(get_current_user)):
     return {"message": "تمت الإضافة للسلة"}
 
 @router.put("/update")
-async def update_cart_item(item: CartItem, user: dict = Depends(get_current_user)):
+async def update_cart_item(item: CartItem, user: dict = Depends(get_current_user)) -> dict:
     if item.quantity <= 0:
         # حذف العنصر بنفس المنتج والمقاس والوزن
         await db.carts.update_one(
@@ -191,7 +191,7 @@ async def remove_from_cart(
     selected_size: str = None, 
     selected_weight: str = None,
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     # بناء فلتر الحذف
     filter_query = {"product_id": product_id}
     if selected_size is not None:
@@ -206,6 +206,6 @@ async def remove_from_cart(
     return {"message": "تمت الإزالة"}
 
 @router.delete("")
-async def clear_cart(user: dict = Depends(get_current_user)):
+async def clear_cart(user: dict = Depends(get_current_user)) -> dict:
     await db.carts.delete_one({"user_id": user["id"]})
     return {"message": "تم إفراغ السلة"}

@@ -205,7 +205,7 @@ ACHIEVEMENTS = {
 # ============== API Endpoints ==============
 
 @router.get("/my-achievements")
-async def get_my_achievements(user: dict = Depends(get_current_user)):
+async def get_my_achievements(user: dict = Depends(get_current_user)) -> dict:
     """جلب إنجازات السائق"""
     if user["user_type"] != "delivery":
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
@@ -264,7 +264,7 @@ async def get_my_achievements(user: dict = Depends(get_current_user)):
     }
 
 @router.post("/check-and-unlock")
-async def check_and_unlock_achievements(user: dict = Depends(get_current_user)):
+async def check_and_unlock_achievements(user: dict = Depends(get_current_user)) -> dict:
     """فحص وفتح الإنجازات الجديدة"""
     if user["user_type"] != "delivery":
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
@@ -473,7 +473,7 @@ async def calculate_progress(driver_id: str) -> dict:
     return progress
 
 @router.get("/recent")
-async def get_recent_achievements(user: dict = Depends(get_current_user)):
+async def get_recent_achievements(user: dict = Depends(get_current_user)) -> dict:
     """آخر الإنجازات المفتوحة (لجميع السائقين)"""
     if user["user_type"] != "delivery":
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")

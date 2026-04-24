@@ -152,13 +152,13 @@ TEMPLATES_3D = [
 ]
 
 
-def hex_to_rgb(hex_color):
+def hex_to_rgb(hex_color) -> dict:
     """تحويل لون HEX إلى RGB"""
     hex_color = hex_color.lstrip('#')
     return tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
 
 
-def create_gradient_background(width, height, color1, color2, direction="vertical"):
+def create_gradient_background(width, height, color1, color2, direction="vertical") -> dict:
     """إنشاء خلفية متدرجة"""
     image = Image.new('RGB', (width, height))
     draw = ImageDraw.Draw(image)
@@ -184,7 +184,7 @@ def create_gradient_background(width, height, color1, color2, direction="vertica
     return image
 
 
-def create_3d_platform(width, height, platform_color, glow_color):
+def create_3d_platform(width, height, platform_color, glow_color) -> dict:
     """إنشاء منصة 3D للمنتج"""
     platform = Image.new('RGBA', (width, height), (0, 0, 0, 0))
     draw = ImageDraw.Draw(platform)
@@ -376,7 +376,7 @@ async def generate_ai_image(image_base64: str, template_id: str, template: dict)
 # ============== API Endpoints ==============
 
 @router.get("/list")
-async def get_templates():
+async def get_templates() -> dict:
     """جلب قائمة القوالب المتاحة"""
     return {
         "templates": TEMPLATES_3D,
@@ -395,7 +395,7 @@ async def get_templates():
 async def apply_free_template(
     file: UploadFile = File(...),
     template_id: str = Form(...)
-):
+) -> dict:
     """
     تطبيق قالب مجاني على صورة المنتج
     - مجاني للجميع
@@ -441,7 +441,7 @@ async def apply_ai_template(
     file: UploadFile = File(...),
     template_id: str = Form(...),
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """
     إنشاء صورة احترافية بالذكاء الاصطناعي
     - مدفوع (يخصم من رصيد البائع)
@@ -550,7 +550,7 @@ async def apply_ai_template(
 
 
 @router.get("/check-balance")
-async def check_ai_balance(user: dict = Depends(get_current_user)):
+async def check_ai_balance(user: dict = Depends(get_current_user)) -> dict:
     """التحقق من رصيد البائع للصور AI"""
     if user["user_type"] not in ["seller", "food_seller"]:
         raise HTTPException(status_code=403, detail="للبائعين فقط")

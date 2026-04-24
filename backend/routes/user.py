@@ -13,7 +13,7 @@ router = APIRouter(prefix="/user", tags=["User"])
 # ============== Addresses ==============
 
 @router.get("/addresses")
-async def get_user_addresses(user: dict = Depends(get_current_user)):
+async def get_user_addresses(user: dict = Depends(get_current_user)) -> dict:
     addresses = await db.addresses.find(
         {"user_id": user["id"]},
         {"_id": 0}
@@ -21,7 +21,7 @@ async def get_user_addresses(user: dict = Depends(get_current_user)):
     return addresses
 
 @router.post("/addresses")
-async def create_address(address: AddressCreate, user: dict = Depends(get_current_user)):
+async def create_address(address: AddressCreate, user: dict = Depends(get_current_user)) -> dict:
     address_id = str(uuid.uuid4())
     
     if address.is_default:
@@ -54,7 +54,7 @@ async def create_address(address: AddressCreate, user: dict = Depends(get_curren
     return {"id": address_id, "message": "تم إضافة العنوان بنجاح"}
 
 @router.put("/addresses/{address_id}")
-async def update_address(address_id: str, address: AddressCreate, user: dict = Depends(get_current_user)):
+async def update_address(address_id: str, address: AddressCreate, user: dict = Depends(get_current_user)) -> dict:
     existing = await db.addresses.find_one({"id": address_id, "user_id": user["id"]})
     if not existing:
         raise HTTPException(status_code=404, detail="العنوان غير موجود")
@@ -85,14 +85,14 @@ async def update_address(address_id: str, address: AddressCreate, user: dict = D
     return {"message": "تم تحديث العنوان"}
 
 @router.delete("/addresses/{address_id}")
-async def delete_address(address_id: str, user: dict = Depends(get_current_user)):
+async def delete_address(address_id: str, user: dict = Depends(get_current_user)) -> dict:
     result = await db.addresses.delete_one({"id": address_id, "user_id": user["id"]})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="العنوان غير موجود")
     return {"message": "تم حذف العنوان"}
 
 @router.post("/addresses/{address_id}/default")
-async def set_default_address(address_id: str, user: dict = Depends(get_current_user)):
+async def set_default_address(address_id: str, user: dict = Depends(get_current_user)) -> dict:
     existing = await db.addresses.find_one({"id": address_id, "user_id": user["id"]})
     if not existing:
         raise HTTPException(status_code=404, detail="العنوان غير موجود")
@@ -110,7 +110,7 @@ async def set_default_address(address_id: str, user: dict = Depends(get_current_
 # ============== Payment Methods ==============
 
 @router.get("/payment-methods")
-async def get_payment_methods(user: dict = Depends(get_current_user)):
+async def get_payment_methods(user: dict = Depends(get_current_user)) -> dict:
     methods = await db.payment_methods.find(
         {"user_id": user["id"]},
         {"_id": 0}
@@ -118,7 +118,7 @@ async def get_payment_methods(user: dict = Depends(get_current_user)):
     return methods
 
 @router.post("/payment-methods")
-async def create_payment_method(payment: PaymentMethodCreate, user: dict = Depends(get_current_user)):
+async def create_payment_method(payment: PaymentMethodCreate, user: dict = Depends(get_current_user)) -> dict:
     payment_id = str(uuid.uuid4())
     
     if payment.is_default:
@@ -143,7 +143,7 @@ async def create_payment_method(payment: PaymentMethodCreate, user: dict = Depen
     return {"id": payment_id, "message": "تم إضافة طريقة الدفع بنجاح"}
 
 @router.put("/payment-methods/{payment_id}")
-async def update_payment_method(payment_id: str, payment: PaymentMethodCreate, user: dict = Depends(get_current_user)):
+async def update_payment_method(payment_id: str, payment: PaymentMethodCreate, user: dict = Depends(get_current_user)) -> dict:
     existing = await db.payment_methods.find_one({"id": payment_id, "user_id": user["id"]})
     if not existing:
         raise HTTPException(status_code=404, detail="طريقة الدفع غير موجودة")
@@ -166,14 +166,14 @@ async def update_payment_method(payment_id: str, payment: PaymentMethodCreate, u
     return {"message": "تم تحديث طريقة الدفع"}
 
 @router.delete("/payment-methods/{payment_id}")
-async def delete_payment_method(payment_id: str, user: dict = Depends(get_current_user)):
+async def delete_payment_method(payment_id: str, user: dict = Depends(get_current_user)) -> dict:
     result = await db.payment_methods.delete_one({"id": payment_id, "user_id": user["id"]})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="طريقة الدفع غير موجودة")
     return {"message": "تم حذف طريقة الدفع"}
 
 @router.post("/payment-methods/{payment_id}/default")
-async def set_default_payment(payment_id: str, user: dict = Depends(get_current_user)):
+async def set_default_payment(payment_id: str, user: dict = Depends(get_current_user)) -> dict:
     existing = await db.payment_methods.find_one({"id": payment_id, "user_id": user["id"]})
     if not existing:
         raise HTTPException(status_code=404, detail="طريقة الدفع غير موجودة")
@@ -193,7 +193,7 @@ async def set_default_payment(payment_id: str, user: dict = Depends(get_current_
 # ============== Account Deletion ==============
 
 @router.delete("/account")
-async def delete_my_account(user: dict = Depends(get_current_user)):
+async def delete_my_account(user: dict = Depends(get_current_user)) -> dict:
     """حذف حساب المستخدم (البائع يستطيع حذف حسابه مباشرة)"""
     
     user_type = user.get("user_type")

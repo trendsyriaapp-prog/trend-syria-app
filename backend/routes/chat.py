@@ -24,7 +24,7 @@ class MarkReadRequest(BaseModel):
 # ============== APIs ==============
 
 @router.get("/conversation/{order_id}")
-async def get_conversation(order_id: str, user: dict = Depends(get_current_user)):
+async def get_conversation(order_id: str, user: dict = Depends(get_current_user)) -> dict:
     """جلب محادثة طلب معين"""
     
     # التحقق من الطلب
@@ -86,7 +86,7 @@ async def get_conversation(order_id: str, user: dict = Depends(get_current_user)
 
 
 @router.post("/send")
-async def send_message(req: SendMessageRequest, user: dict = Depends(get_current_user)):
+async def send_message(req: SendMessageRequest, user: dict = Depends(get_current_user)) -> dict:
     """إرسال رسالة في محادثة الطلب"""
     
     # التحقق من الطلب
@@ -178,7 +178,7 @@ async def send_message(req: SendMessageRequest, user: dict = Depends(get_current
 
 
 @router.post("/mark-read")
-async def mark_messages_read(req: MarkReadRequest, user: dict = Depends(get_current_user)):
+async def mark_messages_read(req: MarkReadRequest, user: dict = Depends(get_current_user)) -> dict:
     """تحديد الرسائل كمقروءة"""
     
     await db.chat_messages.update_many(
@@ -194,7 +194,7 @@ async def mark_messages_read(req: MarkReadRequest, user: dict = Depends(get_curr
 
 
 @router.get("/unread-count")
-async def get_unread_count(user: dict = Depends(get_current_user)):
+async def get_unread_count(user: dict = Depends(get_current_user)) -> dict:
     """عدد الرسائل غير المقروءة"""
     
     count = await db.chat_messages.count_documents({
@@ -206,7 +206,7 @@ async def get_unread_count(user: dict = Depends(get_current_user)):
 
 
 @router.get("/active-conversations")
-async def get_active_conversations(user: dict = Depends(get_current_user)):
+async def get_active_conversations(user: dict = Depends(get_current_user)) -> dict:
     """جلب المحادثات النشطة للمستخدم"""
     
     user_id = user["id"]

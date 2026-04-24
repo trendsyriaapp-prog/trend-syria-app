@@ -34,7 +34,7 @@ class ApplyCouponRequest(BaseModel):
 async def create_discount(
     data: CreateDiscountRequest,
     current_user: dict = Depends(get_current_user)
-):
+) -> dict:
     """إنشاء خصم جديد"""
     
     if current_user.get("user_type") != "seller":
@@ -84,7 +84,7 @@ async def create_discount(
 @router.get("/my-discounts")
 async def get_my_discounts(
     current_user: dict = Depends(get_current_user)
-):
+) -> dict:
     """الحصول على خصومات البائع"""
     
     if current_user.get("user_type") != "seller":
@@ -114,7 +114,7 @@ async def get_my_discounts(
 async def toggle_discount(
     discount_id: str,
     current_user: dict = Depends(get_current_user)
-):
+) -> dict:
     """تفعيل أو إيقاف خصم"""
     
     if current_user.get("user_type") != "seller":
@@ -142,7 +142,7 @@ async def toggle_discount(
 async def delete_discount(
     discount_id: str,
     current_user: dict = Depends(get_current_user)
-):
+) -> dict:
     """حذف خصم"""
     
     if current_user.get("user_type") != "seller":
@@ -160,7 +160,7 @@ async def delete_discount(
 
 # الحصول على الخصومات النشطة لمنتج
 @router.get("/product/{product_id}")
-async def get_product_discounts(product_id: str):
+async def get_product_discounts(product_id: str) -> dict:
     """الحصول على الخصومات النشطة لمنتج معين"""
     
     now = datetime.utcnow()
@@ -213,7 +213,7 @@ async def get_product_discounts(product_id: str):
 async def apply_coupon(
     data: ApplyCouponRequest,
     current_user: dict = Depends(get_current_user)
-):
+) -> dict:
     """التحقق من كوبون وتطبيقه"""
     
     now = datetime.utcnow()
@@ -283,7 +283,7 @@ async def apply_coupon(
 
 # استخدام الكوبون (يُستدعى عند إتمام الطلب)
 @router.post("/use-coupon/{code}")
-async def use_coupon(code: str):
+async def use_coupon(code: str) -> dict:
     """تسجيل استخدام الكوبون"""
     
     result = await db.discounts.update_one(
@@ -299,7 +299,7 @@ async def get_active_discounts(
     seller_id: Optional[str] = None,
     category: Optional[str] = None,
     limit: int = 20
-):
+) -> dict:
     """الحصول على العروض النشطة"""
     
     now = datetime.utcnow()
@@ -333,7 +333,7 @@ async def get_active_discounts(
 @router.get("/my-stats")
 async def get_discount_stats(
     current_user: dict = Depends(get_current_user)
-):
+) -> dict:
     """إحصائيات الخصومات للبائع"""
     
     if current_user.get("user_type") != "seller":

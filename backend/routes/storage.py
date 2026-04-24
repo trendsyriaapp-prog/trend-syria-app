@@ -42,7 +42,7 @@ class ImageUploadResponse(BaseModel):
 # ============== Image Serving ==============
 
 @router.get("/images/{path:path}")
-async def serve_image(path: str):
+async def serve_image(path: str) -> Response:
     """
     Serve an image from storage.
     Used by frontend <img src="..."> tags.
@@ -78,7 +78,7 @@ async def serve_image(path: str):
 async def upload_images(
     data: Base64ImageUpload,
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """
     Upload multiple base64 images to storage.
     Returns storage paths that can be stored in the database.
@@ -116,7 +116,7 @@ async def upload_file(
     file: UploadFile = File(...),
     folder: str = Query(default="products"),
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """
     Upload a single file to storage.
     Accepts multipart/form-data.
@@ -155,7 +155,7 @@ async def upload_video(
     file: UploadFile = File(...),
     folder: str = Query(default="videos"),
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """
     Upload a video file to CDN storage.
     Supports videos up to 15MB for Syria's slow internet.
@@ -226,7 +226,7 @@ async def upload_video(
 
 
 @router.get("/video/{path:path}")
-async def serve_video(path: str):
+async def serve_video(path: str) -> Response:
     """
     Serve a video from CDN storage.
     """
@@ -259,7 +259,7 @@ async def serve_video(path: str):
 async def migrate_product_images(
     product_id: str,
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """
     Migrate a single product's images from Base64 to CDN storage.
     Admin only.
@@ -304,7 +304,7 @@ async def migrate_product_images(
 async def migrate_batch_images(
     limit: int = Query(default=10, le=50),
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """
     Batch migrate products with Base64 images to CDN storage.
     Admin only. Processes 'limit' products at a time.
@@ -411,7 +411,7 @@ async def migrate_batch_images(
 @router.get("/diagnose-images")
 async def diagnose_images(
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """
     تشخيص أنواع الصور المخزنة في المنتجات.
     Admin only.

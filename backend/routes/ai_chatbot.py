@@ -132,7 +132,7 @@ def get_or_create_chat(session_id: str, user_id: str) -> LlmChat:
     return chat_sessions[cache_key]
 
 @router.post("/send")
-async def send_ai_message(data: ChatMessage, user: dict = Depends(get_optional_user)):
+async def send_ai_message(data: ChatMessage, user: dict = Depends(get_optional_user)) -> dict:
     """إرسال رسالة للشات بوت الذكي - متاح للجميع (مسجلين وزوار)"""
     
     if not API_KEY:
@@ -274,7 +274,7 @@ def _generate_quick_replies(message: str) -> List[str]:
         return ["أين طلبي؟", "كيف أرجع منتج؟", "التواصل مع الدعم"]
 
 @router.get("/history")
-async def get_ai_chat_history(session_id: Optional[str] = None, user: dict = Depends(get_current_user)):
+async def get_ai_chat_history(session_id: Optional[str] = None, user: dict = Depends(get_current_user)) -> dict:
     """جلب سجل المحادثة مع الشات بوت الذكي"""
     
     query = {"user_id": user["id"]}
@@ -289,7 +289,7 @@ async def get_ai_chat_history(session_id: Optional[str] = None, user: dict = Dep
     return {"messages": messages}
 
 @router.post("/request-support")
-async def request_human_support_from_ai(data: SupportRequest, user: dict = Depends(get_current_user)):
+async def request_human_support_from_ai(data: SupportRequest, user: dict = Depends(get_current_user)) -> dict:
     """طلب التحويل لموظف دعم بشري من الشات بوت الذكي"""
     
     now = datetime.now(timezone.utc).isoformat()
@@ -336,7 +336,7 @@ async def request_human_support_from_ai(data: SupportRequest, user: dict = Depen
     }
 
 @router.get("/quick-questions")
-async def get_quick_questions():
+async def get_quick_questions() -> dict:
     """جلب الأسئلة السريعة الشائعة"""
     
     return {
@@ -352,7 +352,7 @@ async def get_quick_questions():
     }
 
 @router.delete("/clear-session/{session_id}")
-async def clear_chat_session(session_id: str, user: dict = Depends(get_current_user)):
+async def clear_chat_session(session_id: str, user: dict = Depends(get_current_user)) -> dict:
     """مسح جلسة محادثة"""
     
     cache_key = f"{user['id']}_{session_id}"

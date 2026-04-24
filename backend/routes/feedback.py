@@ -22,7 +22,7 @@ class FeedbackResponse(BaseModel):
 # ============== إرسال ملاحظة/اقتراح ==============
 
 @router.post("")
-async def create_feedback(data: FeedbackCreate, user: dict = Depends(get_optional_user)):
+async def create_feedback(data: FeedbackCreate, user: dict = Depends(get_optional_user)) -> dict:
     """إنشاء ملاحظة أو اقتراح جديد - متاح للجميع"""
     
     if not data.message or len(data.message.strip()) < 5:
@@ -85,7 +85,7 @@ async def get_all_feedback(
     status: Optional[str] = None,
     type: Optional[str] = None,
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """جلب جميع الملاحظات والاقتراحات - للمدير فقط"""
     
     if user["user_type"] != "admin":
@@ -119,7 +119,7 @@ async def respond_to_feedback(
     feedback_id: str,
     data: FeedbackResponse,
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """الرد على ملاحظة - للمدير فقط"""
     
     if user["user_type"] != "admin":
@@ -170,7 +170,7 @@ async def respond_to_feedback(
 # ============== حذف ملاحظة (للمدير) ==============
 
 @router.delete("/{feedback_id}")
-async def delete_feedback(feedback_id: str, user: dict = Depends(get_current_user)):
+async def delete_feedback(feedback_id: str, user: dict = Depends(get_current_user)) -> dict:
     """حذف ملاحظة - للمدير فقط"""
     
     if user["user_type"] != "admin":

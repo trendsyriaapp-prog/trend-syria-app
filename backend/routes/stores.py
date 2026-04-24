@@ -14,7 +14,7 @@ router = APIRouter(tags=["Stores"])
 # ============== Store Page ==============
 
 @router.get("/stores/{seller_id}")
-async def get_store_page(seller_id: str, authorization: Optional[str] = Header(default=None)):
+async def get_store_page(seller_id: str, authorization: Optional[str] = Header(default=None)) -> dict:
     seller_docs = await db.seller_documents.find_one({"seller_id": seller_id})
     seller = await db.users.find_one({"id": seller_id})
     
@@ -51,7 +51,7 @@ async def get_store_page(seller_id: str, authorization: Optional[str] = Header(d
     }
 
 @router.post("/stores/{seller_id}/follow")
-async def follow_store(seller_id: str, user: dict = Depends(get_current_user)):
+async def follow_store(seller_id: str, user: dict = Depends(get_current_user)) -> dict:
     seller = await db.users.find_one({"id": seller_id, "user_type": "seller"})
     if not seller:
         raise HTTPException(status_code=404, detail="المتجر غير موجود")
@@ -71,7 +71,7 @@ async def follow_store(seller_id: str, user: dict = Depends(get_current_user)):
     return {"message": "تمت المتابعة بنجاح"}
 
 @router.delete("/stores/{seller_id}/follow")
-async def unfollow_store(seller_id: str, user: dict = Depends(get_current_user)):
+async def unfollow_store(seller_id: str, user: dict = Depends(get_current_user)) -> dict:
     result = await db.follows.delete_one({"user_id": user["id"], "seller_id": seller_id})
     if result.deleted_count == 0:
         raise HTTPException(status_code=400, detail="أنت لا تتابع هذا المتجر")
@@ -83,7 +83,7 @@ async def get_following_stores(
     page: int = Query(1, ge=1),
     limit: int = Query(20, ge=1, le=100),
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     skip = (page - 1) * limit
     
     # جلب العدد الإجمالي
@@ -146,7 +146,7 @@ async def get_following_stores(
 # ============== Favorites ==============
 
 @router.post("/favorites/{product_id}")
-async def add_to_favorites(product_id: str, user: dict = Depends(get_current_user)):
+async def add_to_favorites(product_id: str, user: dict = Depends(get_current_user)) -> dict:
     product = await db.products.find_one({"id": product_id, "is_active": True})
     if not product:
         raise HTTPException(status_code=404, detail="المنتج غير موجود")
@@ -166,7 +166,7 @@ async def add_to_favorites(product_id: str, user: dict = Depends(get_current_use
     return {"message": "تمت الإضافة للمفضلة"}
 
 @router.delete("/favorites/{product_id}")
-async def remove_from_favorites(product_id: str, user: dict = Depends(get_current_user)):
+async def remove_from_favorites(product_id: str, user: dict = Depends(get_current_user)) -> dict:
     result = await db.favorites.delete_one({"user_id": user["id"], "product_id": product_id})
     if result.deleted_count == 0:
         raise HTTPException(status_code=400, detail="المنتج غير موجود في المفضلة")
@@ -178,7 +178,7 @@ async def get_favorites(
     page: int = Query(1, ge=1),
     limit: int = Query(20, ge=1, le=100),
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     skip = (page - 1) * limit
     
     # جلب العدد الإجمالي
@@ -222,21 +222,21 @@ async def get_favorites(
     }
 
 @router.get("/favorites/check/{product_id}")
-async def check_favorite(product_id: str, user: dict = Depends(get_current_user)):
+async def check_favorite(product_id: str, user: dict = Depends(get_current_user)) -> dict:
     favorite = await db.favorites.find_one({"user_id": user["id"], "product_id": product_id})
     return {"is_favorite": favorite is not None}
 
 # ============== Seller Products ==============
 
 @router.get("/seller/products")
-async def get_seller_products(user: dict = Depends(get_current_user)):
+async def get_seller_products(user: dict = Depends(get_current_user)) -> dict:
     if user["user_type"] != "seller":
         raise HTTPException(status_code=403, detail="للبائعين فقط")
     products = await db.products.find({"seller_id": user["id"]}, {"_id": 0}).to_list(100)
     return products
 
 @router.get("/seller/my-products")
-async def get_seller_my_products(user: dict = Depends(get_current_user)):
+async def get_seller_my_products(user: dict = Depends(get_current_user)) -> dict:
     if user["user_type"] != "seller":
         raise HTTPException(status_code=403, detail="للبائعين فقط")
     

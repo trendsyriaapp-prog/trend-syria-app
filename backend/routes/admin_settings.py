@@ -34,7 +34,7 @@ class DeliverySettingsUpdate(BaseModel):
 
 
 @router.get("/settings/delivery")
-async def get_delivery_settings_api(user: dict = Depends(get_current_user)):
+async def get_delivery_settings_api(user: dict = Depends(get_current_user)) -> dict:
     """جلب إعدادات التوصيل"""
     if user.get("user_type") != "admin":
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -50,7 +50,7 @@ async def get_delivery_settings_api(user: dict = Depends(get_current_user)):
 async def update_delivery_settings_api(
     data: DeliverySettingsUpdate,
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """تحديث إعدادات التوصيل"""
     if user.get("user_type") != "admin":
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -79,7 +79,7 @@ class HoldSettingsUpdate(BaseModel):
 
 
 @router.get("/settings/earnings-hold")
-async def get_earnings_hold_settings(user: dict = Depends(get_current_user)):
+async def get_earnings_hold_settings(user: dict = Depends(get_current_user)) -> dict:
     """جلب إعدادات تعليق الأرباح"""
     if user.get("user_type") != "admin":
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -96,7 +96,7 @@ async def get_earnings_hold_settings(user: dict = Depends(get_current_user)):
 async def update_earnings_hold_settings(
     data: HoldSettingsUpdate,
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """تحديث إعدادات تعليق الأرباح"""
     if user.get("user_type") != "admin":
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -121,7 +121,7 @@ async def update_earnings_hold_settings(
 
 
 @router.get("/held-earnings/summary")
-async def get_held_earnings_summary(user: dict = Depends(get_current_user)):
+async def get_held_earnings_summary(user: dict = Depends(get_current_user)) -> dict:
     """ملخص الأرباح المعلقة للمدير"""
     if user.get("user_type") != "admin":
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -148,7 +148,7 @@ async def get_held_earnings_summary(user: dict = Depends(get_current_user)):
 
 
 @router.post("/held-earnings/release-all")
-async def manual_release_held_earnings(user: dict = Depends(get_current_user)):
+async def manual_release_held_earnings(user: dict = Depends(get_current_user)) -> dict:
     """إطلاق جميع الأرباح المعلقة يدوياً"""
     if user.get("user_type") != "admin":
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -169,7 +169,7 @@ async def get_violations_list(
     limit: int = 20,
     store_id: Optional[str] = None,
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """قائمة المخالفات"""
     if user.get("user_type") != "admin":
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -199,7 +199,7 @@ async def get_violations_list(
 
 
 @router.post("/stores/{store_id}/unsuspend")
-async def unsuspend_store(store_id: str, user: dict = Depends(get_current_user)):
+async def unsuspend_store(store_id: str, user: dict = Depends(get_current_user)) -> dict:
     """إلغاء إيقاف متجر"""
     if user.get("user_type") != "admin":
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -226,7 +226,7 @@ async def unsuspend_store(store_id: str, user: dict = Depends(get_current_user))
 async def get_violations_report(
     days: int = 30,
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """تقرير المخالفات الشامل للأدمن"""
     if user.get("user_type") != "admin":
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -240,7 +240,7 @@ async def get_violations_report(
 
 
 @router.get("/dispatch/status")
-async def get_dispatch_status(user: dict = Depends(get_current_user)):
+async def get_dispatch_status(user: dict = Depends(get_current_user)) -> dict:
     """حالة نظام التوزيع التلقائي"""
     if user.get("user_type") != "admin":
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -284,7 +284,7 @@ async def get_dispatch_status(user: dict = Depends(get_current_user)):
 # ============================================
 
 @router.get("/settings/product-delivery-hours")
-async def get_product_delivery_hours(user: dict = Depends(get_current_user)):
+async def get_product_delivery_hours(user: dict = Depends(get_current_user)) -> dict:
     """جلب إعدادات ساعات توصيل المنتجات"""
     if user.get("user_type") != "admin":
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -318,7 +318,7 @@ class ProductDeliveryHoursUpdate(BaseModel):
 async def update_product_delivery_hours(
     data: ProductDeliveryHoursUpdate,
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """تحديث إعدادات ساعات توصيل المنتجات"""
     if user.get("user_type") != "admin":
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -353,7 +353,7 @@ async def update_product_delivery_hours(
 
 
 @router.get("/delivery/check-hours")
-async def check_delivery_hours():
+async def check_delivery_hours() -> dict:
     """التحقق من إمكانية التوصيل الآن (للسائقين)"""
     settings = await db.settings.find_one({"type": "product_delivery_hours"}, {"_id": 0})
     
@@ -387,7 +387,7 @@ async def check_delivery_hours():
 
 
 @router.post("/delivery/process-undelivered")
-async def process_undelivered_orders(user: dict = Depends(get_current_user)):
+async def process_undelivered_orders(user: dict = Depends(get_current_user)) -> dict:
     """معالجة الطلبات غير المُسلّمة وخصم قيمتها من رصيد السائقين - يدوي من المدير"""
     if user.get("user_type") != "admin":
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -476,7 +476,7 @@ async def process_undelivered_orders(user: dict = Depends(get_current_user)):
 
 
 @router.get("/delivery/undelivered-report")
-async def get_undelivered_report(user: dict = Depends(get_current_user)):
+async def get_undelivered_report(user: dict = Depends(get_current_user)) -> dict:
     """تقرير الطلبات غير المُسلّمة"""
     if user.get("user_type") != "admin":
         raise HTTPException(status_code=403, detail="للمدراء فقط")

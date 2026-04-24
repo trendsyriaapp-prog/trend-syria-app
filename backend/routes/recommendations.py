@@ -13,7 +13,7 @@ router = APIRouter(prefix="/recommendations", tags=["Recommendations"])
 async def get_personalized_recommendations(
     limit: int = 10,
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """توصيات مخصصة بناءً على سلوك المستخدم"""
     
     recommendations = []
@@ -99,7 +99,7 @@ async def get_personalized_recommendations(
     return recommendations[:limit]
 
 @router.get("/similar/{product_id}")
-async def get_similar_products(product_id: str, limit: int = 6):
+async def get_similar_products(product_id: str, limit: int = 6) -> list:
     """منتجات مشابهة لمنتج معين"""
     
     product = await db.products.find_one({"id": product_id}, {"_id": 0})
@@ -132,7 +132,7 @@ async def get_similar_products(product_id: str, limit: int = 6):
     return similar[:limit]
 
 @router.get("/trending")
-async def get_trending_products(limit: int = 10):
+async def get_trending_products(limit: int = 10) -> list:
     """المنتجات الرائجة حالياً"""
     
     # أولاً: البحث عن المنتجات ذات أعلى views مباشرة
@@ -187,7 +187,7 @@ async def get_trending_products(limit: int = 10):
     return products
 
 @router.get("/deals")
-async def get_best_deals(limit: int = 10):
+async def get_best_deals(limit: int = 10) -> dict:
     """أفضل العروض والخصومات"""
     
     # البحث عن منتجات بخصم
@@ -222,7 +222,7 @@ async def get_best_deals(limit: int = 10):
 
 
 @router.get("/new-products")
-async def get_new_products(limit: int = 10):
+async def get_new_products(limit: int = 10) -> dict:
     """المنتجات الجديدة"""
     
     # المنتجات المضافة في آخر 7 أيام
@@ -250,7 +250,7 @@ async def get_new_products(limit: int = 10):
 
 
 @router.post("/track-view/{product_id}")
-async def track_product_view(product_id: str, user: dict = Depends(get_current_user)):
+async def track_product_view(product_id: str, user: dict = Depends(get_current_user)) -> dict:
     """تتبع مشاهدة المنتج (لتحسين التوصيات)"""
     
     await db.product_views.insert_one({

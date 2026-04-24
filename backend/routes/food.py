@@ -117,7 +117,7 @@ class FoodOfferCreate(BaseModel):
 # ===============================
 
 @router.get("/flash-sales/active")
-async def get_active_flash_sales():
+async def get_active_flash_sales() -> dict:
     """جلب عروض الفلاش النشطة حالياً - للعملاء"""
     now = datetime.now(timezone.utc).isoformat()
     
@@ -130,7 +130,7 @@ async def get_active_flash_sales():
     return sales
 
 @router.get("/banners")
-async def get_food_banners():
+async def get_food_banners() -> dict:
     """جلب البانرات الخاصة بقسم الطعام"""
     now = datetime.now(timezone.utc).isoformat()
     
@@ -145,7 +145,7 @@ async def get_food_banners():
     return banners
 
 @router.get("/categories")
-async def get_food_categories():
+async def get_food_categories() -> dict:
     """جلب الأقسام الرئيسية والفرعية"""
     categories = []
     
@@ -180,7 +180,7 @@ async def get_food_categories():
     return categories
 
 @router.get("/store-types")
-async def get_store_types():
+async def get_store_types() -> dict:
     """جلب أنواع المتاجر للاختيار عند التسجيل"""
     return {
         "main_categories": MAIN_CATEGORIES,
@@ -195,7 +195,7 @@ async def get_food_stores(
     search: Optional[str] = None,
     skip: int = 0,
     limit: int = 20
-):
+) -> dict:
     """جلب متاجر الطعام مع حالة الفتح/الإغلاق والتعليق"""
     query = {"is_active": True, "is_approved": True}
     
@@ -331,7 +331,7 @@ def _get_next_open_time(working_hours: dict, current_day: int) -> str:
     return None
 
 @router.get("/stores/{store_id}")
-async def get_food_store(store_id: str):
+async def get_food_store(store_id: str) -> dict:
     """جلب تفاصيل متجر معين"""
     store = await db.food_stores.find_one({"id": store_id}, {"_id": 0})
     if not store:
@@ -417,7 +417,7 @@ async def get_food_store(store_id: str):
     return store
 
 @router.post("/stores")
-async def create_food_store(store: FoodStoreCreate, user: dict = Depends(get_current_user)):
+async def create_food_store(store: FoodStoreCreate, user: dict = Depends(get_current_user)) -> dict:
     """إنشاء متجر طعام جديد (للبائعين)"""
     if user["user_type"] not in ["seller", "food_seller", "admin"]:
         raise HTTPException(status_code=403, detail="للبائعين فقط")
@@ -517,7 +517,7 @@ async def toggle_store_status(
     store_id: str, 
     request: StoreToggleRequest,
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """فتح أو إغلاق المتجر يدوياً"""
     # التحقق من ملكية المتجر
     store = await db.food_stores.find_one({"id": store_id})
@@ -547,7 +547,7 @@ async def toggle_store_status(
     }
 
 @router.get("/stores/{store_id}/status")
-async def get_store_status(store_id: str):
+async def get_store_status(store_id: str) -> dict:
     """جلب حالة المتجر (مفتوح/مغلق)"""
     store = await db.food_stores.find_one({"id": store_id}, {"_id": 0})
     if not store:
@@ -607,7 +607,7 @@ async def get_food_products(
     search: Optional[str] = None,
     skip: int = 0,
     limit: int = 20
-):
+) -> dict:
     """جلب منتجات الطعام"""
     # أولاً نجلب المتاجر المعتمدة من الفئة المطلوبة والمدينة
     store_query = {"is_active": True, "is_approved": True}
@@ -702,7 +702,7 @@ async def get_food_products(
     return products
 
 @router.post("/products")
-async def create_food_product(product: FoodProductCreate, user: dict = Depends(get_current_user)):
+async def create_food_product(product: FoodProductCreate, user: dict = Depends(get_current_user)) -> dict:
     """إضافة منتج طعام جديد"""
     # التحقق من ملكية المتجر
     store = await db.food_stores.find_one({"id": product.store_id})
@@ -740,7 +740,7 @@ async def create_food_product(product: FoodProductCreate, user: dict = Depends(g
 # ===============================
 
 @router.get("/stats")
-async def get_food_stats():
+async def get_food_stats() -> dict:
     """إحصائيات قسم الطعام"""
     stores_count = await db.food_stores.count_documents({"is_active": True, "is_approved": True})
     products_count = await db.food_products.count_documents({"is_available": True})
@@ -767,7 +767,7 @@ async def get_food_stats():
 # ===============================
 
 @router.get("/my-items")
-async def get_my_food_items(user: dict = Depends(get_current_user)):
+async def get_my_food_items(user: dict = Depends(get_current_user)) -> dict:
     """جلب أطباق المطعم للبائع"""
     if user.get("user_type") != "food_seller":
         raise HTTPException(status_code=403, detail="غير مصرح لك بالوصول")
@@ -782,7 +782,7 @@ async def get_my_food_items(user: dict = Depends(get_current_user)):
     return items or []
 
 @router.post("/items")
-async def create_food_item(item_data: dict, user: dict = Depends(get_current_user)):
+async def create_food_item(item_data: dict, user: dict = Depends(get_current_user)) -> dict:
     """إضافة طبق جديد"""
     if user.get("user_type") != "food_seller":
         raise HTTPException(status_code=403, detail="غير مصرح لك بالوصول")
@@ -829,7 +829,7 @@ async def create_food_item(item_data: dict, user: dict = Depends(get_current_use
     return {"message": "تم إضافة الطبق بنجاح وينتظر موافقة الإدارة", "id": item_id}
 
 @router.put("/items/{item_id}/availability")
-async def toggle_food_item_availability(item_id: str, data: dict, user: dict = Depends(get_current_user)):
+async def toggle_food_item_availability(item_id: str, data: dict, user: dict = Depends(get_current_user)) -> dict:
     """تغيير حالة توفر الطبق"""
     if user.get("user_type") != "food_seller":
         raise HTTPException(status_code=403, detail="غير مصرح لك بالوصول")
@@ -846,7 +846,7 @@ async def toggle_food_item_availability(item_id: str, data: dict, user: dict = D
     return {"message": "تم تحديث حالة الطبق"}
 
 @router.delete("/items/{item_id}")
-async def delete_food_item(item_id: str, user: dict = Depends(get_current_user)):
+async def delete_food_item(item_id: str, user: dict = Depends(get_current_user)) -> dict:
     """حذف طبق"""
     if user.get("user_type") != "food_seller":
         raise HTTPException(status_code=403, detail="غير مصرح لك بالوصول")
@@ -858,7 +858,7 @@ async def delete_food_item(item_id: str, user: dict = Depends(get_current_user))
     return {"message": "تم حذف الطبق بنجاح"}
 
 @router.get("/my-store")
-async def get_my_store(user: dict = Depends(get_current_user)):
+async def get_my_store(user: dict = Depends(get_current_user)) -> dict:
     """جلب متجر المستخدم الحالي"""
     # البحث بـ seller_id أو owner_id للتوافق
     store = await db.food_stores.find_one(
@@ -875,7 +875,7 @@ async def get_my_store(user: dict = Depends(get_current_user)):
 
 
 @router.get("/my-store/commission")
-async def get_my_store_commission(user: dict = Depends(get_current_user)):
+async def get_my_store_commission(user: dict = Depends(get_current_user)) -> dict:
     """جلب نسبة العمولة لمتجر البائع"""
     store = await db.food_stores.find_one(
         {"$or": [{"seller_id": user["id"]}, {"owner_id": user["id"]}]}, 
@@ -914,7 +914,7 @@ async def get_my_store_commission(user: dict = Depends(get_current_user)):
     }
 
 @router.put("/my-store")
-async def update_my_store(update_data: dict, user: dict = Depends(get_current_user)):
+async def update_my_store(update_data: dict, user: dict = Depends(get_current_user)) -> dict:
     """تحديث معلومات متجر المستخدم"""
     store = await db.food_stores.find_one(
         {"$or": [{"seller_id": user["id"]}, {"owner_id": user["id"]}]}
@@ -935,7 +935,7 @@ async def update_my_store(update_data: dict, user: dict = Depends(get_current_us
     return {"message": "تم تحديث المتجر بنجاح"}
 
 @router.put("/products/{product_id}")
-async def update_food_product(product_id: str, update_data: dict, user: dict = Depends(get_current_user)):
+async def update_food_product(product_id: str, update_data: dict, user: dict = Depends(get_current_user)) -> dict:
     """تحديث منتج طعام"""
     product = await db.food_products.find_one({"id": product_id})
     if not product:
@@ -959,7 +959,7 @@ async def update_food_product(product_id: str, update_data: dict, user: dict = D
     return {"message": "تم تحديث المنتج بنجاح"}
 
 @router.patch("/products/{product_id}")
-async def patch_food_product(product_id: str, update_data: dict, user: dict = Depends(get_current_user)):
+async def patch_food_product(product_id: str, update_data: dict, user: dict = Depends(get_current_user)) -> dict:
     """تحديث جزئي لمنتج طعام (مثل تغيير حالة التوفر)"""
     product = await db.food_products.find_one({"id": product_id})
     if not product:
@@ -977,7 +977,7 @@ async def patch_food_product(product_id: str, update_data: dict, user: dict = De
     return {"message": "تم التحديث"}
 
 @router.delete("/products/{product_id}")
-async def delete_food_product(product_id: str, user: dict = Depends(get_current_user)):
+async def delete_food_product(product_id: str, user: dict = Depends(get_current_user)) -> dict:
     """حذف منتج طعام"""
     product = await db.food_products.find_one({"id": product_id})
     if not product:
@@ -1006,7 +1006,7 @@ async def update_product_availability(
     product_id: str,
     status: str,  # available, sold_out_today, unavailable
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """
     تغيير حالة توفر منتج طعام
     
@@ -1062,7 +1062,7 @@ async def update_product_availability(
     }
 
 @router.post("/products/reset-sold-out")
-async def reset_sold_out_products():
+async def reset_sold_out_products() -> dict:
     """
     إعادة المنتجات التي نفدت مؤقتاً إلى حالة "متاح"
     يُستدعى تلقائياً كل يوم في منتصف الليل
@@ -1092,7 +1092,7 @@ async def reset_sold_out_products():
     }
 
 @router.get("/products/{product_id}/availability")
-async def get_product_availability(product_id: str):
+async def get_product_availability(product_id: str) -> dict:
     """جلب حالة توفر منتج"""
     product = await db.food_products.find_one(
         {"id": product_id},
@@ -1120,7 +1120,7 @@ async def get_product_availability(product_id: str):
     }
 
 @router.post("/offers")
-async def create_food_offer(offer: FoodOfferCreate, user: dict = Depends(get_current_user)):
+async def create_food_offer(offer: FoodOfferCreate, user: dict = Depends(get_current_user)) -> dict:
     """إنشاء عرض جديد لمتجر الطعام"""
     # التحقق من أن المستخدم لديه متجر
     store = await db.food_stores.find_one({"owner_id": user["id"]})
@@ -1154,7 +1154,7 @@ async def create_food_offer(offer: FoodOfferCreate, user: dict = Depends(get_cur
     return offer_doc
 
 @router.get("/my-offers")
-async def get_my_offers(user: dict = Depends(get_current_user)):
+async def get_my_offers(user: dict = Depends(get_current_user)) -> dict:
     """جلب عروض متجري"""
     store = await db.food_stores.find_one({"owner_id": user["id"]})
     if not store:
@@ -1168,7 +1168,7 @@ async def get_my_offers(user: dict = Depends(get_current_user)):
     return offers
 
 @router.get("/stores/{store_id}/offers")
-async def get_store_offers(store_id: str):
+async def get_store_offers(store_id: str) -> dict:
     """جلب العروض النشطة لمتجر معين"""
     now = datetime.now(timezone.utc).isoformat()
     
@@ -1184,7 +1184,7 @@ async def get_store_offers(store_id: str):
     return offers
 
 @router.put("/offers/{offer_id}")
-async def update_food_offer(offer_id: str, update_data: dict, user: dict = Depends(get_current_user)):
+async def update_food_offer(offer_id: str, update_data: dict, user: dict = Depends(get_current_user)) -> dict:
     """تحديث عرض"""
     offer = await db.food_offers.find_one({"id": offer_id})
     if not offer:
@@ -1206,7 +1206,7 @@ async def update_food_offer(offer_id: str, update_data: dict, user: dict = Depen
     return {"message": "تم تحديث العرض"}
 
 @router.delete("/offers/{offer_id}")
-async def delete_food_offer(offer_id: str, user: dict = Depends(get_current_user)):
+async def delete_food_offer(offer_id: str, user: dict = Depends(get_current_user)) -> dict:
     """حذف عرض"""
     offer = await db.food_offers.find_one({"id": offer_id})
     if not offer:
@@ -1319,7 +1319,7 @@ async def calculate_offer_discount(store_id: str, items: list, subtotal: float) 
 # ===============================
 
 @router.get("/flash-sales/available")
-async def get_available_flash_sales(user: dict = Depends(get_current_user)):
+async def get_available_flash_sales(user: dict = Depends(get_current_user)) -> dict:
     """جلب عروض الفلاش المتاحة للانضمام"""
     now = datetime.now(timezone.utc).isoformat()
     
@@ -1332,7 +1332,7 @@ async def get_available_flash_sales(user: dict = Depends(get_current_user)):
     return sales
 
 @router.get("/flash-sale-settings")
-async def get_flash_settings_for_seller(user: dict = Depends(get_current_user)):
+async def get_flash_settings_for_seller(user: dict = Depends(get_current_user)) -> dict:
     """جلب إعدادات رسوم الانضمام للفلاش"""
     settings = await db.platform_settings.find_one({"id": "flash_sale"}, {"_id": 0})
     
@@ -1346,7 +1346,7 @@ async def get_flash_settings_for_seller(user: dict = Depends(get_current_user)):
     return settings
 
 @router.get("/my-flash-requests")
-async def get_my_flash_requests(user: dict = Depends(get_current_user)):
+async def get_my_flash_requests(user: dict = Depends(get_current_user)) -> dict:
     """جلب طلبات الانضمام للفلاش الخاصة بي"""
     store = await db.food_stores.find_one({"owner_id": user["id"]})
     if not store:
@@ -1395,7 +1395,7 @@ async def get_my_flash_requests(user: dict = Depends(get_current_user)):
     return requests
 
 @router.post("/flash-sale-request")
-async def request_flash_sale_join(request_data: dict, user: dict = Depends(get_current_user)):
+async def request_flash_sale_join(request_data: dict, user: dict = Depends(get_current_user)) -> dict:
     """طلب الانضمام لعرض فلاش"""
     store = await db.food_stores.find_one({"owner_id": user["id"]})
     if not store:
@@ -1504,7 +1504,7 @@ async def request_flash_sale_join(request_data: dict, user: dict = Depends(get_c
     }
 
 @router.delete("/flash-sale-request/{request_id}")
-async def cancel_flash_sale_request(request_id: str, user: dict = Depends(get_current_user)):
+async def cancel_flash_sale_request(request_id: str, user: dict = Depends(get_current_user)) -> dict:
     """إلغاء طلب انضمام للفلاش (فقط إذا كان قيد الانتظار)"""
     req = await db.flash_sale_requests.find_one({"id": request_id})
     if not req:

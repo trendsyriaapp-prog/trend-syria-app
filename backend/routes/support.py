@@ -31,7 +31,7 @@ class UpdateTicketStatusRequest(BaseModel):
 # ============== APIs للمستخدمين ==============
 
 @router.post("/tickets")
-async def create_ticket(req: CreateTicketRequest, user: dict = Depends(get_current_user)):
+async def create_ticket(req: CreateTicketRequest, user: dict = Depends(get_current_user)) -> dict:
     """إنشاء تذكرة دعم جديدة"""
     
     now = datetime.now(timezone.utc)
@@ -93,7 +93,7 @@ async def create_ticket(req: CreateTicketRequest, user: dict = Depends(get_curre
 async def get_my_tickets(
     status: Optional[str] = None,
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """جلب تذاكر المستخدم"""
     
     query = {"user_id": user["id"]}
@@ -109,7 +109,7 @@ async def get_my_tickets(
 
 
 @router.get("/tickets/{ticket_id}")
-async def get_ticket(ticket_id: str, user: dict = Depends(get_current_user)):
+async def get_ticket(ticket_id: str, user: dict = Depends(get_current_user)) -> dict:
     """جلب تفاصيل تذكرة"""
     
     ticket = await db.support_tickets.find_one({"id": ticket_id}, {"_id": 0})
@@ -132,7 +132,7 @@ async def reply_to_ticket(
     ticket_id: str,
     req: TicketReplyRequest,
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """الرد على تذكرة"""
     
     ticket = await db.support_tickets.find_one({"id": ticket_id}, {"_id": 0})
@@ -198,7 +198,7 @@ async def get_all_tickets(
     page: int = Query(1, ge=1),
     limit: int = Query(20, ge=1, le=100),
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """جلب جميع التذاكر (للمدراء)"""
     
     if user.get("user_type") not in ["admin", "sub_admin"]:
@@ -230,7 +230,7 @@ async def get_all_tickets(
 
 
 @router.get("/admin/stats")
-async def get_support_stats(user: dict = Depends(get_current_user)):
+async def get_support_stats(user: dict = Depends(get_current_user)) -> dict:
     """إحصائيات الدعم (للمدراء)"""
     
     if user.get("user_type") not in ["admin", "sub_admin"]:
@@ -273,7 +273,7 @@ async def update_ticket_status(
     ticket_id: str,
     req: UpdateTicketStatusRequest,
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """تحديث حالة التذكرة (للمدراء)"""
     
     if user.get("user_type") not in ["admin", "sub_admin"]:
@@ -320,7 +320,7 @@ async def assign_ticket(
     ticket_id: str,
     admin_id: Optional[str] = None,
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """تعيين التذكرة لمدير (للمدراء)"""
     
     if user.get("user_type") not in ["admin", "sub_admin"]:
@@ -342,7 +342,7 @@ async def assign_ticket(
 
 
 @router.delete("/admin/tickets/{ticket_id}")
-async def delete_ticket(ticket_id: str, user: dict = Depends(get_current_user)):
+async def delete_ticket(ticket_id: str, user: dict = Depends(get_current_user)) -> dict:
     """حذف تذكرة دعم (للمدراء)"""
     
     if user.get("user_type") not in ["admin", "sub_admin"]:
@@ -369,7 +369,7 @@ class EmergencyHelpRequest(BaseModel):
 async def request_emergency_help(
     req: EmergencyHelpRequest,
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """طلب مساعدة طارئة من السائق - الدعم سيتواصل مع العميل"""
     
     if user.get("user_type") != "delivery":
@@ -469,7 +469,7 @@ async def request_emergency_help(
 
 
 @router.get("/emergency-help/my-requests")
-async def get_my_emergency_requests(user: dict = Depends(get_current_user)):
+async def get_my_emergency_requests(user: dict = Depends(get_current_user)) -> dict:
     """جلب طلبات المساعدة الطارئة للسائق"""
     
     if user.get("user_type") != "delivery":
@@ -487,7 +487,7 @@ async def get_my_emergency_requests(user: dict = Depends(get_current_user)):
 async def get_all_emergency_requests(
     status: Optional[str] = None,
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """جلب جميع طلبات المساعدة الطارئة (للمدراء)"""
     
     if user.get("user_type") not in ["admin", "sub_admin"]:
@@ -516,7 +516,7 @@ async def resolve_emergency_request(
     request_id: str,
     notes: Optional[str] = None,
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """حل طلب مساعدة طارئ (للمدراء)"""
     
     if user.get("user_type") not in ["admin", "sub_admin"]:

@@ -31,19 +31,19 @@ client = AsyncIOMotorClient(MONGO_URL)
 db = client[DB_NAME]
 
 
-def format_price(price):
+def format_price(price) -> str:
     """تنسيق السعر بالليرة السورية"""
     return f"{price:,.0f} ل.س"
 
 
-def format_date(date):
+def format_date(date) -> dict:
     """تنسيق التاريخ"""
     if isinstance(date, datetime):
         return date.strftime("%Y-%m-%d %H:%M")
     return str(date)
 
 
-async def get_sales_data(seller_id: str = None, start_date: datetime = None, end_date: datetime = None):
+async def get_sales_data(seller_id: str = None, start_date: datetime = None, end_date: datetime = None) -> dict:
     """جلب بيانات المبيعات"""
     query = {"status": {"$in": ["paid", "delivered", "shipped"]}}
     
@@ -62,7 +62,7 @@ async def get_sales_data(seller_id: str = None, start_date: datetime = None, end
     return orders
 
 
-async def get_products_data(seller_id: str = None):
+async def get_products_data(seller_id: str = None) -> dict:
     """جلب بيانات المنتجات"""
     query = {}
     if seller_id:
@@ -76,7 +76,7 @@ async def get_products_data(seller_id: str = None):
 async def export_sales_excel(
     seller_id: str = Query(None, description="معرف البائع (اختياري)"),
     days: int = Query(30, description="عدد الأيام")
-):
+) -> dict:
     """
     تصدير تقرير المبيعات بصيغة Excel
     """
@@ -175,7 +175,7 @@ async def export_sales_excel(
 async def export_sales_pdf(
     seller_id: str = Query(None, description="معرف البائع (اختياري)"),
     days: int = Query(30, description="عدد الأيام")
-):
+) -> dict:
     """
     تصدير تقرير المبيعات بصيغة PDF
     """
@@ -270,7 +270,7 @@ async def export_sales_pdf(
 @router.get("/products/excel")
 async def export_products_excel(
     seller_id: str = Query(None, description="معرف البائع (اختياري)")
-):
+) -> dict:
     """
     تصدير تقرير المنتجات بصيغة Excel
     """
@@ -341,7 +341,7 @@ async def export_products_excel(
 async def export_analytics_excel(
     seller_id: str = Query(None, description="معرف البائع"),
     days: int = Query(30, description="عدد الأيام")
-):
+) -> dict:
     """
     تصدير تقرير تحليلي شامل بصيغة Excel
     """

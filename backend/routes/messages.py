@@ -11,7 +11,7 @@ from models.schemas import MessageCreate
 router = APIRouter(prefix="/messages", tags=["Messages"])
 
 @router.post("")
-async def send_message(message: MessageCreate, user: dict = Depends(get_current_user)):
+async def send_message(message: MessageCreate, user: dict = Depends(get_current_user)) -> dict:
     msg_doc = {
         "id": str(uuid.uuid4()),
         "sender_id": user["id"],
@@ -26,7 +26,7 @@ async def send_message(message: MessageCreate, user: dict = Depends(get_current_
     return {"message": "تم إرسال الرسالة"}
 
 @router.get("")
-async def get_conversations(user: dict = Depends(get_current_user)):
+async def get_conversations(user: dict = Depends(get_current_user)) -> dict:
     pipeline = [
         {"$match": {"$or": [{"sender_id": user["id"]}, {"receiver_id": user["id"]}]}},
         {"$sort": {"created_at": -1}},
@@ -80,7 +80,7 @@ async def get_conversations(user: dict = Depends(get_current_user)):
     return result
 
 @router.get("/{other_user_id}")
-async def get_chat_messages(other_user_id: str, user: dict = Depends(get_current_user)):
+async def get_chat_messages(other_user_id: str, user: dict = Depends(get_current_user)) -> dict:
     messages = await db.messages.find({
         "$or": [
             {"sender_id": user["id"], "receiver_id": other_user_id},

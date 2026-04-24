@@ -21,7 +21,7 @@ class AlertConfigUpdate(BaseModel):
 
 
 @router.get("/stats")
-async def get_rate_limit_stats(admin: dict = Depends(get_current_admin)):
+async def get_rate_limit_stats(admin: dict = Depends(get_current_admin)) -> dict:
     """
     جلب إحصائيات Rate Limiting
     
@@ -37,7 +37,7 @@ async def get_rate_limit_stats(admin: dict = Depends(get_current_admin)):
 
 
 @router.get("/blocked")
-async def get_blocked_ips(admin: dict = Depends(get_current_admin)):
+async def get_blocked_ips(admin: dict = Depends(get_current_admin)) -> dict:
     """
     جلب قائمة IPs المحظورة حالياً
     """
@@ -48,7 +48,7 @@ async def get_blocked_ips(admin: dict = Depends(get_current_admin)):
 
 
 @router.post("/unblock")
-async def unblock_ip(data: UnblockRequest, admin: dict = Depends(get_current_admin)):
+async def unblock_ip(data: UnblockRequest, admin: dict = Depends(get_current_admin)) -> dict:
     """
     إلغاء حظر IP يدوياً
     """
@@ -61,7 +61,7 @@ async def unblock_ip(data: UnblockRequest, admin: dict = Depends(get_current_adm
 
 
 @router.get("/config")
-async def get_rate_limit_config(admin: dict = Depends(get_current_admin)):
+async def get_rate_limit_config(admin: dict = Depends(get_current_admin)) -> dict:
     """
     جلب إعدادات Rate Limiting الحالية
     """
@@ -76,7 +76,7 @@ async def get_rate_limit_config(admin: dict = Depends(get_current_admin)):
 
 
 @router.post("/clear-stats")
-async def clear_stats(admin: dict = Depends(get_current_admin)):
+async def clear_stats(admin: dict = Depends(get_current_admin)) -> dict:
     """
     مسح إحصائيات Rate Limiting (للمدير فقط)
     """
@@ -89,7 +89,7 @@ async def clear_stats(admin: dict = Depends(get_current_admin)):
 
 
 @router.get("/alerts/config")
-async def get_alert_config(admin: dict = Depends(get_current_admin)):
+async def get_alert_config(admin: dict = Depends(get_current_admin)) -> dict:
     """
     جلب إعدادات التنبيهات الأمنية
     """
@@ -108,7 +108,7 @@ async def get_alert_config(admin: dict = Depends(get_current_admin)):
 async def update_alert_config(
     data: AlertConfigUpdate,
     admin: dict = Depends(get_current_admin)
-):
+) -> dict:
     """
     تحديث إعدادات التنبيهات الأمنية (للمدير فقط)
     """
@@ -141,7 +141,7 @@ async def update_alert_config(
 
 
 @router.post("/test-alert")
-async def test_security_alert(admin: dict = Depends(get_current_admin)):
+async def test_security_alert(admin: dict = Depends(get_current_admin)) -> dict:
     """
     إرسال تنبيه تجريبي للتأكد من عمل النظام
     """

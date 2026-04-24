@@ -215,7 +215,7 @@ async def find_similar_products(analysis: dict, limit: int = 10) -> List[dict]:
 # ============== نقاط النهاية ==============
 
 @router.post("/search")
-async def search_by_image(data: ImageSearchRequest):
+async def search_by_image(data: ImageSearchRequest) -> dict:
     """البحث عن منتجات باستخدام صورة"""
     
     try:
@@ -258,7 +258,7 @@ async def search_by_image(data: ImageSearchRequest):
 async def search_by_uploaded_image(
     file: UploadFile = File(...),
     limit: int = 10
-):
+) -> dict:
     """البحث باستخدام ملف صورة مرفوع"""
     
     # التحقق من نوع الملف
@@ -296,7 +296,7 @@ async def search_by_uploaded_image(
         raise HTTPException(status_code=500, detail=f"خطأ في معالجة الصورة: {str(e)}")
 
 @router.get("/recent")
-async def get_recent_searches(user: dict = Depends(get_current_user), limit: int = 5):
+async def get_recent_searches(user: dict = Depends(get_current_user), limit: int = 5) -> dict:
     """جلب آخر عمليات البحث بالصورة للمستخدم"""
     
     searches = await db.image_searches.find(
@@ -310,7 +310,7 @@ async def get_recent_searches(user: dict = Depends(get_current_user), limit: int
 async def save_image_search(
     data: ImageSearchRequest,
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """حفظ بحث بالصورة في سجل المستخدم"""
     
     search_record = {

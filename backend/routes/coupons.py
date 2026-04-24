@@ -36,7 +36,7 @@ COUPON_SCOPES = {
 async def get_all_coupons(
     status: str = "all",  # all, active, expired, disabled
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """جلب جميع الكوبونات للمدير"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -72,7 +72,7 @@ async def get_all_coupons(
 
 
 @router.post("/admin/create")
-async def create_coupon(coupon_data: dict, user: dict = Depends(get_current_user)):
+async def create_coupon(coupon_data: dict, user: dict = Depends(get_current_user)) -> dict:
     """إنشاء كوبون جديد"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -137,7 +137,7 @@ async def create_coupon(coupon_data: dict, user: dict = Depends(get_current_user
 
 
 @router.put("/admin/{coupon_id}")
-async def update_coupon(coupon_id: str, coupon_data: dict, user: dict = Depends(get_current_user)):
+async def update_coupon(coupon_id: str, coupon_data: dict, user: dict = Depends(get_current_user)) -> dict:
     """تحديث كوبون"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -163,7 +163,7 @@ async def update_coupon(coupon_id: str, coupon_data: dict, user: dict = Depends(
 
 
 @router.delete("/admin/{coupon_id}")
-async def delete_coupon(coupon_id: str, user: dict = Depends(get_current_user)):
+async def delete_coupon(coupon_id: str, user: dict = Depends(get_current_user)) -> dict:
     """حذف كوبون"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -176,7 +176,7 @@ async def delete_coupon(coupon_id: str, user: dict = Depends(get_current_user)):
 
 
 @router.get("/admin/{coupon_id}/usage")
-async def get_coupon_usage(coupon_id: str, user: dict = Depends(get_current_user)):
+async def get_coupon_usage(coupon_id: str, user: dict = Depends(get_current_user)) -> dict:
     """جلب سجل استخدام كوبون"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -197,7 +197,7 @@ async def get_coupon_usage(coupon_id: str, user: dict = Depends(get_current_user
 async def validate_coupon(
     data: dict,
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """التحقق من صلاحية كوبون وحساب الخصم"""
     code = data.get("code", "").strip().upper()
     order_amount = data.get("order_amount", 0)
@@ -307,7 +307,7 @@ async def validate_coupon(
 async def apply_coupon_to_order(
     data: dict,
     user: dict = Depends(get_current_user)
-):
+) -> dict:
     """تطبيق كوبون على طلب (يُستدعى عند إتمام الطلب)"""
     coupon_id = data.get("coupon_id")
     order_id = data.get("order_id")
