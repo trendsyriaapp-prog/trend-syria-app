@@ -7,7 +7,6 @@ from datetime import datetime, timezone, timedelta
 from pydantic import BaseModel
 import uuid
 import math
-import logging
 import secrets
 
 from core.database import db, get_current_user, create_notification_for_user
@@ -300,7 +299,6 @@ async def check_delivery_distance(data: DistanceCheckRequest) -> dict:
         "store_name": store.get("name"),
         "store_type": store.get("store_type")
     }
-
 
 
 # ===============================
@@ -1303,7 +1301,6 @@ async def cancel_batch_orders(batch_id: str, user: dict = Depends(get_current_us
         "message": f"تم إلغاء {len(orders)} طلب",
         "refunded_amount": total_refund
     }
-
 
 
 @router.get("/my-orders")
@@ -3767,7 +3764,6 @@ async def get_store_reviews(
     }
 
 
-
 # ============== إلغاء الطلب من الأدمن ==============
 
 @router.post("/admin/{order_id}/cancel-with-penalty")
@@ -3907,7 +3903,6 @@ async def get_support_phone() -> dict:
     """جلب رقم الدعم"""
     setting = await db.settings.find_one({"key": "support_phone"})
     return {"phone": setting["value"] if setting else "0911111111"}
-
 
 
 # ============== نظام إرسال الطلب للسائق بالتأكيد ==============
