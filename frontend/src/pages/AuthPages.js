@@ -528,7 +528,53 @@ const RegisterPage = () => {
     }
   };
 
-  // التحقق من OTP وإنشاء الحساب
+  // التحقق من OTP فقط (للبائعين وموظفي التوصيل)
+  const verifyOTPOnly = async () => {
+    const otpCode = otp.join('');
+    if (otpCode.length !== 6) {
+      toast({ title: "خطأ", description: "يرجى إدخال رمز التحقق كاملاً", variant: "destructive" });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // التحقق من OTP فقط بدون إنشاء الحساب
+      await axios.post(`${API}/api/auth/verify-otp-only`, {
+        registration_id: registrationId,
+        otp: otpCode,
+        phone: formData.phone
+      });
+      
+      // حفظ بيانات التسجيل مؤقتاً للاستخدام في صفحة الوثائق
+      const pendingRegistration = {
+        registration_id: registrationId,
+        full_name: formData.full_name,
+        phone: formData.phone,
+        password: formData.password,
+        city: formData.city,
+        user_type: formData.user_type
+      };
+      sessionStorage.setItem('pending_registration', JSON.stringify(pendingRegistration));
+      
+      toast({ title: "تم التحقق بنجاح", description: "أكمل بياناتك لإنشاء الحساب" });
+      
+      // توجيه لصفحة الوثائق حسب نوع المستخدم
+      if (formData.user_type === 'seller') {
+        navigate('/seller/documents', { replace: true });
+      } else if (formData.user_type === 'food_seller') {
+        navigate('/join/food-seller', { replace: true });
+      } else if (formData.user_type === 'delivery') {
+        navigate('/delivery/documents', { replace: true });
+      }
+    } catch (error) {
+      const msg = error.response?.data?.detail || "رمز التحقق غير صحيح";
+      toast({ title: "خطأ", description: msg, variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // التحقق من OTP وإنشاء الحساب (للمشترين فقط)
   const verifyOTPAndRegister = async () => {
     const otpCode = otp.join('');
     if (otpCode.length !== 6) {
@@ -551,16 +597,8 @@ const RegisterPage = () => {
       localStorage.setItem('user', JSON.stringify(res.data.user));
       toast({ title: "تم التسجيل بنجاح", description: "مرحباً بك في ترند سورية" });
       
-      // توجيه حسب نوع المستخدم
-      if (formData.user_type === 'seller') {
-        navigate('/seller/documents', { replace: true });
-      } else if (formData.user_type === 'food_seller') {
-        navigate('/join/food-seller', { replace: true });
-      } else if (formData.user_type === 'delivery') {
-        navigate('/delivery/documents', { replace: true });
-      } else {
-        navigate('/', { replace: true });
-      }
+      // المشتري يذهب للصفحة الرئيسية مباشرة
+      navigate('/', { replace: true });
     } catch (error) {
       const msg = error.response?.data?.detail || "فشل التحقق من الرمز";
       toast({ title: "خطأ", description: msg, variant: "destructive" });
@@ -626,12 +664,12 @@ const RegisterPage = () => {
             </div>
 
             <button
-              onClick={verifyOTPAndRegister}
+              onClick={formData.user_type === 'buyer' ? verifyOTPAndRegister : verifyOTPOnly}
               disabled={loading || otp.join('').length !== 6}
               className="w-full bg-[#FF6B00] text-white font-bold py-3 rounded-full hover:bg-[#E65000] disabled:opacity-50 transition-colors"
               data-testid="verify-otp-btn"
             >
-              {loading ? 'جاري التحقق...' : 'إنشاء الحساب'}
+              {loading ? 'جاري التحقق...' : (formData.user_type === 'buyer' ? 'إنشاء الحساب' : 'تحقق')}
             </button>
 
             <button

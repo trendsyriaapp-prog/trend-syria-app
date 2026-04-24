@@ -40,12 +40,17 @@ const API = process.env.REACT_APP_BACKEND_URL;
 
 // صفحة رفع وثائق موظف التوصيل
 const DeliveryDocuments = () => {
-  const { user } = useAuth();
+  const { user, fetchUser } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState(null);
   const [rejectionReason, setRejectionReason] = useState(null);
+  
+  // بيانات التسجيل المعلقة (للمستخدمين الجدد)
+  const [pendingRegistration, setPendingRegistration] = useState(null);
+  const [isNewRegistration, setIsNewRegistration] = useState(false);
+  
   const [docs, setDocs] = useState({
     national_id: '',
     personal_photo: '',
@@ -76,9 +81,28 @@ const DeliveryDocuments = () => {
     { id: 'electric', name: 'كهرباء', icon: '🔋' }
   ];
 
+  // التحقق من وجود تسجيل معلق
   useEffect(() => {
-    checkStatus();
+    const pending = sessionStorage.getItem('pending_registration');
+    if (pending) {
+      try {
+        const data = JSON.parse(pending);
+        if (data.user_type === 'delivery') {
+          setPendingRegistration(data);
+          setIsNewRegistration(true);
+        }
+      } catch (e) {
+        logger.error('Error parsing pending registration:', e);
+      }
+    }
   }, []);
+
+  useEffect(() => {
+    // فقط تحقق من الحالة إذا كان المستخدم موجود وليس تسجيل جديد
+    if (user && !isNewRegistration) {
+      checkStatus();
+    }
+  }, [user, isNewRegistration]);
 
   const checkStatus = async () => {
     try {
@@ -240,13 +264,13 @@ const DeliveryDocuments = () => {
 
     setLoading(true);
     try {
-      // إعداد بيانات الإرسال
-      const submitData = {
-        national_id: docs.national_id,
+      // إعداد بيانات الوثائق
+      const deliveryData = {
         personal_photo: docs.personal_photo,
-        id_photo: docs.id_photo,
-        bike_photo: docs.bike_photo,
-        fuel_type: docs.fuel_type,
+        national_id: docs.id_photo,
+        driving_license: docs.bike_photo, // نستخدم صورة الدراجة كرخصة مؤقتاً
+        vehicle_photo: docs.bike_photo,
+        vehicle_type: docs.fuel_type,
         home_address: docs.home_address,
         home_latitude: docs.home_latitude,
         home_longitude: docs.home_longitude,
@@ -259,16 +283,69 @@ const DeliveryDocuments = () => {
         }
       };
       
-      await axios.post(`${API}/api/delivery/documents`, submitData);
-      toast({
-        title: "تم بنجاح",
-        description: "تم إرسال الوثائق، في انتظار موافقة الإدارة"
-      });
-      setStatus('pending');
+      // إذا كان تسجيل جديد (المستخدم لم يُنشأ بعد)
+      if (isNewRegistration && pendingRegistration) {
+        // إنشاء الحساب مع الوثائق معاً
+        const registrationData = {
+          registration_id: pendingRegistration.registration_id,
+          full_name: pendingRegistration.full_name,
+          phone: pendingRegistration.phone,
+          password: pendingRegistration.password,
+          city: pendingRegistration.city,
+          user_type: 'delivery',
+          delivery_data: deliveryData
+        };
+        
+        const res = await axios.post(`${API}/api/auth/complete-registration`, registrationData, {
+          withCredentials: true
+        });
+        
+        // مسح بيانات التسجيل المؤقتة
+        sessionStorage.removeItem('pending_registration');
+        
+        // حفظ بيانات المستخدم
+        localStorage.setItem('user', JSON.stringify(res.data.user));
+        
+        toast({
+          title: "تم إنشاء الحساب بنجاح",
+          description: "تم إرسال الوثائق، في انتظار موافقة الإدارة"
+        });
+        
+        // تحديث الـ AuthContext
+        await fetchUser();
+        
+        setStatus('pending');
+      } else {
+        // المستخدم موجود بالفعل، فقط رفع الوثائق
+        const submitData = {
+          national_id: docs.national_id,
+          personal_photo: docs.personal_photo,
+          id_photo: docs.id_photo,
+          bike_photo: docs.bike_photo,
+          fuel_type: docs.fuel_type,
+          home_address: docs.home_address,
+          home_latitude: docs.home_latitude,
+          home_longitude: docs.home_longitude,
+          home_city: docs.home_city,
+          payment_account: {
+            type: docs.payment_account_type,
+            account_number: docs.payment_account_number,
+            holder_name: docs.payment_account_holder,
+            bank_name: docs.payment_account_type === 'bank_account' ? docs.payment_bank_name : null
+          }
+        };
+        
+        await axios.post(`${API}/api/delivery/documents`, submitData);
+        toast({
+          title: "تم بنجاح",
+          description: "تم إرسال الوثائق، في انتظار موافقة الإدارة"
+        });
+        setStatus('pending');
+      }
     } catch (error) {
       toast({
-        title: "خطأ في رفع الوثائق",
-        description: error.response?.data?.detail || "حدث خطأ أثناء رفع الوثائق، يرجى المحاولة مرة أخرى",
+        title: "خطأ",
+        description: error.response?.data?.detail || "حدث خطأ أثناء إنشاء الحساب، يرجى المحاولة مرة أخرى",
         variant: "destructive"
       });
     } finally {
@@ -757,8 +834,9 @@ const DeliveryDocuments = () => {
             type="submit"
             disabled={loading || !docs.national_id || !docs.personal_photo || !docs.id_photo || !docs.bike_photo || !docs.fuel_type || !docs.home_address || !docs.home_latitude || !docs.payment_account_number || !docs.payment_account_holder || (docs.payment_account_type === 'bank_account' && !docs.payment_bank_name)}
             className="w-full bg-[#FF6B00] text-white py-3 rounded-xl font-bold disabled:opacity-50 disabled:cursor-not-allowed"
+            data-testid="delivery-submit-btn"
           >
-            {loading ? 'جاري الإرسال...' : 'إرسال الوثائق'}
+            {loading ? (isNewRegistration ? 'جاري إنشاء الحساب...' : 'جاري الإرسال...') : (isNewRegistration ? 'إنشاء الحساب' : 'إرسال الوثائق')}
           </button>
         </form>
       </div>

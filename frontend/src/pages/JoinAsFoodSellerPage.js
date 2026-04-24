@@ -75,7 +75,7 @@ const DEFAULT_SETTINGS = {
 
 const JoinAsFoodSellerPage = () => {
   const navigate = useNavigate();
-  const { user, token } = useAuth();
+  const { user, token, fetchUser } = useAuth();
   const { toast } = useToast();
 
   const [step, setStep] = useState(0); // تبدأ من 0 (شاشة الترحيب)
@@ -84,9 +84,29 @@ const JoinAsFoodSellerPage = () => {
   const [mainType, setMainType] = useState(''); // food or market
   const [selectedCategories, setSelectedCategories] = useState([]); // الأصناف المختارة
   
+  // بيانات التسجيل المعلقة (للمستخدمين الجدد)
+  const [pendingRegistration, setPendingRegistration] = useState(null);
+  const [isNewRegistration, setIsNewRegistration] = useState(false);
+  
   // أصناف النشاط من API
   const [businessCategories, setBusinessCategories] = useState([]);
   const [loadingCategories, setLoadingCategories] = useState(false);
+  
+  // التحقق من وجود تسجيل معلق
+  useEffect(() => {
+    const pending = sessionStorage.getItem('pending_registration');
+    if (pending) {
+      try {
+        const data = JSON.parse(pending);
+        if (data.user_type === 'food_seller') {
+          setPendingRegistration(data);
+          setIsNewRegistration(true);
+        }
+      } catch (e) {
+        logger.error('Error parsing pending registration:', e);
+      }
+    }
+  }, []);
   
   // ساعات العمل الافتراضية
   const defaultWorkingHours = {
@@ -275,7 +295,8 @@ const JoinAsFoodSellerPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!token) {
+    // إذا كان تسجيل جديد، لا نحتاج للتحقق من token
+    if (!isNewRegistration && !token) {
       toast({ title: "تنبيه", description: "يجب تسجيل الدخول أولاً", variant: "destructive" });
       navigate('/login');
       return;
@@ -337,8 +358,16 @@ const JoinAsFoodSellerPage = () => {
     setLoading(true);
     try {
       // إعداد بيانات حساب الدفع
-      const submitData = {
-        ...formData,
+      const foodSellerData = {
+        restaurant_name: formData.name,
+        business_category: selectedCategories[0] || mainType,
+        logo: formData.logo,
+        storefront_image: formData.cover_image,
+        health_license: formData.commercial_license,
+        store_address: formData.address,
+        store_latitude: formData.latitude,
+        store_longitude: formData.longitude,
+        store_city: formData.city,
         payment_account: {
           type: formData.payment_account_type,
           account_number: formData.payment_account_number,
@@ -347,21 +376,66 @@ const JoinAsFoodSellerPage = () => {
         }
       };
       
-      // حذف الحقول القديمة
-      delete submitData.payment_account_type;
-      delete submitData.payment_account_number;
-      delete submitData.payment_account_holder;
-      delete submitData.payment_bank_name;
-      
-      await axios.post(`${API}/api/food/stores`, submitData, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      toast({ 
-        title: "تم التسجيل بنجاح! 🎉", 
-        description: "سيتم مراجعة طلبك من قبل الإدارة" 
-      });
-      setStep(6); // Success step
+      // إذا كان تسجيل جديد (المستخدم لم يُنشأ بعد)
+      if (isNewRegistration && pendingRegistration) {
+        // إنشاء الحساب مع بيانات المطعم معاً
+        const registrationData = {
+          registration_id: pendingRegistration.registration_id,
+          full_name: pendingRegistration.full_name,
+          phone: pendingRegistration.phone,
+          password: pendingRegistration.password,
+          city: pendingRegistration.city,
+          user_type: 'food_seller',
+          food_seller_data: foodSellerData
+        };
+        
+        const res = await axios.post(`${API}/api/auth/complete-registration`, registrationData, {
+          withCredentials: true
+        });
+        
+        // مسح بيانات التسجيل المؤقتة
+        sessionStorage.removeItem('pending_registration');
+        
+        // حفظ بيانات المستخدم
+        localStorage.setItem('user', JSON.stringify(res.data.user));
+        
+        toast({ 
+          title: "تم إنشاء الحساب بنجاح! 🎉", 
+          description: "سيتم مراجعة طلبك من قبل الإدارة" 
+        });
+        
+        // تحديث الـ AuthContext
+        await fetchUser();
+        
+        setStep(6); // Success step
+      } else {
+        // المستخدم موجود بالفعل، فقط إنشاء المتجر
+        const submitData = {
+          ...formData,
+          payment_account: {
+            type: formData.payment_account_type,
+            account_number: formData.payment_account_number,
+            holder_name: formData.payment_account_holder,
+            bank_name: formData.payment_account_type === 'bank_account' ? formData.payment_bank_name : null
+          }
+        };
+        
+        // حذف الحقول القديمة
+        delete submitData.payment_account_type;
+        delete submitData.payment_account_number;
+        delete submitData.payment_account_holder;
+        delete submitData.payment_bank_name;
+        
+        await axios.post(`${API}/api/food/stores`, submitData, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        toast({ 
+          title: "تم التسجيل بنجاح! 🎉", 
+          description: "سيتم مراجعة طلبك من قبل الإدارة" 
+        });
+        setStep(6); // Success step
+      }
     } catch (error) {
       toast({ 
         title: "خطأ", 
@@ -373,8 +447,8 @@ const JoinAsFoodSellerPage = () => {
     }
   };
 
-  // Check if user is logged in
-  if (!user) {
+  // Check if user is logged in OR has pending registration
+  if (!user && !isNewRegistration) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-2xl p-8 text-center max-w-md w-full shadow-lg">
@@ -389,7 +463,7 @@ const JoinAsFoodSellerPage = () => {
               تسجيل الدخول
             </button>
             <button
-              onClick={() => navigate('/register')}
+              onClick={() => navigate('/register?type=food_seller')}
               className="flex-1 bg-gray-100 text-gray-700 py-3 rounded-xl font-bold hover:bg-gray-200"
             >
               حساب جديد
@@ -1109,14 +1183,15 @@ const JoinAsFoodSellerPage = () => {
                 type="submit"
                 disabled={loading || !formData.payment_account_number || !formData.payment_account_holder || (formData.payment_account_type === 'bank_account' && !formData.payment_bank_name)}
                 className="w-full bg-[#FF6B00] text-white py-3 rounded-xl font-bold hover:bg-[#E65000] transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                data-testid="food-seller-submit-btn"
               >
                 {loading ? (
                   <>
                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    جاري الإرسال...
+                    {isNewRegistration ? 'جاري إنشاء الحساب...' : 'جاري الإرسال...'}
                   </>
                 ) : (
-                  'إرسال الطلب'
+                  isNewRegistration ? 'إنشاء الحساب' : 'إرسال الطلب'
                 )}
               </button>
             </form>

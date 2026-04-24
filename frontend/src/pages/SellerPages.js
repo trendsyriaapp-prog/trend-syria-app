@@ -412,7 +412,7 @@ const WithdrawModal = ({ balance, onClose, onSuccess, token }) => {
 // Seller Documents Upload Page
 const SellerDocumentsPage = () => {
   const navigate = useNavigate();
-  const { user, fetchUser, token, loading: authLoading } = useAuth();
+  const { user, fetchUser, token, loading: authLoading, login } = useAuth();
   const { toast } = useToast();
 
   const [businessName, setBusinessName] = useState('');
@@ -427,6 +427,10 @@ const SellerDocumentsPage = () => {
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState(null);
   const [rejectionReason, setRejectionReason] = useState(null);
+  
+  // بيانات التسجيل المعلقة (للمستخدمين الجدد)
+  const [pendingRegistration, setPendingRegistration] = useState(null);
+  const [isNewRegistration, setIsNewRegistration] = useState(false);
   
   // حقول العنوان الجديدة
   const [storeAddress, setStoreAddress] = useState('');
@@ -444,6 +448,22 @@ const SellerDocumentsPage = () => {
   const [paymentAccountNumber, setPaymentAccountNumber] = useState('');
   const [paymentAccountHolder, setPaymentAccountHolder] = useState('');
   const [paymentBankName, setPaymentBankName] = useState('');
+
+  // التحقق من وجود تسجيل معلق
+  useEffect(() => {
+    const pending = sessionStorage.getItem('pending_registration');
+    if (pending) {
+      try {
+        const data = JSON.parse(pending);
+        if (data.user_type === 'seller') {
+          setPendingRegistration(data);
+          setIsNewRegistration(true);
+        }
+      } catch (e) {
+        logger.error('Error parsing pending registration:', e);
+      }
+    }
+  }, []);
 
   // جلب أصناف الأنشطة التجارية
   useEffect(() => {
@@ -483,10 +503,12 @@ const SellerDocumentsPage = () => {
   }, [token]);
 
   useEffect(() => {
-    if (user) {
+    // إذا كان المستخدم موجود، تحقق من حالته
+    // إذا كان تسجيل جديد، لا نحتاج للتحقق
+    if (user && !isNewRegistration) {
       checkStatus();
     }
-  }, [user, checkStatus]);
+  }, [user, checkStatus, isNewRegistration]);
 
   const handleFileChange = (setter) => async (e) => {
     const file = e.target.files[0];
@@ -545,38 +567,89 @@ const SellerDocumentsPage = () => {
 
     setLoading(true);
     try {
-      await axios.post(`${API}/api/seller/documents`, {
-        business_name: businessName,
-        business_category: businessCategory,
-        seller_type: sellerType, // دائماً traditional_shop
-        national_id: nationalId,
-        commercial_registration: commercialReg,
-        shop_photo: shopPhoto,
-        // حقول العنوان
-        store_address: storeAddress,
-        store_latitude: storeLatitude,
-        store_longitude: storeLongitude,
-        store_city: storeCity,
-        // حساب استلام الأرباح
-        payment_account: {
-          type: paymentAccountType,
-          account_number: paymentAccountNumber,
-          holder_name: paymentAccountHolder,
-          bank_name: paymentAccountType === 'bank_account' ? paymentBankName : null
-        }
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      // إذا كان تسجيل جديد (المستخدم لم يُنشأ بعد)
+      if (isNewRegistration && pendingRegistration) {
+        // إنشاء الحساب مع الوثائق معاً
+        const registrationData = {
+          registration_id: pendingRegistration.registration_id,
+          full_name: pendingRegistration.full_name,
+          phone: pendingRegistration.phone,
+          password: pendingRegistration.password,
+          city: pendingRegistration.city,
+          user_type: 'seller',
+          seller_data: {
+            business_name: businessName,
+            business_category: businessCategory,
+            seller_type: sellerType,
+            national_id: nationalId,
+            commercial_reg: commercialReg,
+            shop_photo: shopPhoto,
+            store_address: storeAddress,
+            store_latitude: storeLatitude,
+            store_longitude: storeLongitude,
+            store_city: storeCity,
+            payment_account: {
+              type: paymentAccountType,
+              account_number: paymentAccountNumber,
+              holder_name: paymentAccountHolder,
+              bank_name: paymentAccountType === 'bank_account' ? paymentBankName : null
+            }
+          }
+        };
+        
+        const res = await axios.post(`${API}/api/auth/complete-registration`, registrationData, {
+          withCredentials: true
+        });
+        
+        // مسح بيانات التسجيل المؤقتة
+        sessionStorage.removeItem('pending_registration');
+        
+        // حفظ بيانات المستخدم
+        localStorage.setItem('user', JSON.stringify(res.data.user));
+        
+        toast({
+          title: "تم إنشاء الحساب بنجاح",
+          description: "تم رفع المستندات وسيتم مراجعتها"
+        });
+        
+        // تحديث الـ AuthContext
+        await fetchUser();
+        
+        // الانتقال لصفحة انتظار الموافقة
+        navigate('/seller/pending', { replace: true });
+      } else {
+        // المستخدم موجود بالفعل، فقط رفع الوثائق
+        await axios.post(`${API}/api/seller/documents`, {
+          business_name: businessName,
+          business_category: businessCategory,
+          seller_type: sellerType,
+          national_id: nationalId,
+          commercial_registration: commercialReg,
+          shop_photo: shopPhoto,
+          store_address: storeAddress,
+          store_latitude: storeLatitude,
+          store_longitude: storeLongitude,
+          store_city: storeCity,
+          payment_account: {
+            type: paymentAccountType,
+            account_number: paymentAccountNumber,
+            holder_name: paymentAccountHolder,
+            bank_name: paymentAccountType === 'bank_account' ? paymentBankName : null
+          }
+        }, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
 
-      toast({
-        title: "تم الإرسال",
-        description: "تم رفع المستندات بنجاح، سيتم مراجعتها"
-      });
-      setStatus('pending');
+        toast({
+          title: "تم الإرسال",
+          description: "تم رفع المستندات بنجاح، سيتم مراجعتها"
+        });
+        setStatus('pending');
+      }
     } catch (error) {
       toast({
-        title: "خطأ في رفع الوثائق",
-        description: getErrorMessage(error, "فشل رفع الوثائق، يرجى التأكد من رفع جميع الصور المطلوبة"),
+        title: "خطأ",
+        description: getErrorMessage(error, "فشل إنشاء الحساب، يرجى المحاولة مرة أخرى"),
         variant: "destructive"
       });
     } finally {
@@ -585,7 +658,7 @@ const SellerDocumentsPage = () => {
   };
 
   // انتظار تحميل بيانات المستخدم
-  if (authLoading) {
+  if (authLoading && !isNewRegistration) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-[#FF6B00]" />
@@ -593,14 +666,17 @@ const SellerDocumentsPage = () => {
     );
   }
 
-  if (!user || !['seller', 'food_seller'].includes(user.user_type)) {
-    navigate('/', { replace: true });
-    return null;
-  }
+  // للتسجيل الجديد، لا نحتاج للتحقق من user
+  if (!isNewRegistration) {
+    if (!user || !['seller', 'food_seller'].includes(user.user_type)) {
+      navigate('/', { replace: true });
+      return null;
+    }
 
-  if (user.is_approved) {
-    navigate('/seller/dashboard', { replace: true });
-    return null;
+    if (user.is_approved) {
+      navigate('/seller/dashboard', { replace: true });
+      return null;
+    }
   }
 
   // مكون رفع الصور
@@ -986,10 +1062,10 @@ const SellerDocumentsPage = () => {
               {loading ? (
                 <>
                   <Loader2 className="animate-spin" size={20} />
-                  جاري الإرسال...
+                  {isNewRegistration ? 'جاري إنشاء الحساب...' : 'جاري الإرسال...'}
                 </>
               ) : (
-                'إرسال للمراجعة'
+                isNewRegistration ? 'إنشاء الحساب' : 'إرسال للمراجعة'
               )}
             </button>
           </form>
