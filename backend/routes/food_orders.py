@@ -333,17 +333,7 @@ async def create_food_order(order: FoodOrderCreate, user: dict = Depends(get_cur
         )
     
     # حساب المسافة (للتسجيل وحساب الأجرة فقط - بدون رفض الطلب)
-    R = 6371  # نصف قطر الأرض بالكيلومتر
-    
-    lat1, lon1 = math.radians(store_lat), math.radians(store_lng)
-    lat2, lon2 = math.radians(customer_lat), math.radians(customer_lng)
-    
-    dlat = lat2 - lat1
-    dlon = lon2 - lon1
-    
-    a = math.sin(dlat/2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon/2)**2
-    c = 2 * math.asin(math.sqrt(a))
-    distance = R * c
+    distance = calculate_distance_km(store_lat, store_lng, customer_lat, customer_lng)
     
     # لا نرفض الطلب بناءً على المسافة - العميل اختار المطعم وهو على علم بالمسافة
     
@@ -2472,15 +2462,7 @@ async def accept_food_order(
         
         if store_lat and store_lng:
             # حساب المسافة بين السائق والمتجر
-            import math
-            R = 6371
-            lat1, lon1 = math.radians(driver_lat), math.radians(driver_lng)
-            lat2, lon2 = math.radians(store_lat), math.radians(store_lng)
-            dlat = lat2 - lat1
-            dlon = lon2 - lon1
-            a = math.sin(dlat/2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon/2)**2
-            c = 2 * math.asin(math.sqrt(a))
-            driver_to_store_km = R * c
+            driver_to_store_km = calculate_distance_km(driver_lat, driver_lng, store_lat, store_lng)
             
             # حساب وقت وصول السائق للمتجر (متوسط سرعة 25 كم/ساعة)
             avg_speed = 25
@@ -3068,18 +3050,9 @@ async def driver_arrived_at_store(
         # 🧪 تجاوز فحص المسافة للحساب التجريبي فقط
         print(f"🧪 حساب تجريبي - تجاوز فحص المسافة للسائق {user.get('name')}")
     else:
-        # حساب المسافة بين السائق والمتجر (Haversine formula)
-        import math
-        R = 6371000  # نصف قطر الأرض بالمتر
-        
-        lat1_rad = math.radians(latitude)
-        lat2_rad = math.radians(store_lat)
-        delta_lat = math.radians(store_lat - latitude)
-        delta_lon = math.radians(store_lon - longitude)
-        
-        a = math.sin(delta_lat / 2) ** 2 + math.cos(lat1_rad) * math.cos(lat2_rad) * math.sin(delta_lon / 2) ** 2
-        c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
-        distance_meters = R * c
+        # حساب المسافة بين السائق والمتجر
+        distance_km = calculate_distance_km(latitude, longitude, store_lat, store_lon)
+        distance_meters = distance_km * 1000  # تحويل من كيلومتر إلى متر
         
         if distance_meters > MAX_DISTANCE_METERS:
             raise HTTPException(
