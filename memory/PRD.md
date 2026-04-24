@@ -41,6 +41,30 @@
 
 ## ما تم إنجازه حديثاً (24 أبريل 2026)
 
+### 🔧 تقسيم DeliverySettingsTab.js ✅ - 24 أبريل 2026
+**من ~2444 سطر إلى ~715 سطر**
+
+استخراج 16 مكون فرعي إلى `/frontend/src/components/admin/delivery-settings/`:
+1. `DispatchStatusCard.js` - حالة التوزيع التلقائي
+2. `ViolationsReportCard.js` - تقرير المخالفات
+3. `DistancePricingCard.js` - رسوم التوصيل للعميل
+4. `DriverEarningsCard.js` - أرباح السائق
+5. `WaitTimeCard.js` - وقت انتظار التوصيل
+6. `WaitCompensationCard.js` - تعويض انتظار السائق
+7. `OrderLimitsCard.js` - حدود الطلبات
+8. `SmartPriorityCard.js` - الأولوية الذكية
+9. `DeliveryTimeSettingsCard.js` - إعدادات وقت التوصيل
+10. `ProductDeliveryHoursCard.js` - ساعات توصيل المنتجات
+11. `PerformanceLevelsCard.js` - مستويات الأداء
+12. `LeaderboardRewardsCard.js` - جوائز الصدارة
+13. `WorkingHoursCard.js` - ساعات العمل
+14. `HoldSettingsCard.js` - تعليق الأرباح
+15. `CustomerProtectionCard.js` - حماية العميل
+16. `UndeliveredOrdersCard.js` - الطلبات غير المُسلّمة
+17. `Modals.js` - النوافذ المنبثقة
+
+**نتائج الاختبار**: ✅ 100% نجاح (كل البطاقات تعرض + الحفظ يعمل)
+
 ### 🛠️ إصلاحات جودة الكود (Code Quality Report) ✅ - 24 أبريل 2026
 
 #### Critical Issues:
@@ -138,10 +162,12 @@
 
 ### P3 - Refactoring
 - [x] تقسيم `FoodStoreDashboard.js`: من 4252 إلى 3477 سطر ✅
+- [x] تقسيم `DeliverySettingsTab.js`: من 2444 سطر إلى ~715 سطر ✅ (24 أبريل 2026)
+  - استخراج 16 مكون فرعي إلى `/delivery-settings/`
+  - المكونات: DispatchStatusCard, ViolationsReportCard, DistancePricingCard, DriverEarningsCard, WaitTimeCard, WaitCompensationCard, OrderLimitsCard, SmartPriorityCard, DeliveryTimeSettingsCard, ProductDeliveryHoursCard, PerformanceLevelsCard, LeaderboardRewardsCard, WorkingHoursCard, HoldSettingsCard, CustomerProtectionCard, UndeliveredOrdersCard, Modals
 - [ ] تقسيم المكونات الكبيرة المتبقية:
   - `OrdersMap.js`: 3403 سطر
   - `DeliveryPages.js`: 2492 سطر
-  - `DeliverySettingsTab.js`: 2443 سطر
 
 ### P5 - مستقبلي
 - [ ] نظام الوكلاء/مكاتب الحوالات للشحن
