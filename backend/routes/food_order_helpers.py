@@ -1011,3 +1011,165 @@ async def complete_delivery_and_pay_driver(order: dict, driver: dict, note: str)
             })
             print(f"🔓 إشعار فك القفل للسائق {driver['id']}: {pending_product_orders} طلب منتجات")
 
+
+
+# ============== دوال جلب البيانات الشائعة ==============
+
+async def get_order_by_id(order_id: str, projection: dict = None) -> dict:
+    """جلب طلب بواسطة المعرف"""
+    proj = projection or {"_id": 0}
+    return await db.food_orders.find_one({"id": order_id}, proj)
+
+
+async def get_store_by_id(store_id: str, projection: dict = None) -> dict:
+    """جلب متجر بواسطة المعرف"""
+    proj = projection or {"_id": 0}
+    return await db.food_stores.find_one({"id": store_id}, proj)
+
+
+async def get_driver_by_id(driver_id: str, projection: dict = None) -> dict:
+    """جلب سائق بواسطة المعرف"""
+    proj = projection or {"_id": 0}
+    return await db.users.find_one({"id": driver_id, "user_type": "delivery"}, proj)
+
+
+async def get_customer_by_id(customer_id: str, projection: dict = None) -> dict:
+    """جلب عميل بواسطة المعرف"""
+    proj = projection or {"_id": 0}
+    return await db.users.find_one({"id": customer_id}, proj)
+
+
+async def get_driver_active_food_orders(driver_id: str) -> list:
+    """جلب طلبات الطعام النشطة للسائق"""
+    return await db.food_orders.find({
+        "driver_id": driver_id,
+        "status": {"$in": ["accepted", "picked_up", "out_for_delivery"]}
+    }, {"_id": 0}).to_list(None)
+
+
+async def get_available_orders_for_delivery() -> list:
+    """جلب الطلبات المتاحة للتوصيل"""
+    now = datetime.now(timezone.utc).isoformat()
+    return await db.food_orders.find(
+        {
+            "status": {"$in": ["ready", "ready_for_pickup"]},
+            "driver_id": None,
+            "$or": [
+                {"can_process_after": {"$lte": now}},
+                {"can_process_after": {"$exists": False}}
+            ]
+        },
+        {"_id": 0}
+    ).sort("created_at", 1).to_list(None)
+
+
+async def get_stores_by_ids(store_ids: list, projection: dict = None) -> dict:
+    """جلب متاجر متعددة وإرجاعها كـ map"""
+    if not store_ids:
+        return {}
+    proj = projection or {"_id": 0}
+    stores_list = await db.food_stores.find(
+        {"id": {"$in": store_ids}},
+        proj
+    ).to_list(None)
+    return {s["id"]: s for s in stores_list}
+
+
+async def count_driver_hot_fresh_orders(driver_id: str) -> int:
+    """حساب عدد طلبات الطعام الساخنة/الطازجة النشطة للسائق"""
+    orders = await get_driver_active_food_orders(driver_id)
+    if not orders:
+        return 0
+    
+    # جلب المتاجر
+    store_ids = list(set(o.get("store_id") for o in orders if o.get("store_id")))
+    stores_map = await get_stores_by_ids(store_ids, {"_id": 0, "id": 1, "store_type": 1})
+    
+    count = 0
+    for order in orders:
+        store = stores_map.get(order.get("store_id"))
+        store_type = store.get("store_type", "restaurants") if store else "restaurants"
+        if store_type in HOT_FRESH_STORE_TYPES:
+            count += 1
+    
+    return count
+
+
+async def can_driver_accept_order(driver_id: str, store_type: str) -> tuple:
+    """
+    التحقق إذا كان السائق يمكنه قبول طلب جديد
+    Returns: (can_accept: bool, reason: str, current_count: int, max_limit: int)
+    """
+    # جلب إعدادات الحدود
+    settings = await db.platform_settings.find_one({"id": "main"})
+    driver_limits = settings.get("driver_order_limits", {}) if settings else {}
+    
+    hot_fresh_limit = driver_limits.get("hot_fresh", DEFAULT_HOT_FRESH_LIMIT)
+    cold_dry_limit = driver_limits.get("cold_dry", DEFAULT_COLD_DRY_LIMIT)
+    
+    # تحديد تصنيف المتجر
+    category = get_store_delivery_category(store_type)
+    max_limit = hot_fresh_limit if category == "hot_fresh" else cold_dry_limit
+    
+    # حساب الطلبات الحالية
+    current_count = await count_driver_hot_fresh_orders(driver_id)
+    
+    if category == "hot_fresh" and current_count >= hot_fresh_limit:
+        return (False, f"لديك بالفعل {current_count} طلبات ساخنة/طازجة (الحد الأقصى: {hot_fresh_limit})", current_count, hot_fresh_limit)
+    
+    return (True, "", current_count, max_limit)
+
+
+# ============== دوال تحديث الطلبات ==============
+
+async def update_order_status_with_history(order_id: str, new_status: str, note: str = "", extra_fields: dict = None) -> bool:
+    """تحديث حالة الطلب مع إضافة سجل"""
+    now = datetime.now(timezone.utc).isoformat()
+    
+    update_data = {
+        "$set": {
+            "status": new_status,
+            "updated_at": now
+        },
+        "$push": {
+            "status_history": {
+                "status": new_status,
+                "timestamp": now,
+                "note": note
+            }
+        }
+    }
+    
+    if extra_fields:
+        update_data["$set"].update(extra_fields)
+    
+    result = await db.food_orders.update_one({"id": order_id}, update_data)
+    return result.modified_count > 0
+
+
+async def assign_driver_to_order(order_id: str, driver_id: str, driver_name: str) -> bool:
+    """تعيين سائق لطلب"""
+    now = datetime.now(timezone.utc).isoformat()
+    
+    result = await db.food_orders.update_one(
+        {"id": order_id, "driver_id": None},  # فقط إذا لم يتم تعيين سائق
+        {
+            "$set": {
+                "driver_id": driver_id,
+                "driver_name": driver_name,
+                "driver_assigned_at": now,
+                "status": "accepted",
+                "driver_status": "accepted",
+                "updated_at": now
+            },
+            "$push": {
+                "status_history": {
+                    "status": "accepted",
+                    "timestamp": now,
+                    "note": f"تم قبول الطلب من السائق {driver_name}"
+                }
+            }
+        }
+    )
+    return result.modified_count > 0
+
