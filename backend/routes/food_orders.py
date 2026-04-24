@@ -2957,13 +2957,7 @@ async def verify_pickup_code(order_id: str, data: VerifyPickupCode, user: dict =
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
     
     # جلب الطلب
-    order = await db.food_orders.find_one({
-        "id": order_id,
-        "driver_id": user["id"]
-    })
-    
-    if not order:
-        raise HTTPException(status_code=404, detail="الطلب غير موجود أو ليس مخصصاً لك")
+    order = await get_order_for_driver(order_id, user["id"])
     
     # التحقق من الكود
     correct_code = order.get("pickup_code")
@@ -3018,13 +3012,7 @@ async def start_delivery_to_customer(
     if user["user_type"] != "delivery":
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
     
-    order = await db.food_orders.find_one({
-        "id": order_id,
-        "driver_id": user["id"]
-    })
-    
-    if not order:
-        raise HTTPException(status_code=404, detail="الطلب غير موجود أو ليس مخصصاً لك")
+    order = await get_order_for_driver(order_id, user["id"])
     
     # التحقق من أن الطلب تم استلامه من المتجر
     if not order.get("pickup_code_verified"):
@@ -3321,12 +3309,7 @@ async def delivery_arrived_at_customer(order_id: str, user: dict = Depends(get_c
     if user["user_type"] != "delivery":
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
     
-    order = await db.food_orders.find_one({
-        "id": order_id,
-        "driver_id": user["id"]
-    })
-    if not order:
-        raise HTTPException(status_code=404, detail="الطلب غير موجود أو ليس مسنداً لك")
+    order = await get_order_for_driver(order_id, user["id"])
     
     # إذا كان وقت الوصول محفوظاً مسبقاً، أرجعه
     if order.get("driver_arrived_at_customer"):
@@ -3572,13 +3555,7 @@ async def mark_customer_not_responding(order_id: str, user: dict = Depends(get_c
     if user["user_type"] != "delivery":
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
     
-    order = await db.food_orders.find_one({
-        "id": order_id, 
-        "driver_id": user["id"], 
-        "status": "out_for_delivery"
-    })
-    if not order:
-        raise HTTPException(status_code=404, detail="الطلب غير موجود")
+    order = await get_order_for_driver(order_id, user["id"], status="out_for_delivery")
     
     # التحقق من أنه لم يتم تسجيل عدم الرد مسبقاً
     if order.get("customer_not_responding"):
@@ -3642,13 +3619,7 @@ async def leave_order_at_door(order_id: str, user: dict = Depends(get_current_us
     if user["user_type"] != "delivery":
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
     
-    order = await db.food_orders.find_one({
-        "id": order_id, 
-        "driver_id": user["id"], 
-        "status": "out_for_delivery"
-    })
-    if not order:
-        raise HTTPException(status_code=404, detail="الطلب غير موجود")
+    order = await get_order_for_driver(order_id, user["id"], status="out_for_delivery")
     
     # التحقق من تسجيل عدم الرد
     if not order.get("customer_not_responding"):
@@ -3685,9 +3656,7 @@ async def complete_food_delivery(order_id: str, user: dict = Depends(get_current
     if user["user_type"] != "delivery":
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
     
-    order = await db.food_orders.find_one({"id": order_id, "driver_id": user["id"], "status": "out_for_delivery"})
-    if not order:
-        raise HTTPException(status_code=404, detail="الطلب غير موجود")
+    order = await get_order_for_driver(order_id, user["id"], status="out_for_delivery")
     
     # إذا كان الطلب يحتوي على كود تسليم ولم يتم التحقق منه
     if order.get("delivery_code") and not order.get("delivery_code_verified"):

@@ -1,0 +1,129 @@
+{
+  "summary": "Phase 16 refactoring tested successfully. Replaced 6 additional usages of db.food_orders.find_one with get_order_for_driver helper in driver endpoints. All 32 tests passed. Backend is healthy. No regressions detected.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_results": {
+    "pytest_summary": {
+      "total_tests": 32,
+      "passed": 32,
+      "failed": 0,
+      "status": "PASS"
+    },
+    "test_categories": {
+      "backend_health": {
+        "tests": 2,
+        "passed": 2,
+        "details": ["Health endpoint returns healthy", "Food orders router loaded correctly"]
+      },
+      "phase16_imports": {
+        "tests": 3,
+        "passed": 3,
+        "details": ["get_order_for_driver importable", "Correct function signature", "All helpers importable"]
+      },
+      "food_orders_imports": {
+        "tests": 3,
+        "passed": 3,
+        "details": ["food_orders.py imports get_order_for_driver", "6 usages of get_order_for_driver found", "Module loads without errors"]
+      },
+      "driver_endpoints_auth": {
+        "tests": 6,
+        "passed": 6,
+        "details": ["All 6 modified driver endpoints require authentication"]
+      },
+      "file_structure": {
+        "tests": 3,
+        "passed": 3,
+        "details": ["food_orders.py reduced to 4391 lines", "food_order_helpers.py has get_order_for_driver", "food_order_helpers.py has 1216 lines"]
+      },
+      "helper_logic": {
+        "tests": 2,
+        "passed": 2,
+        "details": ["get_order_for_driver accepts optional status parameter", "get_order_for_driver is async"]
+      },
+      "no_regressions": {
+        "tests": 5,
+        "passed": 5,
+        "details": ["check-distance endpoint works", "check-drivers-availability requires auth", "create order requires auth", "my-deliveries requires auth", "verify-code requires auth"]
+      },
+      "phase16_specific_usages": {
+        "tests": 6,
+        "passed": 6,
+        "details": ["verify_pickup_code uses helper", "start_delivery_to_customer uses helper", "delivery_arrived_at_customer uses helper", "mark_customer_not_responding uses helper", "leave_order_at_door uses helper", "complete_food_delivery uses helper"]
+      },
+      "helper_function_logic": {
+        "tests": 2,
+        "passed": 2,
+        "details": ["get_first_name works correctly", "ORDER_STATUSES has all expected statuses"]
+      }
+    }
+  },
+  "phase16_refactoring_details": {
+    "helper_used": "get_order_for_driver",
+    "helper_location": "food_order_helpers.py:1203-1215",
+    "helper_purpose": "جلب طلب للسائق مع التحقق من الملكية",
+    "replaced_usages": [
+      {
+        "endpoint": "verify_pickup_code",
+        "line": 2960,
+        "description": "التحقق من كود الاستلام من البائع"
+      },
+      {
+        "endpoint": "start_delivery_to_customer",
+        "line": 3015,
+        "description": "بدء التوصيل - السائق في الطريق للعميل"
+      },
+      {
+        "endpoint": "delivery_arrived_at_customer",
+        "line": 3312,
+        "description": "تسجيل وصول موظف التوصيل للعميل"
+      },
+      {
+        "endpoint": "mark_customer_not_responding",
+        "line": 3558,
+        "description": "تسجيل أن العميل لا يرد"
+      },
+      {
+        "endpoint": "leave_order_at_door",
+        "line": 3622,
+        "description": "ترك الطلب عند الباب بعد انتهاء وقت الانتظار"
+      },
+      {
+        "endpoint": "complete_food_delivery",
+        "line": 3659,
+        "description": "إتمام التوصيل"
+      }
+    ],
+    "file_size_changes": {
+      "food_orders.py": "4422 → 4391 lines (-31 lines)",
+      "food_order_helpers.py": "1216 lines (unchanged)"
+    }
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_phase16_driver_order_helpers.py",
+    "/app/test_reports/pytest/phase16_driver_order_helpers_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [
+    "/app/backend/tests/test_phase16_driver_order_helpers.py"
+  ],
+  "success_rate": {
+    "backend": "100% (32/32 tests passed)",
+    "frontend": "N/A - backend only testing"
+  },
+  "seed_data_creation": "None",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Phase 16 refactoring completed successfully. Replaced 6 usages of db.food_orders.find_one with get_order_for_driver helper in driver endpoints (verify_pickup_code, start_delivery_to_customer, delivery_arrived_at_customer, mark_customer_not_responding, leave_order_at_door, complete_food_delivery). food_orders.py is now 4391 lines. All tests pass. Continuing incremental refactoring approach.",
+  "mocked_apis": {
+    "has_mocked_apis": true,
+    "mocked_apis_list": ["SMS OTP (الكود دائماً 123456)", "Sham Cash Payment Gateway"]
+  }
+}
