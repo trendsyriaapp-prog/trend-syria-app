@@ -829,3 +829,185 @@ async def add_seller_earnings_directly(seller_id: str, amount: float, order: dic
     # إعادة توجيه للدالة الجديدة
     await add_seller_earnings_food(seller_id, amount, order)
 
+
+
+# ============== دالة إتمام التسليم والدفع ==============
+
+async def complete_delivery_and_pay_driver(order: dict, driver: dict, note: str) -> None:
+    """
+    إتمام التسليم وإضافة الأجرة لمحفظة السائق (مع التعليق)
+    
+    Args:
+        order: بيانات الطلب
+        driver: بيانات السائق
+        note: ملاحظة للسجل
+    """
+    import uuid
+    
+    now = datetime.now(timezone.utc)
+    
+    # تحديث حالة الطلب
+    await db.food_orders.update_one(
+        {"id": order["id"]},
+        {
+            "$set": {
+                "status": "delivered",
+                "delivered_at": now.isoformat(),
+                "payment_status": "paid",
+                "delivery_code_verified": True
+            },
+            "$push": {
+                "status_history": {
+                    "status": "delivered",
+                    "timestamp": now.isoformat(),
+                    "note": note
+                }
+            }
+        }
+    )
+    
+    # حساب أرباح السائق من إعدادات المنصة
+    delivery_fee = order.get("delivery_fee", 0)
+    driver_delivery_fee = order.get("driver_delivery_fee", delivery_fee)
+    
+    # جلب إعدادات المنصة
+    platform_settings = await db.platform_settings.find_one({"id": "main"})
+    
+    # جلب إعدادات أرباح السائق من المنصة
+    driver_settings = platform_settings.get("driver_earnings", {}) if platform_settings else {}
+    base_fee = driver_settings.get("base_fee", 1000)
+    
+    # ربح السائق = الربح الأساسي + أجرة التوصيل
+    driver_earning = base_fee + driver_delivery_fee
+    
+    # جلب المتجر لحساب العمولة
+    store = await db.food_stores.find_one({"id": order.get("store_id")})
+    store_type = store.get("store_type", "restaurants") if store else "restaurants"
+    
+    # جلب نسبة العمولة من قاعدة البيانات
+    from routes.admin import get_food_commission_rates_from_db
+    commission_rates = await get_food_commission_rates_from_db()
+    commission_rate = commission_rates.get(store_type, commission_rates.get("default", 0.20))
+    
+    # حساب أرباح البائع (subtotal - خصومات - عمولة المنصة)
+    subtotal = order.get("subtotal", 0) - order.get("offer_discount", 0) - order.get("flash_discount", 0)
+    platform_commission = subtotal * commission_rate
+    seller_earning = subtotal - platform_commission
+    
+    # تحديث الطلب بمعلومات العمولة
+    await db.food_orders.update_one(
+        {"id": order["id"]},
+        {
+            "$set": {
+                "platform_commission": platform_commission,
+                "commission_rate": commission_rate,
+                "seller_earning": seller_earning
+            }
+        }
+    )
+    
+    # استخدام نظام تعليق الأرباح
+    try:
+        from services.earnings_hold import add_held_earnings, get_hold_settings
+        settings = await get_hold_settings()
+        
+        if settings.get("enabled", True):
+            # إضافة أرباح السائق (معلقة)
+            await add_held_earnings(
+                user_id=driver["id"],
+                user_type="delivery",
+                amount=driver_earning,
+                order_id=order["id"],
+                order_type="food",
+                description=f"أجرة توصيل طلب #{order['order_number']}"
+            )
+            
+            # إضافة أرباح البائع (معلقة) - بعد خصم العمولة
+            if store and store.get("owner_id") and seller_earning > 0:
+                await add_held_earnings(
+                    user_id=store["owner_id"],
+                    user_type="food_seller",
+                    amount=seller_earning,
+                    order_id=order["id"],
+                    order_type="food",
+                    description=f"أرباح طلب #{order['order_number']} (بعد عمولة {int(commission_rate*100)}%)"
+                )
+        else:
+            # إضافة مباشرة بدون تعليق
+            await add_earnings_directly(driver, driver_earning, order, "delivery")
+            if store and store.get("owner_id") and seller_earning > 0:
+                await add_seller_earnings_directly(store["owner_id"], seller_earning, order)
+    except Exception as e:
+        print(f"Error using hold system, falling back to direct: {e}")
+        # Fallback للإضافة المباشرة
+        await add_earnings_directly(driver, driver_earning, order, "delivery")
+        if store and store.get("owner_id") and seller_earning > 0:
+            await add_seller_earnings_directly(store["owner_id"], seller_earning, order)
+    
+    # إضافة العمولة لمحفظة المنصة (الأدمن)
+    if platform_commission > 0:
+        await add_commission_to_platform_wallet_food(order["id"], platform_commission, order.get("order_number", ""))
+    
+    # إشعار العميل
+    await db.notifications.insert_one({
+        "id": str(uuid.uuid4()),
+        "user_id": order["customer_id"],
+        "title": "✅ تم التوصيل!",
+        "message": f"طلبك #{order['order_number']} وصل. شكراً لك!",
+        "type": "order_delivered",
+        "order_id": order["id"],
+        "is_read": False,
+        "created_at": now.isoformat()
+    })
+    
+    # ===== إشعار فك القفل للسائق =====
+    # التحقق إذا كان هذا آخر طلب طعام ساخن/طازج نشط للسائق
+    
+    # جلب طلبات الطعام المتبقية
+    remaining_food_orders = await db.food_orders.find({
+        "driver_id": driver["id"],
+        "status": {"$in": ["accepted", "out_for_delivery", "picked_up"]},
+        "id": {"$ne": order["id"]}
+    }).to_list(length=100)
+    
+    # جلب جميع المتاجر للطلبات المتبقية دفعة واحدة
+    remaining_store_ids = list(set(o.get("store_id") for o in remaining_food_orders if o.get("store_id")))
+    if remaining_store_ids:
+        remaining_stores_list = await db.food_stores.find(
+            {"id": {"$in": remaining_store_ids}},
+            {"_id": 0, "id": 1, "store_type": 1}
+        ).to_list(None)
+        remaining_stores_map = {s["id"]: s for s in remaining_stores_list}
+    else:
+        remaining_stores_map = {}
+    
+    # حساب عدد الطلبات الساخنة/الطازجة المتبقية
+    remaining_hot_fresh = 0
+    for o in remaining_food_orders:
+        o_store = remaining_stores_map.get(o.get("store_id"))
+        o_store_type = o_store.get("store_type", "restaurants") if o_store else "restaurants"
+        if o_store_type in HOT_FRESH_STORE_TYPES:
+            remaining_hot_fresh += 1
+    
+    # إذا لم يعد هناك طلبات طعام ساخنة/طازجة
+    if remaining_hot_fresh == 0:
+        # التحقق من وجود طلبات منتجات معلقة
+        pending_product_orders = await db.orders.count_documents({
+            "delivery_driver_id": driver["id"],
+            "delivery_status": {"$in": ["out_for_delivery", "picked_up", "on_the_way"]}
+        })
+        
+        # إذا كان لديه طلبات منتجات معلقة، أرسل إشعار فك القفل
+        if pending_product_orders > 0:
+            await db.notifications.insert_one({
+                "id": str(uuid.uuid4()),
+                "user_id": driver["id"],
+                "title": "🔓 تم فك القفل!",
+                "message": f"أكملت طلبات الطعام الساخنة! لديك {pending_product_orders} طلب منتجات بانتظار التسليم. يمكنك الآن إكمال توصيلها.",
+                "type": "lock_released",
+                "is_read": False,
+                "play_sound": True,
+                "created_at": now.isoformat()
+            })
+            print(f"🔓 إشعار فك القفل للسائق {driver['id']}: {pending_product_orders} طلب منتجات")
+
