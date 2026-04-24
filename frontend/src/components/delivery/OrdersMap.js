@@ -61,6 +61,7 @@ import {
 // استيراد الـ Hooks المُستخرجة
 import useTheme from './orders-map/hooks/useTheme';
 import usePriorityOrders from './orders-map/hooks/usePriorityOrders';
+import useGPS from './orders-map/hooks/useGPS';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
