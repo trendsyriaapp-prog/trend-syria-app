@@ -142,11 +142,8 @@ const AddressPickerModal = ({
 
     const handleBackButton = (e) => {
       e.preventDefault();
-      if (showAreaPicker) {
-        setShowAreaPicker(false);
-      } else {
-        onClose();
-      }
+      // سنتحقق من showAreaPicker عند الاستدعاء وليس عند التسجيل
+      onClose();
     };
 
     window.history.pushState({ addressPicker: true }, '');
@@ -158,7 +155,7 @@ const AddressPickerModal = ({
         window.history.back();
       }
     };
-  }, [isOpen, onClose, showAreaPicker]);
+  }, [isOpen, onClose]); // إزالة showAreaPicker من الـ dependencies
 
   const handleChange = (field, value) => {
     setAddress(prev => ({ ...prev, [field]: value }));
@@ -225,7 +222,8 @@ const AddressPickerModal = ({
   if (!isOpen) return null;
 
   return (
-    <AnimatePresence>
+    <>
+      {/* Main Address Modal */}
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
@@ -368,131 +366,126 @@ const AddressPickerModal = ({
             </button>
           </div>
         </motion.div>
-
-        {/* Area Picker Modal */}
-        <AnimatePresence>
-          {showAreaPicker && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/50"
-              onClick={() => setShowAreaPicker(false)}
-            >
-              <motion.div
-                initial={{ y: '100%' }}
-                animate={{ y: 0 }}
-                exit={{ y: '100%' }}
-                transition={{ type: 'spring', damping: 25 }}
-                onClick={(e) => e.stopPropagation()}
-                className="bg-white rounded-t-2xl sm:rounded-2xl w-full sm:max-w-md max-h-[80vh] overflow-hidden"
-              >
-                {/* Area Picker Header */}
-                <div className="sticky top-0 bg-white border-b border-gray-100 px-4 py-3 z-10">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-lg font-bold text-gray-900">
-                      اختر المنطقة في {address.city}
-                    </h3>
-                    <button
-                      onClick={() => setShowAreaPicker(false)}
-                      className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200"
-                    >
-                      <X size={18} />
-                    </button>
-                  </div>
-                  
-                  {/* Search */}
-                  <div className="relative">
-                    <Search size={18} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                    <input
-                      type="text"
-                      value={areaSearchQuery}
-                      onChange={(e) => setAreaSearchQuery(e.target.value)}
-                      placeholder="ابحث عن المنطقة..."
-                      className="w-full border border-gray-200 rounded-xl pr-10 pl-4 py-2.5 focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00]"
-                      data-testid="area-search-input"
-                    />
-                  </div>
-                </div>
-
-                {/* Areas List */}
-                <div className="overflow-y-auto max-h-[50vh] p-2">
-                  {/* Add Custom Area Button */}
-                  {!showCustomAreaInput && (
-                    <button
-                      onClick={() => setShowCustomAreaInput(true)}
-                      className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-orange-50 hover:bg-orange-100 text-[#FF6B00] font-medium mb-2 transition-colors"
-                      data-testid="add-custom-area-btn"
-                    >
-                      <Plus size={20} />
-                      إضافة منطقة غير موجودة
-                    </button>
-                  )}
-
-                  {/* Custom Area Input */}
-                  {showCustomAreaInput && (
-                    <div className="bg-orange-50 rounded-xl p-3 mb-2">
-                      <input
-                        type="text"
-                        value={customArea}
-                        onChange={(e) => setCustomArea(e.target.value)}
-                        placeholder="اكتب اسم المنطقة"
-                        className="w-full border border-orange-200 rounded-lg px-3 py-2 mb-2 focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00]"
-                        autoFocus
-                        data-testid="custom-area-input"
-                      />
-                      <div className="flex gap-2">
-                        <button
-                          onClick={saveCustomArea}
-                          disabled={!customArea.trim()}
-                          className="flex-1 bg-[#FF6B00] text-white py-2 rounded-lg font-medium disabled:opacity-50"
-                        >
-                          إضافة
-                        </button>
-                        <button
-                          onClick={() => {
-                            setShowCustomAreaInput(false);
-                            setCustomArea('');
-                          }}
-                          className="flex-1 bg-gray-200 text-gray-700 py-2 rounded-lg font-medium"
-                        >
-                          إلغاء
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Areas */}
-                  {getFilteredAreas().length > 0 ? (
-                    <div className="space-y-1">
-                      {getFilteredAreas().map((area) => (
-                        <button
-                          key={area}
-                          onClick={() => selectArea(area)}
-                          className={`w-full text-right px-4 py-3 rounded-xl transition-colors ${
-                            address.area === area
-                              ? 'bg-[#FF6B00] text-white'
-                              : 'hover:bg-gray-100 text-gray-700'
-                          }`}
-                          data-testid={`area-option-${area}`}
-                        >
-                          {area}
-                        </button>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-8 text-gray-500">
-                      <p>لا توجد نتائج للبحث</p>
-                      <p className="text-sm mt-1">جرب إضافة المنطقة يدوياً</p>
-                    </div>
-                  )}
-                </div>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
-    </AnimatePresence>
+      
+      {/* Area Picker Modal - مستقل تماماً */}
+      {showAreaPicker && (
+        <div 
+          className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/50"
+          onClick={() => setShowAreaPicker(false)}
+        >
+          <motion.div
+            initial={{ y: '100%' }}
+            animate={{ y: 0 }}
+            exit={{ y: '100%' }}
+            transition={{ type: 'spring', damping: 25 }}
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-t-2xl sm:rounded-2xl w-full sm:max-w-md max-h-[80vh] overflow-hidden"
+          >
+            {/* Area Picker Header */}
+            <div className="sticky top-0 bg-white border-b border-gray-100 px-4 py-3 z-10">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-lg font-bold text-gray-900">
+                  اختر المنطقة في {address.city}
+                </h3>
+                <button
+                  onClick={() => setShowAreaPicker(false)}
+                  className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+              
+              {/* Search */}
+              <div className="relative">
+                <Search size={18} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  value={areaSearchQuery}
+                  onChange={(e) => setAreaSearchQuery(e.target.value)}
+                  placeholder="ابحث عن المنطقة..."
+                  className="w-full border border-gray-200 rounded-xl pr-10 pl-4 py-2.5 focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00]"
+                  data-testid="area-search-input"
+                />
+              </div>
+            </div>
+
+            {/* Areas List */}
+            <div className="overflow-y-auto max-h-[50vh] p-2">
+              {/* Add Custom Area Button */}
+              {!showCustomAreaInput && (
+                <button
+                  onClick={() => setShowCustomAreaInput(true)}
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-orange-50 hover:bg-orange-100 text-[#FF6B00] font-medium mb-2 transition-colors"
+                  data-testid="add-custom-area-btn"
+                >
+                  <Plus size={20} />
+                  إضافة منطقة غير موجودة
+                </button>
+              )}
+
+              {/* Custom Area Input */}
+              {showCustomAreaInput && (
+                <div className="bg-orange-50 rounded-xl p-3 mb-2">
+                  <input
+                    type="text"
+                    value={customArea}
+                    onChange={(e) => setCustomArea(e.target.value)}
+                    placeholder="اكتب اسم المنطقة"
+                    className="w-full border border-orange-200 rounded-lg px-3 py-2 mb-2 focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00]"
+                    autoFocus
+                    data-testid="custom-area-input"
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      onClick={saveCustomArea}
+                      disabled={!customArea.trim()}
+                      className="flex-1 bg-[#FF6B00] text-white py-2 rounded-lg font-medium disabled:opacity-50"
+                    >
+                      إضافة
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowCustomAreaInput(false);
+                        setCustomArea('');
+                      }}
+                      className="flex-1 bg-gray-200 text-gray-700 py-2 rounded-lg font-medium"
+                    >
+                      إلغاء
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Areas */}
+              {getFilteredAreas().length > 0 ? (
+                <div className="space-y-1">
+                  {getFilteredAreas().map((area) => (
+                    <button
+                      key={area}
+                      onClick={() => selectArea(area)}
+                      className={`w-full text-right px-4 py-3 rounded-xl transition-colors ${
+                        address.area === area
+                          ? 'bg-[#FF6B00] text-white'
+                          : 'hover:bg-gray-100 text-gray-700'
+                      }`}
+                      data-testid={`area-option-${area}`}
+                    >
+                      {area}
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <p>لا توجد نتائج للبحث</p>
+                  <p className="text-sm mt-1">جرب إضافة المنطقة يدوياً</p>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        </div>
+      )}
+    </>
   );
 };
 
