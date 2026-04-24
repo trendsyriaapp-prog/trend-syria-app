@@ -26,43 +26,46 @@ Fixed 7 bugs reported by user:
 1. ✅ Phone number hidden behind icon - Added pr-14 padding
 2. ✅ Image upload X button not working - Fixed handler + added red/green colors
 3. ✅ Address text change - Updated to new message
-4. ✅ Location button position - Moved above address field
+4. ✅ Location button position (inside map) - Moved to top-20
 5. ✅ Sham Cash character limit - Removed maxLength restriction
 6. ✅ Password eye icon issue - Added z-10 and pl-12 padding
 7. ✅ Admin API error - Fixed return type from dict to list
 
-### Phase 26-29 (Previous Session)
-- Removed unused imports from `food_orders.py`
-- Replaced 5 duplicate MongoDB queries with helpers
-- Replaced Haversine calculations with `calculate_distance_km`
-- Removed `import math`
+### Phase 31 - food_orders.py Complete (Dec 2025)
+- Replaced ALL `datetime.now().isoformat()` with `get_now()`
+- Final count: 0 datetime.now().isoformat(), 21 get_now() usages
+- Tests: 10/10 passed
 
-### Phase 30 (Dec 2025)
-- Replaced 18+ `datetime.now(timezone.utc).isoformat()` with `get_now()` helper
-- Remaining 9 usages are for datetime objects (comparison, not string conversion)
-- Tests: 11/11 passed
+### Phase 32 - admin.py Complete (Dec 2025)
+- Added `get_now()` helper function
+- Replaced 58 `datetime.now().isoformat()` calls with `get_now()`
+- Fixed 3 return type annotation bugs (-> dict to -> list)
+- Final count: 0 datetime.now().isoformat(), 60 get_now() usages
+- Tests: 19/19 passed
 
-### Frontend Refactoring (Previous Session)
+### Earlier Refactoring (Previous Sessions)
 - `OrdersMap.js`: 2273 → 1902 lines
-- Extracted helpers to `MapHelpers.js`
+- `food_orders.py`: 4435 → 4248 lines
+- Extracted helpers to `food_order_helpers.py` and `MapHelpers.js`
 
 ---
 
 ## Current File Sizes
 | File | Lines | Status |
 |------|-------|--------|
-| `food_orders.py` | 4245 | In Progress |
+| `food_orders.py` | 4248 | ✅ Complete |
 | `food_order_helpers.py` | 1258 | Helpers extracted |
-| `admin.py` | 4746 | Pending (Next target) |
-| `OrdersMap.js` | 1902 | Done |
+| `admin.py` | 4751 | ✅ Complete (datetime refactoring) |
+| `OrdersMap.js` | 1902 | ✅ Complete |
 
 ---
 
 ## Prioritized Backlog
 
 ### P0 - Critical (Refactoring)
-- [ ] Start `admin.py` refactoring (4746 lines - largest file)
-- [ ] Apply same methodology: gradual extraction → test → zero errors
+- [x] Complete datetime.now() refactoring in food_orders.py
+- [x] Complete datetime.now() refactoring in admin.py
+- [ ] Extract notification creation pattern (24 occurrences in admin.py)
 
 ### P1 - High Priority
 - [ ] Activate real SMS OTP for Syrian numbers (currently mocked to `123456`)
@@ -96,12 +99,13 @@ Fixed 7 bugs reported by user:
 - Backend Helpers: `/app/backend/routes/food_order_helpers.py`
 - Backend Admin: `/app/backend/routes/admin.py`
 - Frontend Map: `/app/frontend/src/components/delivery/OrdersMap.js`
+- Frontend Map Modal: `/app/frontend/src/components/FullScreenMapPicker.js`
 
 ---
 
 ## Test Reports
-- Latest: `/app/test_reports/iteration_199.json` (11/11 passed)
-- Bug fixes: `/app/test_reports/iteration_198.json` (100% pass)
+- Latest: `/app/test_reports/iteration_201.json` (19/19 passed)
+- Phase 31: `/app/test_reports/iteration_200.json` (10/10 passed)
 
 ---
 
