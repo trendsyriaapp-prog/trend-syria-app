@@ -14,3 +14,5 @@ export { default as NavigationBar } from './NavigationBar';
 export { default as ActivateNavigationButton } from './ActivateNavigationButton';
 export { default as MapTopBar } from './MapTopBar';
 export { default as GpsErrorMessage } from './GpsErrorMessage';
+export { default as GoogleMapsButton } from './GoogleMapsButton';
+export { default as StepByStepCard } from './StepByStepCard';

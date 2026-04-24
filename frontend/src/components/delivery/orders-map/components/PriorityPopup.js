@@ -1,112 +1,133 @@
 // /app/frontend/src/components/delivery/orders-map/components/PriorityPopup.js
 // نافذة طلب الأولوية المنبثقة
 
-import { motion } from 'framer-motion';
-import { Navigation } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
+/**
+ * نافذة إشعار الأولوية الذكية
+ * @param {boolean} showPriorityPopup - هل تُعرض النافذة
+ * @param {Object} priorityOrder - بيانات الطلب
+ * @param {number} priorityCountdown - العد التنازلي
+ * @param {Function} onAccept - دالة قبول الطلب
+ * @param {Function} onReject - دالة رفض الطلب
+ */
 const PriorityPopup = ({
-  show,
-  order,
-  countdown,
+  showPriorityPopup,
+  priorityOrder,
+  priorityCountdown,
   onAccept,
-  onReject,
-  isDark
+  onReject
 }) => {
-  if (!show || !order) return null;
-
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/70">
-      <motion.div
-        initial={{ scale: 0.8, opacity: 0, y: 50 }}
-        animate={{ scale: 1, opacity: 1, y: 0 }}
-        exit={{ scale: 0.8, opacity: 0, y: 50 }}
-        className={`w-full max-w-sm rounded-2xl overflow-hidden shadow-2xl ${
-          isDark ? 'bg-[#1a1a1a] border border-[#333]' : 'bg-white'
-        }`}
-      >
-        {/* Header مع countdown */}
-        <div className="bg-gradient-to-r from-orange-500 to-red-500 p-4 text-white relative">
-          <div className="absolute top-2 left-2 w-12 h-12 rounded-full bg-white/20 flex items-center justify-center">
-            <span className="text-2xl font-bold">{countdown}</span>
+    <AnimatePresence>
+      {showPriorityPopup && priorityOrder && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9, y: -20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.9, y: -20 }}
+          className={`absolute top-20 left-4 right-4 z-[2000] rounded-2xl shadow-2xl overflow-hidden border-4 ${
+            priorityCountdown > 0 
+              ? 'bg-gradient-to-br from-yellow-400 via-amber-500 to-orange-500 border-yellow-300' 
+              : 'bg-gradient-to-br from-red-400 via-red-500 to-red-600 border-red-300'
+          }`}
+          style={{ 
+            boxShadow: priorityCountdown > 0 ? '0 0 40px rgba(251, 191, 36, 0.5)' : '0 0 40px rgba(239, 68, 68, 0.5)',
+            touchAction: 'none'
+          }}
+          onTouchMove={(e) => e.stopPropagation()}
+          data-testid="priority-popup"
+        >
+          {/* شريط العد التنازلي */}
+          <div className="h-2 bg-black/20">
+            {priorityCountdown > 0 ? (
+              <motion.div
+                initial={{ width: '100%' }}
+                animate={{ width: '0%' }}
+                transition={{ duration: priorityCountdown, ease: 'linear' }}
+                className="h-full bg-white"
+              />
+            ) : (
+              <div className="h-full bg-white animate-pulse" />
+            )}
           </div>
-          <div className="text-center">
-            <span className="text-4xl">⚡</span>
-            <h3 className="text-xl font-bold mt-2">طلب أولوية!</h3>
-            <p className="text-sm text-white/80">أنت الأقرب للمطعم</p>
-          </div>
-          {/* شريط التقدم */}
-          <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/30">
-            <motion.div
-              className="h-full bg-white"
-              initial={{ width: '100%' }}
-              animate={{ width: '0%' }}
-              transition={{ duration: 25, ease: 'linear' }}
-            />
-          </div>
-        </div>
-
-        {/* تفاصيل الطلب */}
-        <div className="p-4">
-          {/* اسم المطعم */}
-          <div className={`rounded-xl p-3 mb-3 ${
-            isDark ? 'bg-[#252525]' : 'bg-gray-100'
-          }`}>
-            <div className="flex items-center gap-2">
-              <span className="text-2xl">🍔</span>
-              <div>
-                <p className={`font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                  {order.store_name || order.restaurant_name}
-                </p>
-                <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                  طلب #{order.order_number || order.id?.slice(-6)}
-                </p>
+          
+          <div className="p-5 text-black">
+            {/* العنوان */}
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <span className={`text-4xl ${priorityCountdown > 0 ? 'animate-bounce' : 'animate-pulse'}`}>
+                  {priorityCountdown > 0 ? '🔔' : '⚠️'}
+                </span>
+                <div>
+                  <p className="font-black text-lg">
+                    {priorityCountdown > 0 ? 'طلب جديد من نفس المطعم!' : '⏰ قرر الآن!'}
+                  </p>
+                  <p className={`text-sm ${priorityCountdown > 0 ? 'text-black/70' : 'text-white font-bold'}`}>
+                    {priorityCountdown > 0 ? 'أنت ذاهب لهذا المطعم الآن' : 'الطلب قد يُأخذ من سائق آخر'}
+                  </p>
+                </div>
+              </div>
+              <div className={`rounded-full w-16 h-16 flex flex-col items-center justify-center ${
+                priorityCountdown > 0 ? 'bg-black text-yellow-400' : 'bg-white text-red-500 animate-pulse'
+              }`}>
+                {priorityCountdown > 0 ? (
+                  <>
+                    <span className="font-black text-2xl">{priorityCountdown}</span>
+                    <span className="text-xs">ثانية</span>
+                  </>
+                ) : (
+                  <span className="font-black text-xl">!</span>
+                )}
               </div>
             </div>
-          </div>
 
-          {/* المسافة والمبلغ */}
-          <div className="grid grid-cols-2 gap-2 mb-4">
-            <div className={`rounded-xl p-3 text-center ${
-              isDark ? 'bg-green-500/20' : 'bg-green-50'
-            }`}>
-              <p className="text-green-500 text-2xl font-bold">
-                {(order.driver_delivery_fee || order.delivery_fee || 0).toLocaleString()}
-              </p>
-              <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>ل.س ربحك</p>
+            {/* معلومات الطلب */}
+            <div className="bg-black/10 rounded-xl p-4 mb-4">
+              <div className="flex items-center gap-3 mb-3">
+                <span className="text-2xl">🍔</span>
+                <span className="font-bold text-lg">{priorityOrder.restaurant_name}</span>
+              </div>
+              <div className="flex items-center gap-3 mb-2">
+                <span className="text-xl">🏠</span>
+                <span className="font-medium">{priorityOrder.customer_name}</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="text-xl">📍</span>
+                <span className="text-sm text-black/70 truncate">
+                  {typeof priorityOrder.delivery_address === 'object' 
+                    ? [priorityOrder.delivery_address?.area, priorityOrder.delivery_address?.street, priorityOrder.delivery_address?.building].filter(Boolean).join(', ')
+                    : priorityOrder.delivery_address}
+                </span>
+              </div>
             </div>
-            <div className={`rounded-xl p-3 text-center ${
-              isDark ? 'bg-blue-500/20' : 'bg-blue-50'
-            }`}>
-              <p className="text-blue-500 text-2xl font-bold">
-                {order.distance_to_store_km?.toFixed(1) || '؟'}
-              </p>
-              <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>كم للمطعم</p>
-            </div>
-          </div>
 
-          {/* أزرار القبول والرفض */}
-          <div className="flex gap-2">
-            <button
-              onClick={onReject}
-              className={`flex-1 py-3 rounded-xl font-bold ${
-                isDark 
-                  ? 'bg-[#252525] text-gray-400 border border-[#444]' 
-                  : 'bg-gray-100 text-gray-700'
-              }`}
-            >
-              ❌ رفض
-            </button>
-            <button
-              onClick={onAccept}
-              className="flex-1 py-3 rounded-xl font-bold bg-gradient-to-r from-green-500 to-teal-500 text-white flex items-center justify-center gap-2"
-            >
-              <Navigation size={18} />
-              ✅ قبول
-            </button>
+            {/* الربح المتوقع */}
+            <div className="bg-green-500 text-white rounded-xl p-4 mb-4 text-center">
+              <span className="text-sm">💰 ربح إضافي: </span>
+              <span className="font-black text-2xl">+{(priorityOrder.driver_earnings || priorityOrder.driver_delivery_fee || priorityOrder.delivery_fee || 1500).toLocaleString()} ل.س</span>
+            </div>
+
+            {/* أزرار القبول والرفض */}
+            <div className="grid grid-cols-2 gap-4">
+              <button
+                onClick={onReject}
+                data-testid="priority-reject-btn"
+                className="py-4 bg-white/50 hover:bg-white/70 rounded-xl font-bold text-lg transition-colors border-2 border-black/20"
+              >
+                ❌ رفض
+              </button>
+              <button
+                onClick={onAccept}
+                data-testid="priority-accept-btn"
+                className="py-4 bg-green-600 hover:bg-green-700 text-white rounded-xl font-bold text-lg transition-colors shadow-xl"
+              >
+                ✅ قبول
+              </button>
+            </div>
           </div>
-        </div>
-      </motion.div>
-    </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 };
 
