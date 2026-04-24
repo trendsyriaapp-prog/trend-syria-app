@@ -658,3 +658,174 @@ async def send_priority_order_push_notification(order: dict) -> dict:
     except Exception as e:
         print(f"❌ Error sending priority push: {e}")
 
+
+
+# ============== دوال الطلبات التجميعية (Batch) ==============
+
+async def check_batch_readiness_and_notify_driver(batch_id: str, ready_order_id: str) -> dict:
+    """
+    تحقق من جهوزية جميع طلبات الدفعة وأرسل إشعار للسائق
+    مع ترتيب الاستلام الأمثل (الأبعد عن العميل أولاً)
+    """
+    # جلب جميع طلبات الدفعة
+    batch_orders = await db.food_orders.find({"batch_id": batch_id}).to_list(None)
+    
+    if not batch_orders:
+        return
+    
+    # حساب عدد الطلبات الجاهزة
+    ready_orders = [o for o in batch_orders if o.get("status") == "ready"]
+    total_orders = len(batch_orders)
+    ready_count = len(ready_orders)
+    
+    # إذا جهز أول طلب (حوالي 50% أو أكثر)، أرسل إشعار للسائقين
+    (ready_count / total_orders) * 100
+    
+    # إذا جهز على الأقل طلب واحد ولم يتم إرسال إشعار بعد
+    first_order = batch_orders[0]
+    if ready_count >= 1 and not first_order.get("drivers_notified_for_batch"):
+        # تحديث جميع الطلبات لتسجيل أننا أرسلنا إشعار
+        await db.food_orders.update_many(
+            {"batch_id": batch_id},
+            {"$set": {"drivers_notified_for_batch": True}}
+        )
+        
+        # إرسال إشعار للسائقين
+        try:
+            from routes.push_notifications import send_new_order_notification_to_delivery
+            customer_city = first_order.get("delivery_city", "")
+            await send_new_order_notification_to_delivery(
+                order_type=f"طلب تجميعي ({ready_count}/{total_orders} جاهز)",
+                city=customer_city
+            )
+        except Exception as e:
+            print(f"Push notification error: {e}")
+
+
+async def calculate_optimal_pickup_order(batch_id: str, driver_lat: float, driver_lng: float) -> list:
+    """
+    حساب ترتيب الاستلام الأمثل للطلب التجميعي
+    المنطق: استلم من المتجر الأبعد عن العميل أولاً، والأقرب أخيراً
+    هكذا الطعام الذي يُستلم أخيراً يكون الأحدث
+    """
+    from math import radians, sin, cos, sqrt, atan2
+    
+    def haversine(lat1, lon1, lat2, lon2) -> list:
+        R = 6371  # نصف قطر الأرض بالكيلومتر
+        dlat = radians(lat2 - lat1)
+        dlon = radians(lon2 - lon1)
+        a = sin(dlat/2)**2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlon/2)**2
+        c = 2 * atan2(sqrt(a), sqrt(1-a))
+        return R * c
+    
+    # جلب طلبات الدفعة
+    batch_orders = await db.food_orders.find({"batch_id": batch_id, "status": "ready"}).to_list(None)
+    
+    if not batch_orders:
+        return []
+    
+    # جلب إحداثيات العميل
+    customer_lat = batch_orders[0].get("latitude")
+    customer_lng = batch_orders[0].get("longitude")
+    
+    if not customer_lat or not customer_lng:
+        return batch_orders  # إرجاع بدون ترتيب
+    
+    # جلب معرفات المتاجر
+    store_ids = list(set([o.get("store_id") for o in batch_orders if o.get("store_id")]))
+    
+    # جلب جميع المتاجر دفعة واحدة
+    stores_list = await db.food_stores.find(
+        {"id": {"$in": store_ids}},
+        {"_id": 0}
+    ).to_list(None)
+    stores_map = {s["id"]: s for s in stores_list}
+    
+    # حساب المسافة من كل متجر للعميل
+    stores_with_distance = []
+    for order in batch_orders:
+        store = stores_map.get(order.get("store_id"))
+        if store and store.get("latitude") and store.get("longitude"):
+            distance_to_customer = haversine(
+                store["latitude"], store["longitude"],
+                customer_lat, customer_lng
+            )
+            stores_with_distance.append({
+                "order": order,
+                "store": store,
+                "distance_to_customer": distance_to_customer,
+                "ready_at": order.get("ready_at")
+            })
+        else:
+            # إذا لا توجد إحداثيات، أضفه في النهاية
+            stores_with_distance.append({
+                "order": order,
+                "store": store,
+                "distance_to_customer": 0,
+                "ready_at": order.get("ready_at")
+            })
+    
+    # ترتيب: الأبعد عن العميل أولاً (سيُستلم أولاً، يبقى أكثر في السيارة لكنه طُبخ مبكراً)
+    # والأقرب أخيراً (سيُستلم أخيراً، يصل طازجاً)
+    stores_with_distance.sort(key=lambda x: x["distance_to_customer"], reverse=True)
+    
+    return stores_with_distance
+
+
+# ============== دوال الأرباح والدفع ==============
+
+async def add_driver_earnings_food(driver: dict, amount: float, order: dict) -> None:
+    """
+    إضافة أجرة توصيل طلب الطعام للسائق (معلقة لمدة ساعة واحدة)
+    """
+    import logging
+    from services.earnings_hold import add_held_earnings
+    
+    await add_held_earnings(
+        user_id=driver["id"],
+        user_type="delivery",
+        amount=amount,
+        order_id=order["id"],
+        order_type="food",  # طعام = 1 ساعة تعليق
+        description=f"أجرة توصيل طلب #{order['order_number']}"
+    )
+    
+    # التحقق من التأمين وخصم تلقائي إذا لزم
+    try:
+        from routes.driver_security import check_and_deduct_for_security
+        await check_and_deduct_for_security(driver["id"])
+    except Exception as e:
+        logging.error(f"Error checking security deposit: {e}")
+
+
+async def add_seller_earnings_food(seller_id: str, amount: float, order: dict) -> None:
+    """
+    إضافة أرباح بائع الطعام (معلقة لمدة ساعة واحدة)
+    """
+    from services.earnings_hold import add_held_earnings
+    
+    # تحديد نوع البائع
+    seller = await db.users.find_one({"id": seller_id}, {"_id": 0, "user_type": 1})
+    user_type = seller.get("user_type", "food_seller") if seller else "food_seller"
+    
+    await add_held_earnings(
+        user_id=seller_id,
+        user_type=user_type,
+        amount=amount,
+        order_id=order["id"],
+        order_type="food",  # طعام = 1 ساعة تعليق
+        description=f"أرباح مبيعات طلب #{order['order_number']}"
+    )
+
+
+async def add_earnings_directly(driver: dict, amount: float, order: dict, user_type: str) -> None:
+    """إضافة أرباح مباشرة بدون تعليق (Fallback) - استخدم add_driver_earnings_food بدلاً منها"""
+    # إعادة توجيه للدالة الجديدة
+    await add_driver_earnings_food(driver, amount, order)
+
+
+async def add_seller_earnings_directly(seller_id: str, amount: float, order: dict) -> None:
+    """إضافة أرباح البائع مباشرة - استخدم add_seller_earnings_food بدلاً منها"""
+    # إعادة توجيه للدالة الجديدة
+    await add_seller_earnings_food(seller_id, amount, order)
+
