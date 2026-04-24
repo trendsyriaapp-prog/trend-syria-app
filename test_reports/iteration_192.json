@@ -1,0 +1,91 @@
+{
+  "summary": "Phase 25: Removed 3 unused imports from food_orders.py (can_driver_accept_order, update_order_status_with_history, assign_driver_to_order). All 11 tests passed. No regression detected.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_results": {
+    "pytest_summary": {
+      "total_tests": 11,
+      "passed": 11,
+      "failed": 0,
+      "status": "PASS"
+    },
+    "test_categories": {
+      "import_removal_verification": {
+        "tests": 4,
+        "passed": 4,
+        "details": [
+          "Backend is healthy",
+          "3 imports removed: can_driver_accept_order, update_order_status_with_history, assign_driver_to_order",
+          "File size reduced to 4304 lines (was 4307, -3 lines)",
+          "Module imports successfully without errors"
+        ]
+      },
+      "syntax_validation": {
+        "tests": 1,
+        "passed": 1,
+        "details": [
+          "No syntax errors in food_orders.py"
+        ]
+      },
+      "regression_tests": {
+        "tests": 6,
+        "passed": 6,
+        "details": [
+          "check-distance endpoint works",
+          "my-orders requires auth",
+          "store/orders requires auth",
+          "seller orders requires auth",
+          "batch orders endpoint exists",
+          "my-scheduled endpoint exists"
+        ]
+      }
+    }
+  },
+  "phase25_changes": {
+    "removed_imports": [
+      "can_driver_accept_order",
+      "update_order_status_with_history",
+      "assign_driver_to_order"
+    ],
+    "file_before": "4307 lines",
+    "file_after": "4304 lines",
+    "lines_removed": 3,
+    "benefit": "تنظيف الكود وإزالة الاستيرادات غير المستخدمة"
+  },
+  "file_sizes": {
+    "food_orders.py": "4304 lines (was 4307 in Phase 24, -3 lines)"
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_phase25_unused_imports_removal.py",
+    "/app/test_reports/pytest/phase25_unused_imports_removal_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Phase 25 cleanup is clean and minimal",
+    "3 unused imports successfully removed",
+    "No functional changes - only dead code removal",
+    "All API endpoints continue to work correctly"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_phase25_unused_imports_removal.py"
+  ],
+  "success_rate": {
+    "backend": "100% (11/11 tests passed)",
+    "frontend": "N/A - backend only testing"
+  },
+  "seed_data_creation": "None",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Phase 25 completed successfully. food_orders.py is now 4304 lines (was 4307). 3 unused imports removed: can_driver_accept_order, update_order_status_with_history, assign_driver_to_order. All tests pass. No regression detected.",
+  "mocked_apis": {
+    "has_mocked_apis": true,
+    "mocked_apis_list": ["SMS OTP (الكود دائماً 123456)", "Sham Cash Payment Gateway"]
+  }
+}
