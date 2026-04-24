@@ -262,7 +262,7 @@ const AllPendingItemsTab = () => {
                   {product.images?.length > 1 && (
                     <div className="flex gap-2 mb-3 overflow-x-auto">
                       {product.images.map((img, i) => (
-                        <img key={i} src={img} alt="" className="w-16 h-16 object-cover rounded-lg flex-shrink-0" />
+                        <img key={`img-${img.slice(-20)}-${i}`} src={img} alt="" className="w-16 h-16 object-cover rounded-lg flex-shrink-0" />
                       ))}
                     </div>
                   )}

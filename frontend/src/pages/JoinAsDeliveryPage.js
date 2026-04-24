@@ -177,12 +177,11 @@ const JoinAsDeliveryPage = () => {
             لماذا تعمل معنا؟
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {benefits.map((benefit, i) => (
+            {benefits.map((benefit) => (
               <motion.div
-                key={i}
+                key={benefit.title}
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: i * 0.05 }}
                 className="bg-white rounded-xl p-4 border border-gray-200 hover:border-green-500 hover:shadow-md transition-all"
               >
                 <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mb-3">
@@ -203,10 +202,10 @@ const JoinAsDeliveryPage = () => {
             💰 كم أقدر أكسب؟
           </h2>
           <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-            {earnings.map((item, i) => (
+            {earnings.map((item) => (
               <div 
-                key={i}
-                className={`flex items-center justify-between p-4 ${i < earnings.length - 1 ? 'border-b border-gray-100' : ''}`}
+                key={item.label}
+                className="flex items-center justify-between p-4 border-b border-gray-100 last:border-b-0"
               >
                 <span className="text-sm text-gray-700">{item.label}</span>
                 <span className="font-bold text-green-600">{item.value}</span>
@@ -224,8 +223,8 @@ const JoinAsDeliveryPage = () => {
           </h2>
           <div className="bg-white rounded-xl border border-gray-200 p-6">
             <div className="space-y-3">
-              {requirements.map((req, i) => (
-                <div key={i} className="flex items-center gap-3">
+              {requirements.map((req) => (
+                <div key={req.text} className="flex items-center gap-3">
                   <req.icon size={20} className="text-green-500 flex-shrink-0" />
                   <span className="text-sm text-gray-700">{req.text}</span>
                 </div>
@@ -270,8 +269,8 @@ const JoinAsDeliveryPage = () => {
             ⭐ ماذا يقول السائقون؟
           </h2>
           <div className="space-y-4">
-            {testimonials.map((t, i) => (
-              <div key={i} className="bg-white rounded-xl border border-gray-200 p-4">
+            {testimonials.map((t) => (
+              <div key={t.name} className="bg-white rounded-xl border border-gray-200 p-4">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
                     <span className="text-green-600 font-bold">{t.name[0]}</span>
@@ -282,7 +281,7 @@ const JoinAsDeliveryPage = () => {
                   </div>
                   <div className="mr-auto flex">
                     {[...Array(t.rating)].map((_, j) => (
-                      <Star key={j} size={14} className="text-yellow-400 fill-yellow-400" />
+                      <Star key={`star-${j}`} size={14} className="text-yellow-400 fill-yellow-400" />
                     ))}
                   </div>
                 </div>
@@ -302,7 +301,7 @@ const JoinAsDeliveryPage = () => {
           <div className="space-y-3">
             {faqs.map((faq, i) => (
               <div
-                key={i}
+                key={faq.q}
                 className="bg-white rounded-xl border border-gray-200 overflow-hidden"
               >
                 <button

@@ -480,7 +480,7 @@ const TicketDetails = ({ ticket, chatHistory, onUpdateStatus, onDelete, onClose,
           <div className="mt-4 space-y-2">
             <h4 className="text-sm font-bold text-gray-700">سجل المحادثة:</h4>
             {chatHistory.map((msg, i) => (
-              <div key={i} className={`p-2 rounded-lg text-sm ${
+              <div key={msg.id || msg.timestamp || `msg-${i}`} className={`p-2 rounded-lg text-sm ${
                 msg.sender === 'user' ? 'bg-gray-100' : 'bg-orange-50'
               }`}>
                 {msg.message}
@@ -619,12 +619,12 @@ const RatingStatsPanel = ({ stats }) => {
           {stats.recent_ratings?.length > 0 ? (
             <div className="space-y-2 max-h-40 overflow-y-auto">
               {stats.recent_ratings.slice(0, 5).map((r, i) => (
-                <div key={i} className="bg-gray-50 rounded-lg p-2">
+                <div key={r.id || r.user_id || `rating-${i}`} className="bg-gray-50 rounded-lg p-2">
                   <div className="flex items-center gap-1 mb-1">
                     <span className="text-xs text-gray-500">{r.user_name}</span>
                     <div className="flex">
                       {[...Array(r.rating)].map((_, j) => (
-                        <Star key={j} size={10} className="text-yellow-400 fill-yellow-400" />
+                        <Star key={`star-${j}`} size={10} className="text-yellow-400 fill-yellow-400" />
                       ))}
                     </div>
                   </div>

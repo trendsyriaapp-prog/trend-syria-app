@@ -562,7 +562,7 @@ const OrdersPage = () => {
                         <h4 className="font-bold text-gray-900 mb-3">المنتجات</h4>
                         <div className="space-y-2">
                           {(order.items || []).map((item, i) => (
-                            <div key={i} className="flex items-center gap-3 bg-white p-2 rounded-lg">
+                            <div key={item.product_id || item.id || `order-item-${i}`} className="flex items-center gap-3 bg-white p-2 rounded-lg">
                               <img
                                 src={item.image || '/placeholder.svg'}
                                 alt={item.product_name}

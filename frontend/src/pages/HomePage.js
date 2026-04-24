@@ -590,7 +590,7 @@ const HomePage = () => {
           <div className="ticker-wrapper">
             {tickerMessages.map((msg, i) => (
               <div 
-                key={i} 
+                key={msg.id || `ticker-${i}`} 
                 className={`ticker-item transition-all duration-500 ease-in-out ${
                   currentTickerIndex === i 
                     ? 'opacity-100 translate-y-0' 

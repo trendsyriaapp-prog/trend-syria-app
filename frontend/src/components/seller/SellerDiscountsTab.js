@@ -204,8 +204,8 @@ const SellerDiscountsTab = ({ products = [] }) => {
             { icon: Gift, label: 'إجمالي العروض', value: stats.total_discounts, color: 'bg-purple-50 text-purple-600' },
             { icon: CheckCircle, label: 'عروض نشطة', value: stats.active_discounts, color: 'bg-green-50 text-green-600' },
             { icon: Users, label: 'مرات الاستخدام', value: stats.total_uses, color: 'bg-blue-50 text-blue-600' },
-          ].map((stat, i) => (
-            <div key={i} className="bg-white rounded-xl p-3 border border-gray-200">
+          ].map((stat) => (
+            <div key={stat.label} className="bg-white rounded-xl p-3 border border-gray-200">
               <div className={`w-7 h-7 rounded-lg ${stat.color} flex items-center justify-center mb-1.5`}>
                 <stat.icon size={14} />
               </div>

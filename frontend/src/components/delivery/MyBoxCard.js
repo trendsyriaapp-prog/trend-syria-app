@@ -174,8 +174,8 @@ const MyBoxCard = () => {
           
           {showPayments && (
             <div className="px-4 pb-4 space-y-2">
-              {boxData.payments.map((payment, i) => (
-                <div key={i} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg text-xs">
+              {boxData.payments.map((payment) => (
+                <div key={payment.id || payment.date} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg text-xs">
                   <div>
                     <span className={`px-1.5 py-0.5 rounded ${
                       payment.type === 'deposit' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'
