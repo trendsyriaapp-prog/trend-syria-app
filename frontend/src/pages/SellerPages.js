@@ -40,6 +40,7 @@ import StatDetailsModal from '../components/seller/StatDetailsModal';
 import FoodItemsGrid from '../components/seller/FoodItemsGrid';
 import FoodOrdersSection from '../components/seller/FoodOrdersSection';
 import WithdrawModal from '../components/seller/WithdrawModal';
+import ValidatedInput from '../components/ValidatedInput';
 import { getErrorMessage } from '../utils/errorHelpers';
 
 const API = process.env.REACT_APP_BACKEND_URL;
@@ -618,25 +619,41 @@ const SellerDocumentsPage = () => {
                 {paymentAccountType === 'shamcash' && (
                   <div className="space-y-3">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">رقم شام كاش *</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">رقم شام كاش <span className="text-red-500">*</span></label>
                       <input
                         type="tel"
                         value={paymentAccountNumber}
                         onChange={(e) => setPaymentAccountNumber(e.target.value)}
                         placeholder="09XXXXXXXX"
-                        className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-green-500 focus:outline-none"
+                        className={`w-full p-3 border-2 rounded-xl focus:outline-none transition-colors ${
+                          paymentAccountNumber && /^09\d{8}$/.test(paymentAccountNumber)
+                            ? 'border-green-500 bg-green-50'
+                            : paymentAccountNumber
+                              ? 'border-red-400 bg-red-50'
+                              : 'border-gray-200'
+                        }`}
                         required
                         dir="ltr"
+                        maxLength={10}
                       />
+                      {paymentAccountNumber && !/^09\d{8}$/.test(paymentAccountNumber) && (
+                        <p className="text-xs text-red-500 mt-1">رقم الهاتف يجب أن يبدأ بـ 09 ويكون 10 أرقام</p>
+                      )}
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">اسم صاحب الحساب *</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">اسم صاحب الحساب <span className="text-red-500">*</span></label>
                       <input
                         type="text"
                         value={paymentAccountHolder}
                         onChange={(e) => setPaymentAccountHolder(e.target.value)}
                         placeholder="الاسم كما هو مسجل في شام كاش"
-                        className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-green-500 focus:outline-none"
+                        className={`w-full p-3 border-2 rounded-xl focus:outline-none transition-colors ${
+                          paymentAccountHolder && paymentAccountHolder.trim().length >= 3
+                            ? 'border-green-500 bg-green-50'
+                            : paymentAccountHolder
+                              ? 'border-red-400 bg-red-50'
+                              : 'border-gray-200'
+                        }`}
                         required
                       />
                     </div>
@@ -647,36 +664,54 @@ const SellerDocumentsPage = () => {
                 {paymentAccountType === 'bank_account' && (
                   <div className="space-y-3">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">اسم البنك *</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">اسم البنك <span className="text-red-500">*</span></label>
                       <input
                         type="text"
                         value={paymentBankName}
                         onChange={(e) => setPaymentBankName(e.target.value)}
                         placeholder="مثال: بنك سورية الدولي الإسلامي"
-                        className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-green-500 focus:outline-none"
+                        className={`w-full p-3 border-2 rounded-xl focus:outline-none transition-colors ${
+                          paymentBankName && paymentBankName.trim().length >= 3
+                            ? 'border-green-500 bg-green-50'
+                            : paymentBankName
+                              ? 'border-red-400 bg-red-50'
+                              : 'border-gray-200'
+                        }`}
                         required
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">رقم الحساب / IBAN *</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">رقم الحساب / IBAN <span className="text-red-500">*</span></label>
                       <input
                         type="text"
                         value={paymentAccountNumber}
                         onChange={(e) => setPaymentAccountNumber(e.target.value)}
                         placeholder="رقم الحساب البنكي"
-                        className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-green-500 focus:outline-none"
+                        className={`w-full p-3 border-2 rounded-xl focus:outline-none transition-colors ${
+                          paymentAccountNumber && paymentAccountNumber.trim().length >= 5
+                            ? 'border-green-500 bg-green-50'
+                            : paymentAccountNumber
+                              ? 'border-red-400 bg-red-50'
+                              : 'border-gray-200'
+                        }`}
                         required
                         dir="ltr"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">اسم صاحب الحساب *</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">اسم صاحب الحساب <span className="text-red-500">*</span></label>
                       <input
                         type="text"
                         value={paymentAccountHolder}
                         onChange={(e) => setPaymentAccountHolder(e.target.value)}
                         placeholder="الاسم كما هو مسجل في البنك"
-                        className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-green-500 focus:outline-none"
+                        className={`w-full p-3 border-2 rounded-xl focus:outline-none transition-colors ${
+                          paymentAccountHolder && paymentAccountHolder.trim().length >= 3
+                            ? 'border-green-500 bg-green-50'
+                            : paymentAccountHolder
+                              ? 'border-red-400 bg-red-50'
+                              : 'border-gray-200'
+                        }`}
                         required
                       />
                     </div>

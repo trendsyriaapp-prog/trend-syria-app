@@ -34,6 +34,7 @@ import EarningsStats from '../components/delivery/EarningsStats';
 import RouteProgressBar from '../components/delivery/RouteProgressBar';
 import SecurityDepositCard from '../components/delivery/SecurityDepositCard';
 import ResignationSection from '../components/delivery/ResignationSection';
+import ValidatedInput from '../components/ValidatedInput';
 import '../styles/driver-dark-theme.css';
 
 const API = process.env.REACT_APP_BACKEND_URL;
@@ -490,16 +491,25 @@ const DeliveryDocuments = () => {
           <div className="bg-white rounded-xl p-4 border border-gray-200">
             <label className="block text-sm font-bold text-gray-700 mb-2">
               <CreditCard size={16} className="inline ml-1" />
-              رقم الهوية الوطنية
+              رقم الهوية الوطنية <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
               value={docs.national_id}
               onChange={(e) => setDocs(prev => ({ ...prev, national_id: e.target.value }))}
-              className="w-full p-3 border border-gray-300 rounded-lg text-sm"
+              className={`w-full p-3 border-2 rounded-lg text-sm transition-colors ${
+                docs.national_id && docs.national_id.length >= 8
+                  ? 'border-green-500 bg-green-50'
+                  : docs.national_id
+                    ? 'border-red-400 bg-red-50'
+                    : 'border-gray-300'
+              }`}
               placeholder="أدخل رقم الهوية الوطنية"
               required
             />
+            {docs.national_id && docs.national_id.length < 8 && (
+              <p className="text-xs text-red-500 mt-1">رقم الهوية يجب أن يكون 8 أرقام على الأقل</p>
+            )}
           </div>
 
           {/* صورة شخصية حية من الكاميرا */}
@@ -763,25 +773,41 @@ const DeliveryDocuments = () => {
             {docs.payment_account_type === 'shamcash' && (
               <div className="space-y-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">رقم شام كاش *</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">رقم شام كاش <span className="text-red-500">*</span></label>
                   <input
                     type="tel"
                     value={docs.payment_account_number}
                     onChange={(e) => setDocs(prev => ({...prev, payment_account_number: e.target.value}))}
                     placeholder="09XXXXXXXX"
-                    className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-green-500 focus:outline-none"
+                    className={`w-full p-3 border-2 rounded-xl focus:outline-none transition-colors ${
+                      docs.payment_account_number && /^09\d{8}$/.test(docs.payment_account_number)
+                        ? 'border-green-500 bg-green-50'
+                        : docs.payment_account_number
+                          ? 'border-red-400 bg-red-50'
+                          : 'border-gray-200'
+                    }`}
                     required
                     dir="ltr"
+                    maxLength={10}
                   />
+                  {docs.payment_account_number && !/^09\d{8}$/.test(docs.payment_account_number) && (
+                    <p className="text-xs text-red-500 mt-1">رقم الهاتف يجب أن يبدأ بـ 09 ويكون 10 أرقام</p>
+                  )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">اسم صاحب الحساب *</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">اسم صاحب الحساب <span className="text-red-500">*</span></label>
                   <input
                     type="text"
                     value={docs.payment_account_holder}
                     onChange={(e) => setDocs(prev => ({...prev, payment_account_holder: e.target.value}))}
                     placeholder="الاسم كما هو مسجل في شام كاش"
-                    className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-green-500 focus:outline-none"
+                    className={`w-full p-3 border-2 rounded-xl focus:outline-none transition-colors ${
+                      docs.payment_account_holder && docs.payment_account_holder.trim().length >= 3
+                        ? 'border-green-500 bg-green-50'
+                        : docs.payment_account_holder
+                          ? 'border-red-400 bg-red-50'
+                          : 'border-gray-200'
+                    }`}
                     required
                   />
                 </div>
@@ -792,36 +818,54 @@ const DeliveryDocuments = () => {
             {docs.payment_account_type === 'bank_account' && (
               <div className="space-y-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">اسم البنك *</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">اسم البنك <span className="text-red-500">*</span></label>
                   <input
                     type="text"
                     value={docs.payment_bank_name}
                     onChange={(e) => setDocs(prev => ({...prev, payment_bank_name: e.target.value}))}
                     placeholder="مثال: بنك سورية الدولي الإسلامي"
-                    className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-green-500 focus:outline-none"
+                    className={`w-full p-3 border-2 rounded-xl focus:outline-none transition-colors ${
+                      docs.payment_bank_name && docs.payment_bank_name.trim().length >= 3
+                        ? 'border-green-500 bg-green-50'
+                        : docs.payment_bank_name
+                          ? 'border-red-400 bg-red-50'
+                          : 'border-gray-200'
+                    }`}
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">رقم الحساب / IBAN *</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">رقم الحساب / IBAN <span className="text-red-500">*</span></label>
                   <input
                     type="text"
                     value={docs.payment_account_number}
                     onChange={(e) => setDocs(prev => ({...prev, payment_account_number: e.target.value}))}
                     placeholder="رقم الحساب البنكي"
-                    className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-green-500 focus:outline-none"
+                    className={`w-full p-3 border-2 rounded-xl focus:outline-none transition-colors ${
+                      docs.payment_account_number && docs.payment_account_number.trim().length >= 5
+                        ? 'border-green-500 bg-green-50'
+                        : docs.payment_account_number
+                          ? 'border-red-400 bg-red-50'
+                          : 'border-gray-200'
+                    }`}
                     required
                     dir="ltr"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">اسم صاحب الحساب *</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">اسم صاحب الحساب <span className="text-red-500">*</span></label>
                   <input
                     type="text"
                     value={docs.payment_account_holder}
                     onChange={(e) => setDocs(prev => ({...prev, payment_account_holder: e.target.value}))}
                     placeholder="الاسم كما هو مسجل في البنك"
-                    className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-green-500 focus:outline-none"
+                    className={`w-full p-3 border-2 rounded-xl focus:outline-none transition-colors ${
+                      docs.payment_account_holder && docs.payment_account_holder.trim().length >= 3
+                        ? 'border-green-500 bg-green-50'
+                        : docs.payment_account_holder
+                          ? 'border-red-400 bg-red-50'
+                          : 'border-gray-200'
+                    }`}
                     required
                   />
                 </div>

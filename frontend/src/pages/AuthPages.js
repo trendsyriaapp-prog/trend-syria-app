@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { Eye, EyeOff, Phone, User, AlertCircle, CheckCircle, KeyRound, Smartphone, Shield, RefreshCw } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
+import ValidatedInput from '../components/ValidatedInput';
 import axios from 'axios';
 import logger from '../lib/logger';
 
@@ -460,6 +461,33 @@ const RegisterPage = () => {
     return false;
   };
 
+  // ===== دوال التحقق من الحقول =====
+  
+  // التحقق من الاسم الثلاثي
+  const validateFullName = (name) => {
+    if (!name) return false;
+    const nameParts = name.trim().split(' ').filter(p => p.length > 0);
+    return nameParts.length >= 3;
+  };
+
+  // التحقق من رقم الهاتف السوري
+  const validatePhone = (phone) => {
+    if (!phone) return false;
+    // يجب أن يبدأ بـ 09 ويكون 10 أرقام
+    const phoneRegex = /^09\d{8}$/;
+    return phoneRegex.test(phone);
+  };
+
+  // التحقق من كلمة المرور (6 أحرف على الأقل)
+  const validatePassword = (password) => {
+    return password && password.length >= 6;
+  };
+
+  // التحقق من تطابق كلمة المرور
+  const validateConfirmPassword = (confirmPass) => {
+    return confirmPass && formData.password === confirmPass;
+  };
+
   // التحقق من البيانات الأساسية
   const validateForm = () => {
     const nameParts = formData.full_name.trim().split(' ').filter(p => p.length > 0);
@@ -824,111 +852,87 @@ const RegisterPage = () => {
           {/* حقول التسجيل - تظهر فقط بعد اختيار نوع الحساب */}
           {shouldShowRegistrationFields() ? (
           <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium mb-2 text-gray-700">الاسم الثلاثي *</label>
-              <div className="relative">
-                <input
-                  type="text"
-                  value={formData.full_name}
-                  onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-lg py-3 px-4 pr-12 text-gray-900 placeholder:text-gray-400 focus:border-[#FF6B00] focus:outline-none transition-colors"
-                  placeholder="مثال: محمد أحمد علي"
-                  required
-                  data-testid="name-input"
-                />
-                <User size={20} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" />
-              </div>
-              <p className="text-xs text-gray-400 mt-1">أدخل اسمك الثلاثي كاملاً</p>
-            </div>
+            {/* الاسم الثلاثي */}
+            <ValidatedInput
+              type="text"
+              value={formData.full_name}
+              onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
+              label="الاسم الثلاثي"
+              placeholder="مثال: محمد أحمد علي"
+              required
+              icon={User}
+              validation={validateFullName}
+              errorMessage="يرجى إدخال الاسم الثلاثي كاملاً"
+              successMessage="الاسم صحيح"
+              hint="أدخل اسمك الثلاثي كاملاً"
+              dataTestId="name-input"
+            />
 
-            <div>
-              <label className="block text-sm font-medium mb-2 text-gray-700">رقم الهاتف *</label>
-              <div className="relative">
-                <input
-                  type="tel"
-                  value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-lg py-3 px-4 pr-12 text-gray-900 placeholder:text-gray-400 focus:border-[#FF6B00] focus:outline-none transition-colors"
-                  placeholder="09xxxxxxxx"
-                  required
-                  data-testid="phone-input"
-                />
-                <Phone size={20} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" />
-              </div>
-              <p className="text-xs text-gray-400 mt-1">سيُستخدم لتسجيل الدخول</p>
-            </div>
+            {/* رقم الهاتف */}
+            <ValidatedInput
+              type="tel"
+              value={formData.phone}
+              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+              label="رقم الهاتف"
+              placeholder="09xxxxxxxx"
+              required
+              icon={Phone}
+              validation={validatePhone}
+              errorMessage="رقم الهاتف يجب أن يبدأ بـ 09 ويكون 10 أرقام"
+              successMessage="رقم الهاتف صحيح"
+              hint="سيُستخدم لتسجيل الدخول"
+              dataTestId="phone-input"
+              inputMode="tel"
+              maxLength={10}
+            />
 
-            <div>
-              <label className="block text-sm font-medium mb-2 text-gray-700">كلمة المرور *</label>
-              <div className="relative">
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-lg py-3 px-4 pl-12 text-gray-900 placeholder:text-gray-400 focus:border-[#FF6B00] focus:outline-none transition-colors"
-                  placeholder="••••••••"
-                  required
-                  minLength={6}
-                  data-testid="password-input"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-                >
-                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                </button>
-              </div>
-              <p className="text-xs text-gray-400 mt-1">6 أحرف على الأقل</p>
-            </div>
+            {/* كلمة المرور */}
+            <ValidatedInput
+              type="password"
+              value={formData.password}
+              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+              label="كلمة المرور"
+              placeholder="••••••••"
+              required
+              validation={validatePassword}
+              errorMessage="كلمة المرور يجب أن تكون 6 أحرف على الأقل"
+              successMessage="كلمة المرور قوية"
+              hint="6 أحرف على الأقل"
+              dataTestId="password-input"
+              showToggle
+              onToggle={() => setShowPassword(!showPassword)}
+              showToggleValue={showPassword}
+              minLength={6}
+            />
 
-            <div>
-              <label className="block text-sm font-medium mb-2 text-gray-700">تأكيد كلمة المرور *</label>
-              <div className="relative">
-                <input
-                  type={showConfirmPassword ? 'text' : 'password'}
-                  value={formData.confirmPassword}
-                  onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                  className={`w-full bg-gray-50 border rounded-lg py-3 px-4 pl-12 text-gray-900 placeholder:text-gray-400 focus:outline-none transition-colors ${
-                    formData.confirmPassword && formData.password !== formData.confirmPassword 
-                      ? 'border-red-500 focus:border-red-500' 
-                      : formData.confirmPassword && formData.password === formData.confirmPassword
-                        ? 'border-green-500 focus:border-green-500'
-                        : 'border-gray-200 focus:border-[#FF6B00]'
-                  }`}
-                  placeholder="••••••••"
-                  required
-                  minLength={6}
-                  data-testid="confirm-password-input"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-                >
-                  {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                </button>
-              </div>
-              {formData.confirmPassword && formData.password !== formData.confirmPassword && (
-                <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
-                  <AlertCircle size={12} /> كلمة المرور غير متطابقة
-                </p>
-              )}
-              {formData.confirmPassword && formData.password === formData.confirmPassword && (
-                <p className="text-xs text-green-500 mt-1 flex items-center gap-1">
-                  <CheckCircle size={12} /> كلمة المرور متطابقة
-                </p>
-              )}
-            </div>
+            {/* تأكيد كلمة المرور */}
+            <ValidatedInput
+              type="password"
+              value={formData.confirmPassword}
+              onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+              label="تأكيد كلمة المرور"
+              placeholder="••••••••"
+              required
+              validation={validateConfirmPassword}
+              errorMessage="كلمة المرور غير متطابقة"
+              successMessage="كلمة المرور متطابقة"
+              dataTestId="confirm-password-input"
+              showToggle
+              onToggle={() => setShowConfirmPassword(!showConfirmPassword)}
+              showToggleValue={showConfirmPassword}
+              minLength={6}
+            />
 
             {/* المدينة - تُعرض فقط للمشترين، أما البائعين والسائقين فيُدخلونها لاحقاً */}
             {formData.user_type === 'buyer' && (
               <div>
-                <label className="block text-sm font-medium mb-2 text-gray-700">المدينة</label>
+                <label className="block text-sm font-medium mb-2 text-gray-700">المدينة <span className="text-red-500">*</span></label>
                 <select
                   value={formData.city}
                   onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-lg py-3 px-4 text-gray-900 focus:border-[#FF6B00] focus:outline-none transition-colors"
+                  className={`w-full bg-gray-50 border-2 rounded-lg py-3 px-4 text-gray-900 focus:outline-none transition-all duration-200 ${
+                    formData.city ? 'border-green-500' : 'border-red-400'
+                  }`}
                   required
                   data-testid="city-select"
                 >
