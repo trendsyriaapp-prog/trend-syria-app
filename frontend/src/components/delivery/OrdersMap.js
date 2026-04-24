@@ -1,6 +1,6 @@
-import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import logger from '../../lib/logger';
-import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Map, Navigation, Route } from 'lucide-react';
 import L from 'leaflet';
