@@ -22,6 +22,18 @@ def get_now() -> str:
     """إرجاع الوقت الحالي بصيغة ISO"""
     return datetime.now(timezone.utc).isoformat()
 
+async def require_admin_user(user: dict = Depends(get_current_user)) -> dict:
+    """التحقق من صلاحيات المدير أو المشرف الفرعي"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    return user
+
+async def require_main_admin(user: dict = Depends(get_current_user)) -> dict:
+    """التحقق من صلاحيات المدير الرئيسي فقط"""
+    if user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
+    return user
+
 async def insert_notification(user_id: str, title: str, message: str, notif_type: str, data: dict = None) -> None:
     """إنشاء إشعار للمستخدم (helper داخلي)"""
     notif = {
@@ -40,11 +52,8 @@ async def insert_notification(user_id: str, title: str, message: str, notif_type
 # ============== إعدادات المنصة ==============
 
 @router.get("/settings")
-async def get_platform_settings(user: dict = Depends(get_current_user)) -> dict:
+async def get_platform_settings(user: dict = Depends(require_main_admin)) -> dict:
     """جلب إعدادات المنصة"""
-    if user["user_type"] != "admin":
-        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
-    
     settings = await db.platform_settings.find_one({"id": "main"}, {"_id": 0})
     if not settings:
         # إعدادات افتراضية
@@ -82,11 +91,8 @@ async def get_platform_settings(user: dict = Depends(get_current_user)) -> dict:
     return settings
 
 @router.put("/settings")
-async def update_platform_settings(data: dict, user: dict = Depends(get_current_user)) -> dict:
+async def update_platform_settings(data: dict, user: dict = Depends(require_main_admin)) -> dict:
     """تحديث إعدادات المنصة مع إشعارات قابلة للتخصيص"""
-    if user["user_type"] != "admin":
-        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
-    
     # جلب الإعدادات الحالية للمقارنة
     current_settings = await db.platform_settings.find_one({"id": "main"}, {"_id": 0})
     
@@ -1770,7 +1776,7 @@ async def get_platform_wallet(user: dict = Depends(get_current_user)) -> dict:
 async def get_platform_wallet_transactions(
     user: dict = Depends(get_current_user),
     limit: int = 50
-) -> dict:
+) -> list:
     """جلب معاملات محفظة المنصة"""
     if user["user_type"] != "admin":
         raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
