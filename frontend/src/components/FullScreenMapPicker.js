@@ -289,18 +289,18 @@ const FullScreenMapPicker = ({
             </div>
           )}
 
-          {/* زر GPS - في الزاوية السفلية اليمنى داخل الخريطة */}
+          {/* زر GPS - في الزاوية العلوية اليمنى داخل الخريطة */}
           <button
             type="button"
             onClick={getCurrentLocation}
             disabled={loading}
-            className="absolute bottom-40 right-3 z-[1002] bg-white w-10 h-10 rounded-full shadow-lg border border-gray-300 hover:bg-gray-50 active:bg-gray-100 transition-all flex items-center justify-center"
+            className="absolute top-20 right-3 z-[1002] bg-white w-12 h-12 rounded-full shadow-lg border border-gray-300 hover:bg-gray-50 active:bg-gray-100 transition-all flex items-center justify-center"
             data-testid="gps-location-btn"
           >
             {loading ? (
-              <Loader2 className="w-5 h-5 text-blue-500 animate-spin" />
+              <Loader2 className="w-6 h-6 text-blue-500 animate-spin" />
             ) : (
-              <Navigation className="w-5 h-5 text-blue-600" />
+              <Navigation className="w-6 h-6 text-blue-600" />
             )}
           </button>
 

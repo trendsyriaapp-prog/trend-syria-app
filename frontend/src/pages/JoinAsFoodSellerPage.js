@@ -741,20 +741,6 @@ const JoinAsFoodSellerPage = () => {
                 />
               </div>
 
-              {/* تحديد موقع المتجر - إجباري - تم رفعه للأعلى */}
-              <GoogleMapsLocationPicker
-                label="📍 موقع المتجر على الخريطة"
-                required={true}
-                currentLocation={formData.latitude ? { latitude: formData.latitude, longitude: formData.longitude } : null}
-                onLocationSelect={(location) => {
-                  if (location) {
-                    setFormData({ ...formData, latitude: location.latitude, longitude: location.longitude });
-                  } else {
-                    setFormData({ ...formData, latitude: null, longitude: null });
-                  }
-                }}
-              />
-
               {/* زر إضافة العنوان */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">العنوان *</label>
@@ -789,6 +775,20 @@ const JoinAsFoodSellerPage = () => {
                   )}
                 </button>
               </div>
+
+              {/* تحديد موقع المتجر - إجباري */}
+              <GoogleMapsLocationPicker
+                label="📍 موقع المتجر على الخريطة"
+                required={true}
+                currentLocation={formData.latitude ? { latitude: formData.latitude, longitude: formData.longitude } : null}
+                onLocationSelect={(location) => {
+                  if (location) {
+                    setFormData({ ...formData, latitude: location.latitude, longitude: location.longitude });
+                  } else {
+                    setFormData({ ...formData, latitude: null, longitude: null });
+                  }
+                }}
+              />
 
               <button
                 type="button"
