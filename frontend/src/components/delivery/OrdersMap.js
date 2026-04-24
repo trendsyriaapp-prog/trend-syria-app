@@ -49,7 +49,9 @@ import {
   GoogleMapsButton,
   StepByStepCard,
   RouteDetailsCard,
-  OptimizedRouteCard 
+  OptimizedRouteCard,
+  ExternalPriorityPopup,
+  OpenMapButton 
 } from './orders-map/components';
 
 const API = process.env.REACT_APP_BACKEND_URL;
@@ -1843,23 +1845,11 @@ const OrdersMap = ({
   return (
     <>
       {/* زر فتح الخريطة */}
-      <button
+      <OpenMapButton
         onClick={() => setIsOpen(true)}
-        disabled={totalOrders === 0}
-        className={`w-full py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-lg ${
-          totalOrders > 0 
-            ? isMyOrdersOnly
-              ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700'
-              : 'bg-gradient-to-r from-orange-400 to-orange-600 text-white hover:from-orange-500 hover:to-orange-700' 
-            : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-        }`}
-      >
-        <Map size={18} />
-        {isMyOrdersOnly 
-          ? `🗺️ خريطة طلباتي (${totalOrders} طلب)`
-          : `🗺️ خريطة التطبيق (${totalOrders} طلب)`
-        }
-      </button>
+        totalOrders={totalOrders}
+        isMyOrdersOnly={isMyOrdersOnly}
+      />
 
       {/* نافذة الخريطة */}
       <AnimatePresence>
@@ -2527,58 +2517,14 @@ const OrdersMap = ({
       </AnimatePresence>
 
       {/* ⭐ Popup الطلب العاجل - يظهر حتى لو الخريطة مغلقة */}
-      <AnimatePresence>
-        {showPriorityPopup && priorityOrder && !isOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: -100 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -100 }}
-            className="fixed top-4 left-4 right-4 z-[9999] rounded-2xl shadow-2xl overflow-hidden border-4 bg-gradient-to-br from-yellow-400 via-amber-500 to-orange-500 border-yellow-300"
-            style={{ 
-              boxShadow: '0 0 40px rgba(251, 191, 36, 0.5)',
-              maxWidth: '400px',
-              margin: '0 auto'
-            }}
-          >
-            {/* العد التنازلي */}
-            <div className="absolute top-2 left-2 w-12 h-12 rounded-full bg-white/20 backdrop-blur flex items-center justify-center">
-              <span className="text-2xl font-bold text-white">{priorityCountdown}</span>
-            </div>
-            
-            <div className="p-4 text-center">
-              <div className="mb-2">
-                <span className="text-3xl">🔔</span>
-              </div>
-              <h3 className="text-lg font-bold text-white mb-1">طلب عاجل!</h3>
-              <p className="text-sm text-white/90 mb-3">من نفس المطعم الذي أنت ذاهب إليه</p>
-              
-              <div className="bg-white/20 backdrop-blur rounded-xl p-3 mb-3">
-                <p className="text-white font-bold text-lg">🍔 {priorityOrder.store_name || priorityOrder.restaurant_name}</p>
-                <p className="text-white/80 text-sm">📍 {priorityOrder.delivery_address?.city || priorityOrder.delivery_area}</p>
-              </div>
-              
-              <p className="text-white font-bold text-xl mb-4">
-                💰 +{(priorityOrder.driver_delivery_fee || priorityOrder.delivery_fee || 0).toLocaleString()} ل.س
-              </p>
-              
-              <div className="flex gap-2">
-                <button
-                  onClick={rejectPriorityOrder}
-                  className="flex-1 py-3 bg-white/20 backdrop-blur text-white rounded-xl font-bold hover:bg-white/30 transition-all"
-                >
-                  ❌ رفض
-                </button>
-                <button
-                  onClick={acceptPriorityOrder}
-                  className="flex-1 py-3 bg-white text-amber-600 rounded-xl font-bold hover:bg-gray-100 transition-all"
-                >
-                  ✅ قبول
-                </button>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <ExternalPriorityPopup
+        showPriorityPopup={showPriorityPopup}
+        priorityOrder={priorityOrder}
+        priorityCountdown={priorityCountdown}
+        isMapOpen={isOpen}
+        onAccept={acceptPriorityOrder}
+        onReject={rejectPriorityOrder}
+      />
     </>
   );
 };

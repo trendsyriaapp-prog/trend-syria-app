@@ -18,3 +18,5 @@ export { default as GoogleMapsButton } from './GoogleMapsButton';
 export { default as StepByStepCard } from './StepByStepCard';
 export { default as RouteDetailsCard } from './RouteDetailsCard';
 export { default as OptimizedRouteCard } from './OptimizedRouteCard';
+export { default as ExternalPriorityPopup } from './ExternalPriorityPopup';
+export { default as OpenMapButton } from './OpenMapButton';
