@@ -22,6 +22,21 @@ def get_now() -> str:
     """إرجاع الوقت الحالي بصيغة ISO"""
     return datetime.now(timezone.utc).isoformat()
 
+async def insert_notification(user_id: str, title: str, message: str, notif_type: str, data: dict = None) -> None:
+    """إنشاء إشعار للمستخدم (helper داخلي)"""
+    notif = {
+        "id": str(uuid.uuid4()),
+        "user_id": user_id,
+        "title": title,
+        "message": message,
+        "type": notif_type,
+        "is_read": False,
+        "created_at": get_now()
+    }
+    if data:
+        notif["data"] = data
+    await db.notifications.insert_one(notif)
+
 # ============== إعدادات المنصة ==============
 
 @router.get("/settings")
@@ -816,15 +831,12 @@ async def approve_seller(seller_id: str, user: dict = Depends(get_current_user))
         seller_type_name = "مطعم" if is_food_seller else "بائع"
         
         # إرسال إشعار داخلي للبائع بالموافقة
-        await db.notifications.insert_one({
-            "id": str(uuid.uuid4()),
-            "user_id": seller_id,
-            "title": "✅ تم قبول طلبك!",
-            "message": f"مبروك! تم قبول طلبك كـ{seller_type_name}. يمكنك الآن إضافة منتجاتك والبدء بالبيع.",
-            "type": "seller_approved",
-            "is_read": False,
-            "created_at": now
-        })
+        await insert_notification(
+            user_id=seller_id,
+            title="✅ تم قبول طلبك!",
+            message=f"مبروك! تم قبول طلبك كـ{seller_type_name}. يمكنك الآن إضافة منتجاتك والبدء بالبيع.",
+            notif_type="seller_approved"
+        )
         
         # 📲 إرسال Push Notification للبائع
         try:
@@ -898,15 +910,12 @@ async def reject_seller(seller_id: str, data: dict = Body(default={}), user: dic
         if reason:
             message += f"\n📝 السبب: {reason}"
         
-        await db.notifications.insert_one({
-            "id": str(uuid.uuid4()),
-            "user_id": seller_id,
-            "title": f"❌ تم رفض طلب الـ{seller_type_name}",
-            "message": message,
-            "type": "seller_rejected",
-            "is_read": False,
-            "created_at": now
-        })
+        await insert_notification(
+            user_id=seller_id,
+            title=f"❌ تم رفض طلب الـ{seller_type_name}",
+            message=message,
+            notif_type="seller_rejected"
+        )
         
         # 📲 إرسال Push Notification للبائع بالرفض
         try:
@@ -953,15 +962,12 @@ async def suspend_seller(seller_id: str, data: dict = None, user: dict = Depends
     )
     
     # إشعار البائع
-    await db.notifications.insert_one({
-        "id": str(uuid.uuid4()),
-        "user_id": seller_id,
-        "title": "⛔ تم إيقاف حسابك",
-        "message": "تم إيقاف حسابك من قبل الإدارة" + (f". السبب: {reason}" if reason else ""),
-        "type": "account_suspended",
-        "is_read": False,
-        "created_at": now
-    })
+    await insert_notification(
+        user_id=seller_id,
+        title="⛔ تم إيقاف حسابك",
+        message="تم إيقاف حسابك من قبل الإدارة" + (f". السبب: {reason}" if reason else ""),
+        notif_type="account_suspended"
+    )
     
     return {"message": "تم إيقاف حساب البائع بنجاح"}
 
@@ -989,16 +995,12 @@ async def activate_seller(seller_id: str, user: dict = Depends(get_current_user)
     )
     
     # إشعار البائع
-    now = get_now()
-    await db.notifications.insert_one({
-        "id": str(uuid.uuid4()),
-        "user_id": seller_id,
-        "title": "✅ تم تفعيل حسابك",
-        "message": "تم إعادة تفعيل حسابك. يمكنك الآن استقبال الطلبات",
-        "type": "account_activated",
-        "is_read": False,
-        "created_at": now
-    })
+    await insert_notification(
+        user_id=seller_id,
+        title="✅ تم تفعيل حسابك",
+        message="تم إعادة تفعيل حسابك. يمكنك الآن استقبال الطلبات",
+        notif_type="account_activated"
+    )
     
     return {"message": "تم تفعيل حساب البائع بنجاح"}
 
@@ -1206,15 +1208,12 @@ async def approve_product(product_id: str, user: dict = Depends(get_current_user
     )
     
     # إرسال إشعار للبائع
-    await db.notifications.insert_one({
-        "id": str(uuid.uuid4()),
-        "user_id": product.get("seller_id"),
-        "title": "تم قبول منتجك ✅",
-        "message": f"تمت الموافقة على منتج '{product.get('name')}' وهو الآن متاح للعملاء",
-        "type": "product_approved",
-        "read": False,
-        "created_at": get_now()
-    })
+    await insert_notification(
+        user_id=product.get("seller_id"),
+        title="تم قبول منتجك ✅",
+        message=f"تمت الموافقة على منتج '{product.get('name')}' وهو الآن متاح للعملاء",
+        notif_type="product_approved"
+    )
     
     return {"message": "تم الموافقة على المنتج"}
 
@@ -1245,15 +1244,12 @@ async def reject_product(product_id: str, data: dict = None, user: dict = Depend
     )
     
     # إرسال إشعار للبائع
-    await db.notifications.insert_one({
-        "id": str(uuid.uuid4()),
-        "user_id": product.get("seller_id"),
-        "title": "تم رفض منتجك ❌",
-        "message": f"تم رفض منتج '{product.get('name')}'. السبب: {reason or 'غير محدد'}",
-        "type": "product_rejected",
-        "read": False,
-        "created_at": get_now()
-    })
+    await insert_notification(
+        user_id=product.get("seller_id"),
+        title="تم رفض منتجك ❌",
+        message=f"تم رفض منتج '{product.get('name')}'. السبب: {reason or 'غير محدد'}",
+        notif_type="product_rejected"
+    )
     
     return {"message": "تم رفض المنتج", "reason": reason if reason else None}
 
@@ -1317,15 +1313,12 @@ async def approve_food_product(product_id: str, user: dict = Depends(get_current
     # إرسال إشعار للبائع
     store = await db.food_stores.find_one({"id": product.get("store_id")})
     if store:
-        await db.notifications.insert_one({
-            "id": str(uuid.uuid4()),
-            "user_id": store.get("owner_id"),
-            "title": "تم قبول منتجك ✅",
-            "message": f"تمت الموافقة على منتج '{product.get('name')}' وهو الآن متاح للعملاء",
-            "type": "product_approved",
-            "read": False,
-            "created_at": get_now()
-        })
+        await insert_notification(
+            user_id=store.get("owner_id"),
+            title="تم قبول منتجك ✅",
+            message=f"تمت الموافقة على منتج '{product.get('name')}' وهو الآن متاح للعملاء",
+            notif_type="product_approved"
+        )
     
     return {"message": "تم الموافقة على المنتج"}
 
@@ -1358,15 +1351,12 @@ async def reject_food_product(product_id: str, data: dict = None, user: dict = D
     # إرسال إشعار للبائع
     store = await db.food_stores.find_one({"id": product.get("store_id")})
     if store:
-        await db.notifications.insert_one({
-            "id": str(uuid.uuid4()),
-            "user_id": store.get("owner_id"),
-            "title": "تم رفض منتجك ❌",
-            "message": f"تم رفض منتج '{product.get('name')}'. السبب: {reason or 'غير محدد'}",
-            "type": "product_rejected",
-            "read": False,
-            "created_at": get_now()
-        })
+        await insert_notification(
+            user_id=store.get("owner_id"),
+            title="تم رفض منتجك ❌",
+            message=f"تم رفض منتج '{product.get('name')}'. السبب: {reason or 'غير محدد'}",
+            notif_type="product_rejected"
+        )
     
     return {"message": "تم رفض المنتج", "reason": reason if reason else None}
 
@@ -1544,15 +1534,12 @@ async def approve_delivery_driver(driver_id: str, user: dict = Depends(get_curre
         )
     
     # إرسال إشعار داخلي لموظف التوصيل بالموافقة
-    await db.notifications.insert_one({
-        "id": str(uuid.uuid4()),
-        "user_id": driver_id,
-        "title": "✅ تم قبول طلبك!",
-        "message": "مبروك! تم قبول طلبك كموظف توصيل. يمكنك الآن البدء باستلام الطلبات.",
-        "type": "delivery_approved",
-        "is_read": False,
-        "created_at": now
-    })
+    await insert_notification(
+        user_id=driver_id,
+        title="✅ تم قبول طلبك!",
+        message="مبروك! تم قبول طلبك كموظف توصيل. يمكنك الآن البدء باستلام الطلبات.",
+        notif_type="delivery_approved"
+    )
     
     # 📲 إرسال Push Notification للسائق
     try:
@@ -1628,15 +1615,12 @@ async def reject_delivery_driver(driver_id: str, data: dict = Body(default={}), 
     if reason:
         message += f"\n📝 السبب: {reason}"
     
-    await db.notifications.insert_one({
-        "id": str(uuid.uuid4()),
-        "user_id": driver_id,
-        "title": "❌ تم رفض طلب التوصيل",
-        "message": message,
-        "type": "delivery_rejected",
-        "is_read": False,
-        "created_at": now
-    })
+    await insert_notification(
+        user_id=driver_id,
+        title="❌ تم رفض طلب التوصيل",
+        message=message,
+        notif_type="delivery_rejected"
+    )
     
     # 📲 إرسال Push Notification للسائق بالرفض
     try:
@@ -2104,7 +2088,7 @@ async def create_notification(data: NotificationCreate, user: dict = Depends(get
     return {"message": "تم إرسال الإشعار بنجاح", "notification": notification}
 
 @router.get("/notifications")
-async def get_admin_notifications(user: dict = Depends(get_current_user)) -> dict:
+async def get_admin_notifications(user: dict = Depends(get_current_user)) -> list:
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="غير مصرح")
     
@@ -4006,44 +3990,35 @@ async def admin_cancel_order(
             }
             message += f" السبب: {reason_labels.get(reason, reason)}"
         
-        await db.notifications.insert_one({
-            "id": str(uuid.uuid4()),
-            "user_id": customer_id,
-            "title": "❌ تم إلغاء طلبك",
-            "message": message,
-            "type": "order_cancelled",
-            "data": {"order_id": order_id},
-            "is_read": False,
-            "created_at": now
-        })
+        await insert_notification(
+            user_id=customer_id,
+            title="❌ تم إلغاء طلبك",
+            message=message,
+            notif_type="order_cancelled",
+            data={"order_id": order_id}
+        )
     
     # إشعار البائع
     seller_id = order.get("seller_id") or order.get("store_owner_id")
     if seller_id:
-        await db.notifications.insert_one({
-            "id": str(uuid.uuid4()),
-            "user_id": seller_id,
-            "title": "❌ تم إلغاء طلب",
-            "message": f"تم إلغاء الطلب #{order_id[:8]} من قبل الإدارة",
-            "type": "order_cancelled_by_admin",
-            "data": {"order_id": order_id},
-            "is_read": False,
-            "created_at": now
-        })
+        await insert_notification(
+            user_id=seller_id,
+            title="❌ تم إلغاء طلب",
+            message=f"تم إلغاء الطلب #{order_id[:8]} من قبل الإدارة",
+            notif_type="order_cancelled_by_admin",
+            data={"order_id": order_id}
+        )
     
     # إشعار السائق إذا كان معيناً
     driver_id = order.get("driver_id")
     if driver_id:
-        await db.notifications.insert_one({
-            "id": str(uuid.uuid4()),
-            "user_id": driver_id,
-            "title": "❌ تم إلغاء طلب",
-            "message": f"تم إلغاء الطلب #{order_id[:8]} الذي كنت تقوم بتوصيله",
-            "type": "order_cancelled_driver",
-            "data": {"order_id": order_id},
-            "is_read": False,
-            "created_at": now
-        })
+        await insert_notification(
+            user_id=driver_id,
+            title="❌ تم إلغاء طلب",
+            message=f"تم إلغاء الطلب #{order_id[:8]} الذي كنت تقوم بتوصيله",
+            notif_type="order_cancelled_driver",
+            data={"order_id": order_id}
+        )
     
     return {"message": "تم إلغاء الطلب بنجاح", "order_id": order_id}
 
@@ -4114,16 +4089,13 @@ async def admin_change_order_status(
     # إشعار العميل
     customer_id = order.get("customer_id") or order.get("user_id")
     if customer_id:
-        await db.notifications.insert_one({
-            "id": str(uuid.uuid4()),
-            "user_id": customer_id,
-            "title": "📦 تحديث حالة الطلب",
-            "message": f"تم تحديث حالة طلبك إلى: {status_labels.get(new_status, new_status)}",
-            "type": "order_status_updated",
-            "data": {"order_id": order_id, "new_status": new_status},
-            "is_read": False,
-            "created_at": now
-        })
+        await insert_notification(
+            user_id=customer_id,
+            title="📦 تحديث حالة الطلب",
+            message=f"تم تحديث حالة طلبك إلى: {status_labels.get(new_status, new_status)}",
+            notif_type="order_status_updated",
+            data={"order_id": order_id, "new_status": new_status}
+        )
     
     return {
         "message": f"تم تغيير حالة الطلب إلى: {status_labels.get(new_status, new_status)}",
@@ -4203,16 +4175,13 @@ async def admin_full_refund(
     )
     
     # إشعار العميل
-    await db.notifications.insert_one({
-        "id": str(uuid.uuid4()),
-        "user_id": customer_id,
-        "title": "💰 تم استرداد المبلغ",
-        "message": f"تم إضافة {order_total:,.0f} ل.س إلى محفظتك كاسترداد للطلب #{order_id[:8]}",
-        "type": "refund_completed",
-        "data": {"order_id": order_id, "amount": order_total},
-        "is_read": False,
-        "created_at": now
-    })
+    await insert_notification(
+        user_id=customer_id,
+        title="💰 تم استرداد المبلغ",
+        message=f"تم إضافة {order_total:,.0f} ل.س إلى محفظتك كاسترداد للطلب #{order_id[:8]}",
+        notif_type="refund_completed",
+        data={"order_id": order_id, "amount": order_total}
+    )
     
     return {
         "message": "تم استرداد المبلغ بنجاح",
@@ -4256,16 +4225,13 @@ async def admin_toggle_product_visibility(
     seller_id = product.get("seller_id")
     if seller_id:
         action = "إخفاء" if new_status else "إظهار"
-        await db.notifications.insert_one({
-            "id": str(uuid.uuid4()),
-            "user_id": seller_id,
-            "title": f"{'👁️‍🗨️' if new_status else '👁️'} تم {action} منتجك",
-            "message": f"تم {action} المنتج '{product.get('name', '')}' من قبل الإدارة",
-            "type": "product_visibility_changed",
-            "data": {"product_id": product_id, "is_hidden": new_status},
-            "is_read": False,
-            "created_at": now
-        })
+        await insert_notification(
+            user_id=seller_id,
+            title=f"{'👁️‍🗨️' if new_status else '👁️'} تم {action} منتجك",
+            message=f"تم {action} المنتج '{product.get('name', '')}' من قبل الإدارة",
+            notif_type="product_visibility_changed",
+            data={"product_id": product_id, "is_hidden": new_status}
+        )
     
     return {
         "message": f"تم {'إخفاء' if new_status else 'إظهار'} المنتج بنجاح",
@@ -4305,16 +4271,13 @@ async def admin_delete_product(
     
     # إشعار البائع
     if seller_id:
-        await db.notifications.insert_one({
-            "id": str(uuid.uuid4()),
-            "user_id": seller_id,
-            "title": "🗑️ تم حذف منتج",
-            "message": f"تم حذف المنتج '{product_name}' من قبل الإدارة",
-            "type": "product_deleted_by_admin",
-            "data": {"product_name": product_name},
-            "is_read": False,
-            "created_at": now
-        })
+        await insert_notification(
+            user_id=seller_id,
+            title="🗑️ تم حذف منتج",
+            message=f"تم حذف المنتج '{product_name}' من قبل الإدارة",
+            notif_type="product_deleted_by_admin",
+            data={"product_name": product_name}
+        )
     
     # تسجيل النشاط
     await db.admin_activity_log.insert_one({
@@ -4457,16 +4420,13 @@ async def approve_food_item(item_id: str, user: dict = Depends(get_current_user)
     # إشعار صاحب المتجر
     seller_id = item.get("seller_id")
     if seller_id:
-        await db.notifications.insert_one({
-            "id": str(uuid.uuid4()),
-            "user_id": seller_id,
-            "title": "✅ تمت الموافقة على الطبق",
-            "message": f"تمت الموافقة على طبق '{item.get('name', '')}' وأصبح ظاهراً للعملاء",
-            "type": "food_item_approved",
-            "data": {"item_id": item_id, "item_name": item.get("name", "")},
-            "is_read": False,
-            "created_at": now
-        })
+        await insert_notification(
+            user_id=seller_id,
+            title="✅ تمت الموافقة على الطبق",
+            message=f"تمت الموافقة على طبق '{item.get('name', '')}' وأصبح ظاهراً للعملاء",
+            notif_type="food_item_approved",
+            data={"item_id": item_id, "item_name": item.get("name", "")}
+        )
     
     return {"message": "تمت الموافقة على الطبق بنجاح"}
 
@@ -4485,7 +4445,6 @@ async def reject_food_item(
         raise HTTPException(status_code=404, detail="الطبق غير موجود")
     
     reason = data.get("reason", "").strip() if data else ""
-    now = get_now()
     
     # حذف الطبق أو تحديد حالة الرفض
     await db.food_items.delete_one({"id": item_id})
@@ -4497,16 +4456,13 @@ async def reject_food_item(
         if reason:
             message += f"\n📝 سبب الرفض: {reason}"
         
-        await db.notifications.insert_one({
-            "id": str(uuid.uuid4()),
-            "user_id": seller_id,
-            "title": "❌ تم رفض الطبق",
-            "message": message,
-            "type": "food_item_rejected",
-            "data": {"item_name": item.get("name", ""), "reason": reason},
-            "is_read": False,
-            "created_at": now
-        })
+        await insert_notification(
+            user_id=seller_id,
+            title="❌ تم رفض الطبق",
+            message=message,
+            notif_type="food_item_rejected",
+            data={"item_name": item.get("name", ""), "reason": reason}
+        )
     
     return {"message": "تم رفض الطبق", "reason": reason if reason else None}
 
@@ -4645,15 +4601,12 @@ async def cancel_promotion(promotion_id: str, user: dict = Depends(get_current_u
     )
     
     # إشعار البائع
-    await db.notifications.insert_one({
-        "id": str(uuid.uuid4()),
-        "user_id": promotion.get("seller_id"),
-        "title": "⚠️ تم إلغاء الترويج",
-        "message": f"تم إلغاء ترويج منتج '{promotion.get('product_name', '')}'",
-        "type": "promotion_cancelled",
-        "is_read": False,
-        "created_at": get_now()
-    })
+    await insert_notification(
+        user_id=promotion.get("seller_id"),
+        title="⚠️ تم إلغاء الترويج",
+        message=f"تم إلغاء ترويج منتج '{promotion.get('product_name', '')}'",
+        notif_type="promotion_cancelled"
+    )
     
     return {"message": "تم إلغاء الترويج"}
 

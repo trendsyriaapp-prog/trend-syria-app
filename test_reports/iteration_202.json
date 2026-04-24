@@ -1,0 +1,94 @@
+{
+  "summary": "Phase 33 - Verified insert_notification helper refactoring in admin.py. All admin approval/rejection APIs working correctly. Fixed 1 pre-existing return type annotation bug.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_phase33_insert_notification_refactoring.py",
+    "/app/test_reports/pytest/phase33_insert_notification_refactoring_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "insert_notification helper function correctly defined at line 25 in admin.py",
+    "20 usages of insert_notification helper for standard user notifications",
+    "4 remaining db.notifications.insert_one usages are intentional (different data structures: commission updates with old_rate/new_rate, admin-created notifications with target/created_by)",
+    "Fixed 1 pre-existing return type annotation bug: get_admin_notifications (-> dict changed to -> list)"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_phase33_insert_notification_refactoring.py",
+    "/app/backend/routes/admin.py (fixed return type annotation for get_admin_notifications)"
+  ],
+  "success_rate": {
+    "backend": "100%",
+    "frontend": "N/A - backend only testing"
+  },
+  "test_credentials": {
+    "super_admin": "0945570365 / TrendSyria@2026",
+    "otp_code": "123456"
+  },
+  "seed_data_creation": "",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Phase 33 refactoring verified: insert_notification helper function extracted and used 20 times for standard user notifications. 4 remaining db.notifications.insert_one usages are intentional for different notification structures (commission updates, admin-created notifications). Fixed 1 return type annotation bug (get_admin_notifications -> list). All admin APIs tested: sellers pending/all/approve/reject/suspend/activate, drivers pending/all/approve/reject, products pending/all/approve/reject, food-products pending/approve/reject, stats, settings, platform-status, notifications.",
+  "mocked_apis": {
+    "has_mocked_apis": true,
+    "mocked_apis_list": ["SMS OTP (123456)", "Sham Cash Payment Gateway"]
+  },
+  "verification_details": {
+    "insert_notification_helper": {
+      "status": "VERIFIED",
+      "location": "Line 25 in admin.py",
+      "implementation": "Creates notification with id, user_id, title, message, type, is_read, created_at, optional data",
+      "usages": 20
+    },
+    "remaining_direct_inserts": {
+      "count": 4,
+      "reason": "Different notification structures - commission updates (with old_rate/new_rate data), admin-created notifications (with target/created_by fields)"
+    },
+    "admin_apis": {
+      "status": "VERIFIED",
+      "endpoints_tested": [
+        "GET /api/admin/sellers/pending",
+        "GET /api/admin/sellers/all",
+        "POST /api/admin/sellers/{id}/approve",
+        "POST /api/admin/sellers/{id}/reject",
+        "POST /api/admin/sellers/{id}/suspend",
+        "POST /api/admin/sellers/{id}/activate",
+        "GET /api/admin/delivery/pending",
+        "GET /api/admin/delivery/all",
+        "POST /api/admin/delivery/{id}/approve",
+        "POST /api/admin/delivery/{id}/reject",
+        "GET /api/admin/products/pending",
+        "GET /api/admin/products/all",
+        "POST /api/admin/products/{id}/approve",
+        "POST /api/admin/products/{id}/reject",
+        "GET /api/admin/food-products/pending",
+        "POST /api/admin/food-products/{id}/approve",
+        "POST /api/admin/food-products/{id}/reject",
+        "GET /api/admin/stats",
+        "GET /api/admin/settings",
+        "GET /api/admin/settings/public",
+        "GET /api/admin/platform-status",
+        "GET /api/admin/notifications",
+        "POST /api/admin/notifications"
+      ]
+    },
+    "bugs_fixed": {
+      "count": 1,
+      "details": [
+        "get_admin_notifications: return type -> dict changed to -> list"
+      ]
+    }
+  },
+  "tests_executed": {
+    "passed": 22,
+    "skipped": 0,
+    "failed": 0
+  }
+}
