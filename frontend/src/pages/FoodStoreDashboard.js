@@ -304,7 +304,7 @@ const FoodStoreDashboard = () => {
     try {
       const res = await axios.get(`${API}/api/notifications/unread`);
       
-      const notifications = res.data || [];
+      const notifications = res.data?.notifications || res.data || [];
       const driverArriving = notifications.find(n => 
         n.type === 'driver_arriving_store' && 
         n.id !== lastNotificationId.current
@@ -2886,7 +2886,8 @@ const FlashSalesTab = ({ store, products, token }) => {
       ]);
       
       setFlashSales(salesRes.data || []);
-      setMyRequests(requestsRes.data || []);
+      const requestsData = requestsRes.data?.requests || requestsRes.data || [];
+      setMyRequests(requestsData);
       setSettings(settingsRes.data || { join_fee: 5000 });
     } catch (error) {
       logger.error('Error fetching flash data:', error);

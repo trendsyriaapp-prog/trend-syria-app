@@ -498,7 +498,8 @@ const FoodPage = () => {
         axios.get(`${API}/api/settings/public`).catch(() => ({ data: { food_free_delivery_threshold: 100000 } }))
       ]);
       setStores(storesRes.data || []);
-      setProducts(productsRes.data || []);
+      const productsData = productsRes.data?.products || productsRes.data || [];
+      setProducts(productsData);
       setFlashSales(flashRes.data || []);
       setFoodBanners(bannersRes.data || []);
       setBadgeSettings(badgeRes.data || null);

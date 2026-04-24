@@ -124,7 +124,7 @@ const FoodFreeDeliveryPage = () => {
           axios.get(`${API}/api/settings/product-badges`).catch(() => ({ data: null }))
         ]);
         
-        const allProductsData = productsRes.data || [];
+        const allProductsData = productsRes.data?.products || productsRes.data || [];
         const threshold = settingsRes.data?.food_free_delivery_threshold || food_free_delivery_threshold || 75000;
         
         // فلترة منتجات التوصيل المجاني

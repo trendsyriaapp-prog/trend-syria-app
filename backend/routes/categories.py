@@ -107,7 +107,7 @@ async def get_categories(type: Optional[str] = None, active_only: bool = True, p
     return categories
 
 @router.get("/hierarchical")
-async def get_categories_hierarchical(type: Optional[str] = None) -> dict:
+async def get_categories_hierarchical(type: Optional[str] = None) -> List[dict]:
     """جلب الفئات بشكل هرمي (رئيسية مع فرعياتها)"""
     count = await db.categories.count_documents({})
     if count == 0:
@@ -133,12 +133,12 @@ async def get_categories_hierarchical(type: Optional[str] = None) -> dict:
     return result
 
 @router.get("/shopping")
-async def get_shopping_categories() -> dict:
+async def get_shopping_categories() -> List[dict]:
     """جلب فئات التسوق فقط"""
     return await get_categories(type="shopping")
 
 @router.get("/food")
-async def get_food_categories() -> dict:
+async def get_food_categories() -> List[dict]:
     """جلب فئات الطعام فقط"""
     return await get_categories(type="food")
 
@@ -352,7 +352,7 @@ async def suggest_category(suggestion: CategorySuggestion, user: dict = Depends(
     }
 
 @router.get("/suggestions/my")
-async def get_my_suggestions(user: dict = Depends(get_current_user)) -> dict:
+async def get_my_suggestions(user: dict = Depends(get_current_user)) -> List[dict]:
     """جلب اقتراحات البائع"""
     
     suggestions = await db.category_suggestions.find(
@@ -363,7 +363,7 @@ async def get_my_suggestions(user: dict = Depends(get_current_user)) -> dict:
     return suggestions
 
 @router.get("/suggestions/all")
-async def get_all_suggestions(status: Optional[str] = None, user: dict = Depends(get_current_user)) -> dict:
+async def get_all_suggestions(status: Optional[str] = None, user: dict = Depends(get_current_user)) -> List[dict]:
     """جلب جميع اقتراحات التصنيفات (للأدمن)"""
     
     if user["user_type"] not in ["admin", "sub_admin"]:

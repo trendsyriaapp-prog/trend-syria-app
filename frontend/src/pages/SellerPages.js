@@ -963,7 +963,8 @@ const SellerDashboardPage = () => {
           axios.get(`${API}/api/food/my-items`, { headers }),
           axios.get(`${API}/api/food/orders/seller`, { headers })
         ]);
-        setFoodItems(menuRes.data || []);
+        const itemsData = menuRes.data?.items || menuRes.data || [];
+        setFoodItems(itemsData);
         setFoodOrders(foodOrdersRes.data || []);
       } else {
         // بائع منتجات - جلب المنتجات والطلبات

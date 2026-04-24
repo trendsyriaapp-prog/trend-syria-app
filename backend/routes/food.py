@@ -117,7 +117,7 @@ class FoodOfferCreate(BaseModel):
 # ===============================
 
 @router.get("/flash-sales/active")
-async def get_active_flash_sales() -> dict:
+async def get_active_flash_sales() -> List[dict]:
     """جلب عروض الفلاش النشطة حالياً - للعملاء"""
     now = datetime.now(timezone.utc).isoformat()
     
@@ -130,7 +130,7 @@ async def get_active_flash_sales() -> dict:
     return sales
 
 @router.get("/banners")
-async def get_food_banners() -> dict:
+async def get_food_banners() -> List[dict]:
     """جلب البانرات الخاصة بقسم الطعام"""
     now = datetime.now(timezone.utc).isoformat()
     
@@ -145,7 +145,7 @@ async def get_food_banners() -> dict:
     return banners
 
 @router.get("/categories")
-async def get_food_categories() -> dict:
+async def get_food_categories() -> List[dict]:
     """جلب الأقسام الرئيسية والفرعية"""
     categories = []
     
@@ -195,7 +195,7 @@ async def get_food_stores(
     search: Optional[str] = None,
     skip: int = 0,
     limit: int = 20
-) -> dict:
+) -> List[dict]:
     """جلب متاجر الطعام مع حالة الفتح/الإغلاق والتعليق"""
     query = {"is_active": True, "is_approved": True}
     
@@ -607,7 +607,7 @@ async def get_food_products(
     search: Optional[str] = None,
     skip: int = 0,
     limit: int = 20
-) -> dict:
+):
     """جلب منتجات الطعام"""
     # أولاً نجلب المتاجر المعتمدة من الفئة المطلوبة والمدينة
     store_query = {"is_active": True, "is_approved": True}
@@ -633,7 +633,7 @@ async def get_food_products(
     approved_store_ids = [s["id"] for s in approved_stores]
     
     if not approved_store_ids:
-        return []
+        return {"products": [], "total": 0}
     
     # ثم نجلب المنتجات من هذه المتاجر
     query = {"store_id": {"$in": approved_store_ids}, "is_available": True}
@@ -649,7 +649,7 @@ async def get_food_products(
     products = await db.food_products.find(query, {"_id": 0}).skip(skip).limit(limit).to_list(None)
     
     if not products:
-        return []
+        return {"products": [], "total": 0}
     
     # جلب معرفات المتاجر
     store_ids = list(set([p.get("store_id") for p in products if p.get("store_id")]))
@@ -699,7 +699,7 @@ async def get_food_products(
                     except Exception:
                         pass
     
-    return products
+    return {"products": products, "total": len(products)}
 
 @router.post("/products")
 async def create_food_product(product: FoodProductCreate, user: dict = Depends(get_current_user)) -> dict:
@@ -767,7 +767,7 @@ async def get_food_stats() -> dict:
 # ===============================
 
 @router.get("/my-items")
-async def get_my_food_items(user: dict = Depends(get_current_user)) -> dict:
+async def get_my_food_items(user: dict = Depends(get_current_user)):
     """جلب أطباق المطعم للبائع"""
     if user.get("user_type") != "food_seller":
         raise HTTPException(status_code=403, detail="غير مصرح لك بالوصول")
@@ -775,11 +775,11 @@ async def get_my_food_items(user: dict = Depends(get_current_user)) -> dict:
     # البحث عن متجر البائع
     store = await db.food_stores.find_one({"owner_id": user["id"]}, {"_id": 0})
     if not store:
-        return []
+        return {"items": [], "store": None}
     
     # جلب أطباق المتجر
     items = await db.food_items.find({"store_id": store["id"]}, {"_id": 0}).to_list(None)
-    return items or []
+    return {"items": items or [], "store_id": store.get("id")}
 
 @router.post("/items")
 async def create_food_item(item_data: dict, user: dict = Depends(get_current_user)) -> dict:
@@ -1154,7 +1154,7 @@ async def create_food_offer(offer: FoodOfferCreate, user: dict = Depends(get_cur
     return offer_doc
 
 @router.get("/my-offers")
-async def get_my_offers(user: dict = Depends(get_current_user)) -> dict:
+async def get_my_offers(user: dict = Depends(get_current_user)) -> List[dict]:
     """جلب عروض متجري"""
     store = await db.food_stores.find_one({"owner_id": user["id"]})
     if not store:
@@ -1168,7 +1168,7 @@ async def get_my_offers(user: dict = Depends(get_current_user)) -> dict:
     return offers
 
 @router.get("/stores/{store_id}/offers")
-async def get_store_offers(store_id: str) -> dict:
+async def get_store_offers(store_id: str) -> List[dict]:
     """جلب العروض النشطة لمتجر معين"""
     now = datetime.now(timezone.utc).isoformat()
     
@@ -1319,7 +1319,7 @@ async def calculate_offer_discount(store_id: str, items: list, subtotal: float) 
 # ===============================
 
 @router.get("/flash-sales/available")
-async def get_available_flash_sales(user: dict = Depends(get_current_user)) -> dict:
+async def get_available_flash_sales(user: dict = Depends(get_current_user)) -> List[dict]:
     """جلب عروض الفلاش المتاحة للانضمام"""
     now = datetime.now(timezone.utc).isoformat()
     
@@ -1346,7 +1346,7 @@ async def get_flash_settings_for_seller(user: dict = Depends(get_current_user)) 
     return settings
 
 @router.get("/my-flash-requests")
-async def get_my_flash_requests(user: dict = Depends(get_current_user)) -> dict:
+async def get_my_flash_requests(user: dict = Depends(get_current_user)):
     """جلب طلبات الانضمام للفلاش الخاصة بي"""
     store = await db.food_stores.find_one({"owner_id": user["id"]})
     if not store:
@@ -1358,7 +1358,7 @@ async def get_my_flash_requests(user: dict = Depends(get_current_user)) -> dict:
     ).sort("created_at", -1).to_list(50)
     
     if not requests:
-        return []
+        return {"requests": []}
     
     # جمع المعرفات
     flash_sale_ids = list(set([r.get("flash_sale_id") for r in requests if r.get("flash_sale_id")]))
@@ -1392,7 +1392,7 @@ async def get_my_flash_requests(user: dict = Depends(get_current_user)) -> dict:
         if req.get("product_ids"):
             req["products"] = [products_map[pid] for pid in req["product_ids"] if pid in products_map]
     
-    return requests
+    return {"requests": requests}
 
 @router.post("/flash-sale-request")
 async def request_flash_sale_join(request_data: dict, user: dict = Depends(get_current_user)) -> dict:

@@ -823,7 +823,8 @@ const FlashSaleModal = ({ flash, token, onClose, onSave }) => {
     setLoadingProducts(true);
     try {
       const res = await axios.get(`${API}/api/food/products?limit=500`);
-      setAllProducts(res.data || []);
+      const productsData = res.data?.products || res.data || [];
+      setAllProducts(productsData);
     } catch (error) {
       logger.error('Error fetching products:', error);
     } finally {

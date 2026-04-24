@@ -108,7 +108,7 @@ async def get_notifications(
 
 
 @router.get("/unread")
-async def get_unread_notifications(user: dict = Depends(get_current_user)) -> dict:
+async def get_unread_notifications(user: dict = Depends(get_current_user)):
     """جلب الإشعارات غير المقروءة للمستخدم"""
     # Get user's read notifications
     user_reads = await db.notification_reads.find(
@@ -138,7 +138,7 @@ async def get_unread_notifications(user: dict = Depends(get_current_user)) -> di
     for n in unread_notifications:
         n["is_read"] = False
     
-    return unread_notifications
+    return {"notifications": unread_notifications, "count": len(unread_notifications)}
 
 
 
