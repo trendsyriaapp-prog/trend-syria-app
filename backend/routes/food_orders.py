@@ -1602,7 +1602,7 @@ async def update_order_status(
     """تحديث حالة الطلب من المتجر أو المدير"""
     # المدير يمكنه تحديث أي طلب
     if user["user_type"] in ["admin", "sub_admin"]:
-        order = await db.food_orders.find_one({"id": order_id})
+        order = await get_order_by_id(order_id)
         if not order:
             raise HTTPException(status_code=404, detail="الطلب غير موجود")
         valid_statuses = list(ORDER_STATUSES.keys())
@@ -2340,7 +2340,7 @@ async def accept_food_order(
     
     if not order:
         # إما الطلب غير موجود أو تم قبوله من سائق آخر
-        existing_order = await db.food_orders.find_one({"id": order_id})
+        existing_order = await get_order_by_id(order_id)
         if existing_order:
             if existing_order.get("driver_id"):
                 raise HTTPException(status_code=400, detail="⚡ عذراً! تم قبول هذا الطلب من سائق آخر")
@@ -2357,7 +2357,7 @@ async def accept_food_order(
     
     try:
         # جلب معلومات المتجر لمعرفة نوعه
-        store = await db.food_stores.find_one({"id": order.get("store_id")})
+        store = await get_store_by_id(order.get("store_id"))
         new_store_type = store.get("store_type", "restaurants") if store else "restaurants"
         new_store_category = get_store_delivery_category(new_store_type)
         
@@ -4155,7 +4155,7 @@ async def driver_accept_order(
         raise HTTPException(status_code=403, detail="غير مصرح لك")
     
     # جلب الطلب
-    order = await db.food_orders.find_one({"id": order_id})
+    order = await get_order_by_id(order_id)
     if not order:
         raise HTTPException(status_code=404, detail="الطلب غير موجود")
     
