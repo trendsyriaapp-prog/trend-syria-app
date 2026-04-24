@@ -9,6 +9,11 @@ import math
 from core.database import db, get_current_user
 
 
+def get_now() -> str:
+    """الحصول على الوقت الحالي بتنسيق ISO"""
+    return datetime.now(timezone.utc).isoformat()
+
+
 def require_delivery_user(user: dict = Depends(get_current_user)) -> dict:
     """التحقق من أن المستخدم سائق توصيل"""
     if user.get("user_type") != "delivery":

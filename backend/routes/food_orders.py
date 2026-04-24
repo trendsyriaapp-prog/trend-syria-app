@@ -45,6 +45,7 @@ from routes.food_order_helpers import (
     get_order_for_driver,
     require_delivery_user,
     get_user_store,
+    get_now,
     HOT_FRESH_STORE_TYPES,
     COLD_DRY_STORE_TYPES,
     DEFAULT_HOT_FRESH_LIMIT,
@@ -420,7 +421,7 @@ async def create_food_order(order: FoodOrderCreate, user: dict = Depends(get_cur
     flash_discount = 0
     flash_sale_applied = None
     flash_items = []  # المنتجات المشمولة بالفلاش
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     active_flash = await db.flash_sales.find_one({
         "is_active": True,
@@ -1428,7 +1429,7 @@ async def get_store_orders(
     """جلب طلبات المتجر - فقط الطلبات التي انتهت مهلة إلغائها"""
     store = await get_user_store(user["id"])
     
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     query = {
         "store_id": store["id"],
@@ -1785,7 +1786,7 @@ async def get_available_food_orders(
     user: dict = Depends(require_delivery_user)
 ) -> dict:
     """جلب الطلبات المتاحة للتوصيل - مرتبة حسب القرب من السائق"""
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     # الطلبات الجاهزة للاستلام وانتهت مهلة إلغائها
     orders = await db.food_orders.find(
@@ -3265,7 +3266,7 @@ async def delivery_arrived_at_customer(order_id: str, user: dict = Depends(requi
             "order_id": order_id
         }
     
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     await db.food_orders.update_one(
         {"id": order_id},
@@ -3649,7 +3650,7 @@ async def rate_food_order(order_id: str, rating_data: dict, user: dict = Depends
     if not store_rating or store_rating < 1 or store_rating > 5:
         raise HTTPException(status_code=400, detail="تقييم المتجر مطلوب (1-5)")
     
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     # حفظ التقييم
     rating_doc = {
