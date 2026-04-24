@@ -598,9 +598,14 @@ const DeliveryDocuments = () => {
               <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
                 <MapPin size={16} className="text-green-600" />
               </div>
-              <div>
-                <h3 className="font-bold text-gray-900">العنوان والموقع *</h3>
-                <p className="text-xs text-gray-500">حدد موقعك بدقة لتستقبل طلبات من منطقتك</p>
+              <h3 className="font-bold text-gray-900">العنوان والموقع *</h3>
+            </div>
+            
+            {/* تنبيه */}
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
+              <div className="flex items-center gap-2 text-amber-700">
+                <AlertTriangle size={16} />
+                <span className="text-sm font-medium">على هذا العنوان ستستقبل طلبات التوصيل من منطقتك</span>
               </div>
             </div>
             
@@ -632,10 +637,9 @@ const DeliveryDocuments = () => {
             
             {/* خريطة تحديد الموقع */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                تحديد الموقع على الخريطة *
-              </label>
               <GoogleMapsLocationPicker
+                label="تحديد الموقع على الخريطة"
+                required={true}
                 currentLocation={docs.home_latitude ? { latitude: docs.home_latitude, longitude: docs.home_longitude } : null}
                 onLocationSelect={(location) => {
                   if (location) {
@@ -648,19 +652,7 @@ const DeliveryDocuments = () => {
                     setDocs(prev => ({ ...prev, home_latitude: null, home_longitude: null }));
                   }
                 }}
-                height="200px"
               />
-              {docs.home_latitude && docs.home_longitude ? (
-                <p className="text-xs text-green-600 mt-2 flex items-center gap-1">
-                  <Check size={12} />
-                  تم تحديد الموقع بنجاح
-                </p>
-              ) : (
-                <p className="text-xs text-red-500 mt-2 flex items-center gap-1">
-                  <X size={12} />
-                  يرجى تحديد موقعك على الخريطة
-                </p>
-              )}
             </div>
           </div>
 

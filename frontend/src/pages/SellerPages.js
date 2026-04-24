@@ -522,7 +522,7 @@ const SellerDocumentsPage = () => {
                   <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
                     <div className="flex items-center gap-2 text-amber-700">
                       <AlertTriangle size={16} />
-                      <span className="text-sm font-medium">سيزورك فريق ترند سورية للكشف، وسيظهر للتوصيل</span>
+                      <span className="text-sm font-medium">على هذا العنوان سيزورك فريق ترند سورية للكشف، وسيظهر للتوصيل</span>
                     </div>
                   </div>
                   
