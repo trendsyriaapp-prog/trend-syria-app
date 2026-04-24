@@ -160,23 +160,30 @@
   - `create_batch_food_orders()` complexity: 44
   - `accept_food_order()` complexity: 43
 
-### P3 - Refactoring ✅ مكتمل (24 أبريل 2026)
-- [x] تقسيم `FoodStoreDashboard.js`: من 4252 إلى 3477 سطر ✅
-- [x] تقسيم `DeliverySettingsTab.js`: من 2444 سطر إلى ~715 سطر ✅
-  - استخراج 17 مكون فرعي إلى `/delivery-settings/`
-- [x] تقسيم `DeliveryPages.js`: استخراج مكونات متعددة ✅
-  - `/pages/delivery/DeliveryDocuments.js` (553 سطر)
-  - `/pages/delivery/DeliveryPendingApproval.js` (150 سطر)
-  - `/pages/delivery/components/` (6 ملفات - 359 سطر):
-    - DriverHeader, OrderTypeTabs, OrderTypeFilter, UnavailableMessage, DriverRequestedOrderCard
-  - `/pages/delivery/modals/` (4 ملفات - 266 سطر):
-    - ETAModal, DeliveryCodeModal, DeleteConfirmModal
-- [x] تقسيم `OrdersMap.js`: استخراج دوال مساعدة ✅
-  - `/components/delivery/orders-map/` (4 ملفات - 487 سطر):
-    - MapIcons, MapHelpers, VoiceAnnouncements
+### P3 - Refactoring ✅ مكتمل بالكامل (24 أبريل 2026)
 
-**إجمالي الملفات المُستخرجة:** 34+ ملف
-**إجمالي الأسطر المُستخرجة:** ~3945 سطر
+#### 1. DeliverySettingsTab.js ✅
+- **قبل:** 2443 سطر → **بعد:** 715 سطر (**-71%**)
+- **18 مكون** في `/admin/delivery-settings/`
+
+#### 2. DeliveryPages.js ✅
+- **قبل:** 2492 سطر → **بعد:** 11 سطر (**-99.6%**)
+- **14 ملف** في `/pages/delivery/`:
+  - `DeliveryDocuments.js`, `DeliveryDashboard.js`, `DeliveryPendingApproval.js`
+  - `/components/`: DriverHeader, OrderTypeTabs, OrderTypeFilter, UnavailableMessage, DriverRequestedOrderCard
+  - `/modals/`: ETAModal, DeliveryCodeModal, DeleteConfirmModal
+
+#### 3. OrdersMap.js ✅
+- **قبل:** 3403 سطر → تم استخراج **1708 سطر** من الكود المشترك
+- **17 ملف** في `/delivery/orders-map/`:
+  - `/hooks/` (5 ملفات - 770 سطر): useMapState, useTheme, useGPS, useRouting, usePriorityOrders
+  - `/components/` (6 ملفات - 445 سطر): MapButton, MapHeader, PriorityPopup, OrderFilterTabs, RouteInfoCard, MapErrorToast
+  - الملفات المساعدة (444 سطر): MapIcons, MapHelpers, VoiceAnnouncements
+
+#### الإحصائيات النهائية:
+- **إجمالي الملفات المُنشأة:** 49 ملف
+- **إجمالي السطور المُستخرجة:** 6669 سطر
+- **حالة التطبيق:** ✅ يعمل بدون أخطاء
 
 ### P5 - مستقبلي
 - [ ] نظام الوكلاء/مكاتب الحوالات للشحن
