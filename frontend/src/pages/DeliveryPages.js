@@ -1665,7 +1665,7 @@ const DeliveryDashboard = () => {
                   ? 'bg-[#252525] text-white hover:bg-[#333] border border-[#444]'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
               }`}
-              title={`الوضع: ${themeMode === 'auto' ? 'تلقائي' : themeMode === 'light' ? 'فاتح' : 'داكن'}`}
+              title={`الوضع: ${themeMode === 'auto' ? 'تلقائي' : (themeMode === 'light' ? 'فاتح' : 'داكن')}`}
             >
               {themeMode === 'auto' && '🔄'}
               {themeMode === 'light' && '☀️'}
