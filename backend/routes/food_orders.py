@@ -46,6 +46,7 @@ from routes.food_order_helpers import (
     require_delivery_user,
     get_user_store,
     get_now,
+    generate_id,
     HOT_FRESH_STORE_TYPES,
     COLD_DRY_STORE_TYPES,
     DEFAULT_HOT_FRESH_LIMIT,
@@ -633,7 +634,7 @@ async def create_food_order(order: FoodOrderCreate, user: dict = Depends(get_cur
         })
     
     # إنشاء الطلب
-    order_id = str(uuid.uuid4())
+    order_id = generate_id()
     # توليد رقم طلب بسيط (6 أرقام) للعميل
     order_number = str(secrets.randbelow(900000) + 100000)
     now = datetime.now(timezone.utc)
@@ -1145,7 +1146,7 @@ async def create_batch_food_orders(batch: BatchOrderCreate, user: dict = Depends
                     "notes": item.notes
                 })
         
-        order_id = str(uuid.uuid4())
+        order_id = generate_id()
         # توليد رقم طلب بسيط (6 أرقام) للعميل
         order_number = str(secrets.randbelow(900000) + 100000)
         

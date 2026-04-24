@@ -14,6 +14,11 @@ def get_now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
+def generate_id() -> str:
+    """توليد معرف فريد"""
+    return str(__import__('uuid').uuid4())
+
+
 def require_delivery_user(user: dict = Depends(get_current_user)) -> dict:
     """التحقق من أن المستخدم سائق توصيل"""
     if user.get("user_type") != "delivery":
