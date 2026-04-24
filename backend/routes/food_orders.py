@@ -12,234 +12,26 @@ import secrets
 
 from core.database import db, get_current_user, create_notification_for_user
 
+# استيراد الدوال المساعدة والثوابت
+from routes.food_order_helpers import (
+    get_first_name,
+    calculate_haversine_distance as calculate_distance_km,
+    get_driver_km_settings,
+    calculate_driver_fee_by_km,
+    get_store_delivery_category,
+    get_driver_cancel_settings,
+    calculate_driver_cancel_rate,
+    add_commission_to_platform_wallet_food,
+    send_priority_order_push_notification,
+    HOT_FRESH_STORE_TYPES,
+    COLD_DRY_STORE_TYPES,
+    DEFAULT_HOT_FRESH_LIMIT,
+    DEFAULT_COLD_DRY_LIMIT,
+    ORDER_STATUSES,
+    PLATFORM_WALLET_ID
+)
+
 router = APIRouter(prefix="/food/orders", tags=["Food Orders"])
-
-# ============== دالة استخراج الاسم الأول ==============
-
-def get_first_name(full_name: str) -> str:
-    """استخراج الاسم الأول فقط من الاسم الكامل"""
-    if not full_name:
-        return "السائق"
-    # أخذ الكلمة الأولى فقط
-    return full_name.strip().split()[0] if full_name.strip() else "السائق"
-
-# ============== حساب المسافة والأجرة بالكيلومتر ==============
-
-async def get_driver_km_settings() -> dict:
-    """جلب إعدادات أجرة السائق بالكيلومتر"""
-    settings = await db.platform_settings.find_one({"id": "main"}, {"_id": 0})
-    
-    default_settings = {
-        "enabled": True,
-        "base_fee": 1000,       # رسوم أساسية
-        "price_per_km": 300,   # سعر الكيلومتر
-        "min_fee": 1500        # الحد الأدنى
-    }
-    
-    if settings and "driver_km_settings" in settings:
-        return {**default_settings, **settings["driver_km_settings"]}
-    
-    return default_settings
-
-def calculate_distance_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
-    """حساب المسافة بين نقطتين بالكيلومتر (Haversine)"""
-    if not all([lat1, lon1, lat2, lon2]):
-        return 0
-    
-    R = 6371  # نصف قطر الأرض بالكيلومتر
-    
-    lat1_rad = math.radians(lat1)
-    lat2_rad = math.radians(lat2)
-    delta_lat = math.radians(lat2 - lat1)
-    delta_lon = math.radians(lon2 - lon1)
-    
-    a = math.sin(delta_lat/2)**2 + math.cos(lat1_rad) * math.cos(lat2_rad) * math.sin(delta_lon/2)**2
-    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
-    
-    return R * c
-
-async def calculate_driver_fee_by_km(distance_km: float) -> dict:
-    """حساب أجرة السائق بناءً على المسافة"""
-    settings = await get_driver_km_settings()
-    
-    if not settings.get("enabled", True):
-        # إذا النظام معطل، استخدم الرسوم الثابتة
-        platform_settings = await db.platform_settings.find_one({"id": "main"})
-        fixed_fee = platform_settings.get("food_delivery_fee", 5000) if platform_settings else 5000
-        return {
-            "driver_fee": fixed_fee,
-            "distance_km": distance_km,
-            "calculation_method": "fixed",
-            "details": None
-        }
-    
-    base_fee = settings.get("base_fee", 1000)
-    price_per_km = settings.get("price_per_km", 300)
-    min_fee = settings.get("min_fee", 1500)
-    
-    # الحساب: رسوم أساسية + (المسافة × سعر الكيلومتر)
-    calculated_fee = base_fee + (distance_km * price_per_km)
-    final_fee = max(calculated_fee, min_fee)
-    final_fee = round(final_fee)
-    
-    return {
-        "driver_fee": final_fee,
-        "distance_km": round(distance_km, 2),
-        "calculation_method": "per_km",
-        "details": {
-            "base_fee": base_fee,
-            "price_per_km": price_per_km,
-            "min_fee": min_fee,
-            "calculated": round(calculated_fee)
-        }
-    }
-
-# ============== تصنيفات أنواع المتاجر للتوصيل ==============
-# ساخن/طازج: يحتاج توصيل سريع (حد أقصى 2 طلبات)
-HOT_FRESH_STORE_TYPES = ["restaurants", "cafes", "bakery", "drinks", "sweets"]
-# بارد/جاف: يتحمل الانتظار (حد أقصى 5 طلبات)
-COLD_DRY_STORE_TYPES = ["market", "vegetables"]
-
-# الحدود الافتراضية
-DEFAULT_HOT_FRESH_LIMIT = 2  # طلبات ساخنة/طازجة
-DEFAULT_COLD_DRY_LIMIT = 5   # طلبات باردة/جافة
-
-def get_store_delivery_category(store_type: str) -> str:
-    """تحديد تصنيف التوصيل للمتجر (hot_fresh أو cold_dry)"""
-    if store_type in HOT_FRESH_STORE_TYPES:
-        return "hot_fresh"
-    elif store_type in COLD_DRY_STORE_TYPES:
-        return "cold_dry"
-    else:
-        # افتراضياً نعامله كساخن/طازج للأمان
-        return "hot_fresh"
-
-# حالات الطلب
-ORDER_STATUSES = {
-    "pending": "بانتظار التأكيد",
-    "confirmed": "تم التأكيد",
-    "preparing": "جاري التحضير",
-    "ready": "جاهز للاستلام",
-    "out_for_delivery": "في الطريق",
-    "delivered": "تم التوصيل",
-    "cancelled": "ملغي"
-}
-
-# ============== إشعارات Push للطلبات العاجلة ==============
-
-async def send_priority_order_push_notification(order: dict) -> dict:
-    """
-    إرسال إشعار Push للسائقين الذين لديهم طلبات من نفس المطعم
-    يُستدعى عندما يصبح طلب جديد ready
-    """
-    try:
-        from core.firebase_admin import send_push_to_user
-        
-        restaurant_id = order.get("restaurant_id") or order.get("store_id")
-        if not restaurant_id:
-            return
-        
-        # البحث عن سائقين لديهم طلبات من نفس المطعم
-        drivers_with_same_restaurant = await db.food_orders.aggregate([
-            {
-                "$match": {
-                    "status": "out_for_delivery",
-                    "$or": [
-                        {"restaurant_id": restaurant_id},
-                        {"store_id": restaurant_id}
-                    ],
-                    "driver_id": {"$ne": None}
-                }
-            },
-            {
-                "$group": {
-                    "_id": "$driver_id"
-                }
-            }
-        ]).to_list(length=50)
-        
-        if not drivers_with_same_restaurant:
-            return
-        
-        driver_ids = [d["_id"] for d in drivers_with_same_restaurant]
-        
-        # جلب معلومات الطلب للإشعار
-        store_name = order.get("restaurant_name") or order.get("store_name") or "المطعم"
-        delivery_fee = order.get("driver_delivery_fee") or order.get("delivery_fee") or 0
-        delivery_area = ""
-        if order.get("delivery_address"):
-            if isinstance(order["delivery_address"], dict):
-                delivery_area = order["delivery_address"].get("city") or order["delivery_address"].get("area") or ""
-            else:
-                delivery_area = str(order["delivery_address"])[:30]
-        
-        # إرسال إشعار لكل سائق
-        for driver_id in driver_ids:
-            await send_push_to_user(
-                user_id=driver_id,
-                title="🔔 طلب عاجل من نفس المطعم!",
-                body=f"💰 +{delivery_fee:,} ل.س من {store_name} - {delivery_area}",
-                data={
-                    "type": "priority_order",
-                    "order_id": order.get("id", ""),
-                    "store_name": store_name,
-                    "delivery_fee": str(delivery_fee),
-                    "click_action": "/delivery/dashboard?tab=my"
-                }
-            )
-            
-            # تسجيل الإشعار في قاعدة البيانات
-            await db.notifications.insert_one({
-                "id": str(uuid.uuid4()),
-                "user_id": driver_id,
-                "title": "🔔 طلب عاجل من نفس المطعم!",
-                "message": f"💰 +{delivery_fee:,} ل.س من {store_name} - {delivery_area}",
-                "type": "priority_order",
-                "order_id": order.get("id"),
-                "is_read": False,
-                "created_at": datetime.now(timezone.utc).isoformat()
-            })
-        
-        print(f"✅ Priority push sent to {len(driver_ids)} drivers for order from {store_name}")
-        
-    except Exception as e:
-        print(f"❌ Error sending priority push: {e}")
-
-# ============== Platform Wallet Helper ==============
-
-PLATFORM_WALLET_ID = "platform_admin_wallet"
-
-async def add_commission_to_platform_wallet_food(order_id: str, commission_amount: float, order_number: str = "") -> dict:
-    """إضافة عمولة طلبات الطعام لمحفظة المنصة"""
-    if commission_amount <= 0:
-        return
-    
-    now = datetime.now(timezone.utc).isoformat()
-    
-    # تحديث رصيد المحفظة
-    await db.platform_wallet.update_one(
-        {"id": PLATFORM_WALLET_ID},
-        {
-            "$inc": {
-                "balance": commission_amount,
-                "total_commission_food": commission_amount
-            },
-            "$set": {"updated_at": now}
-        },
-        upsert=True
-    )
-    
-    # تسجيل المعاملة
-    transaction = {
-        "id": str(uuid.uuid4()),
-        "type": "commission",
-        "order_type": "food",
-        "amount": commission_amount,
-        "order_id": order_id,
-        "created_at": now,
-        "description": f"عمولة طلب طعام #{order_number or order_id[:8]}"
-    }
-    await db.platform_wallet_transactions.insert_one(transaction)
 
 # ============== حساب المسافة والتحذير الذكي ==============
 
@@ -672,7 +464,6 @@ async def create_food_order(order: FoodOrderCreate, user: dict = Depends(get_cur
         )
     
     # حساب المسافة (للتسجيل وحساب الأجرة فقط - بدون رفض الطلب)
-    import math
     R = 6371  # نصف قطر الأرض بالكيلومتر
     
     lat1, lon1 = math.radians(store_lat), math.radians(store_lng)
@@ -2188,13 +1979,12 @@ async def get_available_food_orders(
     def calculate_distance(lat1, lon1, lat2, lon2) -> dict:
         if not all([lat1, lon1, lat2, lon2]):
             return 9999  # مسافة كبيرة للطلبات بدون إحداثيات
-        import math
         R = 6371
-        lat1, lon1 = math.radians(lat1), math.radians(lon1)
-        lat2, lon2 = math.radians(lat2), math.radians(lon2)
-        dlat = lat2 - lat1
-        dlon = lon2 - lon1
-        a = math.sin(dlat/2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon/2)**2
+        lat1_r, lon1_r = math.radians(lat1), math.radians(lon1)
+        lat2_r, lon2_r = math.radians(lat2), math.radians(lon2)
+        dlat = lat2_r - lat1_r
+        dlon = lon2_r - lon1_r
+        a = math.sin(dlat/2)**2 + math.cos(lat1_r) * math.cos(lat2_r) * math.sin(dlon/2)**2
         c = 2 * math.asin(math.sqrt(a))
         return R * c
     
@@ -2986,45 +2776,6 @@ async def accept_food_order(
 
 class DriverCancelRequest(BaseModel):
     reason: str  # سبب الإلغاء (إجباري)
-
-async def get_driver_cancel_settings() -> dict:
-    """جلب إعدادات إلغاء الطلب للسائق"""
-    settings = await db.platform_settings.find_one({"id": "main"}, {"_id": 0})
-    
-    default_settings = {
-        "enabled": True,
-        "cancel_window_seconds": 120,  # دقيقتين
-        "max_cancel_rate": 10,  # 10%
-        "lookback_orders": 50,  # آخر 50 طلب
-        "warning_threshold": 7,  # تحذير عند 7%
-        "suspension_threshold": 15  # إيقاف عند 15%
-    }
-    
-    if settings and "driver_cancel_settings" in settings:
-        return {**default_settings, **settings["driver_cancel_settings"]}
-    
-    return default_settings
-
-async def calculate_driver_cancel_rate(driver_id: str, lookback: int = 50) -> dict:
-    """حساب نسبة إلغاء السائق"""
-    # جلب آخر X طلب تم قبولها
-    recent_orders = await db.food_orders.find(
-        {"driver_id": driver_id},
-        {"_id": 0, "id": 1, "driver_cancelled": 1}
-    ).sort("picked_up_at", -1).limit(lookback).to_list(length=lookback)
-    
-    if len(recent_orders) < 5:
-        return {"rate": 0, "cancelled": 0, "total": len(recent_orders), "enough_data": False}
-    
-    cancelled_count = sum(1 for o in recent_orders if o.get("driver_cancelled"))
-    cancel_rate = (cancelled_count / len(recent_orders)) * 100
-    
-    return {
-        "rate": round(cancel_rate, 1),
-        "cancelled": cancelled_count,
-        "total": len(recent_orders),
-        "enough_data": True
-    }
 
 @router.post("/delivery/{order_id}/cancel")
 async def driver_cancel_order(order_id: str, data: DriverCancelRequest, user: dict = Depends(get_current_user)) -> dict:

@@ -397,3 +397,264 @@ async def send_order_notifications(
         )
     except Exception as e:
         print(f"Customer notification error: {e}")
+
+
+# ============== ثوابت إضافية ==============
+
+# تصنيفات أنواع المتاجر للتوصيل
+HOT_FRESH_STORE_TYPES = ["restaurants", "cafes", "bakery", "drinks", "sweets"]
+COLD_DRY_STORE_TYPES = ["market", "vegetables"]
+
+# الحدود الافتراضية
+DEFAULT_HOT_FRESH_LIMIT = 2
+DEFAULT_COLD_DRY_LIMIT = 5
+
+# حالات الطلب
+ORDER_STATUSES = {
+    "pending": "بانتظار التأكيد",
+    "confirmed": "تم التأكيد",
+    "preparing": "جاري التحضير",
+    "ready": "جاهز للاستلام",
+    "out_for_delivery": "في الطريق",
+    "delivered": "تم التوصيل",
+    "cancelled": "ملغي"
+}
+
+PLATFORM_WALLET_ID = "platform_admin_wallet"
+
+
+# ============== دوال إضافية ==============
+
+def get_first_name(full_name: str) -> str:
+    """استخراج الاسم الأول فقط من الاسم الكامل"""
+    if not full_name:
+        return "السائق"
+    return full_name.strip().split()[0] if full_name.strip() else "السائق"
+
+
+def get_store_delivery_category(store_type: str) -> str:
+    """تحديد تصنيف التوصيل للمتجر (hot_fresh أو cold_dry)"""
+    if store_type in HOT_FRESH_STORE_TYPES:
+        return "hot_fresh"
+    elif store_type in COLD_DRY_STORE_TYPES:
+        return "cold_dry"
+    else:
+        return "hot_fresh"
+
+
+async def get_driver_km_settings() -> dict:
+    """جلب إعدادات أجرة السائق بالكيلومتر"""
+    settings = await db.platform_settings.find_one({"id": "main"}, {"_id": 0})
+    
+    default_settings = {
+        "enabled": True,
+        "base_fee": 1000,
+        "price_per_km": 300,
+        "min_fee": 1500
+    }
+    
+    if settings and "driver_km_settings" in settings:
+        return {**default_settings, **settings["driver_km_settings"]}
+    
+    return default_settings
+
+
+async def calculate_driver_fee_by_km(distance_km: float) -> dict:
+    """حساب أجرة السائق بناءً على المسافة"""
+    settings = await get_driver_km_settings()
+    
+    if not settings.get("enabled", True):
+        platform_settings = await db.platform_settings.find_one({"id": "main"})
+        fixed_fee = platform_settings.get("food_delivery_fee", 5000) if platform_settings else 5000
+        return {
+            "driver_fee": fixed_fee,
+            "distance_km": distance_km,
+            "calculation_method": "fixed",
+            "details": None
+        }
+    
+    base_fee = settings.get("base_fee", 1000)
+    price_per_km = settings.get("price_per_km", 300)
+    min_fee = settings.get("min_fee", 1500)
+    
+    calculated_fee = base_fee + (distance_km * price_per_km)
+    final_fee = max(calculated_fee, min_fee)
+    final_fee = round(final_fee)
+    
+    return {
+        "driver_fee": final_fee,
+        "distance_km": round(distance_km, 2),
+        "calculation_method": "per_km",
+        "details": {
+            "base_fee": base_fee,
+            "price_per_km": price_per_km,
+            "min_fee": min_fee,
+            "calculated": round(calculated_fee)
+        }
+    }
+
+
+async def get_driver_cancel_settings() -> dict:
+    """جلب إعدادات إلغاء السائقين"""
+    settings = await db.platform_settings.find_one({"id": "main"}, {"_id": 0})
+    
+    default_settings = {
+        "max_cancel_rate": 20,
+        "warning_threshold": 15,
+        "lookback_orders": 50,
+        "penalty_duration_hours": 24,
+        "penalty_fee": 5000,
+        "free_cancels_per_day": 2
+    }
+    
+    if settings and "driver_cancel_settings" in settings:
+        return {**default_settings, **settings["driver_cancel_settings"]}
+    
+    return default_settings
+
+
+async def calculate_driver_cancel_rate(driver_id: str, lookback: int = 50) -> dict:
+    """حساب نسبة إلغاء السائق"""
+    recent_orders = await db.food_orders.find(
+        {"driver_id": driver_id},
+        {"_id": 0, "status": 1, "cancelled_by": 1}
+    ).sort("created_at", -1).limit(lookback).to_list(length=lookback)
+    
+    if not recent_orders:
+        return {
+            "total_orders": 0,
+            "cancelled_orders": 0,
+            "cancel_rate": 0,
+            "status": "good"
+        }
+    
+    total = len(recent_orders)
+    cancelled = sum(1 for o in recent_orders if o.get("cancelled_by") == "driver")
+    rate = (cancelled / total * 100) if total > 0 else 0
+    
+    settings = await get_driver_cancel_settings()
+    max_rate = settings.get("max_cancel_rate", 20)
+    warning_threshold = settings.get("warning_threshold", 15)
+    
+    status = "good"
+    if rate >= max_rate:
+        status = "blocked"
+    elif rate >= warning_threshold:
+        status = "warning"
+    
+    return {
+        "total_orders": total,
+        "cancelled_orders": cancelled,
+        "cancel_rate": round(rate, 1),
+        "status": status,
+        "max_rate": max_rate,
+        "warning_threshold": warning_threshold
+    }
+
+
+async def add_commission_to_platform_wallet_food(order_id: str, commission_amount: float, order_number: str = "") -> dict:
+    """إضافة عمولة طلبات الطعام لمحفظة المنصة"""
+    import uuid
+    
+    if commission_amount <= 0:
+        return
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    await db.platform_wallet.update_one(
+        {"id": PLATFORM_WALLET_ID},
+        {
+            "$inc": {
+                "balance": commission_amount,
+                "total_commission_food": commission_amount
+            },
+            "$set": {"updated_at": now}
+        },
+        upsert=True
+    )
+    
+    transaction = {
+        "id": str(uuid.uuid4()),
+        "type": "commission",
+        "order_type": "food",
+        "amount": commission_amount,
+        "order_id": order_id,
+        "created_at": now,
+        "description": f"عمولة طلب طعام #{order_number or order_id[:8]}"
+    }
+    await db.platform_wallet_transactions.insert_one(transaction)
+
+
+async def send_priority_order_push_notification(order: dict) -> dict:
+    """إرسال إشعار Push للسائقين الذين لديهم طلبات من نفس المطعم"""
+    import uuid
+    
+    try:
+        from core.firebase_admin import send_push_to_user
+        
+        restaurant_id = order.get("restaurant_id") or order.get("store_id")
+        if not restaurant_id:
+            return
+        
+        drivers_with_same_restaurant = await db.food_orders.aggregate([
+            {
+                "$match": {
+                    "status": "out_for_delivery",
+                    "$or": [
+                        {"restaurant_id": restaurant_id},
+                        {"store_id": restaurant_id}
+                    ],
+                    "driver_id": {"$ne": None}
+                }
+            },
+            {
+                "$group": {
+                    "_id": "$driver_id"
+                }
+            }
+        ]).to_list(length=50)
+        
+        if not drivers_with_same_restaurant:
+            return
+        
+        driver_ids = [d["_id"] for d in drivers_with_same_restaurant]
+        
+        store_name = order.get("restaurant_name") or order.get("store_name") or "المطعم"
+        delivery_fee = order.get("driver_delivery_fee") or order.get("delivery_fee") or 0
+        delivery_area = ""
+        if order.get("delivery_address"):
+            if isinstance(order["delivery_address"], dict):
+                delivery_area = order["delivery_address"].get("city") or order["delivery_address"].get("area") or ""
+            else:
+                delivery_area = str(order["delivery_address"])[:30]
+        
+        for driver_id in driver_ids:
+            await send_push_to_user(
+                user_id=driver_id,
+                title="🔔 طلب عاجل من نفس المطعم!",
+                body=f"💰 +{delivery_fee:,} ل.س من {store_name} - {delivery_area}",
+                data={
+                    "type": "priority_order",
+                    "order_id": order.get("id", ""),
+                    "store_name": store_name,
+                    "delivery_fee": str(delivery_fee),
+                    "click_action": "/delivery/dashboard?tab=my"
+                }
+            )
+            
+            await db.notifications.insert_one({
+                "id": str(uuid.uuid4()),
+                "user_id": driver_id,
+                "title": "🔔 طلب عاجل من نفس المطعم!",
+                "message": f"💰 +{delivery_fee:,} ل.س من {store_name} - {delivery_area}",
+                "type": "priority_order",
+                "order_id": order.get("id"),
+                "is_read": False,
+                "created_at": datetime.now(timezone.utc).isoformat()
+            })
+        
+        print(f"✅ Priority push sent to {len(driver_ids)} drivers for order from {store_name}")
+        
+    except Exception as e:
+        print(f"❌ Error sending priority push: {e}")
+
