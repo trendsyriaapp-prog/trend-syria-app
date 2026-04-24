@@ -13,6 +13,7 @@ import { useModalBackHandler } from '../../hooks/useBackButton';
 import {
   createIcon,
   createNumberedIcon,
+  createRoutePointIcon,
   foodStoreIcon,
   productStoreIcon,
   customerIcon,
@@ -51,7 +52,10 @@ import {
   RouteDetailsCard,
   OptimizedRouteCard,
   ExternalPriorityPopup,
-  OpenMapButton 
+  OpenMapButton,
+  MarkerPopupContent,
+  RouteLinePopup,
+  StopMarkerPopup 
 } from './orders-map/components';
 
 const API = process.env.REACT_APP_BACKEND_URL;
@@ -1987,15 +1991,7 @@ const OrdersMap = ({
                       }}
                     >
                       <Popup>
-                        <div className="text-right text-xs">
-                          <p className="font-bold mb-1" style={{ color: line.color }}>
-                            🛒 {line.storeName}
-                          </p>
-                          <p>👤 {line.customerName}</p>
-                          <p className="text-gray-400 text-[10px] mt-1">
-                            {line.dashArray ? '📦 بانتظار الاستلام' : '🚚 جاهز للتوصيل'}
-                          </p>
-                        </div>
+                        <RouteLinePopup line={line} isAvailable={false} />
                       </Popup>
                     </Polyline>
                   ))}
@@ -2013,15 +2009,7 @@ const OrdersMap = ({
                       }}
                     >
                       <Popup>
-                        <div className="text-right text-xs">
-                          <p className="font-bold mb-1 text-emerald-600">
-                            🏪 {line.storeName}
-                          </p>
-                          <p>👤 {line.customerName}</p>
-                          <p className="text-emerald-500 text-[10px] mt-1">
-                            ✨ متاح للقبول
-                          </p>
-                        </div>
+                        <RouteLinePopup line={line} isAvailable={true} />
                       </Popup>
                     </Polyline>
                   ))}
@@ -2036,100 +2024,12 @@ const OrdersMap = ({
                       }}
                     >
                       <Popup>
-                        <div className="text-right min-w-[180px] max-w-[220px]">
-                          {/* اسم العميل */}
-                          <p className="font-bold text-xs mb-1 text-gray-800">👤 {marker.title}</p>
-                          
-                          {marker.order && (
-                            <>
-                              {/* ⭐ اسم المطعم/المتجر */}
-                              {(marker.order.store_name || marker.order.restaurant_name || marker.order.seller_name) && (
-                                <div className="bg-amber-50 rounded p-1.5 mb-2 border border-amber-200">
-                                  <p className="text-amber-800 font-bold text-xs text-center">
-                                    🏪 {marker.order.store_name || marker.order.restaurant_name || marker.order.seller_name}
-                                  </p>
-                                </div>
-                              )}
-                              
-                              {/* معلومات التواصل */}
-                              <div className="text-[10px] text-gray-600 mb-2 bg-gray-50 rounded p-1.5">
-                                <p className="font-medium truncate mb-1">📍 {
-                                  typeof (marker.order.delivery_address || marker.order.address) === 'object'
-                                    ? [(marker.order.delivery_address || marker.order.address)?.area, (marker.order.delivery_address || marker.order.address)?.street, (marker.order.delivery_address || marker.order.address)?.building].filter(Boolean).join(', ')
-                                    : (marker.order.delivery_address || marker.order.address)
-                                }</p>
-                                <p className="text-gray-400 text-xs">
-                                  🔒 رقم العميل مخفي (استخدم زر الاتصال)
-                                </p>
-                                {/* رقم المطعم/البائع */}
-                                {(marker.order.restaurant_phone || marker.order.store_phone || marker.order.seller_phone) && (
-                                  <p className="text-green-600">
-                                    📞 {marker.order.restaurant_id ? 'المطعم' : 'البائع'}: {marker.order.restaurant_phone || marker.order.store_phone || marker.order.seller_phone}
-                                  </p>
-                                )}
-                              </div>
-                              
-                              {/* قائمة المنتجات/الأطعمة */}
-                              {marker.order.items && marker.order.items.length > 0 && (
-                                <div className="text-[10px] mb-2 bg-orange-50 rounded p-1.5 max-h-[80px] overflow-y-auto">
-                                  <p className="font-bold text-orange-700 mb-1">🍽️ الأصناف:</p>
-                                  {marker.order.items.slice(0, 5).map((item, idx) => (
-                                    <p key={idx} className="text-gray-700 truncate">
-                                      • {item.name} {item.quantity > 1 ? `×${item.quantity}` : ''}
-                                    </p>
-                                  ))}
-                                  {marker.order.items.length > 5 && (
-                                    <p className="text-gray-500 text-[9px]">+{marker.order.items.length - 5} أصناف أخرى</p>
-                                  )}
-                                </div>
-                              )}
-                              
-                              {/* ربح السائق من التوصيل */}
-                              {(marker.order.driver_earnings || marker.order.driver_delivery_fee || marker.order.delivery_fee) ? (
-                                <div className="bg-green-50 rounded p-1.5 mb-2">
-                                  <p className="text-green-700 font-bold text-xs text-center">
-                                    💵 ربحك: {(marker.order.driver_earnings || marker.order.driver_delivery_fee || marker.order.delivery_fee || 0).toLocaleString()} ل.س
-                                  </p>
-                                </div>
-                              ) : null}
-                              
-                              {/* زر قبول الطلب - يظهر فقط للطلبات المتاحة (غير المقبولة) */}
-                              {(marker.type === 'food-store' || marker.type === 'product-store') && !marker.isMyOrder && (
-                                <button
-                                  onClick={() => {
-                                    if (marker.type === 'food-store') {
-                                      handleAcceptFoodOrderFromMap(marker.order);
-                                    } else {
-                                      handleAcceptOrderFromMap(marker.order);
-                                    }
-                                  }}
-                                  className="w-full py-1.5 bg-green-500 hover:bg-green-600 text-white rounded text-[10px] font-bold mb-1 transition-colors"
-                                >
-                                  ✅ قبول الطلب
-                                </button>
-                              )}
-                              
-                              {/* أزرار لطلباتي المقبولة */}
-                              {(marker.type === 'food-store' || marker.type === 'product-store') && marker.isMyOrder && (
-                                <div className="space-y-1">
-                                  <button
-                                    onClick={() => {
-                                      const order = marker.order;
-                                      const storeCoords = marker.position;
-                                      if (storeCoords) {
-                                        window.open(`https://www.google.com/maps/dir/?api=1&destination=${storeCoords[0]},${storeCoords[1]}&travelmode=driving`, '_blank');
-                                      }
-                                    }}
-                                    className="w-full py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded text-[10px] font-bold transition-colors"
-                                  >
-                                    🗺️ التنقل للمتجر
-                                  </button>
-                                  <p className="text-[9px] text-center text-green-400">✓ طلب مقبول</p>
-                                </div>
-                              )}
-                            </>
-                          )}
-                        </div>
+                        <MarkerPopupContent
+                          marker={marker}
+                          onAcceptFoodOrder={handleAcceptFoodOrderFromMap}
+                          onAcceptOrder={handleAcceptOrderFromMap}
+                          onShowRoute={showRouteForOrder}
+                        />
                       </Popup>
                     </Marker>
                   ))}
@@ -2249,45 +2149,7 @@ const OrdersMap = ({
                             })}
                           >
                             <Popup>
-                              <div className="text-center min-w-[160px]">
-                                <div className="flex items-center justify-center gap-1 mb-1">
-                                  <span className="bg-gray-800 text-white text-xs px-2 py-0.5 rounded-full">
-                                    نقطة {stop.stopNumber}
-                                  </span>
-                                </div>
-                                <p className="font-bold text-sm mb-1">
-                                  {stop.type === 'driver' ? '📍 موقعك (البداية)' : 
-                                   stop.type === 'store' ? `🏪 ${stop.label}` : 
-                                   `🏠 ${stop.label}`}
-                                </p>
-                                {stop.order && (
-                                  <div className="text-[11px] text-gray-600 text-right space-y-1">
-                                    {stop.type === 'store' ? (
-                                      <p className="text-green-600 font-medium">📦 استلام الطلب</p>
-                                    ) : (
-                                      <p className="text-red-600 font-medium">🚚 تسليم الطلب</p>
-                                    )}
-                                    <p className="truncate">
-                                      {typeof (stop.order.delivery_address || stop.order.address) === 'object'
-                                        ? [(stop.order.delivery_address || stop.order.address)?.area, (stop.order.delivery_address || stop.order.address)?.street, (stop.order.delivery_address || stop.order.address)?.building].filter(Boolean).join(', ')
-                                        : (stop.order.delivery_address || stop.order.address)}
-                                    </p>
-                                    {(stop.order.driver_delivery_fee || stop.order.driver_earnings || stop.order.delivery_fee) ? (
-                                      <p className="text-green-600 font-bold">
-                                        💵 ربحك: {(stop.order.driver_earnings || stop.order.driver_delivery_fee || stop.order.delivery_fee || 0).toLocaleString()} ل.س
-                                      </p>
-                                    ) : null}
-                                    <p className="text-gray-400 text-xs">
-                                      🔒 رقم العميل مخفي
-                                    </p>
-                                    {stop.order.order_code && (
-                                      <p className="text-gray-500">
-                                        كود: {stop.order.order_code}
-                                      </p>
-                                    )}
-                                  </div>
-                                )}
-                              </div>
+                              <StopMarkerPopup stop={stop} />
                             </Popup>
                           </Marker>
                         );
@@ -2306,25 +2168,7 @@ const OrdersMap = ({
                             (currentDriverLocation || driverLocation).latitude,
                             (currentDriverLocation || driverLocation).longitude
                           ]}
-                          icon={L.divIcon({
-                            className: 'route-marker',
-                            html: `<div style="
-                              background: #f97316;
-                              width: 30px;
-                              height: 30px;
-                              border-radius: 50%;
-                              display: flex;
-                              align-items: center;
-                              justify-content: center;
-                              font-size: 14px;
-                              border: 3px solid white;
-                              box-shadow: 0 2px 10px rgba(0,0,0,0.4);
-                              font-weight: bold;
-                              color: white;
-                            ">1</div>`,
-                            iconSize: [30, 30],
-                            iconAnchor: [15, 15]
-                          })}
+                          icon={createRoutePointIcon('#f97316', 1)}
                         >
                           <Popup>📍 موقعك (نقطة البداية)</Popup>
                         </Marker>
@@ -2337,25 +2181,7 @@ const OrdersMap = ({
                             selectedOrderForRoute.store_latitude,
                             selectedOrderForRoute.store_longitude
                           ]}
-                          icon={L.divIcon({
-                            className: 'route-marker',
-                            html: `<div style="
-                              background: #22c55e;
-                              width: 30px;
-                              height: 30px;
-                              border-radius: 50%;
-                              display: flex;
-                              align-items: center;
-                              justify-content: center;
-                              font-size: 14px;
-                              border: 3px solid white;
-                              box-shadow: 0 2px 10px rgba(0,0,0,0.4);
-                              font-weight: bold;
-                              color: white;
-                            ">2</div>`,
-                            iconSize: [30, 30],
-                            iconAnchor: [15, 15]
-                          })}
+                          icon={createRoutePointIcon('#22c55e', 2)}
                         >
                           <Popup>🏪 المتجر (استلام الطلب)</Popup>
                         </Marker>
@@ -2368,25 +2194,7 @@ const OrdersMap = ({
                             selectedOrderForRoute.latitude,
                             selectedOrderForRoute.longitude
                           ]}
-                          icon={L.divIcon({
-                            className: 'route-marker',
-                            html: `<div style="
-                              background: #ef4444;
-                              width: 30px;
-                              height: 30px;
-                              border-radius: 50%;
-                              display: flex;
-                              align-items: center;
-                              justify-content: center;
-                              font-size: 14px;
-                              border: 3px solid white;
-                              box-shadow: 0 2px 10px rgba(0,0,0,0.4);
-                              font-weight: bold;
-                              color: white;
-                            ">3</div>`,
-                            iconSize: [30, 30],
-                            iconAnchor: [15, 15]
-                          })}
+                          icon={createRoutePointIcon('#ef4444', 3)}
                         >
                           <Popup>🏠 العميل (تسليم الطلب)</Popup>
                         </Marker>

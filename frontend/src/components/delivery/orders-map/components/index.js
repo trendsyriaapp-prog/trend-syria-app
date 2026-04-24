@@ -20,3 +20,6 @@ export { default as RouteDetailsCard } from './RouteDetailsCard';
 export { default as OptimizedRouteCard } from './OptimizedRouteCard';
 export { default as ExternalPriorityPopup } from './ExternalPriorityPopup';
 export { default as OpenMapButton } from './OpenMapButton';
+export { default as MarkerPopupContent } from './MarkerPopupContent';
+export { default as RouteLinePopup } from './RouteLinePopup';
+export { default as StopMarkerPopup } from './StopMarkerPopup';

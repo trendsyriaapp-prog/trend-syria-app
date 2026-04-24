@@ -69,6 +69,33 @@ export const createNumberedIcon = (color, number, size = 44) => {
   });
 };
 
+/**
+ * إنشاء أيقونة مسار بسيطة مُرقمة
+ * @param {string} color - لون الخلفية
+ * @param {number} number - رقم النقطة
+ */
+export const createRoutePointIcon = (color, number) => {
+  return L.divIcon({
+    className: 'route-marker',
+    html: `<div style="
+      background: ${color};
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      border: 3px solid white;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.4);
+      font-weight: bold;
+      color: white;
+    ">${number}</div>`,
+    iconSize: [30, 30],
+    iconAnchor: [15, 15]
+  });
+};
+
 // الأيقونات الجاهزة - محسّنة للوضع الداكن
 export const foodStoreIcon = createIcon('#22c55e', '🍔', 48); // أخضر ساطع - أكبر
 export const productStoreIcon = createIcon('#3b82f6', '📦', 48); // أزرق ساطع
