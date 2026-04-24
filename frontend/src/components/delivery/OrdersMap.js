@@ -9,83 +9,38 @@ import axios from 'axios';
 import useNotificationSound from '../../hooks/useNotificationSound';
 import { useModalBackHandler } from '../../hooks/useBackButton';
 
+// استيراد المكونات المُستخرجة
+import {
+  createIcon,
+  createNumberedIcon,
+  foodStoreIcon,
+  productStoreIcon,
+  customerIcon,
+  driverIcon,
+  DEFAULT_CENTER
+} from './orders-map/MapIcons';
+
+import {
+  MapUpdater,
+  calculateDistanceKm,
+  calculateDistanceFromRoute
+} from './orders-map/MapHelpers';
+
+import {
+  speakInstruction,
+  announceNewOrder,
+  announceOrderAccepted,
+  announceNavigation,
+  announceArrival,
+  announcePriorityOrder
+} from './orders-map/VoiceAnnouncements';
+
 const API = process.env.REACT_APP_BACKEND_URL;
 
-// إصلاح مشكلة أيقونات Leaflet
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
-});
-
-// أيقونات مخصصة - محسّنة للوضع الداكن
-const createIcon = (color, emoji, size = 44) => {
-  return L.divIcon({
-    className: 'custom-marker',
-    html: `<div style="
-      background: ${color};
-      width: ${size}px;
-      height: ${size}px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: ${size * 0.5}px;
-      border: 4px solid white;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.5), 0 0 20px ${color}40;
-      position: relative;
-    ">${emoji}</div>`,
-    iconSize: [size, size],
-    iconAnchor: [size/2, size],
-    popupAnchor: [0, -size]
-  });
-};
-
-// أيقونة مرقمة للمحطات
-const createNumberedIcon = (color, number, size = 44) => {
-  return L.divIcon({
-    className: 'custom-marker',
-    html: `<div style="
-      background: ${color};
-      width: ${size}px;
-      height: ${size}px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: ${size * 0.45}px;
-      font-weight: bold;
-      color: white;
-      border: 4px solid white;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.5), 0 0 20px ${color}40;
-      text-shadow: 0 2px 4px rgba(0,0,0,0.5);
-    ">${number}</div>`,
-    iconSize: [size, size],
-    iconAnchor: [size/2, size],
-    popupAnchor: [0, -size]
-  });
-};
-
-// ألوان محسّنة للوضع الداكن
-const foodStoreIcon = createIcon('#22c55e', '🍔', 48); // أخضر ساطع - أكبر
-const productStoreIcon = createIcon('#3b82f6', '📦', 48); // أزرق ساطع
-const customerIcon = createIcon('#f59e0b', '🏠', 44); // أصفر/برتقالي للعميل
-const driverIcon = createIcon('#ffffff', '🏍️', 50); // أبيض للسائق - الأكبر
-
-// مكون لتحديث مركز الخريطة
-const MapUpdater = ({ center, zoom }) => {
-  const map = useMap();
-  useEffect(() => {
-    if (center) {
-      map.setView(center, zoom || 13);
-    }
-  }, [center, zoom, map]);
-  return null;
-};
-
-// إحداثيات دمشق كافتراضي فقط
-const DEFAULT_CENTER = [33.5138, 36.2765];
+// ملاحظة: تم استخراج دوال الأيقونات والمساعدة والتنبيهات الصوتية إلى:
+// - ./orders-map/MapIcons.js
+// - ./orders-map/MapHelpers.js
+// - ./orders-map/VoiceAnnouncements.js
 
 const OrdersMap = ({ 
   orders: ordersProp, 

@@ -6,12 +6,9 @@ import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
 import { useModalBackHandler } from '../hooks/useBackButton';
-import { compressDocumentImage } from '../utils/imageCompression';
-import GoogleMapsLocationPicker from '../components/GoogleMapsLocationPicker';
-import AddressPickerModal from '../components/AddressPickerModal';
 import { 
-  Truck, Clock, Upload, Camera, CreditCard, AlertTriangle, Navigation, Home, Volume2, VolumeX, LogOut, Wallet, Star, Settings,
-  Car, Bike, Check, MapPin, X, Trash2
+  Truck, Clock, Navigation, Volume2, VolumeX, LogOut, Wallet, Star, Settings,
+  Check, MapPin, X, Trash2
 } from 'lucide-react';
 import { PickupChecklist, DeliveryChecklist, ReturnChecklist } from '../components/delivery/DeliveryChecklists';
 import AvailableOrdersList from '../components/delivery/AvailableOrdersList';
@@ -34,12 +31,17 @@ import EarningsStats from '../components/delivery/EarningsStats';
 import RouteProgressBar from '../components/delivery/RouteProgressBar';
 import SecurityDepositCard from '../components/delivery/SecurityDepositCard';
 import ResignationSection from '../components/delivery/ResignationSection';
-import ValidatedInput from '../components/ValidatedInput';
 import '../styles/driver-dark-theme.css';
+
+// استيراد المكونات المُستخرجة
+import DeliveryDocumentsComponent from './delivery/DeliveryDocuments';
+import DeliveryPendingApprovalComponent from './delivery/DeliveryPendingApproval';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
-// صفحة رفع وثائق موظف التوصيل
+// لوحة تحكم موظف التوصيل - الكود القديم (للتوافقية)
+// ملاحظة: تم استخراج DeliveryDocuments إلى ./delivery/DeliveryDocuments.js
+// ملاحظة: تم استخراج DeliveryPendingApproval إلى ./delivery/DeliveryPendingApproval.js
 const DeliveryDocuments = () => {
   const { user, fetchUser } = useAuth();
   const { toast } = useToast();
@@ -2482,3 +2484,7 @@ const DeliveryPendingApproval = () => {
 };
 
 export { DeliveryDocuments, DeliveryDashboard, DeliveryPendingApproval };
+
+// تصدير المكونات المُستخرجة للاستيراد المباشر
+export { DeliveryDocumentsComponent, DeliveryPendingApprovalComponent };
+

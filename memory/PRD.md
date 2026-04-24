@@ -165,9 +165,16 @@
 - [x] تقسيم `DeliverySettingsTab.js`: من 2444 سطر إلى ~715 سطر ✅ (24 أبريل 2026)
   - استخراج 16 مكون فرعي إلى `/delivery-settings/`
   - المكونات: DispatchStatusCard, ViolationsReportCard, DistancePricingCard, DriverEarningsCard, WaitTimeCard, WaitCompensationCard, OrderLimitsCard, SmartPriorityCard, DeliveryTimeSettingsCard, ProductDeliveryHoursCard, PerformanceLevelsCard, LeaderboardRewardsCard, WorkingHoursCard, HoldSettingsCard, CustomerProtectionCard, UndeliveredOrdersCard, Modals
-- [ ] تقسيم المكونات الكبيرة المتبقية:
-  - `OrdersMap.js`: 3403 سطر
-  - `DeliveryPages.js`: 2492 سطر
+- [x] تقسيم `DeliveryPages.js`: استخراج مكونين ✅ (24 أبريل 2026)
+  - `/pages/delivery/DeliveryDocuments.js` - صفحة رفع الوثائق
+  - `/pages/delivery/DeliveryPendingApproval.js` - صفحة انتظار الموافقة
+- [x] تقسيم `OrdersMap.js`: استخراج دوال مساعدة ✅ (24 أبريل 2026)
+  - `/components/delivery/orders-map/MapIcons.js` - أيقونات الخريطة
+  - `/components/delivery/orders-map/MapHelpers.js` - دوال المسافة والإحداثيات
+  - `/components/delivery/orders-map/VoiceAnnouncements.js` - التنبيهات الصوتية
+- [ ] تقسيم المكونات الكبيرة المتبقية (اختياري):
+  - `OrdersMap.js`: 3358 سطر (تم استخراج الدوال المساعدة، الـ JSX متشابك)
+  - `DeliveryPages.js`: 2490 سطر (تم استخراج مكونين، DeliveryDashboard متشابك)
 
 ### P5 - مستقبلي
 - [ ] نظام الوكلاء/مكاتب الحوالات للشحن
