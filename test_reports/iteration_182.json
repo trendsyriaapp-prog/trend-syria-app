@@ -1,0 +1,115 @@
+{
+  "summary": "Phase 15 refactoring tested successfully. Added 3 new helper functions (get_order_for_customer, get_order_for_store, get_order_for_driver) to food_order_helpers.py. These helpers replace 6 usages of db.food_orders.find_one in food_orders.py. All 26 tests passed. Backend is healthy. No regressions detected.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_results": {
+    "pytest_summary": {
+      "total_tests": 26,
+      "passed": 26,
+      "failed": 0,
+      "status": "PASS"
+    },
+    "test_categories": {
+      "backend_health": {
+        "tests": 2,
+        "passed": 2,
+        "details": ["Health endpoint returns healthy", "Food orders router loaded correctly"]
+      },
+      "phase15_imports": {
+        "tests": 3,
+        "passed": 3,
+        "details": ["get_order_for_customer importable", "get_order_for_store importable", "get_order_for_driver importable"]
+      },
+      "food_orders_imports": {
+        "tests": 2,
+        "passed": 2,
+        "details": ["food_orders.py loads with Phase 15 imports", "Phase 15 imports found in food_orders.py"]
+      },
+      "endpoints_auth": {
+        "tests": 6,
+        "passed": 6,
+        "details": ["All endpoints using new helpers require authentication"]
+      },
+      "function_signatures": {
+        "tests": 3,
+        "passed": 3,
+        "details": ["All 3 new helpers have correct signatures"]
+      },
+      "file_structure": {
+        "tests": 3,
+        "passed": 3,
+        "details": ["food_orders.py reduced to 4422 lines", "food_order_helpers.py has Phase 15 functions", "food_order_helpers.py has 1216 lines"]
+      },
+      "function_logic": {
+        "tests": 4,
+        "passed": 4,
+        "details": ["Helper functions work correctly"]
+      },
+      "no_regressions": {
+        "tests": 3,
+        "passed": 3,
+        "details": ["check-distance endpoint works", "check-drivers-availability requires auth", "create order requires auth"]
+      }
+    }
+  },
+  "phase15_refactoring_details": {
+    "new_helpers_added": [
+      {
+        "name": "get_order_for_customer",
+        "location": "food_order_helpers.py:1181-1189",
+        "purpose": "جلب طلب للعميل مع التحقق من الملكية"
+      },
+      {
+        "name": "get_order_for_store",
+        "location": "food_order_helpers.py:1192-1200",
+        "purpose": "جلب طلب للمتجر مع التحقق من الملكية"
+      },
+      {
+        "name": "get_order_for_driver",
+        "location": "food_order_helpers.py:1203-1215",
+        "purpose": "جلب طلب للسائق مع التحقق من الملكية"
+      }
+    ],
+    "usages_in_food_orders": [
+      "Line 832: activate_scheduled_order",
+      "Line 865: cancel_scheduled_order",
+      "Line 1501: start_order_preparation",
+      "Line 1609: update_order_status",
+      "Line 3740: rate_food_order",
+      "Line 4034: mark_order_ready_for_pickup",
+      "Line 4289: another endpoint"
+    ],
+    "file_size_changes": {
+      "food_orders.py": "4435 → 4422 lines (-13 lines)",
+      "food_order_helpers.py": "1216 lines total"
+    }
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_phase15_order_fetch_helpers.py",
+    "/app/test_reports/pytest/phase15_order_fetch_helpers_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [
+    "/app/backend/tests/test_phase15_order_fetch_helpers.py"
+  ],
+  "success_rate": {
+    "backend": "100% (26/26 tests passed)",
+    "frontend": "N/A - backend only testing"
+  },
+  "seed_data_creation": "None",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Phase 15 refactoring completed successfully. Added 3 new helper functions (get_order_for_customer, get_order_for_store, get_order_for_driver) to food_order_helpers.py. These helpers encapsulate order fetching with ownership verification. All tests pass. food_orders.py is now 4422 lines. Continuing incremental refactoring approach.",
+  "mocked_apis": {
+    "has_mocked_apis": true,
+    "mocked_apis_list": ["SMS OTP (الكود دائماً 123456)", "Sham Cash Payment Gateway"]
+  }
+}

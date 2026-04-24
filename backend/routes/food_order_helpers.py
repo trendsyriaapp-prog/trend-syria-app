@@ -1173,3 +1173,44 @@ async def assign_driver_to_order(order_id: str, driver_id: str, driver_name: str
     )
     return result.modified_count > 0
 
+
+# ==========================================
+# دوال جلب الطلبات مع التحقق من الصلاحية
+# ==========================================
+
+async def get_order_for_customer(order_id: str, customer_id: str) -> dict:
+    """جلب طلب للعميل مع التحقق من الملكية"""
+    order = await db.food_orders.find_one({
+        "id": order_id,
+        "customer_id": customer_id
+    })
+    if not order:
+        raise HTTPException(status_code=404, detail="الطلب غير موجود")
+    return order
+
+
+async def get_order_for_store(order_id: str, store_id: str) -> dict:
+    """جلب طلب للمتجر مع التحقق من الملكية"""
+    order = await db.food_orders.find_one({
+        "id": order_id,
+        "store_id": store_id
+    })
+    if not order:
+        raise HTTPException(status_code=404, detail="الطلب غير موجود")
+    return order
+
+
+async def get_order_for_driver(order_id: str, driver_id: str, status: str = None) -> dict:
+    """جلب طلب للسائق مع التحقق من الملكية"""
+    query = {
+        "id": order_id,
+        "driver_id": driver_id
+    }
+    if status:
+        query["status"] = status
+    
+    order = await db.food_orders.find_one(query)
+    if not order:
+        raise HTTPException(status_code=404, detail="الطلب غير موجود")
+    return order
+

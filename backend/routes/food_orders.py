@@ -41,6 +41,9 @@ from routes.food_order_helpers import (
     can_driver_accept_order,
     update_order_status_with_history,
     assign_driver_to_order,
+    get_order_for_customer,
+    get_order_for_store,
+    get_order_for_driver,
     HOT_FRESH_STORE_TYPES,
     COLD_DRY_STORE_TYPES,
     DEFAULT_HOT_FRESH_LIMIT,
@@ -826,10 +829,7 @@ async def get_my_scheduled_orders(user: dict = Depends(get_current_user)) -> dic
 @router.post("/{order_id}/activate-scheduled")
 async def activate_scheduled_order(order_id: str, user: dict = Depends(get_current_user)) -> dict:
     """تفعيل طلب مجدول (تحويله من مجدول إلى معلق)"""
-    order = await db.food_orders.find_one({"id": order_id, "customer_id": user["id"]})
-    
-    if not order:
-        raise HTTPException(status_code=404, detail="الطلب غير موجود")
+    order = await get_order_for_customer(order_id, user["id"])
     
     if not order.get("is_scheduled"):
         raise HTTPException(status_code=400, detail="هذا ليس طلباً مجدولاً")
@@ -862,10 +862,7 @@ async def activate_scheduled_order(order_id: str, user: dict = Depends(get_curre
 @router.delete("/{order_id}/cancel-scheduled")
 async def cancel_scheduled_order(order_id: str, user: dict = Depends(get_current_user)) -> dict:
     """إلغاء طلب مجدول (مع استرداد المبلغ)"""
-    order = await db.food_orders.find_one({"id": order_id, "customer_id": user["id"]})
-    
-    if not order:
-        raise HTTPException(status_code=404, detail="الطلب غير موجود")
+    order = await get_order_for_customer(order_id, user["id"])
     
     if not order.get("is_scheduled"):
         raise HTTPException(status_code=400, detail="هذا ليس طلباً مجدولاً")
@@ -1501,9 +1498,7 @@ async def start_order_preparation(
     if not store:
         raise HTTPException(status_code=403, detail="غير مصرح لك")
     
-    order = await db.food_orders.find_one({"id": order_id, "store_id": store["id"]})
-    if not order:
-        raise HTTPException(status_code=404, detail="الطلب غير موجود")
+    order = await get_order_for_store(order_id, store["id"])
     
     if order.get("status") not in ["pending", "confirmed"]:
         raise HTTPException(status_code=400, detail="لا يمكن بدء التحضير لهذا الطلب")
@@ -1611,9 +1606,7 @@ async def update_order_status(
         if not store:
             raise HTTPException(status_code=403, detail="غير مصرح لك")
         
-        order = await db.food_orders.find_one({"id": order_id, "store_id": store["id"]})
-        if not order:
-            raise HTTPException(status_code=404, detail="الطلب غير موجود")
+        order = await get_order_for_store(order_id, store["id"])
         valid_statuses = ["confirmed", "preparing", "ready", "cancelled"]
     
     if new_status not in valid_statuses:
@@ -3744,9 +3737,7 @@ async def get_my_food_deliveries(user: dict = Depends(get_current_user)) -> dict
 @router.post("/{order_id}/rate")
 async def rate_food_order(order_id: str, rating_data: dict, user: dict = Depends(get_current_user)) -> dict:
     """تقييم طلب الطعام (المتجر وموظف التوصيل)"""
-    order = await db.food_orders.find_one({"id": order_id, "customer_id": user["id"]})
-    if not order:
-        raise HTTPException(status_code=404, detail="الطلب غير موجود")
+    order = await get_order_for_customer(order_id, user["id"])
     
     if order["status"] != "delivered":
         raise HTTPException(status_code=400, detail="لا يمكن تقييم طلب لم يتم توصيله بعد")
@@ -4040,9 +4031,7 @@ async def request_driver_for_order(
         raise HTTPException(status_code=404, detail="المتجر غير موجود")
     
     # جلب الطلب
-    order = await db.food_orders.find_one({"id": order_id, "store_id": store["id"]})
-    if not order:
-        raise HTTPException(status_code=404, detail="الطلب غير موجود")
+    order = await get_order_for_store(order_id, store["id"])
     
     if order.get("status") not in ["pending", "confirmed"]:
         raise HTTPException(status_code=400, detail="لا يمكن طلب سائق لهذا الطلب")
@@ -4297,9 +4286,7 @@ async def set_order_preparation_time(
         raise HTTPException(status_code=404, detail="المتجر غير موجود")
     
     # جلب الطلب
-    order = await db.food_orders.find_one({"id": order_id, "store_id": store["id"]})
-    if not order:
-        raise HTTPException(status_code=404, detail="الطلب غير موجود")
+    order = await get_order_for_store(order_id, store["id"])
     
     if not order.get("driver_id"):
         raise HTTPException(status_code=400, detail="لم يتم تعيين سائق بعد")
