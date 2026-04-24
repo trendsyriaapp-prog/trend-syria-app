@@ -80,12 +80,12 @@ async def check_drivers_availability_for_order(order_id: str, user: dict = Depen
     يُستخدم من البائع قبل قبول الطلب لمعرفة حالة التوصيل
     """
     # جلب الطلب
-    order = await db.food_orders.find_one({"id": order_id}, {"_id": 0})
+    order = await get_order_by_id(order_id)
     if not order:
         raise HTTPException(status_code=404, detail="الطلب غير موجود")
     
     # جلب المتجر
-    store = await db.food_stores.find_one({"id": order.get("store_id")}, {"_id": 0})
+    store = await get_store_by_id(order.get("store_id"))
     if not store:
         return {
             "available": False,
@@ -1346,13 +1346,13 @@ async def get_seller_food_orders(user: dict = Depends(get_current_user)) -> dict
 @router.get("/{order_id}")
 async def get_food_order(order_id: str, user: dict = Depends(get_current_user)) -> dict:
     """جلب تفاصيل طلب"""
-    order = await db.food_orders.find_one({"id": order_id}, {"_id": 0})
+    order = await get_order_by_id(order_id)
     if not order:
         raise HTTPException(status_code=404, detail="الطلب غير موجود")
     
     # التحقق من الصلاحية
     if order["customer_id"] != user["id"]:
-        store = await db.food_stores.find_one({"id": order["store_id"]})
+        store = await get_store_by_id(order["store_id"])
         if not store or store["owner_id"] != user["id"]:
             if user["user_type"] not in ["admin", "delivery"]:
                 raise HTTPException(status_code=403, detail="غير مصرح لك")
@@ -1363,7 +1363,7 @@ async def get_food_order(order_id: str, user: dict = Depends(get_current_user)) 
 @router.post("/{order_id}/cancel")
 async def cancel_food_order(order_id: str, user: dict = Depends(get_current_user)) -> dict:
     """إلغاء طلب - مسموح فقط قبل أن يؤكد البائع الطلب"""
-    order = await db.food_orders.find_one({"id": order_id})
+    order = await get_order_by_id(order_id)
     if not order:
         raise HTTPException(status_code=404, detail="الطلب غير موجود")
     
@@ -2659,7 +2659,7 @@ async def driver_cancel_order(order_id: str, data: DriverCancelRequest, user: di
         raise HTTPException(status_code=403, detail="ميزة إلغاء الطلب معطلة حالياً")
     
     # جلب الطلب
-    order = await db.food_orders.find_one({"id": order_id})
+    order = await get_order_by_id(order_id)
     if not order:
         raise HTTPException(status_code=404, detail="الطلب غير موجود")
     
@@ -3245,7 +3245,7 @@ async def get_pickup_code(order_id: str, user: dict = Depends(get_current_user))
     if user["user_type"] not in ["seller", "admin"]:
         raise HTTPException(status_code=403, detail="للبائع أو المشرف فقط")
     
-    order = await db.food_orders.find_one({"id": order_id}, {"_id": 0})
+    order = await get_order_by_id(order_id)
     if not order:
         raise HTTPException(status_code=404, detail="الطلب غير موجود")
     
@@ -3889,7 +3889,7 @@ async def admin_cancel_order_with_penalty(
     if user["user_type"] != "admin":
         raise HTTPException(status_code=403, detail="للمديرين فقط")
     
-    order = await db.food_orders.find_one({"id": order_id})
+    order = await get_order_by_id(order_id)
     if not order:
         raise HTTPException(status_code=404, detail="الطلب غير موجود")
     
