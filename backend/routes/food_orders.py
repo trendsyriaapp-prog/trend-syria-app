@@ -1792,12 +1792,9 @@ async def report_false_driver_arrival(
 async def get_available_food_orders(
     driver_lat: float = Query(None, description="خط عرض السائق الحالي"),
     driver_lng: float = Query(None, description="خط طول السائق الحالي"),
-    user: dict = Depends(get_current_user)
+    user: dict = Depends(require_delivery_user)
 ) -> dict:
     """جلب الطلبات المتاحة للتوصيل - مرتبة حسب القرب من السائق"""
-    if user["user_type"] != "delivery":
-        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
-    
     now = datetime.now(timezone.utc).isoformat()
     
     # الطلبات الجاهزة للاستلام وانتهت مهلة إلغائها
@@ -2030,11 +2027,8 @@ async def get_available_food_orders(
 
 
 @router.post("/delivery/batch/{batch_id}/accept")
-async def accept_batch_orders(batch_id: str, user: dict = Depends(get_current_user)) -> dict:
+async def accept_batch_orders(batch_id: str, user: dict = Depends(require_delivery_user)) -> dict:
     """قبول جميع طلبات الدفعة - السائق يجب أن يقبل الكل"""
-    if user["user_type"] != "delivery":
-        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
-    
     # التحقق من أن السائق متاح
     doc = await db.delivery_documents.find_one(
         {"$or": [{"driver_id": user["id"]}, {"delivery_id": user["id"]}]},
@@ -2121,15 +2115,12 @@ async def get_batch_pickup_plan(
     batch_id: str,
     driver_lat: float = Query(None, description="خط عرض السائق"),
     driver_lng: float = Query(None, description="خط طول السائق"),
-    user: dict = Depends(get_current_user)
+    user: dict = Depends(require_delivery_user)
 ) -> dict:
     """
     الحصول على خطة الاستلام المثلى للطلب التجميعي
     يرتب المتاجر بحيث يُستلم من الأبعد عن العميل أولاً والأقرب أخيراً
     """
-    if user["user_type"] != "delivery":
-        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
-    
     # جلب طلبات الدفعة
     orders = await db.food_orders.find({"batch_id": batch_id}).to_list(None)
     
@@ -2212,11 +2203,8 @@ async def get_batch_pickup_plan(
             "⏱️ تحقق من جهوزية كل متجر قبل الذهاب إليه"
         ]
     }
-async def complete_batch_delivery(batch_id: str, user: dict = Depends(get_current_user)) -> dict:
+async def complete_batch_delivery(batch_id: str, user: dict = Depends(require_delivery_user)) -> dict:
     """إتمام توصيل جميع طلبات الدفعة"""
-    if user["user_type"] != "delivery":
-        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
-    
     orders = await db.food_orders.find({
         "batch_id": batch_id,
         "driver_id": user["id"],
@@ -2285,12 +2273,9 @@ async def accept_food_order(
     order_id: str, 
     driver_lat: float = Query(None, description="خط عرض السائق الحالي"),
     driver_lng: float = Query(None, description="خط طول السائق الحالي"),
-    user: dict = Depends(get_current_user)
+    user: dict = Depends(require_delivery_user)
 ) -> dict:
     """قبول طلب توصيل مع التحقق من الحد الأقصى حسب نوع المتجر (ساخن/طازج أو بارد/جاف)"""
-    if user["user_type"] != "delivery":
-        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
-    
     # التحقق من أن السائق متاح
     doc = await db.delivery_documents.find_one(
         {"$or": [{"driver_id": user["id"]}, {"delivery_id": user["id"]}]},
@@ -2636,16 +2621,13 @@ async def accept_food_order(
 # ============== إلغاء الطلب من السائق ==============
 
 @router.post("/delivery/{order_id}/cancel")
-async def driver_cancel_order(order_id: str, data: DriverCancelRequest, user: dict = Depends(get_current_user)) -> dict:
+async def driver_cancel_order(order_id: str, data: DriverCancelRequest, user: dict = Depends(require_delivery_user)) -> dict:
     """
     إلغاء طلب من السائق
     - مسموح فقط خلال فترة زمنية محددة
     - يتطلب سبب
     - يؤثر على نسبة الإلغاء
     """
-    if user["user_type"] != "delivery":
-        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
-    
     # جلب إعدادات الإلغاء
     cancel_settings = await get_driver_cancel_settings()
     
