@@ -166,7 +166,10 @@ const FullScreenMapPicker = ({
         setPosition({ lat: latitude, lng: longitude });
         setMapCenter([latitude, longitude]);
         setLoading(false);
-        // لا نظهر toast هنا - نترك المستخدم يضغط زر التأكيد بنفسه
+        toast({
+          title: "✅ تم تحديد موقعك",
+          description: "يمكنك تعديل الموقع بسحب الدبوس، ثم اضغط تأكيد الموقع"
+        });
       },
       (error) => {
         setLoading(false);

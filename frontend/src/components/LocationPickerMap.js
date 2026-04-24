@@ -4,6 +4,7 @@ import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-lea
 import { MapPin, Navigation, X, Check, Loader2 } from 'lucide-react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { useToast } from '../hooks/use-toast';
 
 // Fix Leaflet marker icon issue
 delete L.Icon.Default.prototype._getIconUrl;
@@ -110,6 +111,7 @@ const LocationPickerMap = ({
   const [gpsAccuracy, setGpsAccuracy] = useState(null); // دقة GPS بالمتر
   const [accuracyStatus, setAccuracyStatus] = useState(null); // 'good', 'poor', null
   const mapRef = useRef(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     if (isOpen && initialLat && initialLng) {
@@ -119,11 +121,23 @@ const LocationPickerMap = ({
   }, [isOpen, initialLat, initialLng]);
 
   // معالج زر الرجوع في الهاتف (Back button)
+  // نستخدم ref لتتبع حالة التحميل دون إعادة تشغيل useEffect
+  const gettingLocationRef = useRef(gettingLocation);
+  useEffect(() => {
+    gettingLocationRef.current = gettingLocation;
+  }, [gettingLocation]);
+
   useEffect(() => {
     if (!isOpen) return;
 
     // إضافة entry إلى history عند فتح الخريطة
     const handleBackButton = (e) => {
+      // تجاهل popstate إذا كنا نجلب الموقع حالياً
+      if (gettingLocationRef.current) {
+        e.preventDefault();
+        window.history.pushState({ locationPicker: true }, '');
+        return;
+      }
       e.preventDefault();
       onClose();
     };
@@ -136,10 +150,6 @@ const LocationPickerMap = ({
 
     return () => {
       window.removeEventListener('popstate', handleBackButton);
-      // إزالة state من history إذا لم يتم الضغط على زر الرجوع
-      if (window.history.state?.locationPicker) {
-        window.history.back();
-      }
     };
   }, [isOpen, onClose]);
 
@@ -193,11 +203,20 @@ const LocationPickerMap = ({
         
         reverseGeocode(latitude, longitude);
         setGettingLocation(false);
+        
+        toast({
+          title: "✅ تم تحديد موقعك",
+          description: "يمكنك تعديل الموقع بالضغط على الخريطة، ثم اضغط تأكيد"
+        });
       },
       (error) => {
         logger.error('Geolocation error:', error);
-        alert('تعذر تحديد موقعك. تأكد من تفعيل خدمة الموقع.');
         setGettingLocation(false);
+        toast({
+          title: "⚠️ تعذر تحديد الموقع",
+          description: "تأكد من تفعيل خدمة الموقع وحاول مرة أخرى",
+          variant: "destructive"
+        });
       },
       { enableHighAccuracy: false, timeout: 30000, maximumAge: 60000 }
     );
