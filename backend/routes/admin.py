@@ -18,6 +18,10 @@ admin_logger = logging.getLogger("admin")
 def hash_password(password: str) -> str:
     return hashlib.sha256(password.encode()).hexdigest()
 
+def get_now() -> str:
+    """إرجاع الوقت الحالي بصيغة ISO"""
+    return datetime.now(timezone.utc).isoformat()
+
 # ============== إعدادات المنصة ==============
 
 @router.get("/settings")
@@ -56,7 +60,7 @@ async def get_platform_settings(user: dict = Depends(get_current_user)) -> dict:
             # إعدادات التغليف
             "gift_wrapping_enabled": True,               # تغليف الهدايا
             "gift_wrapping_price": 5000,                 # سعر تغليف الهدايا
-            "updated_at": datetime.now(timezone.utc).isoformat()
+            "updated_at": get_now()
         }
         await db.platform_settings.insert_one(settings)
     
@@ -89,7 +93,7 @@ async def update_platform_settings(data: dict, user: dict = Depends(get_current_
     # الحقول الرقمية (number)
     number_fields = ["products_free_shipping_threshold", "food_free_delivery_threshold", "gift_wrapping_price"]
     
-    update = {"updated_at": datetime.now(timezone.utc).isoformat()}
+    update = {"updated_at": get_now()}
     activated_sections = []
     
     # معالجة الحقول المنطقية
@@ -142,7 +146,7 @@ async def update_platform_settings(data: dict, user: dict = Depends(get_current_
 
 async def send_platform_activation_notification(platform: str, title: str, message: str) -> int:
     """إرسال إشعار تفعيل قسم لجميع المستخدمين"""
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     users = await db.users.find(
         {"user_type": {"$in": ["customer", "seller"]}},
@@ -269,7 +273,7 @@ async def get_public_settings() -> dict:
 
 async def send_offer_notification_to_all_users(title: str, message: str, offer_type: str, offer_data: dict = None) -> int:
     """إرسال إشعار عرض لجميع المستخدمين"""
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     # جلب جميع المستخدمين (عملاء)
     users = await db.users.find(
@@ -303,7 +307,7 @@ async def send_offer_notification_to_all_users(title: str, message: str, offer_t
 
 async def send_flash_sale_notification_to_sellers(title: str, message: str, flash_sale_id: str, sale_scope: str = "all") -> int:
     """إرسال إشعار عرض فلاش للبائعين فقط لدعوتهم للمشاركة"""
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     # تحديد نوع البائعين بناءً على نطاق العرض
     if sale_scope == "food_only":
@@ -787,7 +791,7 @@ async def approve_seller(seller_id: str, user: dict = Depends(get_current_user))
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
     
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     await db.users.update_one({"id": seller_id}, {"$set": {"is_approved": True}})
     # تحديث جميع وثائق البائع (في حالة وجود طلبات متعددة)
@@ -846,7 +850,7 @@ async def reject_seller(seller_id: str, data: dict = Body(default={}), user: dic
     # سبب الرفض اختياري
     reason = data.get("reason", "").strip() if data else ""
     
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     # جلب بيانات البائع قبل الرفض
     seller = await db.users.find_one({"id": seller_id}, {"_id": 0, "password": 0})
@@ -934,7 +938,7 @@ async def suspend_seller(seller_id: str, data: dict = None, user: dict = Depends
         raise HTTPException(status_code=404, detail="البائع غير موجود")
     
     reason = data.get("reason", "") if data else ""
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     await db.users.update_one(
         {"id": seller_id},
@@ -985,7 +989,7 @@ async def activate_seller(seller_id: str, user: dict = Depends(get_current_user)
     )
     
     # إشعار البائع
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     await db.notifications.insert_one({
         "id": str(uuid.uuid4()),
         "user_id": seller_id,
@@ -1021,7 +1025,7 @@ async def delete_seller(seller_id: str, user: dict = Depends(get_current_user)) 
             detail=f"لا يمكن حذف البائع - لديه {active_orders} طلب نشط"
         )
     
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     # حفظ بيانات البائع في سجل الحذف
     await db.deleted_sellers.insert_one({
@@ -1099,7 +1103,7 @@ async def get_all_sellers_with_status(user: dict = Depends(get_current_user)) ->
 # ============== Products Management ==============
 
 @router.get("/products/pending")
-async def get_pending_products(user: dict = Depends(get_current_user)) -> dict:
+async def get_pending_products(user: dict = Depends(get_current_user)) -> list:
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
     
@@ -1196,7 +1200,7 @@ async def approve_product(product_id: str, user: dict = Depends(get_current_user
                 "is_approved": True,
                 "approval_status": "approved",
                 "approved_by": user["id"],
-                "approved_at": datetime.now(timezone.utc).isoformat()
+                "approved_at": get_now()
             }
         }
     )
@@ -1209,7 +1213,7 @@ async def approve_product(product_id: str, user: dict = Depends(get_current_user
         "message": f"تمت الموافقة على منتج '{product.get('name')}' وهو الآن متاح للعملاء",
         "type": "product_approved",
         "read": False,
-        "created_at": datetime.now(timezone.utc).isoformat()
+        "created_at": get_now()
     })
     
     return {"message": "تم الموافقة على المنتج"}
@@ -1235,7 +1239,7 @@ async def reject_product(product_id: str, data: dict = None, user: dict = Depend
                 "approval_status": "rejected",
                 "rejection_reason": reason,
                 "rejected_by": user["id"],
-                "rejected_at": datetime.now(timezone.utc).isoformat()
+                "rejected_at": get_now()
             }
         }
     )
@@ -1248,7 +1252,7 @@ async def reject_product(product_id: str, data: dict = None, user: dict = Depend
         "message": f"تم رفض منتج '{product.get('name')}'. السبب: {reason or 'غير محدد'}",
         "type": "product_rejected",
         "read": False,
-        "created_at": datetime.now(timezone.utc).isoformat()
+        "created_at": get_now()
     })
     
     return {"message": "تم رفض المنتج", "reason": reason if reason else None}
@@ -1256,7 +1260,7 @@ async def reject_product(product_id: str, data: dict = None, user: dict = Depend
 # ============== موافقة منتجات الطعام ==============
 
 @router.get("/food-products/pending")
-async def get_pending_food_products(user: dict = Depends(get_current_user)) -> dict:
+async def get_pending_food_products(user: dict = Depends(get_current_user)) -> list:
     """جلب منتجات الطعام بانتظار الموافقة"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -1305,7 +1309,7 @@ async def approve_food_product(product_id: str, user: dict = Depends(get_current
                 "is_approved": True,
                 "approval_status": "approved",
                 "approved_by": user["id"],
-                "approved_at": datetime.now(timezone.utc).isoformat()
+                "approved_at": get_now()
             }
         }
     )
@@ -1320,7 +1324,7 @@ async def approve_food_product(product_id: str, user: dict = Depends(get_current
             "message": f"تمت الموافقة على منتج '{product.get('name')}' وهو الآن متاح للعملاء",
             "type": "product_approved",
             "read": False,
-            "created_at": datetime.now(timezone.utc).isoformat()
+            "created_at": get_now()
         })
     
     return {"message": "تم الموافقة على المنتج"}
@@ -1346,7 +1350,7 @@ async def reject_food_product(product_id: str, data: dict = None, user: dict = D
                 "approval_status": "rejected",
                 "rejection_reason": reason,
                 "rejected_by": user["id"],
-                "rejected_at": datetime.now(timezone.utc).isoformat()
+                "rejected_at": get_now()
             }
         }
     )
@@ -1361,7 +1365,7 @@ async def reject_food_product(product_id: str, data: dict = None, user: dict = D
             "message": f"تم رفض منتج '{product.get('name')}'. السبب: {reason or 'غير محدد'}",
             "type": "product_rejected",
             "read": False,
-            "created_at": datetime.now(timezone.utc).isoformat()
+            "created_at": get_now()
         })
     
     return {"message": "تم رفض المنتج", "reason": reason if reason else None}
@@ -1503,7 +1507,7 @@ async def approve_delivery_driver(driver_id: str, user: dict = Depends(get_curre
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
     
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     # جلب وثائق السائق للحصول على الصورة الشخصية
     doc = await db.delivery_documents.find_one(
@@ -1575,7 +1579,7 @@ async def reject_delivery_driver(driver_id: str, data: dict = Body(default={}), 
     # سبب الرفض اختياري
     reason = data.get("reason", "").strip() if data else ""
     
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     # جلب بيانات السائق قبل الرفض
     driver = await db.users.find_one({"id": driver_id}, {"_id": 0, "password": 0})
@@ -1675,14 +1679,14 @@ async def create_sub_admin(data: SubAdminCreate, user: dict = Depends(get_curren
         "is_verified": True,
         "is_approved": True,
         "created_by": user["id"],
-        "created_at": datetime.now(timezone.utc).isoformat()
+        "created_at": get_now()
     }
     await db.users.insert_one(sub_admin_doc)
     
     return {"id": sub_admin_id, "message": "تم إنشاء مساعد المدير بنجاح"}
 
 @router.get("/sub-admins")
-async def get_sub_admins(user: dict = Depends(get_current_user)) -> dict:
+async def get_sub_admins(user: dict = Depends(get_current_user)) -> list:
     if user["user_type"] != "admin":
         raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
     
@@ -1771,8 +1775,8 @@ async def get_platform_wallet(user: dict = Depends(get_current_user)) -> dict:
             "total_commission_products": 0,
             "total_commission_food": 0,
             "total_withdrawn": 0,
-            "created_at": datetime.now(timezone.utc).isoformat(),
-            "updated_at": datetime.now(timezone.utc).isoformat()
+            "created_at": get_now(),
+            "updated_at": get_now()
         }
         await db.platform_wallet.insert_one(wallet)
     
@@ -1808,7 +1812,7 @@ async def withdraw_from_platform_wallet(
     if not wallet or wallet.get("balance", 0) < amount:
         raise HTTPException(status_code=400, detail="رصيد غير كافٍ")
     
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     # تحديث الرصيد
     await db.platform_wallet.update_one(
@@ -1940,7 +1944,7 @@ async def update_commission_rates(rates: dict, user: dict = Depends(get_current_
         {
             "$set": {
                 "categories": rates,
-                "updated_at": datetime.now(timezone.utc).isoformat(),
+                "updated_at": get_now(),
                 "updated_by": user["id"]
             }
         },
@@ -1984,7 +1988,7 @@ async def update_commission_rates(rates: dict, user: dict = Depends(get_current_
                         "new_rate": change["new_rate"]
                     },
                     "read": False,
-                    "created_at": datetime.now(timezone.utc).isoformat()
+                    "created_at": get_now()
                 }
                 await db.notifications.insert_one(notification)
     
@@ -2006,7 +2010,7 @@ async def add_commission_category(category: str, rate: float, user: dict = Depen
         {
             "$set": {
                 "categories": current_rates,
-                "updated_at": datetime.now(timezone.utc).isoformat(),
+                "updated_at": get_now(),
                 "updated_by": user["id"]
             }
         },
@@ -2027,7 +2031,7 @@ async def add_commission_category(category: str, rate: float, user: dict = Depen
             "message": f"تم إضافة فئة '{category}' بنسبة عمولة {rate * 100:.0f}%",
             "data": {"category": category, "rate": rate},
             "read": False,
-            "created_at": datetime.now(timezone.utc).isoformat()
+            "created_at": get_now()
         }
         await db.notifications.insert_one(notification)
     
@@ -2051,7 +2055,7 @@ async def delete_commission_category(category: str, user: dict = Depends(get_cur
         {
             "$set": {
                 "categories": current_rates,
-                "updated_at": datetime.now(timezone.utc).isoformat(),
+                "updated_at": get_now(),
                 "updated_by": user["id"]
             }
         },
@@ -2072,7 +2076,7 @@ async def delete_commission_category(category: str, user: dict = Depends(get_cur
             "message": f"تم حذف فئة '{category}' (كانت {old_rate * 100:.0f}%) - ستُطبق العمولة الافتراضية على منتجات هذه الفئة",
             "data": {"category": category, "old_rate": old_rate},
             "read": False,
-            "created_at": datetime.now(timezone.utc).isoformat()
+            "created_at": get_now()
         }
         await db.notifications.insert_one(notification)
     
@@ -2091,7 +2095,7 @@ async def create_notification(data: NotificationCreate, user: dict = Depends(get
         "message": data.message,
         "target": data.target,
         "created_by": user["id"],
-        "created_at": datetime.now(timezone.utc).isoformat()
+        "created_at": get_now()
     }
     
     await db.notifications.insert_one(notification)
@@ -2223,7 +2227,7 @@ async def handle_driver_report(report_id: str, action: str, admin_notes: str = "
     if not report:
         raise HTTPException(status_code=404, detail="البلاغ غير موجود")
     
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     driver_id = report["driver_id"]
     
     # نقاط الخصم حسب نوع البلاغ
@@ -2574,7 +2578,7 @@ async def approve_food_store(store_id: str, user: dict = Depends(get_current_use
     
     await db.food_stores.update_one(
         {"id": store_id},
-        {"$set": {"is_approved": True, "approved_at": datetime.now(timezone.utc).isoformat()}}
+        {"$set": {"is_approved": True, "approved_at": get_now()}}
     )
     
     # إشعار صاحب المتجر
@@ -2604,7 +2608,7 @@ async def reject_food_store(
     if not store:
         raise HTTPException(status_code=404, detail="المتجر غير موجود")
     
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     update_data = {
         "is_approved": False,
@@ -2671,7 +2675,7 @@ async def suspend_food_store(store_id: str, data: dict = None, user: dict = Depe
         raise HTTPException(status_code=404, detail="المتجر غير موجود")
     
     reason = data.get("reason", "") if data else ""
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     await db.food_stores.update_one(
         {"id": store_id},
@@ -2766,7 +2770,7 @@ async def delete_food_store(store_id: str, user: dict = Depends(get_current_user
             detail=f"لا يمكن حذف المتجر - لديه {active_orders} طلب نشط"
         )
     
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     # حفظ بيانات المتجر في سجل الحذف
     await db.deleted_food_stores.insert_one({
@@ -2884,7 +2888,7 @@ async def update_food_commissions(
     
     await db.commission_rates.update_one(
         {"id": "food"},
-        {"$set": {"categories": commissions, "updated_at": datetime.now(timezone.utc).isoformat()}},
+        {"$set": {"categories": commissions, "updated_at": get_now()}},
         upsert=True
     )
     
@@ -2942,7 +2946,7 @@ async def approve_food_offer(offer_id: str, user: dict = Depends(get_current_use
     
     result = await db.food_offers.update_one(
         {"id": offer_id},
-        {"$set": {"admin_approved": True, "approved_by": user["id"], "approved_at": datetime.now(timezone.utc).isoformat()}}
+        {"$set": {"admin_approved": True, "approved_by": user["id"], "approved_at": get_now()}}
     )
     
     if result.matched_count == 0:
@@ -2963,7 +2967,7 @@ async def reject_food_offer(offer_id: str, data: dict = None, user: dict = Depen
     if not offer:
         raise HTTPException(status_code=404, detail="العرض غير موجود")
     
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     update_data = {
         "is_active": False, 
@@ -3011,7 +3015,7 @@ async def admin_update_food_offer(offer_id: str, update_data: dict, user: dict =
     
     update = {k: v for k, v in update_data.items() if k in allowed_fields}
     update["updated_by_admin"] = user["id"]
-    update["admin_updated_at"] = datetime.now(timezone.utc).isoformat()
+    update["admin_updated_at"] = get_now()
     
     if update:
         await db.food_offers.update_one({"id": offer_id}, {"$set": update})
@@ -3045,7 +3049,7 @@ async def admin_create_food_offer(data: dict, user: dict = Depends(get_current_u
     if not data.get("offer_type"):
         raise HTTPException(status_code=400, detail="نوع العرض مطلوب")
     
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     offer_id = str(uuid.uuid4())
     
     offer_doc = {
@@ -3122,7 +3126,7 @@ async def create_flash_sale(sale_data: dict, user: dict = Depends(get_current_us
         "banner_color": sale_data.get("banner_color", "#FF4500"),
         "usage_count": 0,
         "created_by": user["id"],
-        "created_at": datetime.now(timezone.utc).isoformat()
+        "created_at": get_now()
     }
     
     await db.flash_sales.insert_one(sale_doc)
@@ -3170,7 +3174,7 @@ async def update_flash_sale(sale_id: str, update_data: dict, user: dict = Depend
                      "flash_type", "is_active", "banner_image", "banner_color"]
     
     update = {k: v for k, v in update_data.items() if k in allowed_fields}
-    update["updated_at"] = datetime.now(timezone.utc).isoformat()
+    update["updated_at"] = get_now()
     
     result = await db.flash_sales.update_one({"id": sale_id}, {"$set": update})
     
@@ -3298,7 +3302,7 @@ async def approve_flash_sale_request(request_id: str, user: dict = Depends(get_c
         await db.flash_sale_requests.delete_one({"id": request_id})
         raise HTTPException(status_code=400, detail="المتجر محذوف - تم حذف الطلب تلقائياً")
     
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     # تحديث الطلب
     await db.flash_sale_requests.update_one(
@@ -3363,7 +3367,7 @@ async def reject_flash_sale_request(
         await db.flash_sale_requests.delete_one({"id": request_id})
         raise HTTPException(status_code=400, detail="المتجر محذوف - تم حذف الطلب تلقائياً")
     
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     # تحديث الطلب
     await db.flash_sale_requests.update_one(
@@ -3463,7 +3467,7 @@ async def update_flash_sale_settings(settings_data: dict, user: dict = Depends(g
     
     allowed_fields = ["join_fee", "min_products", "max_products", "require_approval", "allow_all_stores"]
     update = {k: v for k, v in settings_data.items() if k in allowed_fields}
-    update["updated_at"] = datetime.now(timezone.utc).isoformat()
+    update["updated_at"] = get_now()
     update["updated_by"] = user["id"]
     
     await db.platform_settings.update_one(
@@ -3974,7 +3978,7 @@ async def admin_cancel_order(
     if order.get("status") == "cancelled":
         raise HTTPException(status_code=400, detail="الطلب ملغي مسبقاً")
     
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     # تحديث الطلب
     update_data = {
@@ -4080,7 +4084,7 @@ async def admin_change_order_status(
     if old_status == new_status:
         raise HTTPException(status_code=400, detail="الطلب بالفعل في هذه الحالة")
     
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     # تحديث الطلب
     update_data = {
@@ -4162,7 +4166,7 @@ async def admin_full_refund(
     if not customer_id:
         raise HTTPException(status_code=400, detail="لم يتم العثور على العميل")
     
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     # إضافة المبلغ لمحفظة العميل
     await db.users.update_one(
@@ -4235,7 +4239,7 @@ async def admin_toggle_product_visibility(
     current_status = product.get("is_hidden", False)
     new_status = not current_status
     
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     await db.products.update_one(
         {"id": product_id},
@@ -4283,7 +4287,7 @@ async def admin_delete_product(
     if not product:
         raise HTTPException(status_code=404, detail="المنتج غير موجود")
     
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     seller_id = product.get("seller_id")
     product_name = product.get("name", "")
     
@@ -4437,7 +4441,7 @@ async def approve_food_item(item_id: str, user: dict = Depends(get_current_user)
     if not item:
         raise HTTPException(status_code=404, detail="الطبق غير موجود")
     
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     await db.food_items.update_one(
         {"id": item_id},
@@ -4481,7 +4485,7 @@ async def reject_food_item(
         raise HTTPException(status_code=404, detail="الطبق غير موجود")
     
     reason = data.get("reason", "").strip() if data else ""
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     # حذف الطبق أو تحديد حالة الرفض
     await db.food_items.delete_one({"id": item_id})
@@ -4530,7 +4534,7 @@ async def get_promotion_settings(user: dict = Depends(get_current_user)) -> dict
             "flash_days": [0, 1, 2, 3, 4, 5, 6],  # كل أيام الأسبوع (0=الاثنين، 6=الأحد)
             "food_flash_enabled": True,     # تفعيل فلاش الطعام
             "products_flash_enabled": True, # تفعيل فلاش المنتجات
-            "updated_at": datetime.now(timezone.utc).isoformat()
+            "updated_at": get_now()
         }
         await db.platform_settings.insert_one(default_settings.copy())
         settings = default_settings
@@ -4555,7 +4559,7 @@ async def update_promotion_settings(data: dict, user: dict = Depends(get_current
     if user["user_type"] != "admin":
         raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
     
-    update = {"updated_at": datetime.now(timezone.utc).isoformat()}
+    update = {"updated_at": get_now()}
     
     if "cost_per_product" in data:
         update["cost_per_product"] = int(data["cost_per_product"])
@@ -4597,7 +4601,7 @@ async def get_all_promotions(user: dict = Depends(get_current_user)) -> dict:
     if user["user_type"] != "admin":
         raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
     
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     # الترويجات النشطة
     active = await db.product_promotions.find(
@@ -4637,7 +4641,7 @@ async def cancel_promotion(promotion_id: str, user: dict = Depends(get_current_u
     # تحديث حالة الترويج ليصبح منتهي
     await db.product_promotions.update_one(
         {"id": promotion_id},
-        {"$set": {"expires_at": datetime.now(timezone.utc).isoformat(), "cancelled": True}}
+        {"$set": {"expires_at": get_now(), "cancelled": True}}
     )
     
     # إشعار البائع
@@ -4648,7 +4652,7 @@ async def cancel_promotion(promotion_id: str, user: dict = Depends(get_current_u
         "message": f"تم إلغاء ترويج منتج '{promotion.get('product_name', '')}'",
         "type": "promotion_cancelled",
         "is_read": False,
-        "created_at": datetime.now(timezone.utc).isoformat()
+        "created_at": get_now()
     })
     
     return {"message": "تم إلغاء الترويج"}
@@ -4731,7 +4735,7 @@ async def reset_database(data: dict, user: dict = Depends(get_current_user)) -> 
                 "balance": 0,
                 "total_earnings": 0,
                 "pending_withdrawals": 0,
-                "updated_at": datetime.now(timezone.utc).isoformat()
+                "updated_at": get_now()
             }},
             upsert=True
         )
