@@ -1,12 +1,7 @@
 // /app/frontend/src/components/admin/delivery-settings/DistancePricingCard.js
-// بطاقة إعدادات أجور التوصيل بالمسافة
+// بطاقة إعدادات أجور التوصيل بالمسافة (رسوم العميل)
 
-import { useState } from 'react';
-import { MapPin, Save, RefreshCw, CheckCircle, AlertCircle } from 'lucide-react';
-import axios from 'axios';
-import { useToast } from '../../../hooks/use-toast';
-
-const API = process.env.REACT_APP_BACKEND_URL;
+import { MapPin, Save, RefreshCw } from 'lucide-react';
 
 const formatPrice = (price) => {
   return new Intl.NumberFormat('ar-SY').format(price) + ' ل.س';
@@ -15,24 +10,9 @@ const formatPrice = (price) => {
 const DistancePricingCard = ({ 
   distanceSettings, 
   setDistanceSettings,
-  onRefresh 
+  saving,
+  onSave
 }) => {
-  const { toast } = useToast();
-  const [saving, setSaving] = useState(false);
-
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-      await axios.post(`${API}/api/admin/settings/distance-pricing`, distanceSettings, {
-        withCredentials: true
-      });
-      toast({ title: "تم الحفظ", description: "تم حفظ إعدادات الأسعار بنجاح" });
-    } catch (error) {
-      toast({ title: "خطأ", description: "فشل في حفظ الإعدادات", variant: "destructive" });
-    }
-    setSaving(false);
-  };
-
   return (
     <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
       <div className="bg-gradient-to-l from-green-500 to-teal-500 p-2 text-white">
@@ -83,20 +63,26 @@ const DistancePricingCard = ({
                 ...distanceSettings,
                 base_fee: e.target.value === '' ? '' : parseInt(e.target.value) || 0
               })}
-              className="w-full bg-white border border-green-300 rounded-lg py-2 px-3 text-center font-bold text-green-600 text-sm"
-              placeholder="500"
+              onBlur={(e) => {
+                if (e.target.value === '') {
+                  setDistanceSettings({...distanceSettings, base_fee: 0});
+                }
+              }}
+              className="w-full p-1.5 border border-green-300 rounded text-center text-sm font-bold"
+              min={0}
+              step={100}
             />
-            <p className="text-[9px] text-gray-500 text-center mt-1">ل.س</p>
+            <p className="text-center text-[9px] text-green-600 mt-0.5">ل.س</p>
           </div>
 
-          {/* السعر لكل كم */}
+          {/* سعر الكيلومتر */}
           <div className="bg-blue-50 rounded-lg p-2 border border-blue-200">
             <div className="flex items-center gap-1.5 mb-1.5">
               <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
                 <span className="text-white text-xs">📏</span>
               </div>
               <div>
-                <h3 className="font-bold text-[10px] text-gray-800">لكل كيلومتر</h3>
+                <h3 className="font-bold text-[10px] text-gray-800">سعر الكيلومتر</h3>
               </div>
             </div>
             <input
@@ -106,10 +92,16 @@ const DistancePricingCard = ({
                 ...distanceSettings,
                 price_per_km: e.target.value === '' ? '' : parseInt(e.target.value) || 0
               })}
-              className="w-full bg-white border border-blue-300 rounded-lg py-2 px-3 text-center font-bold text-blue-600 text-sm"
-              placeholder="200"
+              onBlur={(e) => {
+                if (e.target.value === '') {
+                  setDistanceSettings({...distanceSettings, price_per_km: 0});
+                }
+              }}
+              className="w-full p-1.5 border border-blue-300 rounded text-center text-sm font-bold"
+              min={0}
+              step={50}
             />
-            <p className="text-[9px] text-gray-500 text-center mt-1">ل.س/كم</p>
+            <p className="text-center text-[9px] text-blue-600 mt-0.5">ل.س/كم</p>
           </div>
 
           {/* الحد الأدنى */}
@@ -129,20 +121,59 @@ const DistancePricingCard = ({
                 ...distanceSettings,
                 min_fee: e.target.value === '' ? '' : parseInt(e.target.value) || 0
               })}
-              className="w-full bg-white border border-orange-300 rounded-lg py-2 px-3 text-center font-bold text-orange-600 text-sm"
-              placeholder="1000"
+              onBlur={(e) => {
+                if (e.target.value === '') {
+                  setDistanceSettings({...distanceSettings, min_fee: 0});
+                }
+              }}
+              className="w-full p-1.5 border border-orange-300 rounded text-center text-sm font-bold"
+              min={0}
+              step={100}
             />
-            <p className="text-[9px] text-gray-500 text-center mt-1">ل.س</p>
+            <p className="text-center text-[9px] text-orange-600 mt-0.5">ل.س</p>
           </div>
         </div>
 
+        {/* تفعيل النظام */}
+        <div className="mt-2 grid grid-cols-2 gap-1.5">
+          <label className="flex items-center gap-1.5 p-2 bg-gray-50 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-100">
+            <input
+              type="checkbox"
+              checked={distanceSettings.enabled_for_food}
+              onChange={(e) => setDistanceSettings({
+                ...distanceSettings,
+                enabled_for_food: e.target.checked
+              })}
+              className="w-4 h-4 text-green-500 rounded"
+            />
+            <div>
+              <span className="font-bold text-[10px] text-gray-800">🍔 طلبات الطعام</span>
+            </div>
+          </label>
+
+          <label className="flex items-center gap-1.5 p-2 bg-gray-50 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-100">
+            <input
+              type="checkbox"
+              checked={distanceSettings.enabled_for_products}
+              onChange={(e) => setDistanceSettings({
+                ...distanceSettings,
+                enabled_for_products: e.target.checked
+              })}
+              className="w-4 h-4 text-green-500 rounded"
+            />
+            <div>
+              <span className="font-bold text-[10px] text-gray-800">📦 طلبات المنتجات</span>
+            </div>
+          </label>
+        </div>
+
         <button
-          onClick={handleSave}
+          onClick={onSave}
           disabled={saving}
-          className="mt-2 w-full bg-gradient-to-l from-green-500 to-teal-500 text-white py-2 rounded-lg font-bold text-sm hover:from-green-600 hover:to-teal-600 disabled:opacity-50 flex items-center justify-center gap-2"
+          className="mt-2 w-full bg-gradient-to-l from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white px-3 py-1.5 rounded-lg flex items-center justify-center gap-1.5 text-xs font-bold disabled:opacity-50"
         >
-          {saving ? <RefreshCw size={16} className="animate-spin" /> : <Save size={16} />}
-          حفظ رسوم التوصيل
+          {saving ? <RefreshCw size={14} className="animate-spin" /> : <Save size={14} />}
+          حفظ
         </button>
       </div>
     </div>

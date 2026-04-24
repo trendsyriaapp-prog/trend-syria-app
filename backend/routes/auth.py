@@ -960,7 +960,7 @@ async def reset_brute_force_locks(user: dict = Depends(get_current_user)) -> dic
 
 @router.post("/verify-device-otp")
 @limiter.limit("5/minute")
-async def verify_device_otp(request: Request, data: DeviceOTPVerify) -> dict:
+async def verify_device_otp(request: Request, response: Response, data: DeviceOTPVerify) -> dict:
     """
     🔐 التحقق من OTP للجهاز الجديد
     بعد التحقق، يتم إضافة الجهاز للقائمة الموثوقة وإرجاع التوكن
@@ -1063,6 +1063,9 @@ async def verify_device_otp(request: Request, data: DeviceOTPVerify) -> dict:
     roles = user.get("roles", [user_type])
     active_role = user.get("active_role", user_type)
     role_status = user.get("role_status", {})
+    
+    # 🔒 تعيين cookies المصادقة
+    set_auth_cookies(response, access_token, refresh_token_str)
     
     return {
         "success": True,
