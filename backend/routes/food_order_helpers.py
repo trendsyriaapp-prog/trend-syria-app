@@ -23,6 +23,14 @@ def require_store_owner(user: dict = Depends(get_current_user)) -> dict:
     return user
 
 
+async def get_user_store(user_id: str) -> dict:
+    """جلب متجر المستخدم مع التحقق من الملكية"""
+    store = await db.food_stores.find_one({"owner_id": user_id})
+    if not store:
+        raise HTTPException(status_code=403, detail="غير مصرح لك")
+    return store
+
+
 async def validate_store(store_id: str) -> dict:
     """التحقق من وجود المتجر وإرجاعه"""
     store = await db.food_stores.find_one({

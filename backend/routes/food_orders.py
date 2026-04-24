@@ -45,6 +45,7 @@ from routes.food_order_helpers import (
     get_order_for_store,
     get_order_for_driver,
     require_delivery_user,
+    get_user_store,
     HOT_FRESH_STORE_TYPES,
     COLD_DRY_STORE_TYPES,
     DEFAULT_HOT_FRESH_LIMIT,
@@ -1428,9 +1429,7 @@ async def get_store_orders(
     user: dict = Depends(get_current_user)
 ) -> dict:
     """جلب طلبات المتجر - فقط الطلبات التي انتهت مهلة إلغائها"""
-    store = await db.food_stores.find_one({"owner_id": user["id"]})
-    if not store:
-        raise HTTPException(status_code=404, detail="لا يوجد متجر مرتبط بحسابك")
+    store = await get_user_store(user["id"])
     
     now = datetime.now(timezone.utc).isoformat()
     
@@ -1495,9 +1494,7 @@ async def start_order_preparation(
     بدء تحضير الطلب - للطعام فقط
     يرسل الطلب للسائق الأقرب بعد (وقت_التحضير - 7 دقائق)
     """
-    store = await db.food_stores.find_one({"owner_id": user["id"]})
-    if not store:
-        raise HTTPException(status_code=403, detail="غير مصرح لك")
+    store = await get_user_store(user["id"])
     
     order = await get_order_for_store(order_id, store["id"])
     
@@ -1603,9 +1600,7 @@ async def update_order_status(
             raise HTTPException(status_code=404, detail="الطلب غير موجود")
         valid_statuses = list(ORDER_STATUSES.keys())
     else:
-        store = await db.food_stores.find_one({"owner_id": user["id"]})
-        if not store:
-            raise HTTPException(status_code=403, detail="غير مصرح لك")
+        store = await get_user_store(user["id"])
         
         order = await get_order_for_store(order_id, store["id"])
         valid_statuses = ["confirmed", "preparing", "ready", "cancelled"]
@@ -1676,9 +1671,7 @@ async def report_false_driver_arrival(
     إبلاغ البائع عن وصول كاذب للسائق
     يُسجل شكوى ويُلغي عداد الانتظار
     """
-    store = await db.food_stores.find_one({"owner_id": user["id"]})
-    if not store:
-        raise HTTPException(status_code=403, detail="غير مصرح لك")
+    store = await get_user_store(user["id"])
     
     order = await db.food_orders.find_one({
         "id": order_id,
@@ -3933,9 +3926,7 @@ async def request_driver_for_order(
         raise HTTPException(status_code=403, detail="غير مصرح لك")
     
     # جلب المتجر
-    store = await db.food_stores.find_one({"owner_id": user["id"]})
-    if not store:
-        raise HTTPException(status_code=404, detail="المتجر غير موجود")
+    store = await get_user_store(user["id"])
     
     # جلب الطلب
     order = await get_order_for_store(order_id, store["id"])
@@ -4182,9 +4173,7 @@ async def set_order_preparation_time(
         raise HTTPException(status_code=403, detail="غير مصرح لك")
     
     # جلب المتجر
-    store = await db.food_stores.find_one({"owner_id": user["id"]})
-    if not store:
-        raise HTTPException(status_code=404, detail="المتجر غير موجود")
+    store = await get_user_store(user["id"])
     
     # جلب الطلب
     order = await get_order_for_store(order_id, store["id"])

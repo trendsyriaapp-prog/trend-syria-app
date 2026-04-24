@@ -1,0 +1,187 @@
+{
+  "summary": "Phase 20 refactoring tested successfully. get_user_store helper added to food_order_helpers.py and used in 6 places in food_orders.py. All 19 tests passed. Backend is healthy. File size reduced from 4323 to 4312 lines (-11 lines).",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {
+        "endpoint": "get_seller_food_orders (line 1334)",
+        "issue": "Still uses manual db.food_stores.find_one({owner_id: user[id]})",
+        "priority": "LOW",
+        "note": "Should be replaced with get_user_store in future phase"
+      },
+      {
+        "endpoint": "get_store_order_details (line 3190)",
+        "issue": "Still uses manual db.food_stores.find_one({owner_id: user[id]})",
+        "priority": "LOW",
+        "note": "Should be replaced with get_user_store in future phase"
+      },
+      {
+        "endpoint": "get_store_earnings_summary (line 4289)",
+        "issue": "Still uses manual db.food_stores.find_one({owner_id: user[id]})",
+        "priority": "LOW",
+        "note": "Should be replaced with get_user_store in future phase"
+      }
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_results": {
+    "pytest_summary": {
+      "total_tests": 19,
+      "passed": 19,
+      "failed": 0,
+      "status": "PASS"
+    },
+    "test_categories": {
+      "backend_health": {
+        "tests": 2,
+        "passed": 2,
+        "details": ["Health endpoint returns healthy", "Food orders router loaded correctly"]
+      },
+      "phase20_helper_exists": {
+        "tests": 3,
+        "passed": 3,
+        "details": [
+          "get_user_store function exists in food_order_helpers.py",
+          "get_user_store implementation is correct (queries food_stores with owner_id)",
+          "get_user_store is imported in food_orders.py"
+        ]
+      },
+      "phase20_helper_usage": {
+        "tests": 6,
+        "passed": 6,
+        "details": [
+          "get_store_orders uses get_user_store (line 1432)",
+          "start_order_preparation uses get_user_store (line 1497)",
+          "update_order_status uses get_user_store (line 1603)",
+          "cancel_order_by_store uses get_user_store (line 1674)",
+          "store_stats uses get_user_store (line 3929)",
+          "driver_reject uses get_user_store (line 4176)"
+        ]
+      },
+      "phase20_total_usages": {
+        "tests": 2,
+        "passed": 2,
+        "details": [
+          "get_user_store is used 6 times in food_orders.py",
+          "3 remaining manual store lookups identified for future phases"
+        ]
+      },
+      "file_size": {
+        "tests": 1,
+        "passed": 1,
+        "details": ["food_orders.py has 4312 lines (reduced from 4323)"]
+      },
+      "no_regressions": {
+        "tests": 4,
+        "passed": 4,
+        "details": [
+          "check-distance endpoint works",
+          "my-orders requires auth",
+          "store/orders requires auth",
+          "seller orders requires auth"
+        ]
+      },
+      "phase20_summary": {
+        "tests": 1,
+        "passed": 1,
+        "details": ["All Phase 20 refactoring verified complete"]
+      }
+    }
+  },
+  "phase20_refactoring_details": {
+    "helper_added": "get_user_store",
+    "helper_location": "food_order_helpers.py (lines 26-31)",
+    "helper_purpose": "جلب متجر المستخدم مع التحقق من الملكية",
+    "helper_implementation": "async def get_user_store(user_id: str) -> dict: queries db.food_stores.find_one({owner_id: user_id}) and raises HTTPException(403) if not found",
+    "endpoints_updated_in_phase20": [
+      {
+        "endpoint": "get_store_orders",
+        "route": "/store/orders",
+        "line": 1432,
+        "description": "جلب طلبات المتجر"
+      },
+      {
+        "endpoint": "start_order_preparation",
+        "route": "/store/orders/{order_id}/start-preparation",
+        "line": 1497,
+        "description": "بدء تحضير الطلب"
+      },
+      {
+        "endpoint": "update_order_status",
+        "route": "/store/orders/{order_id}/status",
+        "line": 1603,
+        "description": "تحديث حالة الطلب من المتجر"
+      },
+      {
+        "endpoint": "cancel_order_by_store",
+        "route": "/store/orders/{order_id}/cancel",
+        "line": 1674,
+        "description": "إلغاء الطلب من المتجر"
+      },
+      {
+        "endpoint": "report_false_arrival",
+        "route": "/store/orders/{order_id}/report-false-arrival",
+        "line": 3929,
+        "description": "إبلاغ البائع عن وصول كاذب للسائق"
+      },
+      {
+        "endpoint": "seller_reject_driver",
+        "route": "/store/orders/{order_id}/reject-driver",
+        "line": 4176,
+        "description": "رفض السائق من البائع"
+      }
+    ],
+    "total_get_user_store_usages": 6,
+    "remaining_manual_lookups": [
+      {
+        "endpoint": "get_seller_food_orders",
+        "line": 1334,
+        "pattern": "db.food_stores.find_one({owner_id: user[id]})"
+      },
+      {
+        "endpoint": "get_store_order_details",
+        "line": 3190,
+        "pattern": "db.food_stores.find_one({owner_id: user[id]})"
+      },
+      {
+        "endpoint": "get_store_earnings_summary",
+        "line": 4289,
+        "pattern": "db.food_stores.find_one({owner_id: user[id]})"
+      }
+    ],
+    "file_size_changes": {
+      "food_orders.py": "4323 → 4312 lines (-11 lines)"
+    },
+    "benefit": "استخراج منطق جلب متجر المستخدم إلى دالة مساعدة قابلة لإعادة الاستخدام في 6 endpoints"
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_phase20_get_user_store.py",
+    "/app/test_reports/pytest/phase20_get_user_store_results.xml"
+  ],
+  "action_items": [
+    "Consider replacing remaining 3 manual store lookups with get_user_store in future phases (lines 1334, 3190, 4289)"
+  ],
+  "critical_code_review_comments": [
+    "Phase 20 refactoring is clean and follows the established pattern",
+    "3 remaining manual store lookups could be addressed in future phases for consistency"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_phase20_get_user_store.py"
+  ],
+  "success_rate": {
+    "backend": "100% (19/19 tests passed)",
+    "frontend": "N/A - backend only testing"
+  },
+  "seed_data_creation": "None",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Phase 20 refactoring completed successfully. get_user_store helper is now used in 6 store-related endpoints. food_orders.py is now 4312 lines (reduced from 4323 in Phase 19, -11 lines). 3 remaining manual store lookups at lines 1334, 3190, 4289 could be addressed in future phases. All tests pass.",
+  "mocked_apis": {
+    "has_mocked_apis": true,
+    "mocked_apis_list": ["SMS OTP (الكود دائماً 123456)", "Sham Cash Payment Gateway"]
+  }
+}
