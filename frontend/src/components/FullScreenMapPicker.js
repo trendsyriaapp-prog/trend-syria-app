@@ -117,6 +117,12 @@ const FullScreenMapPicker = ({
 
     // إضافة entry إلى history عند فتح الخريطة
     const handleBackButton = (e) => {
+      // تجاهل popstate إذا كنا نجلب الموقع حالياً
+      if (loading) {
+        e.preventDefault();
+        window.history.pushState({ mapPicker: true }, '');
+        return;
+      }
       e.preventDefault();
       onClose();
     };
@@ -134,7 +140,7 @@ const FullScreenMapPicker = ({
         window.history.back();
       }
     };
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, loading]);
 
   // الحصول على موقع GPS الحالي
   const getCurrentLocation = () => {
