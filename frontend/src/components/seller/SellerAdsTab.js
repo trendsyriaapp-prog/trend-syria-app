@@ -167,8 +167,8 @@ const SellerAdsTab = ({ user, products, walletBalance = 0 }) => {
           { icon: Eye, label: 'المشاهدات', value: totalViews.toLocaleString(), color: 'bg-blue-50 text-blue-600' },
           { icon: MousePointer, label: 'النقرات', value: totalClicks.toLocaleString(), color: 'bg-purple-50 text-purple-600' },
           { icon: Wallet, label: 'المصروف', value: formatPrice(totalSpent), color: 'bg-orange-50 text-orange-600' },
-        ].map((stat, i) => (
-          <div key={i} className="bg-white rounded-xl p-3 border border-gray-200">
+        ].map((stat) => (
+          <div key={stat.label} className="bg-white rounded-xl p-3 border border-gray-200">
             <div className={`w-7 h-7 rounded-lg ${stat.color} flex items-center justify-center mb-1.5`}>
               <stat.icon size={14} />
             </div>

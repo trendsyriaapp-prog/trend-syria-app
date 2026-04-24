@@ -150,8 +150,8 @@ const ImageMigrationTab = () => {
                   عرض تفاصيل العينات ({diagnosis.samples.length})
                 </summary>
                 <div className="mt-2 bg-white rounded-lg p-2 max-h-40 overflow-y-auto text-xs">
-                  {diagnosis.samples.map((s, i) => (
-                    <div key={i} className="flex items-center justify-between py-1 border-b border-gray-100">
+                  {diagnosis.samples.map((s) => (
+                    <div key={s.name || s.type} className="flex items-center justify-between py-1 border-b border-gray-100">
                       <span className="text-gray-700 truncate max-w-[150px]">{s.name}</span>
                       <span className={`px-2 py-0.5 rounded text-[10px] ${
                         s.type === 'cdn_path' ? 'bg-green-100 text-green-700' :
@@ -271,8 +271,8 @@ const ImageMigrationTab = () => {
             <div className="mt-4">
               <h4 className="text-sm font-medium text-gray-600 mb-2">المنتجات المرحّلة:</h4>
               <div className="bg-gray-50 rounded-lg p-3 max-h-40 overflow-y-auto">
-                {lastResult.products.map((p, i) => (
-                  <div key={i} className="flex items-center justify-between py-1 text-sm">
+                {lastResult.products.map((p) => (
+                  <div key={p.id || p.name} className="flex items-center justify-between py-1 text-sm">
                     <span className="text-gray-700">{p.name}</span>
                     <span className="text-gray-500">{p.images_count} صور</span>
                   </div>
@@ -286,8 +286,8 @@ const ImageMigrationTab = () => {
             <div className="mt-4">
               <h4 className="text-sm font-medium text-red-600 mb-2">منتجات فشل ترحيلها:</h4>
               <div className="bg-red-50 rounded-lg p-3 max-h-40 overflow-y-auto">
-                {lastResult.failed.map((p, i) => (
-                  <div key={i} className="flex items-center justify-between py-1 text-sm">
+                {lastResult.failed.map((p) => (
+                  <div key={p.id || p.name} className="flex items-center justify-between py-1 text-sm">
                     <span className="text-red-700">{p.name}</span>
                     <span className="text-red-500 text-xs">{p.reason}</span>
                   </div>

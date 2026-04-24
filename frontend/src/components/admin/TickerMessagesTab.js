@@ -218,8 +218,8 @@ const TickerMessagesTab = () => {
       <div className="bg-gradient-to-r from-[#FF6B00] via-[#FF8533] to-[#FF6B00] text-white py-2 rounded-lg overflow-hidden">
         <div className="ticker-wrapper">
           <div className="ticker-content animate-ticker flex items-center gap-8 whitespace-nowrap px-4">
-            {messages.filter(m => m.is_active !== false).map((msg, i) => (
-              <span key={i} className="flex items-center gap-2 text-sm font-medium">
+            {messages.filter(m => m.is_active !== false).map((msg) => (
+              <span key={msg.id || msg.text} className="flex items-center gap-2 text-sm font-medium">
                 {msg.text}
                 <span className="text-white/50">|</span>
               </span>

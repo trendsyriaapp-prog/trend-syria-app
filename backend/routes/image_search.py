@@ -38,7 +38,6 @@ async def analyze_image_with_ai(image_base64: str) -> dict:
     """تحليل الصورة واستخراج الخصائص"""
     try:
         import openai
-        import base64
         
         api_key = os.environ.get("OPENAI_API_KEY") or os.environ.get("EMERGENT_LLM_KEY")
         if not api_key:

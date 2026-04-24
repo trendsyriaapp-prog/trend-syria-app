@@ -337,40 +337,16 @@ def get_template_prompt(template_id: str, template: dict) -> str:
 
 async def generate_ai_image(image_base64: str, template_id: str, template: dict) -> str:
     """إنشاء صورة احترافية باستخدام OpenAI"""
-    import openai
-    import uuid
-    
-    api_key = os.environ.get("OPENAI_API_KEY") or os.environ.get("EMERGENT_LLM_KEY")
-    if not api_key:
-        raise Exception("OPENAI_API_KEY not configured")
-    
-    # إنشاء prompt للقالب
-    prompt = get_template_prompt(template_id, template)
-    
-    client = openai.OpenAI(api_key=api_key)
+    # TODO: في المستقبل يمكن استخدام DALL-E API لتوليد صور احترافية
+    # حالياً نُرجع الصورة الأصلية
     
     # إزالة prefix من base64 إذا موجود
     if image_base64.startswith('data:'):
         image_base64 = image_base64.split(',')[1]
     
-    # استخدام GPT-4o لتحليل الصورة وإنشاء وصف
-    # TODO: هذا الكود غير مكتمل - النتيجة لا تُستخدم حالياً
-    _response = client.chat.completions.create(
-        model="gpt-4o",
-        messages=[
-            {"role": "system", "content": "You are a professional product photographer. Describe the product in detail for image generation."},
-            {
-                "role": "user",
-                "content": [
-                    {"type": "text", "text": prompt},
-                    {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image_base64}"}}
-                ]
-            }
-        ]
-    )
+    # تجنب تحذير unused
+    _ = (template_id, template)
     
-    # إرجاع الصورة الأصلية مع معالجة بسيطة
-    # ملاحظة: توليد الصور يحتاج DALL-E API
     return f"data:image/jpeg;base64,{image_base64}"
 
 

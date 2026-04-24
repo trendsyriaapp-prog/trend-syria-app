@@ -3,10 +3,9 @@
 
 from fastapi import APIRouter, HTTPException, Depends, Request
 from pydantic import BaseModel
-from typing import Optional, List
+from typing import Optional
 from datetime import datetime, timezone, timedelta
 import uuid
-import traceback
 
 from core.database import db, get_current_user
 

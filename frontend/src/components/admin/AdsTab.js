@@ -120,8 +120,8 @@ const AdsTab = ({ user }) => {
             { icon: DollarSign, label: 'إجمالي الإيرادات', value: formatPrice(stats.total_revenue), color: 'bg-emerald-50 text-emerald-600' },
             { icon: Eye, label: 'المشاهدات', value: stats.total_views.toLocaleString(), color: 'bg-blue-50 text-blue-600' },
             { icon: MousePointer, label: 'النقرات', value: stats.total_clicks.toLocaleString(), color: 'bg-purple-50 text-purple-600' },
-          ].map((stat, i) => (
-            <div key={i} className="bg-white rounded-lg p-3 border border-gray-200">
+          ].map((stat) => (
+            <div key={stat.label} className="bg-white rounded-lg p-3 border border-gray-200">
               <div className={`w-8 h-8 rounded-lg ${stat.color} flex items-center justify-center mb-2`}>
                 <stat.icon size={16} />
               </div>

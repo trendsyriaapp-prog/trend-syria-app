@@ -15,9 +15,9 @@ const SellerStatsCard = ({ products, orders, onStatClick }) => {
 
   return (
     <div className="grid grid-cols-4 gap-2 mb-4">
-      {stats.map((stat, i) => (
+      {stats.map((stat) => (
         <div 
-          key={i} 
+          key={stat.action || stat.label} 
           onClick={() => onStatClick(stat.action)}
           className="bg-white rounded-xl p-2 border border-gray-200 cursor-pointer hover:border-[#FF6B00] hover:shadow-md transition-all"
           data-testid={`stat-${stat.action}`}

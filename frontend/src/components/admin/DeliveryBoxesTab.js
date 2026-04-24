@@ -223,8 +223,8 @@ const DeliveryBoxesTab = () => {
           { label: 'مُعيّنة', value: stats.assigned || 0, icon: User, color: 'bg-blue-100 text-blue-700' },
           { label: 'مُملّكة', value: stats.owned || 0, icon: DollarSign, color: 'bg-purple-100 text-purple-700' },
           { label: 'تالفة', value: stats.damaged || 0, icon: AlertTriangle, color: 'bg-red-100 text-red-700' },
-        ].map((stat, i) => (
-          <div key={i} className={`rounded-lg p-3 ${stat.color}`}>
+        ].map((stat) => (
+          <div key={stat.label} className={`rounded-lg p-3 ${stat.color}`}>
             <stat.icon size={18} className="mb-1" />
             <p className="text-base font-bold">{stat.value}</p>
             <p className="text-xs opacity-80">{stat.label}</p>
