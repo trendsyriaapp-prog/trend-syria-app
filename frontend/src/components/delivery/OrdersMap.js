@@ -58,6 +58,9 @@ import {
   StopMarkerPopup 
 } from './orders-map/components';
 
+// استيراد الـ Hooks المُستخرجة
+import useTheme from './orders-map/hooks/useTheme';
+
 const API = process.env.REACT_APP_BACKEND_URL;
 
 // ملاحظة: تم استخراج دوال الأيقونات والمساعدة والتنبيهات الصوتية إلى:
@@ -95,16 +98,13 @@ const OrdersMap = ({
   // عدد الطلبات النشطة
   const activeOrdersCount = activeMyOrders.length + activeMyFoodOrders.length;
   
-  // تحديد الثيم الفعلي (للوضع التلقائي)
-  const getEffectiveTheme = () => {
-    if (theme === 'auto') {
-      const hour = new Date().getHours();
-      return (hour >= 6 && hour < 18) ? 'light' : 'dark';
-    }
-    return theme;
-  };
-  const effectiveTheme = getEffectiveTheme();
-  const isDark = effectiveTheme === 'dark';
+  // ⭐ استخدام useTheme hook بدلاً من الكود المتكرر
+  const { 
+    themeMode, 
+    currentTheme, 
+    effectiveTheme, 
+    isDark 
+  } = useTheme(theme);
   
   const [isOpen, setIsOpen] = useState(false);
   const [selectedMarker, setSelectedMarker] = useState(null);
@@ -131,48 +131,6 @@ const OrdersMap = ({
   
   // 🔊 أصوات الإشعارات المختلفة
   const { playPriority, playSuccess } = useNotificationSound();
-  
-  // ⭐ نظام الثيم (فاتح/داكن) مع تبديل تلقائي
-  const [themeMode, setThemeMode] = useState(() => {
-    // استرجاع الإعداد المحفوظ من الصفحة الرئيسية أو استخدام القيمة من props
-    return localStorage.getItem('driverThemeMode') || theme || 'auto';
-  });
-  const [currentTheme, setCurrentTheme] = useState(() => {
-    // تحديد الثيم الابتدائي
-    const savedMode = localStorage.getItem('driverThemeMode') || theme || 'auto';
-    if (savedMode === 'auto') {
-      const hour = new Date().getHours();
-      return (hour >= 6 && hour < 18) ? 'light' : 'dark';
-    }
-    return savedMode;
-  });
-  
-  // حساب الثيم التلقائي حسب الوقت
-  useEffect(() => {
-    const updateAutoTheme = () => {
-      // قراءة الإعداد من localStorage (قد يتغير من الصفحة الرئيسية)
-      const savedMode = localStorage.getItem('driverThemeMode') || theme || 'auto';
-      
-      // تحديث themeMode فقط إذا تغير لتجنب الحلقة اللانهائية
-      if (savedMode !== themeMode) {
-        setThemeMode(savedMode);
-      }
-      
-      if (savedMode === 'auto') {
-        const hour = new Date().getHours();
-        // من 6 صباحاً إلى 6 مساءً = فاتح
-        const isDay = hour >= 6 && hour < 18;
-        setCurrentTheme(isDay ? 'light' : 'dark');
-      } else {
-        setCurrentTheme(savedMode);
-      }
-    };
-    
-    updateAutoTheme();
-    // تحديث كل 30 ثانية بدلاً من كل ثانية (لتقليل الضغط على الأداء)
-    const interval = setInterval(updateAutoTheme, 30000);
-    return () => clearInterval(interval);
-  }, [theme]); // إضافة theme للـ dependencies
   
   // رسالة الخطأ داخل الخريطة
   const [mapError, setMapError] = useState(null);
