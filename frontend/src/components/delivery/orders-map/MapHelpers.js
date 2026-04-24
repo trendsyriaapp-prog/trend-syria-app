@@ -209,3 +209,64 @@ export const fetchDriverEarnings = async (params, API) => {
     return 0;
   }
 };
+
+/**
+ * جلب مسار واحد من OSRM وإرجاع الإحداثيات
+ * @param {Array} points - مصفوفة النقاط [[lat, lon], ...]
+ * @returns {Promise<Object>} - {coordinates, distance, duration}
+ */
+export const fetchSingleRoute = async (points) => {
+  try {
+    const coordsStr = points.map(p => `${p[1]},${p[0]}`).join(';');
+    const response = await fetch(
+      `https://router.project-osrm.org/route/v1/driving/${coordsStr}?overview=full&geometries=geojson`
+    );
+    if (response.ok) {
+      const data = await response.json();
+      if (data.routes && data.routes[0]) {
+        return {
+          coordinates: data.routes[0].geometry.coordinates.map(c => [c[1], c[0]]),
+          distance: data.routes[0].distance,
+          duration: data.routes[0].duration
+        };
+      }
+    }
+  } catch (error) {
+    console.error('Error fetching route segment:', error);
+  }
+  // خط مستقيم كبديل
+  return { coordinates: points, distance: 0, duration: 0 };
+};
+
+/**
+ * جلب المسار المُحسَّن باستخدام OSRM Trip API
+ * @param {Array} points - مصفوفة النقاط مع position [{position: [lat, lon]}, ...]
+ * @returns {Promise<Object|null>} - {optimizedOrder, geometry, distance, duration, legs}
+ */
+export const fetchOptimizedRoute = async (points) => {
+  try {
+    const coordsStr = points.map(p => `${p.position[1]},${p.position[0]}`).join(';');
+    const response = await fetch(
+      `https://router.project-osrm.org/trip/v1/driving/${coordsStr}?overview=full&geometries=geojson&source=first&roundtrip=false`
+    );
+    
+    if (response.ok) {
+      const data = await response.json();
+      if (data.trips && data.trips[0] && data.waypoints) {
+        const optimizedOrder = data.waypoints.map(wp => wp.waypoint_index);
+        const trip = data.trips[0];
+        
+        return {
+          optimizedOrder,
+          geometry: trip.geometry.coordinates.map(c => [c[1], c[0]]),
+          distance: trip.distance,
+          duration: trip.duration,
+          legs: trip.legs
+        };
+      }
+    }
+  } catch (error) {
+    console.error('Error fetching optimized route:', error);
+  }
+  return null;
+};
