@@ -31,14 +31,29 @@ from routes.food_order_helpers import (
     PLATFORM_WALLET_ID
 )
 
+# استيراد النماذج
+from routes.food_order_models import (
+    DistanceCheckRequest,
+    FoodOrderItem,
+    FoodOrderCreate,
+    BatchOrderItem,
+    BatchOrderCreate,
+    PreparationStartRequest,
+    DriverCancelRequest,
+    SmartRouteEvaluateRequest,
+    VerifyPickupCode,
+    StartDeliveryData,
+    DeliveryCodeVerification,
+    FoodDeliveryFailedRequest,
+    AdminCancelRequest,
+    RequestDriverData,
+    AcceptOrderData,
+    SetPreparationTimeData
+)
+
 router = APIRouter(prefix="/food/orders", tags=["Food Orders"])
 
 # ============== حساب المسافة والتحذير الذكي ==============
-
-class DistanceCheckRequest(BaseModel):
-    store_id: str
-    customer_lat: float
-    customer_lng: float
 
 @router.get("/check-drivers-availability/{order_id}")
 async def check_drivers_availability_for_order(order_id: str, user: dict = Depends(get_current_user)) -> dict:
@@ -262,56 +277,6 @@ async def check_delivery_distance(data: DistanceCheckRequest) -> dict:
         "store_name": store.get("name"),
         "store_type": store.get("store_type")
     }
-
-# Models
-class FoodOrderItem(BaseModel):
-    product_id: str
-    name: str
-    price: float
-    quantity: int
-    notes: Optional[str] = None
-
-class FoodOrderCreate(BaseModel):
-    store_id: str
-    items: List[FoodOrderItem]
-    delivery_address: str
-    delivery_city: str
-    delivery_phone: str
-    delivery_latitude: Optional[float] = None
-    delivery_longitude: Optional[float] = None
-    detailed_address: str = ""  # العنوان التفصيلي (إجباري)
-    notes: Optional[str] = None
-    delivery_note: str = ""  # ملاحظة لموظف التوصيل
-    payment_method: str = "wallet"  # wallet, cash
-    batch_id: Optional[str] = None  # معرف الدفعة للطلبات المجمعة
-    latitude: Optional[float] = None
-    longitude: Optional[float] = None
-    # رسوم التوصيل
-    delivery_fee: Optional[float] = None
-    delivery_distance_km: Optional[float] = None
-    # الجدولة
-    scheduled_for: Optional[str] = None  # ISO datetime string للطلبات المجدولة
-    is_scheduled: bool = False
-
-
-class BatchOrderItem(BaseModel):
-    store_id: str
-    items: List[FoodOrderItem]
-    notes: Optional[str] = None
-
-
-class BatchOrderCreate(BaseModel):
-    orders: List[BatchOrderItem]
-    delivery_address: str
-    delivery_city: str
-    delivery_phone: str
-    detailed_address: str = ""  # العنوان التفصيلي (إجباري)
-    delivery_note: str = ""  # ملاحظة لموظف التوصيل
-    payment_method: str = "wallet"
-    latitude: Optional[float] = None
-    longitude: Optional[float] = None
-    delivery_latitude: Optional[float] = None
-    delivery_longitude: Optional[float] = None
 
 
 # ===============================
@@ -1616,10 +1581,6 @@ async def get_store_orders(
     return orders
 
 
-class PreparationStartRequest(BaseModel):
-    preparation_time_minutes: int = 15  # وقت التحضير بالدقائق
-
-
 @router.post("/store/orders/{order_id}/start-preparation")
 async def start_order_preparation(
     order_id: str,
@@ -2774,9 +2735,6 @@ async def accept_food_order(
 
 # ============== إلغاء الطلب من السائق ==============
 
-class DriverCancelRequest(BaseModel):
-    reason: str  # سبب الإلغاء (إجباري)
-
 @router.post("/delivery/{order_id}/cancel")
 async def driver_cancel_order(order_id: str, data: DriverCancelRequest, user: dict = Depends(get_current_user)) -> dict:
     """
@@ -2938,11 +2896,6 @@ async def get_my_cancel_rate(user: dict = Depends(get_current_user)) -> dict:
 
 # ============== التوجيه الذكي ==============
 
-class SmartRouteEvaluateRequest(BaseModel):
-    order_id: str
-    driver_lat: float
-    driver_lon: float
-
 @router.post("/delivery/smart-route/evaluate")
 async def evaluate_order_for_smart_route(data: SmartRouteEvaluateRequest, user: dict = Depends(get_current_user)) -> dict:
     """
@@ -3098,9 +3051,6 @@ async def get_optimized_route(user: dict = Depends(get_current_user)) -> dict:
 
 # ============== التحقق من كود الاستلام ==============
 
-class VerifyPickupCode(BaseModel):
-    code: str
-
 @router.post("/delivery/{order_id}/verify-pickup")
 async def verify_pickup_code(order_id: str, data: VerifyPickupCode, user: dict = Depends(get_current_user)) -> dict:
     """التحقق من كود الاستلام من البائع"""
@@ -3158,9 +3108,6 @@ async def verify_pickup_code(order_id: str, data: VerifyPickupCode, user: dict =
         "compensation": compensation_data
     }
 
-
-class StartDeliveryData(BaseModel):
-    estimated_minutes: Optional[int] = 30
 
 @router.post("/delivery/{order_id}/on-the-way")
 async def start_delivery_to_customer(
@@ -3531,9 +3478,6 @@ async def delivery_arrived_at_customer(order_id: str, user: dict = Depends(get_c
         "order_id": order_id
     }
 
-class DeliveryCodeVerification(BaseModel):
-    delivery_code: str
-
 @router.post("/delivery/{order_id}/verify-code")
 async def verify_delivery_code(
     order_id: str, 
@@ -3563,10 +3507,6 @@ async def verify_delivery_code(
 
 
 # ============== فشل التسليم - طلبات الطعام ==============
-class FoodDeliveryFailedRequest(BaseModel):
-    reason: str  # customer_not_responding, wrong_address, customer_refused, other
-    action: str  # return_to_store, cancel_order
-    notes: Optional[str] = None
 
 @router.post("/delivery/{order_id}/failed")
 async def report_food_delivery_failed(
@@ -4262,11 +4202,6 @@ async def get_store_reviews(
 
 # ============== إلغاء الطلب من الأدمن ==============
 
-class AdminCancelRequest(BaseModel):
-    reason: str
-    notify_customer: bool = True
-    offer_replacement: bool = True
-
 @router.post("/admin/{order_id}/cancel-with-penalty")
 async def admin_cancel_order_with_penalty(
     order_id: str, 
@@ -4408,19 +4343,6 @@ async def get_support_phone() -> dict:
 
 
 # ============== نظام إرسال الطلب للسائق بالتأكيد ==============
-
-class RequestDriverData(BaseModel):
-    """بيانات طلب سائق"""
-    pass
-
-class AcceptOrderData(BaseModel):
-    """بيانات قبول الطلب من السائق"""
-    pass
-
-class SetPreparationTimeData(BaseModel):
-    """بيانات تحديد وقت التحضير"""
-    preparation_time_minutes: int
-
 
 @router.post("/store/orders/{order_id}/request-driver")
 async def request_driver_for_order(
