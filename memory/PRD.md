@@ -54,10 +54,12 @@
 4. **Hook Dependencies** ✅ - لا توجد مشاكل فعلية (استخدام `[]` صحيح للتحميل مرة واحدة)
 
 #### Important Issues:
-6. **Function Complexity** ⏸️ - تم تحديد الدوال المعقدة (سيتم تقسيمها لاحقاً)
+6. **Function Complexity** ✅ - إنشاء دوال مساعدة في `/backend/routes/food_order_helpers.py`
 7. **Excessive Imports** ✅ - إزالة imports غير المستخدمة من 8 ملفات
 8. **Array Index as Key** ✅ - إصلاح حالات مهمة (الصور القابلة للحذف)
-9. **Large Components** ⏸️ - تم تحديدها (سيتم تقسيمها لاحقاً)
+9. **Large Components** ✅ - تقسيم `FoodStoreDashboard.js`:
+   - استخراج `StoreOrdersTab` إلى `/components/foodstore/StoreOrdersTab.js` (778 سطر)
+   - تقليص الملف الأصلي من 4252 إلى 3477 سطر
 10. **Console Statements** ✅ - معظمها `console.error` للأخطاء (مقبول للإنتاج)
 
 #### إصلاحات إضافية:
@@ -102,10 +104,11 @@
   - `accept_food_order()` complexity: 43
 
 ### P3 - Refactoring
-- [ ] تقسيم المكونات الكبيرة:
-  - `FoodStoreDashboard.js`: 4252 سطر
+- [x] تقسيم `FoodStoreDashboard.js`: من 4252 إلى 3477 سطر ✅
+- [ ] تقسيم المكونات الكبيرة المتبقية:
   - `OrdersMap.js`: 3403 سطر
   - `DeliveryPages.js`: 2492 سطر
+  - `DeliverySettingsTab.js`: 2443 سطر
 
 ### P5 - مستقبلي
 - [ ] نظام الوكلاء/مكاتب الحوالات للشحن
