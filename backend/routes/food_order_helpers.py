@@ -3,10 +3,24 @@
 # تم استخراجها من create_food_order لتقليل التعقيد
 
 from datetime import datetime, timezone
-from fastapi import HTTPException
+from fastapi import HTTPException, Depends
 import math
 
-from core.database import db
+from core.database import db, get_current_user
+
+
+def require_delivery_user(user: dict = Depends(get_current_user)) -> dict:
+    """التحقق من أن المستخدم سائق توصيل"""
+    if user.get("user_type") != "delivery":
+        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
+    return user
+
+
+def require_store_owner(user: dict = Depends(get_current_user)) -> dict:
+    """التحقق من أن المستخدم صاحب متجر"""
+    if user.get("user_type") != "seller":
+        raise HTTPException(status_code=403, detail="لأصحاب المتاجر فقط")
+    return user
 
 
 async def validate_store(store_id: str) -> dict:

@@ -44,6 +44,7 @@ from routes.food_order_helpers import (
     get_order_for_customer,
     get_order_for_store,
     get_order_for_driver,
+    require_delivery_user,
     HOT_FRESH_STORE_TYPES,
     COLD_DRY_STORE_TYPES,
     DEFAULT_HOT_FRESH_LIMIT,
@@ -2951,11 +2952,8 @@ async def get_optimized_route(user: dict = Depends(get_current_user)) -> dict:
 # ============== التحقق من كود الاستلام ==============
 
 @router.post("/delivery/{order_id}/verify-pickup")
-async def verify_pickup_code(order_id: str, data: VerifyPickupCode, user: dict = Depends(get_current_user)) -> dict:
+async def verify_pickup_code(order_id: str, data: VerifyPickupCode, user: dict = Depends(require_delivery_user)) -> dict:
     """التحقق من كود الاستلام من البائع"""
-    if user["user_type"] != "delivery":
-        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
-    
     # جلب الطلب
     order = await get_order_for_driver(order_id, user["id"])
     
@@ -3006,12 +3004,9 @@ async def verify_pickup_code(order_id: str, data: VerifyPickupCode, user: dict =
 async def start_delivery_to_customer(
     order_id: str, 
     data: StartDeliveryData = None,
-    user: dict = Depends(get_current_user)
+    user: dict = Depends(require_delivery_user)
 ) -> dict:
     """بدء التوصيل - السائق في الطريق للعميل"""
-    if user["user_type"] != "delivery":
-        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
-    
     order = await get_order_for_driver(order_id, user["id"])
     
     # التحقق من أن الطلب تم استلامه من المتجر
@@ -3304,11 +3299,8 @@ async def get_priority_orders(user: dict = Depends(get_current_user)) -> dict:
 # ===============================
 
 @router.post("/delivery/{order_id}/arrived-customer")
-async def delivery_arrived_at_customer(order_id: str, user: dict = Depends(get_current_user)) -> dict:
+async def delivery_arrived_at_customer(order_id: str, user: dict = Depends(require_delivery_user)) -> dict:
     """تسجيل وصول موظف التوصيل للعميل - لطلبات الطعام"""
-    if user["user_type"] != "delivery":
-        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
-    
     order = await get_order_for_driver(order_id, user["id"])
     
     # إذا كان وقت الوصول محفوظاً مسبقاً، أرجعه
@@ -3550,11 +3542,8 @@ async def report_food_delivery_failed(
     }
 
 @router.post("/delivery/{order_id}/customer-not-responding")
-async def mark_customer_not_responding(order_id: str, user: dict = Depends(get_current_user)) -> dict:
+async def mark_customer_not_responding(order_id: str, user: dict = Depends(require_delivery_user)) -> dict:
     """تسجيل أن العميل لا يرد"""
-    if user["user_type"] != "delivery":
-        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
-    
     order = await get_order_for_driver(order_id, user["id"], status="out_for_delivery")
     
     # التحقق من أنه لم يتم تسجيل عدم الرد مسبقاً
@@ -3614,11 +3603,8 @@ async def mark_customer_not_responding(order_id: str, user: dict = Depends(get_c
     }
 
 @router.post("/delivery/{order_id}/leave-at-door")
-async def leave_order_at_door(order_id: str, user: dict = Depends(get_current_user)) -> dict:
+async def leave_order_at_door(order_id: str, user: dict = Depends(require_delivery_user)) -> dict:
     """ترك الطلب عند الباب بعد انتهاء وقت الانتظار"""
-    if user["user_type"] != "delivery":
-        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
-    
     order = await get_order_for_driver(order_id, user["id"], status="out_for_delivery")
     
     # التحقق من تسجيل عدم الرد
@@ -3651,11 +3637,8 @@ async def leave_order_at_door(order_id: str, user: dict = Depends(get_current_us
 
 
 @router.post("/delivery/{order_id}/complete")
-async def complete_food_delivery(order_id: str, user: dict = Depends(get_current_user)) -> dict:
+async def complete_food_delivery(order_id: str, user: dict = Depends(require_delivery_user)) -> dict:
     """إتمام التوصيل (الطريقة القديمة - للتوافق)"""
-    if user["user_type"] != "delivery":
-        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
-    
     order = await get_order_for_driver(order_id, user["id"], status="out_for_delivery")
     
     # إذا كان الطلب يحتوي على كود تسليم ولم يتم التحقق منه
