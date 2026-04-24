@@ -3136,13 +3136,7 @@ async def driver_arrived_at_store(
 @router.get("/delivery/{order_id}/waiting-status")
 async def get_waiting_status(order_id: str, user: dict = Depends(require_delivery_user)) -> dict:
     """جلب حالة الانتظار والتعويض المتوقع"""
-    order = await db.food_orders.find_one({
-        "id": order_id,
-        "driver_id": user["id"]
-    }, {"_id": 0})
-    
-    if not order:
-        raise HTTPException(status_code=404, detail="الطلب غير موجود")
+    order = await get_order_for_driver(order_id, user["id"])
     
     if not order.get("driver_arrived_at"):
         return {

@@ -1232,13 +1232,22 @@ async def get_order_for_store(order_id: str, store_id: str) -> dict:
     return order
 
 
-async def get_order_for_driver(order_id: str, driver_id: str, status: str = None) -> dict:
-    """جلب طلب للسائق مع التحقق من الملكية"""
+async def get_order_for_driver(order_id: str, driver_id: str, status: str = None, statuses: list = None) -> dict:
+    """جلب طلب للسائق مع التحقق من الملكية
+    
+    Args:
+        order_id: معرف الطلب
+        driver_id: معرف السائق
+        status: حالة واحدة (اختياري)
+        statuses: قائمة حالات (اختياري) - يُستخدم $in
+    """
     query = {
         "id": order_id,
         "driver_id": driver_id
     }
-    if status:
+    if statuses:
+        query["status"] = {"$in": statuses}
+    elif status:
         query["status"] = status
     
     order = await db.food_orders.find_one(query)
