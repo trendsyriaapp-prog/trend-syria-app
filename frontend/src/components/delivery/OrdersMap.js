@@ -35,6 +35,9 @@ import {
   announcePriorityOrder
 } from './orders-map/VoiceAnnouncements';
 
+// استيراد المكونات UI المُستخرجة
+import { MapLayerFilters, MapOrderFilters, StationsSummary, MapErrorToast } from './orders-map/components';
+
 const API = process.env.REACT_APP_BACKEND_URL;
 
 // ملاحظة: تم استخراج دوال الأيقونات والمساعدة والتنبيهات الصوتية إلى:
@@ -1947,192 +1950,30 @@ const OrdersMap = ({
               )}
 
               {/* فلاتر الطبقات */}
-              <div className={`px-3 py-2 flex gap-2 border-b ${
-                currentTheme === 'dark' ? 'bg-[#1a1a1a] border-[#333]' : 'bg-white border-gray-200'
-              }`}>
-                {[
-                  { key: 'all', label: 'الكل', icon: '🗺️', color: 'green' },
-                  { key: 'food', label: 'طعام', icon: '🍔', color: 'green' },
-                  { key: 'products', label: 'منتجات', icon: '📦', color: 'blue' },
-                  { key: 'customers', label: 'عملاء', icon: '🏠', color: 'amber' },
-                ].map(layer => (
-                  <button
-                    key={layer.key}
-                    onClick={() => setShowLayer(layer.key)}
-                    className={`flex-1 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all ${
-                      showLayer === layer.key
-                        ? 'bg-green-500 text-black'
-                        : currentTheme === 'dark'
-                          ? 'bg-[#252525] text-gray-400 border border-[#333] hover:border-green-500'
-                          : 'bg-gray-100 text-gray-600 border border-gray-200 hover:border-green-500'
-                    }`}
-                  >
-                    {layer.icon} {layer.label}
-                  </button>
-                ))}
-              </div>
+              <MapLayerFilters
+                showLayer={showLayer}
+                setShowLayer={setShowLayer}
+                currentTheme={currentTheme}
+              />
 
               {/* ⭐ فلاتر الطلبات: متاحة / طلباتي / الكل */}
-              <div className={`px-3 py-2 flex gap-2 border-b ${
-                currentTheme === 'dark' ? 'bg-[#1a1a1a] border-[#333]' : 'bg-white border-gray-200'
-              }`}>
-                {/* طلبات متاحة */}
-                <button
-                  onClick={() => setOrderFilter('available')}
-                  className={`flex-1 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center justify-center gap-1 ${
-                    orderFilter === 'available'
-                      ? 'bg-green-500 text-black shadow-lg shadow-green-500/30'
-                      : currentTheme === 'dark'
-                        ? 'bg-[#252525] text-green-400 border border-green-500/30 hover:border-green-500'
-                        : 'bg-green-50 text-green-600 border border-green-200 hover:border-green-500'
-                  }`}
-                >
-                  <span className="w-2 h-2 rounded-full bg-green-400"></span>
-                  متاحة ({(orders?.length || 0) + (foodOrders?.length || 0)})
-                </button>
-                
-                {/* طلباتي */}
-                <button
-                  onClick={() => setOrderFilter('myOrders')}
-                  className={`flex-1 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center justify-center gap-1 ${
-                    orderFilter === 'myOrders'
-                      ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/30'
-                      : currentTheme === 'dark'
-                        ? 'bg-[#252525] text-blue-400 border border-blue-500/30 hover:border-blue-500'
-                        : 'bg-blue-50 text-blue-600 border border-blue-200 hover:border-blue-500'
-                  }`}
-                >
-                  <span className="w-2 h-2 rounded-full bg-blue-400"></span>
-                  طلباتي ({activeOrdersCount})
-                </button>
-                
-                {/* الكل */}
-                <button
-                  onClick={() => setOrderFilter('all')}
-                  className={`flex-1 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center justify-center gap-1 ${
-                    orderFilter === 'all'
-                      ? 'bg-purple-500 text-white shadow-lg shadow-purple-500/30'
-                      : currentTheme === 'dark'
-                        ? 'bg-[#252525] text-purple-400 border border-purple-500/30 hover:border-purple-500'
-                        : 'bg-purple-50 text-purple-600 border border-purple-200 hover:border-purple-500'
-                  }`}
-                >
-                  <span className="w-2 h-2 rounded-full bg-purple-400"></span>
-                  الكل
-                </button>
-              </div>
+              <MapOrderFilters
+                orderFilter={orderFilter}
+                setOrderFilter={setOrderFilter}
+                availableCount={(orders?.length || 0) + (foodOrders?.length || 0)}
+                activeOrdersCount={activeOrdersCount}
+                currentTheme={currentTheme}
+              />
 
-              {/* زر عرض ملخص المحطات */}
-              {orderedStations.length > 0 && (
-                <div className={`px-3 py-2 border-b ${
-                  currentTheme === 'dark' ? 'bg-[#1a1a1a] border-[#333]' : 'bg-white border-gray-200'
-                }`}>
-                  <button
-                    onClick={() => setShowStationsSummary(!showStationsSummary)}
-                    className={`w-full py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all ${
-                      showStationsSummary 
-                        ? 'bg-blue-500 text-white' 
-                        : currentTheme === 'dark'
-                          ? 'bg-[#252525] text-blue-400 border border-blue-500/50 hover:bg-blue-500/20'
-                          : 'bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100'
-                    }`}
-                  >
-                    📋 جدول المحطات ({orderedStations.length})
-                    {showStationsSummary ? ' ▲' : ' ▼'}
-                  </button>
-                </div>
-              )}
-
-              {/* بطاقة ملخص المحطات */}
-              <AnimatePresence>
-                {showStationsSummary && orderedStations.length > 0 && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    className={`border-t overflow-hidden ${
-                      currentTheme === 'dark' ? 'bg-[#1a1a1a] border-[#333]' : 'bg-gray-50 border-gray-200'
-                    }`}
-                  >
-                    <div className="p-3 max-h-[200px] overflow-y-auto">
-                      <div className="space-y-2">
-                        {orderedStations.map((station, idx) => (
-                          <div 
-                            key={`station-${idx}`}
-                            className={`flex items-center gap-3 p-3 rounded-xl ${
-                              station.type === 'store' 
-                                ? 'bg-green-500/10 border border-green-500/30' 
-                                : 'bg-amber-500/10 border border-amber-500/30'
-                            }`}
-                          >
-                            {/* رقم المحطة */}
-                            <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg ${
-                              station.type === 'store' 
-                                ? (station.isFood ? 'bg-green-500' : 'bg-blue-500')
-                                : 'bg-amber-500'
-                            }`}>
-                              {station.number}
-                            </div>
-                            
-                            {/* معلومات المحطة */}
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2">
-                                <span className="text-lg">{station.type === 'store' ? (station.isFood ? '🍔' : '📦') : '🏠'}</span>
-                                <span className={`font-bold text-sm truncate ${
-                                  currentTheme === 'dark' ? 'text-white' : 'text-gray-900'
-                                }`}>{station.name}</span>
-                              </div>
-                              <p className={`text-xs truncate ${
-                                currentTheme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-                              }`}>{typeof station.address === 'object' 
-                                ? [station.address?.area, station.address?.street, station.address?.building].filter(Boolean).join(', ')
-                                : station.address}</p>
-                            </div>
-                            
-                            {/* الإجراء + الربح */}
-                            <div className="flex flex-col items-end gap-1">
-                              <div className={`px-3 py-1.5 rounded-lg text-xs font-bold ${
-                                station.action === 'استلام' 
-                                  ? 'bg-green-500 text-black' 
-                                  : 'bg-amber-500 text-black'
-                              }`}>
-                                {station.action}
-                              </div>
-                              {station.type === 'customer' && station.order && (
-                                <span className="text-green-500 text-xs font-bold">
-                                  💵 {(station.order.driver_earnings || station.order.driver_delivery_fee || 0).toLocaleString()} ل.س
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                      
-                      {/* ملخص الإجمالي */}
-                      <div className={`mt-3 p-3 rounded-xl border ${
-                        currentTheme === 'dark' 
-                          ? 'bg-[#252525] border-[#333]' 
-                          : 'bg-white border-gray-200 shadow-sm'
-                      }`}>
-                        <div className="grid grid-cols-3 gap-3 text-center">
-                          <div>
-                            <p className={`text-xs ${currentTheme === 'dark' ? 'text-gray-500' : 'text-gray-500'}`}>المحطات</p>
-                            <p className={`font-bold text-lg ${currentTheme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{orderedStations.length}</p>
-                          </div>
-                          <div>
-                            <p className={`text-xs ${currentTheme === 'dark' ? 'text-gray-500' : 'text-gray-500'}`}>المسافة</p>
-                            <p className="font-bold text-blue-500 text-lg">{totalDistance.toFixed(1)} كم</p>
-                          </div>
-                          <div>
-                            <p className={`text-xs ${currentTheme === 'dark' ? 'text-gray-500' : 'text-gray-500'}`}>💰 الربح</p>
-                            <p className="font-bold text-green-500 text-lg">{totalEarnings.toLocaleString()} ل.س</p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              {/* زر عرض ملخص المحطات + بطاقة الملخص */}
+              <StationsSummary
+                show={showStationsSummary}
+                stations={orderedStations}
+                totalDistance={totalDistance}
+                totalEarnings={totalEarnings}
+                onToggle={() => setShowStationsSummary(!showStationsSummary)}
+                isDark={currentTheme === 'dark'}
+              />
 
               {/* ⭐ إشعار الأولوية الذكية (طلب من نفس المطعم) */}
               <AnimatePresence>
@@ -2243,45 +2084,10 @@ const OrdersMap = ({
               </AnimatePresence>
 
               {/* رسالة الخطأ - أعلى الشاشة مع شريط تقدم */}
-              <AnimatePresence>
-                {mapError && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -50 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -50 }}
-                    className="absolute top-0 left-0 right-0 z-[9999]"
-                  >
-                    <div className="bg-red-600 text-white shadow-2xl">
-                      {/* Header */}
-                      <div className="px-4 py-3 flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <span className="text-2xl">⚠️</span>
-                          <div>
-                            <p className="font-bold text-base">{mapError}</p>
-                            <p className="text-xs opacity-80">يرجى إتمام الطلبات الحالية أولاً</p>
-                          </div>
-                        </div>
-                        <button 
-                          onClick={() => setMapError(null)}
-                          className="text-white/80 hover:text-white bg-red-700 hover:bg-red-800 rounded-full p-2 transition-colors"
-                        >
-                          <X size={18} />
-                        </button>
-                      </div>
-                      {/* شريط التقدم */}
-                      <div className="h-1 bg-red-800">
-                        <motion.div 
-                          initial={{ width: '100%' }}
-                          animate={{ width: '0%' }}
-                          transition={{ duration: 5, ease: 'linear' }}
-                          onAnimationComplete={() => setMapError(null)}
-                          className="h-full bg-white/50"
-                        />
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              <MapErrorToast 
+                error={mapError} 
+                onClose={() => setMapError(null)} 
+              />
 
               {/* ⭐ شريط وضع الملاحة */}
               {isNavigationMode && (
