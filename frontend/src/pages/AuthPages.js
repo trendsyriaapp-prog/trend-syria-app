@@ -430,16 +430,34 @@ const RegisterPage = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  // عند الضغط على "بائع"، نظهر خيارات نوع البيع
+  // عند الضغط على "بائع"، نظهر خيارات نوع البيع (بدون اختيار افتراضي)
   const handleSellerClick = () => {
-    setFormData({ ...formData, user_type: 'seller' }); // تعيين نوع البائع مؤقتاً لإخفاء حقل المدينة
+    // إظهار خيارات نوع البيع فقط، بدون تعيين نوع افتراضي
     setShowSellerType(true);
+    // إذا لم يكن نوع البائع محدد مسبقاً، لا نعين شيء
+    if (formData.user_type !== 'seller' && formData.user_type !== 'food_seller') {
+      setFormData({ ...formData, user_type: '' }); // لا شيء مختار
+    }
   };
 
   // اختيار نوع البيع
   const selectSellerType = (type) => {
     setFormData({ ...formData, user_type: type });
     setShowSellerType(false);
+  };
+  
+  // التحقق من إظهار حقول التسجيل
+  const shouldShowRegistrationFields = () => {
+    // للمشتري وموظف التوصيل: نظهر الحقول مباشرة
+    if (formData.user_type === 'buyer' || formData.user_type === 'delivery') {
+      return true;
+    }
+    // للبائعين: نظهر الحقول فقط بعد اختيار نوع البيع
+    if (formData.user_type === 'seller' || formData.user_type === 'food_seller') {
+      return !showSellerType; // الحقول تظهر فقط بعد إغلاق قائمة الاختيار
+    }
+    // إذا لم يتم اختيار نوع الحساب بعد
+    return false;
   };
 
   // التحقق من البيانات الأساسية
@@ -803,6 +821,8 @@ const RegisterPage = () => {
             </div>
           )}
 
+          {/* حقول التسجيل - تظهر فقط بعد اختيار نوع الحساب */}
+          {shouldShowRegistrationFields() ? (
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium mb-2 text-gray-700">الاسم الثلاثي *</label>
@@ -920,6 +940,14 @@ const RegisterPage = () => {
             )}
 
           </div>
+          ) : (
+            /* رسالة للمستخدم لاختيار نوع البيع */
+            showSellerType && (
+              <div className="text-center py-4 text-gray-500">
+                <p className="text-sm">اختر نوع البيع للمتابعة</p>
+              </div>
+            )
+          )}
 
           {formData.user_type === 'food_seller' && (
             <p className="text-sm text-gray-600 mt-4 p-3 bg-orange-50 rounded-lg border border-orange-200">
@@ -927,6 +955,8 @@ const RegisterPage = () => {
             </p>
           )}
 
+          {/* زر الإرسال - يظهر فقط إذا تم اختيار نوع الحساب */}
+          {shouldShowRegistrationFields() && (
           <button
             type="submit"
             disabled={otpLoading}
@@ -935,6 +965,7 @@ const RegisterPage = () => {
           >
             {otpLoading ? 'جاري إرسال رمز التحقق...' : 'إرسال رمز التحقق'}
           </button>
+          )}
 
           {/* Terms Agreement */}
           <p className="text-center text-xs text-gray-500 mt-3">
