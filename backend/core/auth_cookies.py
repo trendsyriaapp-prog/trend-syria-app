@@ -2,9 +2,8 @@
 # نظام المصادقة عبر httpOnly Cookies
 # أكثر أماناً من localStorage - يحمي من هجمات XSS
 
-from fastapi import Request, Response, HTTPException
+from fastapi import Request, Response
 from fastapi.responses import JSONResponse
-from datetime import datetime, timedelta, timezone
 import os
 
 # إعدادات Cookie

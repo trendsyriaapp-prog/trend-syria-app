@@ -163,7 +163,6 @@ async def create_product(product: ProductCreate, user: dict = Depends(get_curren
             data={"product_id": product_id, "product_name": product.name, "seller_name": user["name"]}
         )
     except Exception as e:
-        import logging
         logging.warning(f"Failed to send admin notification for new product: {e}")
     
     return {"id": product_id, "message": "تم إضافة المنتج بنجاح، في انتظار موافقة الإدارة"}

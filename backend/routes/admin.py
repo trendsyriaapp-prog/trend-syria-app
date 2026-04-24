@@ -8,7 +8,7 @@ import hashlib
 import logging
 
 from core.database import db, get_current_user
-from models.schemas import SubAdminCreate, NotificationCreate, ProductApproval
+from models.schemas import SubAdminCreate, NotificationCreate
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
 
@@ -4671,7 +4671,7 @@ async def reset_database(data: dict, user: dict = Depends(get_current_user)) -> 
         raise HTTPException(status_code=400, detail="كلمة التأكيد غير صحيحة")
     
     admin_id = user["id"]
-    admin_phone = user.get("phone", "")
+    # admin_phone متاح لكن غير مستخدم حالياً
     
     try:
         # الجداول التي سيتم مسحها

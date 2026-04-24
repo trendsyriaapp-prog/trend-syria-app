@@ -1247,7 +1247,7 @@ const AddProductModal = ({
               {imageWarnings.length > 0 && (
                 <div className="mb-2 p-2 bg-yellow-50 border border-yellow-200 rounded-lg">
                   {imageWarnings.map((warning, i) => (
-                    <p key={i} className="text-[10px] text-yellow-700 flex items-center gap-1">
+                    <p key={`warning-${warning.slice(0,20)}-${i}`} className="text-[10px] text-yellow-700 flex items-center gap-1">
                       <AlertTriangle size={10} />
                       {warning}
                     </p>
@@ -1346,7 +1346,7 @@ const AddProductModal = ({
               {newProduct.images.length > 0 && (
                 <div className="grid grid-cols-5 gap-1.5 mb-1">
                   {newProduct.images.map((img, i) => (
-                    <div key={i} className="relative aspect-square group">
+                    <div key={`img-${img.slice(-20)}-${i}`} className="relative aspect-square group">
                       <img src={img} alt="" className="w-full h-full object-cover rounded border border-gray-200" />
                       {/* زر الحذف */}
                       <button

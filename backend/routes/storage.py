@@ -3,11 +3,9 @@
 # يخدم الصور للـ Frontend ويوفر endpoint للرفع
 
 from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Response, Query
-from fastapi.responses import StreamingResponse
-from typing import List, Optional
+from typing import List
 from pydantic import BaseModel
 import logging
-import io
 
 from core.database import db, get_current_user
 from core.storage import (
@@ -16,9 +14,7 @@ from core.storage import (
     upload_image_from_bytes,
     upload_video_from_bytes,
     is_base64_image,
-    is_storage_path,
-    is_video_storage_path,
-    init_storage
+    is_storage_path
 )
 
 logger = logging.getLogger(__name__)

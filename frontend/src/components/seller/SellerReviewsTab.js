@@ -129,7 +129,7 @@ const SellerReviewsTab = () => {
                     <div className="flex gap-2 flex-wrap mt-2">
                       {review.images.map((img, i) => (
                         <img
-                          key={i}
+                          key={`review-img-${img.slice(-15)}-${i}`}
                           src={img}
                           alt="صورة من العميل"
                           className="w-16 h-16 object-cover rounded-lg border border-gray-200"

@@ -9,7 +9,6 @@ import uuid
 import math
 import logging
 import secrets
-import random  # للعمليات غير الأمنية مثل shuffle
 
 from core.database import db, get_current_user, create_notification_for_user
 

@@ -441,9 +441,9 @@ async def create_notification_for_user(user_id: str, title: str, message: str, n
         notification["data"] = extra_data
     await db.notifications.insert_one(notification)
     
-    # 🔔 إرسال Push Notification
+    # 🔔 إرسال Push Notification (lazy import لتجنب circular imports)
     try:
-        from core.firebase_admin import send_push_to_user
+        from core.firebase_admin import send_push_to_user  # noqa: lazy import
         push_data = {
             "type": notification_type,
             "notification_id": notification["id"]
@@ -483,9 +483,9 @@ async def create_notification_for_role(role: str, title: str, message: str, noti
     }
     await db.notifications.insert_one(notification)
     
-    # 🔔 إرسال Push Notification لجميع المستخدمين بهذا الدور
+    # 🔔 إرسال Push Notification لجميع المستخدمين بهذا الدور (lazy import لتجنب circular imports)
     try:
-        from core.firebase_admin import send_push_to_multiple
+        from core.firebase_admin import send_push_to_multiple  # noqa: lazy import
         
         # تحديد نوع المستخدم من الدور
         role_to_user_type = {

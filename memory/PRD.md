@@ -41,6 +41,28 @@
 
 ## ما تم إنجازه حديثاً (24 أبريل 2026)
 
+### 🛠️ إصلاحات جودة الكود (Code Quality Report) ✅ - 24 أبريل 2026
+
+#### Critical Issues:
+1. **Circular Imports** ✅ - إصلاح التعارضات بين `database.py` و `firebase_admin.py`
+   - استخدام lazy imports داخل الدوال بدلاً من أعلى الملف
+2. **Hardcoded Secrets** ✅ - نقل كلمات السر للاختبار إلى `.env.test`
+   - إنشاء ملف `/backend/tests/.env.test` مع credentials الاختبار
+3. **Undefined Variables** ✅ - إصلاح المتغيرات غير المعرّفة
+   - إزالة imports غير مستخدمة
+   - تصحيح متغيرات غير مستعملة (`admin_phone`, `response`, `event`)
+4. **Hook Dependencies** ✅ - لا توجد مشاكل فعلية (استخدام `[]` صحيح للتحميل مرة واحدة)
+
+#### Important Issues:
+6. **Function Complexity** ⏸️ - تم تحديد الدوال المعقدة (سيتم تقسيمها لاحقاً)
+7. **Excessive Imports** ✅ - إزالة imports غير المستخدمة من 8 ملفات
+8. **Array Index as Key** ✅ - إصلاح حالات مهمة (الصور القابلة للحذف)
+9. **Large Components** ⏸️ - تم تحديدها (سيتم تقسيمها لاحقاً)
+10. **Console Statements** ✅ - معظمها `console.error` للأخطاء (مقبول للإنتاج)
+
+#### إصلاحات إضافية:
+- ✅ إصلاح خطأ Response Validation في `/api/categories` (كان يُرجع list بدلاً من dict)
+
 ### 🔒 إصلاح أمني كبير: localStorage → httpOnly Cookies ✅
 - [x] إزالة **108 استخدام** لـ `localStorage.getItem('token')` من **53 ملفاً**
 - [x] تحويل جميع استدعاءات API لاستخدام Cookies تلقائياً (`withCredentials: true`)
@@ -74,10 +96,21 @@
 
 ### P2 - أولوية متوسطة
 - [ ] صلاحيات دقيقة للمشرفين الفرعيين (مدير طلبات، مدير منتجات)
+- [ ] تقسيم الدوال المعقدة:
+  - `create_food_order()` complexity: 72
+  - `create_batch_food_orders()` complexity: 44
+  - `accept_food_order()` complexity: 43
+
+### P3 - Refactoring
+- [ ] تقسيم المكونات الكبيرة:
+  - `FoodStoreDashboard.js`: 4252 سطر
+  - `OrdersMap.js`: 3403 سطر
+  - `DeliveryPages.js`: 2492 سطر
 
 ### P5 - مستقبلي
 - [ ] نظام الوكلاء/مكاتب الحوالات للشحن
 - [ ] تسجيل الدخول بالبريد الإلكتروني
+- [ ] إشعارات ذكية (تنبيه انخفاض سعر، توفر منتج)
 
 ---
 

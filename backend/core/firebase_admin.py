@@ -242,7 +242,7 @@ async def send_push_to_user(
         return False
     
     try:
-        from core.database import db
+        from core.database import db  # noqa: lazy import لتجنب circular imports
         
         # جلب FCM tokens للمستخدم من جدول push_tokens
         tokens_cursor = db.push_tokens.find({"user_id": user_id})
@@ -300,7 +300,7 @@ async def send_push_to_admins(
         return {"success": 0, "failed": 0, "total_admins": 0}
     
     try:
-        from core.database import db
+        from core.database import db  # noqa: lazy import لتجنب circular imports
         import uuid
         from datetime import datetime, timezone
         

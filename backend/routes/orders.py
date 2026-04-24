@@ -2431,7 +2431,8 @@ async def get_promoted_products(product_type: str = "all") -> dict:
     flash_start_hour = settings.get("flash_start_hour", 13) if settings else 13
     flash_duration = settings.get("flash_duration_hours", 24) if settings else 24
     
-    event = get_flash_event_times_sync(flash_start_hour, flash_duration)
+    # حساب أوقات الفلاش (للاستخدام المستقبلي)
+    _event = get_flash_event_times_sync(flash_start_hour, flash_duration)
     
     # فقط المنتجات التي بدأت وغير منتهية
     query = {

@@ -354,7 +354,8 @@ async def generate_ai_image(image_base64: str, template_id: str, template: dict)
         image_base64 = image_base64.split(',')[1]
     
     # استخدام GPT-4o لتحليل الصورة وإنشاء وصف
-    response = client.chat.completions.create(
+    # TODO: هذا الكود غير مكتمل - النتيجة لا تُستخدم حالياً
+    _response = client.chat.completions.create(
         model="gpt-4o",
         messages=[
             {"role": "system", "content": "You are a professional product photographer. Describe the product in detail for image generation."},

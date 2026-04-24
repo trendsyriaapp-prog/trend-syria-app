@@ -86,7 +86,7 @@ async def init_default_categories() -> None:
         print("✅ تم إنشاء الفئات الافتراضية مع التنظيم الهرمي")
 
 @router.get("")
-async def get_categories(type: Optional[str] = None, active_only: bool = True, parent_only: bool = False, parent_id: Optional[str] = None) -> dict:
+async def get_categories(type: Optional[str] = None, active_only: bool = True, parent_only: bool = False, parent_id: Optional[str] = None) -> List[dict]:
     """جلب جميع الفئات"""
     # تهيئة الفئات الافتراضية إذا لم تكن موجودة
     count = await db.categories.count_documents({})
