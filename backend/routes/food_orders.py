@@ -612,7 +612,7 @@ async def create_food_order(order: FoodOrderCreate, user: dict = Depends(get_cur
             "type": "payment",
             "amount": -total,
             "description": f"طلب طعام من {store['name']}",
-            "created_at": datetime.now(timezone.utc).isoformat()
+            "created_at": get_now()
         })
     
     # إنشاء الطلب
@@ -1053,7 +1053,7 @@ async def create_batch_food_orders(batch: BatchOrderCreate, user: dict = Depends
             "type": "payment",
             "amount": -total_amount,
             "description": f"طلب مجمع من {len(batch.orders)} متجر - {batch_id}",
-            "created_at": datetime.now(timezone.utc).isoformat()
+            "created_at": get_now()
         })
     
     # إنشاء الطلبات
@@ -1293,7 +1293,7 @@ async def get_my_food_orders(
     skip: int = 0,
     limit: int = 20,
     user: dict = Depends(get_current_user)
-) -> dict:
+) -> List[dict]:
     """جلب طلبات العميل"""
     query = {"customer_id": user["id"], "order_type": "food"}
     if status:
@@ -1380,18 +1380,19 @@ async def cancel_food_order(order_id: str, user: dict = Depends(get_current_user
             "type": "refund",
             "amount": order["total"],
             "description": f"استرجاع طلب طعام #{order.get('order_number', order_id[:8])}",
-            "created_at": datetime.now(timezone.utc).isoformat()
+            "created_at": get_now()
         })
     
     # تحديث حالة الطلب
+    now = get_now()
     await db.food_orders.update_one(
         {"id": order_id},
         {
-            "$set": {"status": "cancelled", "cancelled_at": datetime.now(timezone.utc).isoformat()},
+            "$set": {"status": "cancelled", "cancelled_at": now},
             "$push": {
                 "status_history": {
                     "status": "cancelled",
-                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "timestamp": now,
                     "note": "تم إلغاء الطلب من قبل العميل"
                 }
             }
@@ -1447,7 +1448,7 @@ async def get_store_orders(
                 "message": f"لديك طلب جديد #{order['order_number']} بقيمة {order['total']:,.0f} ل.س",
                 "type": "new_food_order",
                 "is_read": False,
-                "created_at": datetime.now(timezone.utc).isoformat()
+                "created_at": get_now()
             })
             order_ids_to_update.append(order["id"])
         
@@ -1590,10 +1591,11 @@ async def update_order_status(
         raise HTTPException(status_code=400, detail="حالة غير صالحة")
     
     # تحديث الحالة
+    now = get_now()
     update_data = {
         "status": new_status,
         "status_label": ORDER_STATUSES.get(new_status, new_status),
-        "updated_at": datetime.now(timezone.utc).isoformat()
+        "updated_at": now
     }
     
     # إذا كان الطلب جاهز للاستلام، نولد كود استلام ونحفظ وقت الجهوزية
@@ -1601,7 +1603,7 @@ async def update_order_status(
         pickup_code = str(secrets.randbelow(9000) + 1000)
         update_data["pickup_code"] = pickup_code
         update_data["pickup_code_verified"] = False
-        update_data["ready_at"] = datetime.now(timezone.utc).isoformat()
+        update_data["ready_at"] = now
         # تعيين driver_status ليتمكن السائق من قبول الطلب
         if not order.get("driver_id"):
             update_data["driver_status"] = "waiting_for_acceptance"
@@ -1620,7 +1622,7 @@ async def update_order_status(
             "$push": {
                 "status_history": {
                     "status": new_status,
-                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "timestamp": now,
                     "note": note or ORDER_STATUSES.get(new_status),
                     "updated_by": user["id"]
                 }
@@ -1636,7 +1638,7 @@ async def update_order_status(
         "message": f"طلبك #{order['order_number']}: {ORDER_STATUSES.get(new_status)}",
         "type": "order_status_update",
         "is_read": False,
-        "created_at": datetime.now(timezone.utc).isoformat()
+        "created_at": now
     })
     
     return {"message": "تم تحديث حالة الطلب"}
@@ -1911,7 +1913,7 @@ async def get_available_food_orders(
                 "message": f"طلب #{order_num} من {store_name} جاهز للاستلام",
                 "type": "food_order_ready",
                 "is_read": False,
-                "created_at": datetime.now(timezone.utc).isoformat()
+                "created_at": get_now()
             })
             order_ids_to_update.append(order["id"])
         
@@ -2412,6 +2414,7 @@ async def accept_food_order(
                         )
         
         # تحديث باقي بيانات الطلب (driver_id تم تعيينه مسبقاً في القفل الذري)
+        now = get_now()
         await db.food_orders.update_one(
             {"id": order_id, "driver_id": user["id"]},  # التأكد أن الطلب لا يزال مقفولاً لهذا السائق
             {
@@ -2420,7 +2423,7 @@ async def accept_food_order(
                     "driver_phone": user.get("phone"),
                     "driver_image": user.get("photo", ""),
                     "status": "out_for_delivery",
-                    "picked_up_at": datetime.now(timezone.utc).isoformat()
+                    "picked_up_at": now
                 },
                 "$unset": {
                     "_locking_driver": "",  # إزالة علامة القفل المؤقتة
@@ -2429,7 +2432,7 @@ async def accept_food_order(
                 "$push": {
                     "status_history": {
                         "status": "out_for_delivery",
-                        "timestamp": datetime.now(timezone.utc).isoformat(),
+                        "timestamp": now,
                         "note": f"جاري التوصيل بواسطة {user['name']}"
                     }
                 }
@@ -2559,7 +2562,7 @@ async def accept_food_order(
             "message": f"موظف التوصيل {user['name']} في طريقه إليك",
             "type": "order_out_for_delivery",
             "is_read": False,
-            "created_at": datetime.now(timezone.utc).isoformat()
+            "created_at": get_now()
         })
     
     return {
@@ -2627,6 +2630,7 @@ async def driver_cancel_order(order_id: str, data: DriverCancelRequest, user: di
         )
     
     # إعادة الطلب لحالة "جاهز"
+    cancel_now = get_now()
     await db.food_orders.update_one(
         {"id": order_id},
         {
@@ -2637,7 +2641,7 @@ async def driver_cancel_order(order_id: str, data: DriverCancelRequest, user: di
                 "status": "ready",
                 "driver_cancelled": True,
                 "driver_cancel_reason": data.reason,
-                "driver_cancel_at": datetime.now(timezone.utc).isoformat(),
+                "driver_cancel_at": cancel_now,
                 "driver_cancel_by": user["id"]
             },
             "$unset": {
@@ -2649,7 +2653,7 @@ async def driver_cancel_order(order_id: str, data: DriverCancelRequest, user: di
             "$push": {
                 "status_history": {
                     "status": "driver_cancelled",
-                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "timestamp": cancel_now,
                     "note": f"تم إلغاء الاستلام بواسطة السائق: {data.reason}",
                     "driver_id": user["id"],
                     "driver_name": get_first_name(user.get("name", user.get("full_name", "")))
@@ -2666,7 +2670,7 @@ async def driver_cancel_order(order_id: str, data: DriverCancelRequest, user: di
         "order_id": order_id,
         "order_number": order.get("order_number"),
         "reason": data.reason,
-        "cancelled_at": datetime.now(timezone.utc).isoformat()
+        "cancelled_at": cancel_now
     })
     
     # إشعار للعميل
@@ -2677,7 +2681,7 @@ async def driver_cancel_order(order_id: str, data: DriverCancelRequest, user: di
         "message": "يتم البحث عن موظف توصيل آخر لطلبك",
         "type": "driver_changed",
         "is_read": False,
-        "created_at": datetime.now(timezone.utc).isoformat()
+        "created_at": cancel_now
     })
     
     # إشعار للمتجر
@@ -2690,7 +2694,7 @@ async def driver_cancel_order(order_id: str, data: DriverCancelRequest, user: di
             "message": f"الطلب #{order.get('order_number')} - يتم البحث عن سائق آخر",
             "type": "driver_cancelled",
             "is_read": False,
-            "created_at": datetime.now(timezone.utc).isoformat()
+            "created_at": cancel_now
         })
     
     # حساب نسبة الإلغاء الجديدة
@@ -2891,18 +2895,19 @@ async def verify_pickup_code(order_id: str, data: VerifyPickupCode, user: dict =
         raise HTTPException(status_code=400, detail="الكود غير صحيح")
     
     # تحديث حالة الاستلام
+    verify_now = get_now()
     await db.food_orders.update_one(
         {"id": order_id},
         {
             "$set": {
                 "pickup_code_verified": True,
-                "pickup_verified_at": datetime.now(timezone.utc).isoformat(),
+                "pickup_verified_at": verify_now,
                 "pickup_verified_by": user["id"]
             },
             "$push": {
                 "status_history": {
                     "status": "pickup_verified",
-                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "timestamp": verify_now,
                     "note": f"تم تأكيد الاستلام بالكود بواسطة {user['name']}"
                 }
             }
@@ -2943,19 +2948,20 @@ async def start_delivery_to_customer(
         estimated_minutes = data.estimated_minutes
     
     # تحديث حالة الطلب
+    way_now = get_now()
     await db.food_orders.update_one(
         {"id": order_id},
         {
             "$set": {
                 "status": "out_for_delivery",
                 "delivery_status": "on_the_way",
-                "on_the_way_at": datetime.now(timezone.utc).isoformat(),
+                "on_the_way_at": way_now,
                 "estimated_arrival_minutes": estimated_minutes
             },
             "$push": {
                 "tracking_history": {
                     "status": "on_the_way",
-                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "timestamp": way_now,
                     "actor": user.get("full_name", user.get("name", "")),
                     "actor_type": "delivery",
                     "message": f"السائق في الطريق - الوصول خلال {estimated_minutes} دقيقة"
