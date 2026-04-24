@@ -16,3 +16,5 @@ export { default as MapTopBar } from './MapTopBar';
 export { default as GpsErrorMessage } from './GpsErrorMessage';
 export { default as GoogleMapsButton } from './GoogleMapsButton';
 export { default as StepByStepCard } from './StepByStepCard';
+export { default as RouteDetailsCard } from './RouteDetailsCard';
+export { default as OptimizedRouteCard } from './OptimizedRouteCard';
