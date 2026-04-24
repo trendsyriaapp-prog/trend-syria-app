@@ -160,21 +160,23 @@
   - `create_batch_food_orders()` complexity: 44
   - `accept_food_order()` complexity: 43
 
-### P3 - Refactoring
+### P3 - Refactoring ✅ مكتمل (24 أبريل 2026)
 - [x] تقسيم `FoodStoreDashboard.js`: من 4252 إلى 3477 سطر ✅
-- [x] تقسيم `DeliverySettingsTab.js`: من 2444 سطر إلى ~715 سطر ✅ (24 أبريل 2026)
-  - استخراج 16 مكون فرعي إلى `/delivery-settings/`
-  - المكونات: DispatchStatusCard, ViolationsReportCard, DistancePricingCard, DriverEarningsCard, WaitTimeCard, WaitCompensationCard, OrderLimitsCard, SmartPriorityCard, DeliveryTimeSettingsCard, ProductDeliveryHoursCard, PerformanceLevelsCard, LeaderboardRewardsCard, WorkingHoursCard, HoldSettingsCard, CustomerProtectionCard, UndeliveredOrdersCard, Modals
-- [x] تقسيم `DeliveryPages.js`: استخراج مكونين ✅ (24 أبريل 2026)
-  - `/pages/delivery/DeliveryDocuments.js` - صفحة رفع الوثائق
-  - `/pages/delivery/DeliveryPendingApproval.js` - صفحة انتظار الموافقة
-- [x] تقسيم `OrdersMap.js`: استخراج دوال مساعدة ✅ (24 أبريل 2026)
-  - `/components/delivery/orders-map/MapIcons.js` - أيقونات الخريطة
-  - `/components/delivery/orders-map/MapHelpers.js` - دوال المسافة والإحداثيات
-  - `/components/delivery/orders-map/VoiceAnnouncements.js` - التنبيهات الصوتية
-- [ ] تقسيم المكونات الكبيرة المتبقية (اختياري):
-  - `OrdersMap.js`: 3358 سطر (تم استخراج الدوال المساعدة، الـ JSX متشابك)
-  - `DeliveryPages.js`: 2490 سطر (تم استخراج مكونين، DeliveryDashboard متشابك)
+- [x] تقسيم `DeliverySettingsTab.js`: من 2444 سطر إلى ~715 سطر ✅
+  - استخراج 17 مكون فرعي إلى `/delivery-settings/`
+- [x] تقسيم `DeliveryPages.js`: استخراج مكونات متعددة ✅
+  - `/pages/delivery/DeliveryDocuments.js` (553 سطر)
+  - `/pages/delivery/DeliveryPendingApproval.js` (150 سطر)
+  - `/pages/delivery/components/` (6 ملفات - 359 سطر):
+    - DriverHeader, OrderTypeTabs, OrderTypeFilter, UnavailableMessage, DriverRequestedOrderCard
+  - `/pages/delivery/modals/` (4 ملفات - 266 سطر):
+    - ETAModal, DeliveryCodeModal, DeleteConfirmModal
+- [x] تقسيم `OrdersMap.js`: استخراج دوال مساعدة ✅
+  - `/components/delivery/orders-map/` (4 ملفات - 487 سطر):
+    - MapIcons, MapHelpers, VoiceAnnouncements
+
+**إجمالي الملفات المُستخرجة:** 34+ ملف
+**إجمالي الأسطر المُستخرجة:** ~3945 سطر
 
 ### P5 - مستقبلي
 - [ ] نظام الوكلاء/مكاتب الحوالات للشحن
