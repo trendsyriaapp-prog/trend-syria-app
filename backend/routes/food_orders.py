@@ -2758,11 +2758,8 @@ async def driver_cancel_order(order_id: str, data: DriverCancelRequest, user: di
     }
 
 @router.get("/delivery/my-cancel-rate")
-async def get_my_cancel_rate(user: dict = Depends(get_current_user)) -> dict:
+async def get_my_cancel_rate(user: dict = Depends(require_delivery_user)) -> dict:
     """جلب نسبة الإلغاء للسائق"""
-    if user["user_type"] != "delivery":
-        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
-    
     cancel_settings = await get_driver_cancel_settings()
     lookback = cancel_settings.get("lookback_orders", 50)
     
@@ -2779,14 +2776,11 @@ async def get_my_cancel_rate(user: dict = Depends(get_current_user)) -> dict:
 # ============== التوجيه الذكي ==============
 
 @router.post("/delivery/smart-route/evaluate")
-async def evaluate_order_for_smart_route(data: SmartRouteEvaluateRequest, user: dict = Depends(get_current_user)) -> dict:
+async def evaluate_order_for_smart_route(data: SmartRouteEvaluateRequest, user: dict = Depends(require_delivery_user)) -> dict:
     """
     تقييم ما إذا كان الطلب الجديد على مسار السائق الحالي
     يساعد السائق في اتخاذ قرار قبول الطلب
     """
-    if user["user_type"] != "delivery":
-        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
-    
     from services.smart_routing import evaluate_new_order
     
     # جلب الطلب الجديد
@@ -2857,13 +2851,10 @@ async def evaluate_order_for_smart_route(data: SmartRouteEvaluateRequest, user: 
     }
 
 @router.get("/delivery/optimize-route")
-async def get_optimized_route(user: dict = Depends(get_current_user)) -> dict:
+async def get_optimized_route(user: dict = Depends(require_delivery_user)) -> dict:
     """
     الحصول على الترتيب الأمثل لتوصيل الطلبات الحالية
     """
-    if user["user_type"] != "delivery":
-        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
-    
     from services.smart_routing import optimize_delivery_order
     
     # جلب الطلبات الحالية
@@ -3053,12 +3044,9 @@ async def driver_arrived_at_store(
     order_id: str, 
     latitude: float = Query(..., description="خط العرض - إجباري"),
     longitude: float = Query(..., description="خط الطول - إجباري"),
-    user: dict = Depends(get_current_user)
+    user: dict = Depends(require_delivery_user)
 ) -> dict:
     """تسجيل وصول السائق للمطعم - يبدأ عداد الانتظار (يتطلب موقع GPS)"""
-    if user["user_type"] != "delivery":
-        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
-    
     order = await db.food_orders.find_one({
         "id": order_id,
         "driver_id": user["id"]
@@ -3161,11 +3149,8 @@ async def driver_arrived_at_store(
 
 
 @router.get("/delivery/{order_id}/waiting-status")
-async def get_waiting_status(order_id: str, user: dict = Depends(get_current_user)) -> dict:
+async def get_waiting_status(order_id: str, user: dict = Depends(require_delivery_user)) -> dict:
     """جلب حالة الانتظار والتعويض المتوقع"""
-    if user["user_type"] != "delivery":
-        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
-    
     order = await db.food_orders.find_one({
         "id": order_id,
         "driver_id": user["id"]
@@ -3227,11 +3212,8 @@ async def get_pickup_code(order_id: str, user: dict = Depends(get_current_user))
 # ============== الأولوية الذكية - طلبات من نفس المطعم ==============
 
 @router.get("/delivery/priority-orders")
-async def get_priority_orders(user: dict = Depends(get_current_user)) -> dict:
+async def get_priority_orders(user: dict = Depends(require_delivery_user)) -> dict:
     """جلب الطلبات ذات الأولوية - من نفس المطاعم التي يذهب إليها السائق"""
-    if user["user_type"] != "delivery":
-        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
-    
     # جلب إعدادات الأولوية
     settings = await db.platform_settings.find_one({"id": "main"})
     smart_limits = settings.get("smart_order_limits", {}) if settings else {}
@@ -3338,12 +3320,9 @@ async def delivery_arrived_at_customer(order_id: str, user: dict = Depends(requi
 async def verify_delivery_code(
     order_id: str, 
     data: DeliveryCodeVerification, 
-    user: dict = Depends(get_current_user)
+    user: dict = Depends(require_delivery_user)
 ) -> dict:
     """التحقق من كود التسليم وإتمام الطلب"""
-    if user["user_type"] != "delivery":
-        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
-    
     order = await db.food_orders.find_one({
         "id": order_id, 
         "driver_id": user["id"], 
@@ -3648,11 +3627,8 @@ async def complete_food_delivery(order_id: str, user: dict = Depends(require_del
     return {"message": "تم إتمام التوصيل بنجاح"}
 
 @router.get("/delivery/my-deliveries")
-async def get_my_food_deliveries(user: dict = Depends(get_current_user)) -> dict:
+async def get_my_food_deliveries(user: dict = Depends(require_delivery_user)) -> dict:
     """جلب طلبات التوصيل الخاصة بي"""
-    if user["user_type"] != "delivery":
-        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
-    
     orders = await db.food_orders.find(
         {"driver_id": user["id"]},
         {"_id": 0}
@@ -4067,16 +4043,13 @@ async def request_driver_for_order(
 @router.post("/driver/orders/{order_id}/accept")
 async def driver_accept_order(
     order_id: str,
-    user: dict = Depends(get_current_user)
+    user: dict = Depends(require_delivery_user)
 ) -> dict:
     """
     السائق يقبل الطلب
     - يُحسب وقت وصول السائق للمتجر
     - يُرسل إشعار للبائع مع وقت الوصول المتوقع
     """
-    if user["user_type"] != "delivery":
-        raise HTTPException(status_code=403, detail="غير مصرح لك")
-    
     # جلب الطلب
     order = await get_order_by_id(order_id)
     if not order:
@@ -4179,12 +4152,9 @@ async def driver_accept_order(
 @router.post("/driver/orders/{order_id}/reject")
 async def driver_reject_order(
     order_id: str,
-    user: dict = Depends(get_current_user)
+    user: dict = Depends(require_delivery_user)
 ) -> dict:
     """السائق يرفض الطلب"""
-    if user["user_type"] != "delivery":
-        raise HTTPException(status_code=403, detail="غير مصرح لك")
-    
     # تحديث إشعار السائق فقط
     await db.notifications.update_one(
         {
