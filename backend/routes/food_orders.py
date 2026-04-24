@@ -2273,7 +2273,7 @@ async def accept_food_order(
             "$set": {
                 "driver_id": user["id"],  # قفل الطلب فوراً لهذا السائق
                 "_locking_driver": user["id"],  # علامة مؤقتة للقفل
-                "_locked_at": datetime.now(timezone.utc).isoformat()
+                "_locked_at": get_now()
             }
         },
         return_document=True  # إرجاع المستند بعد التحديث
@@ -3742,6 +3742,7 @@ async def admin_cancel_order_with_penalty(
         )
         
         # تسجيل العملية
+        admin_cancel_now = get_now()
         await db.wallet_transactions.insert_one({
             "id": str(uuid.uuid4()),
             "user_id": driver_id,
@@ -3749,7 +3750,7 @@ async def admin_cancel_order_with_penalty(
             "amount": -penalty_amount,
             "description": f"خصم بسبب إلغاء طلب #{order['order_number']} - {request.reason}",
             "order_id": order_id,
-            "created_at": datetime.now(timezone.utc).isoformat()
+            "created_at": admin_cancel_now
         })
         
         # إشعار السائق بالخصم
@@ -3760,10 +3761,11 @@ async def admin_cancel_order_with_penalty(
             "message": f"تم خصم {penalty_amount:,.0f} ل.س بسبب إلغاء طلب #{order['order_number']}",
             "type": "penalty",
             "is_read": False,
-            "created_at": datetime.now(timezone.utc).isoformat()
+            "created_at": admin_cancel_now
         })
     
     # استرجاع المبلغ للعميل إذا كان الدفع بالمحفظة
+    cancel_now = get_now()
     if order["payment_method"] == "wallet" and order["payment_status"] == "paid":
         await db.wallets.update_one(
             {"user_id": order["customer_id"]},
@@ -3777,7 +3779,7 @@ async def admin_cancel_order_with_penalty(
             "amount": order["total"],
             "description": f"استرجاع طلب #{order['order_number']} - {request.reason}",
             "order_id": order_id,
-            "created_at": datetime.now(timezone.utc).isoformat()
+            "created_at": cancel_now
         })
     
     # تحديث حالة الطلب
@@ -3786,7 +3788,7 @@ async def admin_cancel_order_with_penalty(
         {
             "$set": {
                 "status": "cancelled",
-                "cancelled_at": datetime.now(timezone.utc).isoformat(),
+                "cancelled_at": cancel_now,
                 "cancelled_by": "admin",
                 "cancel_reason": request.reason,
                 "driver_penalty": penalty_amount
@@ -3794,7 +3796,7 @@ async def admin_cancel_order_with_penalty(
             "$push": {
                 "status_history": {
                     "status": "cancelled",
-                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "timestamp": cancel_now,
                     "note": f"تم الإلغاء من الإدارة: {request.reason}"
                 }
             }
@@ -3814,7 +3816,7 @@ async def admin_cancel_order_with_penalty(
             "message": message,
             "type": "order_cancelled",
             "is_read": False,
-            "created_at": datetime.now(timezone.utc).isoformat()
+            "created_at": cancel_now
         })
     
     # إشعار المتجر
@@ -3827,7 +3829,7 @@ async def admin_cancel_order_with_penalty(
             "message": f"تم إلغاء طلب #{order['order_number']} من الإدارة\nالسبب: {request.reason}",
             "type": "order_cancelled",
             "is_read": False,
-            "created_at": datetime.now(timezone.utc).isoformat()
+            "created_at": cancel_now
         })
     
     return {
@@ -4087,7 +4089,7 @@ async def driver_reject_order(
         },
         {"$set": {
             "is_rejected": True,
-            "rejected_at": datetime.now(timezone.utc).isoformat()
+            "rejected_at": get_now()
         }}
     )
     
