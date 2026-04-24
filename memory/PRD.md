@@ -17,23 +17,23 @@
 ## Completed Refactoring Work
 
 ### food_orders.py
-- ✅ Replaced ALL `datetime.now().isoformat()` with `get_now()` (27+ → 0)
+- ✅ Replaced ALL `datetime.now().isoformat()` with `get_now()`
 - ✅ Replaced duplicate MongoDB queries with helpers
-- ✅ Replaced Haversine calculations with `calculate_distance_km`
-- ✅ Removed `import math`
+- ✅ Created `require_delivery_user` dependency
 - **Size**: 4435 → 4248 lines
 
 ### admin.py
 - ✅ Added `get_now()` helper function
-- ✅ Replaced 58 `datetime.now().isoformat()` with `get_now()`
-- ✅ Added `insert_notification()` helper function
-- ✅ Replaced 20 duplicate notification inserts with helper
-- ✅ Fixed 4 return type annotation bugs (-> dict to -> list)
-- **Size**: 4751 → 4703 lines (-48 lines)
+- ✅ Added `insert_notification()` helper (replaced 20 usages)
+- ✅ Added `require_admin_user` dependency
+- ✅ Added `require_main_admin` dependency
+- ✅ Fixed 5+ return type annotation bugs
+- **Remaining**: 76 manual permission checks to replace
+- **Size**: 4751 → 4709 lines
 
 ### Frontend
 - ✅ `OrdersMap.js`: 2273 → 1902 lines
-- ✅ Extracted helpers to `MapHelpers.js`
+- ✅ Fixed GPS button position in map (top-20)
 
 ---
 
@@ -53,7 +53,7 @@
 |------|-------|--------|
 | `food_orders.py` | 4248 | ✅ Complete |
 | `food_order_helpers.py` | 1258 | Helpers |
-| `admin.py` | 4703 | ✅ Complete |
+| `admin.py` | 4709 | In Progress (76 checks remaining) |
 | `OrdersMap.js` | 1902 | ✅ Complete |
 
 ---
@@ -61,8 +61,8 @@
 ## Prioritized Backlog
 
 ### P0 - Critical
-- [x] Complete datetime.now() refactoring
-- [x] Extract notification pattern
+- [x] Add admin dependencies (require_admin_user, require_main_admin)
+- [ ] Replace 76 manual permission checks with dependencies
 
 ### P1 - High Priority
 - [ ] Activate real SMS OTP for Syrian numbers (mocked to `123456`)
@@ -86,6 +86,6 @@
 ---
 
 ## Test Reports
-- Latest: `/app/test_reports/iteration_202.json` (22/22 passed)
+- Latest: `/app/test_reports/iteration_203.json` (24/24 passed)
 
 *Last Updated: December 2025*
