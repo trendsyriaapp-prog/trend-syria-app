@@ -16,24 +16,24 @@
 
 ## Completed Refactoring Work
 
-### food_orders.py
-- ✅ Replaced ALL `datetime.now().isoformat()` with `get_now()`
-- ✅ Replaced duplicate MongoDB queries with helpers
-- ✅ Created `require_delivery_user` dependency
-- **Size**: 4435 → 4248 lines
+### food_orders.py ✅ COMPLETE
+- Replaced ALL `datetime.now().isoformat()` with `get_now()`
+- Replaced duplicate MongoDB queries with helpers
+- Created `require_delivery_user` dependency
+- **Size**: 4435 → 4248 lines (-187)
 
-### admin.py
+### admin.py (IN PROGRESS)
 - ✅ Added `get_now()` helper function
 - ✅ Added `insert_notification()` helper (replaced 20 usages)
 - ✅ Added `require_admin_user` dependency
 - ✅ Added `require_main_admin` dependency
-- ✅ Fixed 5+ return type annotation bugs
-- **Remaining**: 76 manual permission checks to replace
-- **Size**: 4751 → 4709 lines
+- ✅ Replaced 16 permission checks with dependencies
+- **Remaining**: 59 manual permission checks
+- **Size**: 4751 → 4662 lines (-89)
 
-### Frontend
-- ✅ `OrdersMap.js`: 2273 → 1902 lines
-- ✅ Fixed GPS button position in map (top-20)
+### Frontend ✅ COMPLETE
+- `OrdersMap.js`: 2273 → 1902 lines
+- Fixed GPS button position in map (top-20)
 
 ---
 
@@ -49,20 +49,20 @@
 ---
 
 ## Current File Sizes
-| File | Lines | Status |
-|------|-------|--------|
-| `food_orders.py` | 4248 | ✅ Complete |
-| `food_order_helpers.py` | 1258 | Helpers |
-| `admin.py` | 4709 | In Progress (76 checks remaining) |
-| `OrdersMap.js` | 1902 | ✅ Complete |
+| File | Original | Current | Saved |
+|------|----------|---------|-------|
+| `food_orders.py` | 4435 | 4248 | -187 |
+| `admin.py` | 4751 | 4662 | -89 |
+| `OrdersMap.js` | 2273 | 1902 | -371 |
+| **Total** | | | **-647** |
 
 ---
 
 ## Prioritized Backlog
 
 ### P0 - Critical
-- [x] Add admin dependencies (require_admin_user, require_main_admin)
-- [ ] Replace 76 manual permission checks with dependencies
+- [x] Add admin dependencies
+- [ ] Replace remaining 59 permission checks with dependencies
 
 ### P1 - High Priority
 - [ ] Activate real SMS OTP for Syrian numbers (mocked to `123456`)
@@ -86,6 +86,6 @@
 ---
 
 ## Test Reports
-- Latest: `/app/test_reports/iteration_203.json` (24/24 passed)
+- Latest: `/app/test_reports/iteration_204.json` (24/24 passed)
 
 *Last Updated: December 2025*
