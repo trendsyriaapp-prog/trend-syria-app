@@ -959,11 +959,8 @@ async def activate_seller(seller_id: str, user: dict = Depends(require_admin_use
 
 
 @router.delete("/sellers/{seller_id}")
-async def delete_seller(seller_id: str, user: dict = Depends(get_current_user)) -> dict:
+async def delete_seller(seller_id: str, user: dict = Depends(require_main_admin)) -> dict:
     """حذف حساب بائع نهائياً (للأدمن)"""
-    if user["user_type"] != "admin":
-        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
-    
     seller = await db.users.find_one({"id": seller_id, "user_type": "seller"})
     if not seller:
         raise HTTPException(status_code=404, detail="البائع غير موجود")
@@ -1294,10 +1291,7 @@ async def reject_food_product(product_id: str, data: dict = None, user: dict = D
 # ============== Delivery Management ==============
 
 @router.get("/delivery/pending")
-async def get_pending_delivery(user: dict = Depends(get_current_user)) -> list:
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
+async def get_pending_delivery(user: dict = Depends(require_admin_user)) -> list:
     docs = await db.delivery_documents.find({"status": "pending"}, {"_id": 0}).to_list(100)
     
     if not docs:
@@ -1348,11 +1342,9 @@ async def get_all_delivery(
     limit: int = Query(50, ge=1, le=100, description="عدد النتائج في الصفحة"),
     search: str = Query(None, description="البحث بالاسم أو الهاتف"),
     status: str = Query(None, description="حالة السائق: approved, pending"),
-    user: dict = Depends(get_current_user)
+    user: dict = Depends(require_admin_user)
 ) -> dict:
     """جلب جميع السائقين مع Pagination"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
     
     # بناء الاستعلام
     query = {"user_type": "delivery"}
@@ -1422,10 +1414,7 @@ async def get_all_delivery(
     }
 
 @router.post("/delivery/{driver_id}/approve")
-async def approve_delivery_driver(driver_id: str, user: dict = Depends(get_current_user)) -> dict:
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
+async def approve_delivery_driver(driver_id: str, user: dict = Depends(require_admin_user)) -> dict:
     now = get_now()
     
     # جلب وثائق السائق للحصول على الصورة الشخصية
@@ -1487,10 +1476,8 @@ async def approve_delivery_driver(driver_id: str, user: dict = Depends(get_curre
     return {"message": "تم اعتماد موظف التوصيل"}
 
 @router.post("/delivery/{driver_id}/reject")
-async def reject_delivery_driver(driver_id: str, data: dict = Body(default={}), user: dict = Depends(get_current_user)) -> dict:
+async def reject_delivery_driver(driver_id: str, data: dict = Body(default={}), user: dict = Depends(require_admin_user)) -> dict:
     """رفض موظف توصيل مع سبب الرفض (اختياري)"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
     
     # سبب الرفض اختياري
     reason = data.get("reason", "").strip() if data else ""
@@ -1572,9 +1559,7 @@ async def reject_delivery_driver(driver_id: str, data: dict = Body(default={}), 
 # ============== Sub-Admin Management ==============
 
 @router.post("/sub-admins")
-async def create_sub_admin(data: SubAdminCreate, user: dict = Depends(get_current_user)) -> dict:
-    if user["user_type"] != "admin":
-        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
+async def create_sub_admin(data: SubAdminCreate, user: dict = Depends(require_main_admin)) -> dict:
     
     existing = await db.users.find_one({"phone": data.phone})
     if existing:
@@ -1599,10 +1584,7 @@ async def create_sub_admin(data: SubAdminCreate, user: dict = Depends(get_curren
     return {"id": sub_admin_id, "message": "تم إنشاء مساعد المدير بنجاح"}
 
 @router.get("/sub-admins")
-async def get_sub_admins(user: dict = Depends(get_current_user)) -> list:
-    if user["user_type"] != "admin":
-        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
-    
+async def get_sub_admins(user: dict = Depends(require_main_admin)) -> list:
     sub_admins = await db.users.find(
         {"user_type": "sub_admin"},
         {"_id": 0, "password": 0}
@@ -1611,10 +1593,7 @@ async def get_sub_admins(user: dict = Depends(get_current_user)) -> list:
     return sub_admins
 
 @router.delete("/sub-admins/{sub_admin_id}")
-async def delete_sub_admin(sub_admin_id: str, user: dict = Depends(get_current_user)) -> dict:
-    if user["user_type"] != "admin":
-        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
-    
+async def delete_sub_admin(sub_admin_id: str, user: dict = Depends(require_main_admin)) -> dict:
     result = await db.users.delete_one({"id": sub_admin_id, "user_type": "sub_admin"})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="مساعد المدير غير موجود")
@@ -1629,11 +1608,9 @@ async def get_all_orders(
     limit: int = Query(50, ge=1, le=100, description="عدد النتائج في الصفحة"),
     search: str = Query(None, description="البحث برقم الطلب أو الهاتف"),
     status: str = Query(None, description="حالة الطلب"),
-    user: dict = Depends(get_current_user)
+    user: dict = Depends(require_admin_user)
 ) -> dict:
     """جلب جميع الطلبات مع Pagination"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
     
     # بناء الاستعلام
     query = {}
@@ -1675,11 +1652,8 @@ async def get_all_orders(
 PLATFORM_WALLET_ID = "platform_admin_wallet"
 
 @router.get("/platform-wallet")
-async def get_platform_wallet(user: dict = Depends(get_current_user)) -> dict:
+async def get_platform_wallet(user: dict = Depends(require_main_admin)) -> dict:
     """جلب محفظة المنصة - للمدير فقط"""
-    if user["user_type"] != "admin":
-        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
-    
     wallet = await db.platform_wallet.find_one({"id": PLATFORM_WALLET_ID}, {"_id": 0})
     if not wallet:
         wallet = {
@@ -1697,13 +1671,10 @@ async def get_platform_wallet(user: dict = Depends(get_current_user)) -> dict:
 
 @router.get("/platform-wallet/transactions")
 async def get_platform_wallet_transactions(
-    user: dict = Depends(get_current_user),
+    user: dict = Depends(require_main_admin),
     limit: int = 50
 ) -> list:
     """جلب معاملات محفظة المنصة"""
-    if user["user_type"] != "admin":
-        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
-    
     transactions = await db.platform_wallet_transactions.find(
         {},
         {"_id": 0}
@@ -1715,12 +1686,9 @@ async def get_platform_wallet_transactions(
 async def withdraw_from_platform_wallet(
     amount: int,
     note: str = "",
-    user: dict = Depends(get_current_user)
+    user: dict = Depends(require_main_admin)
 ) -> dict:
     """سحب من محفظة المنصة"""
-    if user["user_type"] != "admin":
-        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
-    
     wallet = await db.platform_wallet.find_one({"id": PLATFORM_WALLET_ID})
     if not wallet or wallet.get("balance", 0) < amount:
         raise HTTPException(status_code=400, detail="رصيد غير كافٍ")
@@ -1751,10 +1719,7 @@ async def withdraw_from_platform_wallet(
     return {"message": "تم السحب بنجاح", "amount": amount, "new_balance": wallet["balance"] - amount}
 
 @router.get("/commissions")
-async def get_commissions_report(user: dict = Depends(get_current_user)) -> dict:
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
+async def get_commissions_report(user: dict = Depends(require_admin_user)) -> dict:
     orders = await db.orders.find(
         {"status": {"$in": ["paid", "completed", "delivered"]}},
         {"_id": 0}
@@ -1818,10 +1783,7 @@ async def get_commissions_report(user: dict = Depends(get_current_user)) -> dict
     }
 
 @router.get("/commissions/rates")
-async def get_commission_rates(user: dict = Depends(get_current_user)) -> dict:
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
+async def get_commission_rates(user: dict = Depends(require_admin_user)) -> dict:
     db_rates = await get_commission_rates_from_db()
     
     rates = []
@@ -1841,10 +1803,7 @@ async def get_commission_rates(user: dict = Depends(get_current_user)) -> dict:
     }
 
 @router.put("/commissions/rates")
-async def update_commission_rates(rates: dict, user: dict = Depends(get_current_user)) -> dict:
-    if user["user_type"] != "admin":
-        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
-    
+async def update_commission_rates(rates: dict, user: dict = Depends(require_main_admin)) -> dict:
     for category, rate in rates.items():
         if not isinstance(rate, (int, float)) or rate < 0 or rate > 1:
             raise HTTPException(status_code=400, detail=f"نسبة غير صحيحة للفئة {category}")
@@ -1908,10 +1867,7 @@ async def update_commission_rates(rates: dict, user: dict = Depends(get_current_
     return {"message": "تم تحديث نسب العمولات بنجاح", "rates": rates, "notifications_sent": len(changed_categories) > 0}
 
 @router.post("/commissions/rates/category")
-async def add_commission_category(category: str, rate: float, user: dict = Depends(get_current_user)) -> dict:
-    if user["user_type"] != "admin":
-        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
-    
+async def add_commission_category(category: str, rate: float, user: dict = Depends(require_main_admin)) -> dict:
     if rate < 0 or rate > 1:
         raise HTTPException(status_code=400, detail="النسبة يجب أن تكون بين 0 و 1")
     
@@ -1951,10 +1907,7 @@ async def add_commission_category(category: str, rate: float, user: dict = Depen
     return {"message": f"تم إضافة فئة {category} بنسبة {rate * 100:.0f}%"}
 
 @router.delete("/commissions/rates/category/{category}")
-async def delete_commission_category(category: str, user: dict = Depends(get_current_user)) -> dict:
-    if user["user_type"] != "admin":
-        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
-    
+async def delete_commission_category(category: str, user: dict = Depends(require_main_admin)) -> dict:
     if category == "default":
         raise HTTPException(status_code=400, detail="لا يمكن حذف الفئة الافتراضية")
     
@@ -1998,10 +1951,7 @@ async def delete_commission_category(category: str, user: dict = Depends(get_cur
 # ============== Notifications Management ==============
 
 @router.post("/notifications")
-async def create_notification(data: NotificationCreate, user: dict = Depends(get_current_user)) -> dict:
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="غير مصرح")
-    
+async def create_notification(data: NotificationCreate, user: dict = Depends(require_admin_user)) -> dict:
     notification = {
         "id": str(uuid.uuid4()),
         "title": data.title,
@@ -2017,10 +1967,7 @@ async def create_notification(data: NotificationCreate, user: dict = Depends(get
     return {"message": "تم إرسال الإشعار بنجاح", "notification": notification}
 
 @router.get("/notifications")
-async def get_admin_notifications(user: dict = Depends(get_current_user)) -> list:
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="غير مصرح")
-    
+async def get_admin_notifications(user: dict = Depends(require_admin_user)) -> list:
     # جلب فقط الإشعارات التي أنشأها الأدمن (لها created_by أو target)
     # وليس إشعارات المستخدمين الشخصية
     notifications = await db.notifications.find(
@@ -2036,10 +1983,7 @@ async def get_admin_notifications(user: dict = Depends(get_current_user)) -> lis
     return notifications
 
 @router.delete("/notifications/{notification_id}")
-async def delete_notification(notification_id: str, user: dict = Depends(get_current_user)) -> dict:
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="غير مصرح")
-    
+async def delete_notification(notification_id: str, user: dict = Depends(require_admin_user)) -> dict:
     result = await db.notifications.delete_one({"id": notification_id})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="الإشعار غير موجود")
@@ -2052,11 +1996,8 @@ async def delete_notification(notification_id: str, user: dict = Depends(get_cur
 # ============== Low Stock Report ==============
 
 @router.get("/products/low-stock")
-async def get_low_stock_products(user: dict = Depends(get_current_user)) -> dict:
+async def get_low_stock_products(user: dict = Depends(require_admin_user)) -> dict:
     """جلب المنتجات ذات المخزون المنخفض"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     # Get threshold from settings
     settings = await db.platform_settings.find_one({"id": "main"})
     threshold = settings.get("low_stock_threshold", 5) if settings else 5
@@ -2104,11 +2045,8 @@ async def get_low_stock_products(user: dict = Depends(get_current_user)) -> dict
 from core.database import create_notification_for_user
 
 @router.get("/driver-reports")
-async def get_driver_reports(user: dict = Depends(get_current_user)) -> dict:
+async def get_driver_reports(user: dict = Depends(require_admin_user)) -> dict:
     """جلب البلاغات الأخلاقية ضد موظفي التوصيل"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     reports = await db.driver_reports.find(
         {},
         {"_id": 0}
@@ -2128,11 +2066,8 @@ async def get_driver_reports(user: dict = Depends(get_current_user)) -> dict:
     return {"reports": reports, "stats": stats}
 
 @router.put("/driver-reports/{report_id}")
-async def handle_driver_report(report_id: str, action: str, admin_notes: str = "", user: dict = Depends(get_current_user)) -> dict:
+async def handle_driver_report(report_id: str, action: str, admin_notes: str = "", user: dict = Depends(require_admin_user)) -> dict:
     """اتخاذ إجراء بشأن البلاغ"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     if action not in ["dismiss", "suspend", "penalize", "terminate"]:
         raise HTTPException(status_code=400, detail="الإجراء يجب أن يكون dismiss أو suspend أو penalize أو terminate")
     
@@ -2430,11 +2365,8 @@ async def handle_driver_report(report_id: str, action: str, admin_notes: str = "
 # ============== إدارة متاجر الطعام ==============
 
 @router.get("/food/stats")
-async def get_food_admin_stats(user: dict = Depends(get_current_user)) -> dict:
+async def get_food_admin_stats(user: dict = Depends(require_admin_user)) -> dict:
     """إحصائيات متاجر الطعام"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     total_stores = await db.food_stores.count_documents({})
     active_stores = await db.food_stores.count_documents({"is_active": True, "is_approved": True})
     pending_stores = await db.food_stores.count_documents({"is_approved": False})
@@ -2462,12 +2394,9 @@ async def get_food_admin_stats(user: dict = Depends(get_current_user)) -> dict:
 async def get_food_stores_admin(
     status: str = None,
     store_type: str = None,
-    user: dict = Depends(get_current_user)
+    user: dict = Depends(require_admin_user)
 ) -> dict:
     """جلب متاجر الطعام للمدير"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     query = {}
     if status == "pending":
         query["is_approved"] = False
@@ -2480,11 +2409,8 @@ async def get_food_stores_admin(
     return stores
 
 @router.post("/food/stores/{store_id}/approve")
-async def approve_food_store(store_id: str, user: dict = Depends(get_current_user)) -> dict:
+async def approve_food_store(store_id: str, user: dict = Depends(require_main_admin)) -> dict:
     """الموافقة على متجر طعام"""
-    if user["user_type"] != "admin":
-        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
-    
     store = await db.food_stores.find_one({"id": store_id})
     if not store:
         raise HTTPException(status_code=404, detail="المتجر غير موجود")
@@ -2508,12 +2434,9 @@ async def approve_food_store(store_id: str, user: dict = Depends(get_current_use
 async def reject_food_store(
     store_id: str, 
     data: dict = None,
-    user: dict = Depends(get_current_user)
+    user: dict = Depends(require_main_admin)
 ) -> dict:
     """رفض متجر طعام مع سبب الرفض (اختياري)"""
-    if user["user_type"] != "admin":
-        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
-    
     # سبب الرفض اختياري
     reason = data.get("reason", "").strip() if data else ""
     
@@ -2552,11 +2475,8 @@ async def reject_food_store(
 
 
 @router.delete("/food/stores/pending/{store_id}")
-async def delete_pending_food_store(store_id: str, user: dict = Depends(get_current_user)) -> dict:
+async def delete_pending_food_store(store_id: str, user: dict = Depends(require_admin_user)) -> dict:
     """حذف متجر طعام معلق نهائياً"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     store = await db.food_stores.find_one({"id": store_id})
     if not store:
         raise HTTPException(status_code=404, detail="المتجر غير موجود")
@@ -2578,11 +2498,8 @@ async def delete_pending_food_store(store_id: str, user: dict = Depends(get_curr
 
 
 @router.post("/food/stores/{store_id}/suspend")
-async def suspend_food_store(store_id: str, data: dict = None, user: dict = Depends(get_current_user)) -> dict:
+async def suspend_food_store(store_id: str, data: dict = None, user: dict = Depends(require_admin_user)) -> dict:
     """إيقاف متجر طعام"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     store = await db.food_stores.find_one({"id": store_id})
     if not store:
         raise HTTPException(status_code=404, detail="المتجر غير موجود")
@@ -2620,11 +2537,8 @@ async def suspend_food_store(store_id: str, data: dict = None, user: dict = Depe
 
 
 @router.post("/food/stores/{store_id}/activate")
-async def activate_food_store(store_id: str, user: dict = Depends(get_current_user)) -> dict:
+async def activate_food_store(store_id: str, user: dict = Depends(require_admin_user)) -> dict:
     """إعادة تفعيل متجر طعام"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     store = await db.food_stores.find_one({"id": store_id})
     if not store:
         raise HTTPException(status_code=404, detail="المتجر غير موجود")
@@ -2662,11 +2576,8 @@ async def activate_food_store(store_id: str, user: dict = Depends(get_current_us
 
 
 @router.delete("/food/stores/{store_id}")
-async def delete_food_store(store_id: str, user: dict = Depends(get_current_user)) -> dict:
+async def delete_food_store(store_id: str, user: dict = Depends(require_main_admin)) -> dict:
     """حذف متجر طعام نهائياً"""
-    if user["user_type"] != "admin":
-        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
-    
     store = await db.food_stores.find_one({"id": store_id})
     if not store:
         raise HTTPException(status_code=404, detail="المتجر غير موجود")
@@ -2703,11 +2614,8 @@ async def delete_food_store(store_id: str, user: dict = Depends(get_current_user
 
 
 @router.get("/food/stores/with-status")
-async def get_food_stores_with_status(user: dict = Depends(get_current_user)) -> dict:
+async def get_food_stores_with_status(user: dict = Depends(require_admin_user)) -> dict:
     """جلب جميع متاجر الطعام مع حالاتها"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     stores = await db.food_stores.find(
         {},
         {
@@ -2770,11 +2678,8 @@ async def get_food_stores_with_status(user: dict = Depends(get_current_user)) ->
 
 
 @router.get("/food/commissions")
-async def get_food_commissions(user: dict = Depends(get_current_user)) -> dict:
+async def get_food_commissions(user: dict = Depends(require_admin_user)) -> dict:
     """جلب عمولات متاجر الطعام"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     rates = await get_food_commission_rates_from_db()
     return {
         "commissions": rates,
@@ -2788,12 +2693,9 @@ async def get_food_commissions(user: dict = Depends(get_current_user)) -> dict:
 @router.put("/food/commissions")
 async def update_food_commissions(
     commissions: dict,
-    user: dict = Depends(get_current_user)
+    user: dict = Depends(require_main_admin)
 ) -> dict:
     """تحديث عمولات متاجر الطعام"""
-    if user["user_type"] != "admin":
-        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
-    
     # التحقق من صحة القيم
     for key, value in commissions.items():
         if not isinstance(value, (int, float)) or value < 0 or value > 1:
@@ -2813,12 +2715,9 @@ async def update_food_commissions(
 @router.get("/food-offers")
 async def get_all_food_offers(
     status: str = None,  # all, active, inactive, pending
-    user: dict = Depends(get_current_user)
+    user: dict = Depends(require_admin_user)
 ) -> dict:
     """جلب جميع عروض الطعام للمدير"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     query = {}
     if status == "active":
         query["is_active"] = True
@@ -2852,11 +2751,8 @@ async def get_all_food_offers(
     return offers
 
 @router.put("/food-offers/{offer_id}/approve")
-async def approve_food_offer(offer_id: str, user: dict = Depends(get_current_user)) -> dict:
+async def approve_food_offer(offer_id: str, user: dict = Depends(require_admin_user)) -> dict:
     """موافقة المدير على عرض"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     result = await db.food_offers.update_one(
         {"id": offer_id},
         {"$set": {"admin_approved": True, "approved_by": user["id"], "approved_at": get_now()}}
@@ -2868,11 +2764,8 @@ async def approve_food_offer(offer_id: str, user: dict = Depends(get_current_use
     return {"message": "تمت الموافقة على العرض"}
 
 @router.put("/food-offers/{offer_id}/reject")
-async def reject_food_offer(offer_id: str, data: dict = None, user: dict = Depends(get_current_user)) -> dict:
+async def reject_food_offer(offer_id: str, data: dict = None, user: dict = Depends(require_admin_user)) -> dict:
     """رفض المدير لعرض مع سبب الرفض (اختياري)"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     # سبب الرفض اختياري
     reason = data.get("reason", "").strip() if data else ""
     
@@ -2913,11 +2806,8 @@ async def reject_food_offer(offer_id: str, data: dict = None, user: dict = Depen
     return {"message": "تم رفض العرض", "reason": reason if reason else None}
 
 @router.put("/food-offers/{offer_id}")
-async def admin_update_food_offer(offer_id: str, update_data: dict, user: dict = Depends(get_current_user)) -> dict:
+async def admin_update_food_offer(offer_id: str, update_data: dict, user: dict = Depends(require_admin_user)) -> dict:
     """تعديل المدير لعرض (تغيير الكميات، التفعيل/التعطيل)"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     offer = await db.food_offers.find_one({"id": offer_id})
     if not offer:
         raise HTTPException(status_code=404, detail="العرض غير موجود")
@@ -2936,11 +2826,8 @@ async def admin_update_food_offer(offer_id: str, update_data: dict, user: dict =
     return {"message": "تم تحديث العرض"}
 
 @router.delete("/food-offers/{offer_id}")
-async def admin_delete_food_offer(offer_id: str, user: dict = Depends(get_current_user)) -> dict:
+async def admin_delete_food_offer(offer_id: str, user: dict = Depends(require_admin_user)) -> dict:
     """حذف المدير لعرض"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     result = await db.food_offers.delete_one({"id": offer_id})
     
     if result.deleted_count == 0:
@@ -2951,11 +2838,8 @@ async def admin_delete_food_offer(offer_id: str, user: dict = Depends(get_curren
 # ============== إنشاء عرض "اشتري X واحصل على Y" من الأدمن ==============
 
 @router.post("/food-offers/create")
-async def admin_create_food_offer(data: dict, user: dict = Depends(get_current_user)) -> dict:
+async def admin_create_food_offer(data: dict, user: dict = Depends(require_admin_user)) -> dict:
     """إنشاء عرض 'اشتري X واحصل على Y' من الأدمن مباشرة"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     # التحقق من البيانات المطلوبة
     if not data.get("name"):
         raise HTTPException(status_code=400, detail="اسم العرض مطلوب")
@@ -2993,11 +2877,8 @@ async def admin_create_food_offer(data: dict, user: dict = Depends(get_current_u
 
 
 @router.get("/food-stores/list")
-async def get_food_stores_list(user: dict = Depends(get_current_user)) -> dict:
+async def get_food_stores_list(user: dict = Depends(require_admin_user)) -> dict:
     """جلب قائمة متاجر الطعام للاختيار منها"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     stores = await db.food_stores.find(
         {"is_approved": True},
         {"_id": 0, "id": 1, "name": 1, "store_type": 1, "owner_name": 1}
@@ -3009,11 +2890,8 @@ async def get_food_stores_list(user: dict = Depends(get_current_user)) -> dict:
 # ============== عروض الفلاش (Flash Sales) ==============
 
 @router.post("/flash-sales")
-async def create_flash_sale(sale_data: dict, user: dict = Depends(get_current_user)) -> dict:
+async def create_flash_sale(sale_data: dict, user: dict = Depends(require_main_admin)) -> dict:
     """إنشاء عرض فلاش محدود الوقت - للمدير فقط"""
-    if user["user_type"] != "admin":
-        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
-    
     required = ["name", "discount_percentage", "start_time", "end_time"]
     for field in required:
         if field not in sale_data:
@@ -3068,20 +2946,14 @@ async def create_flash_sale(sale_data: dict, user: dict = Depends(get_current_us
     return sale_doc
 
 @router.get("/flash-sales")
-async def get_all_flash_sales(user: dict = Depends(get_current_user)) -> dict:
+async def get_all_flash_sales(user: dict = Depends(require_admin_user)) -> list:
     """جلب جميع عروض الفلاش - للمدير"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     sales = await db.flash_sales.find({}, {"_id": 0}).sort("created_at", -1).to_list(100)
     return sales
 
 @router.put("/flash-sales/{sale_id}")
-async def update_flash_sale(sale_id: str, update_data: dict, user: dict = Depends(get_current_user)) -> dict:
+async def update_flash_sale(sale_id: str, update_data: dict, user: dict = Depends(require_main_admin)) -> dict:
     """تحديث عرض فلاش"""
-    if user["user_type"] != "admin":
-        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
-    
     allowed_fields = ["name", "description", "discount_percentage", "start_time", "end_time",
                      "applicable_categories", "applicable_stores", "applicable_products", 
                      "flash_type", "is_active", "banner_image", "banner_color"]
@@ -3097,11 +2969,8 @@ async def update_flash_sale(sale_id: str, update_data: dict, user: dict = Depend
     return {"message": "تم تحديث عرض الفلاش"}
 
 @router.delete("/flash-sales/{sale_id}")
-async def delete_flash_sale(sale_id: str, user: dict = Depends(get_current_user)) -> dict:
+async def delete_flash_sale(sale_id: str, user: dict = Depends(require_main_admin)) -> dict:
     """حذف عرض فلاش"""
-    if user["user_type"] != "admin":
-        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
-    
     result = await db.flash_sales.delete_one({"id": sale_id})
     
     if result.deleted_count == 0:
@@ -3115,12 +2984,9 @@ async def delete_flash_sale(sale_id: str, user: dict = Depends(get_current_user)
 @router.get("/flash-sale-requests")
 async def get_flash_sale_requests(
     status: str = None,  # pending, approved, rejected, all
-    user: dict = Depends(get_current_user)
+    user: dict = Depends(require_admin_user)
 ) -> dict:
     """جلب طلبات البائعين للانضمام لعروض الفلاش"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     query = {}
     if status and status != "all":
         query["status"] = status
@@ -3196,11 +3062,8 @@ async def get_flash_sale_requests(
     return {"requests": requests, "stats": stats}
 
 @router.put("/flash-sale-requests/{request_id}/approve")
-async def approve_flash_sale_request(request_id: str, user: dict = Depends(get_current_user)) -> dict:
+async def approve_flash_sale_request(request_id: str, user: dict = Depends(require_admin_user)) -> dict:
     """موافقة المدير على طلب انضمام لعرض فلاش"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     req = await db.flash_sale_requests.find_one({"id": request_id})
     if not req:
         raise HTTPException(status_code=404, detail="الطلب غير موجود")
@@ -3260,12 +3123,9 @@ async def reject_flash_sale_request(
     request_id: str, 
     reason: str = "لم يستوفِ الشروط",
     refund: bool = True,
-    user: dict = Depends(get_current_user)
+    user: dict = Depends(require_admin_user)
 ) -> dict:
     """رفض طلب انضمام لعرض فلاش مع إمكانية استرداد الرسوم"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     req = await db.flash_sale_requests.find_one({"id": request_id})
     if not req:
         raise HTTPException(status_code=404, detail="الطلب غير موجود")
@@ -3334,11 +3194,8 @@ async def reject_flash_sale_request(
 
 
 @router.delete("/flash-sale-requests/{request_id}")
-async def delete_flash_sale_request(request_id: str, user: dict = Depends(get_current_user)) -> dict:
+async def delete_flash_sale_request(request_id: str, user: dict = Depends(require_admin_user)) -> dict:
     """حذف طلب انضمام للفلاش (للطلبات اليتيمة أو القديمة)"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     req = await db.flash_sale_requests.find_one({"id": request_id})
     if not req:
         raise HTTPException(status_code=404, detail="الطلب غير موجود")
@@ -3352,11 +3209,8 @@ async def delete_flash_sale_request(request_id: str, user: dict = Depends(get_cu
 # ============== إعدادات رسوم الفلاش ==============
 
 @router.get("/flash-sale-settings")
-async def get_flash_sale_settings(user: dict = Depends(get_current_user)) -> dict:
+async def get_flash_sale_settings(user: dict = Depends(require_admin_user)) -> dict:
     """جلب إعدادات رسوم الانضمام للفلاش"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     settings = await db.platform_settings.find_one({"id": "flash_sale"}, {"_id": 0})
     
     if not settings:
@@ -3373,11 +3227,8 @@ async def get_flash_sale_settings(user: dict = Depends(get_current_user)) -> dic
     return settings
 
 @router.put("/flash-sale-settings")
-async def update_flash_sale_settings(settings_data: dict, user: dict = Depends(get_current_user)) -> dict:
+async def update_flash_sale_settings(settings_data: dict, user: dict = Depends(require_main_admin)) -> dict:
     """تحديث إعدادات رسوم الفلاش"""
-    if user["user_type"] != "admin":
-        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
-    
     allowed_fields = ["join_fee", "min_products", "max_products", "require_approval", "allow_all_stores"]
     update = {k: v for k, v in settings_data.items() if k in allowed_fields}
     update["updated_at"] = get_now()
@@ -3420,12 +3271,9 @@ class ReassignDriverRequest(BaseModel):
 @router.post("/compensate-user")
 async def compensate_user(
     req: CompensationRequest,
-    user: dict = Depends(get_current_user)
+    user: dict = Depends(require_admin_user)
 ) -> dict:
     """إضافة رصيد تعويضي لمستخدم (عميل/سائق/بائع)"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمديرين فقط")
-    
     if req.amount <= 0:
         raise HTTPException(status_code=400, detail="المبلغ يجب أن يكون أكبر من صفر")
     
@@ -3508,12 +3356,9 @@ async def compensate_user(
 async def admin_delete_review(
     review_id: str,
     reason: str = "مخالفة سياسة الاستخدام",
-    user: dict = Depends(get_current_user)
+    user: dict = Depends(require_admin_user)
 ) -> dict:
     """حذف تقييم مسيء أو غير لائق"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمديرين فقط")
-    
     # البحث في تقييمات المنتجات
     review = await db.reviews.find_one({"id": review_id}, {"_id": 0})
     collection = db.reviews
@@ -3568,12 +3413,9 @@ async def admin_delete_review(
 async def admin_partial_refund(
     order_id: str,
     req: PartialRefundRequest,
-    user: dict = Depends(get_current_user)
+    user: dict = Depends(require_admin_user)
 ) -> dict:
     """استرداد جزئي لمبلغ الطلب"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمديرين فقط")
-    
     if req.amount <= 0:
         raise HTTPException(status_code=400, detail="المبلغ يجب أن يكون أكبر من صفر")
     
@@ -3684,12 +3526,9 @@ async def admin_partial_refund(
 async def admin_reassign_driver(
     order_id: str,
     req: ReassignDriverRequest,
-    user: dict = Depends(get_current_user)
+    user: dict = Depends(require_admin_user)
 ) -> dict:
     """تغيير السائق أو تعيين سائق بديل للطلب"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمديرين فقط")
-    
     # البحث عن الطلب
     order = await db.food_orders.find_one({"id": order_id}, {"_id": 0})
     collection = db.food_orders
@@ -3828,11 +3667,8 @@ async def admin_reassign_driver(
 
 # 5️⃣ جلب قائمة السائقين المتاحين
 @router.get("/available-drivers")
-async def get_available_drivers(user: dict = Depends(get_current_user)) -> dict:
+async def get_available_drivers(user: dict = Depends(require_admin_user)) -> dict:
     """جلب قائمة السائقين المتاحين للتعيين"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمديرين فقط")
-    
     drivers = await db.users.find(
         {
             "user_type": "delivery",
@@ -3863,12 +3699,9 @@ async def get_available_drivers(user: dict = Depends(get_current_user)) -> dict:
 async def admin_cancel_order(
     order_id: str,
     data: dict = None,
-    user: dict = Depends(get_current_user)
+    user: dict = Depends(require_admin_user)
 ) -> dict:
     """إلغاء طلب بواسطة المدير"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمديرين فقط")
-    
     reason = data.get("reason", "") if data else ""
     admin_note = data.get("admin_note", "") if data else ""
     
@@ -3956,12 +3789,9 @@ async def admin_cancel_order(
 async def admin_change_order_status(
     order_id: str,
     data: dict,
-    user: dict = Depends(get_current_user)
+    user: dict = Depends(require_admin_user)
 ) -> dict:
     """تغيير حالة الطلب بواسطة المدير"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمديرين فقط")
-    
     new_status = data.get("status")
     admin_note = data.get("admin_note", "")
     
@@ -4038,12 +3868,9 @@ async def admin_change_order_status(
 async def admin_full_refund(
     order_id: str,
     data: dict = None,
-    user: dict = Depends(get_current_user)
+    user: dict = Depends(require_admin_user)
 ) -> dict:
     """استرداد كامل المبلغ للعميل"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمديرين فقط")
-    
     admin_note = data.get("admin_note", "") if data else ""
     
     # البحث عن الطلب
@@ -4124,12 +3951,9 @@ async def admin_full_refund(
 @router.post("/products/{product_id}/toggle-visibility")
 async def admin_toggle_product_visibility(
     product_id: str,
-    user: dict = Depends(get_current_user)
+    user: dict = Depends(require_admin_user)
 ) -> dict:
     """إخفاء/إظهار منتج"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمديرين فقط")
-    
     product = await db.products.find_one({"id": product_id}, {"_id": 0})
     if not product:
         raise HTTPException(status_code=404, detail="المنتج غير موجود")
@@ -4172,12 +3996,9 @@ async def admin_toggle_product_visibility(
 @router.delete("/products/{product_id}")
 async def admin_delete_product(
     product_id: str,
-    user: dict = Depends(get_current_user)
+    user: dict = Depends(require_admin_user)
 ) -> dict:
     """حذف منتج نهائياً"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمديرين فقط")
-    
     product = await db.products.find_one({"id": product_id}, {"_id": 0})
     if not product:
         raise HTTPException(status_code=404, detail="المنتج غير موجود")
@@ -4226,11 +4047,8 @@ async def admin_delete_product(
 # ============== إدارة أطباق الطعام ==============
 
 @router.get("/food-items/all")
-async def get_all_food_items(user: dict = Depends(get_current_user)) -> dict:
+async def get_all_food_items(user: dict = Depends(require_admin_user)) -> dict:
     """جلب جميع أصناف الطعام"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     items = await db.food_items.find(
         {},
         {"_id": 0}
@@ -4260,11 +4078,8 @@ async def get_all_food_items(user: dict = Depends(get_current_user)) -> dict:
     return items
 
 @router.delete("/food-items/{item_id}")
-async def delete_food_item(item_id: str, user: dict = Depends(get_current_user)) -> dict:
+async def delete_food_item(item_id: str, user: dict = Depends(require_admin_user)) -> dict:
     """حذف صنف طعام"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     result = await db.food_items.delete_one({"id": item_id})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="الصنف غير موجود")
@@ -4274,11 +4089,8 @@ async def delete_food_item(item_id: str, user: dict = Depends(get_current_user))
 # ============== إدارة أطباق الطعام المعلقة ==============
 
 @router.get("/food-items/pending")
-async def get_pending_food_items(user: dict = Depends(get_current_user)) -> dict:
+async def get_pending_food_items(user: dict = Depends(require_admin_user)) -> dict:
     """جلب الأطباق المعلقة التي تنتظر الموافقة"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     items = await db.food_items.find(
         {"is_approved": False},
         {"_id": 0}
@@ -4308,11 +4120,8 @@ async def get_pending_food_items(user: dict = Depends(get_current_user)) -> dict
     return items
 
 @router.get("/food-items/stats")
-async def get_food_items_stats(user: dict = Depends(get_current_user)) -> dict:
+async def get_food_items_stats(user: dict = Depends(require_admin_user)) -> dict:
     """إحصائيات الأطباق"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     pending_count = await db.food_items.count_documents({"is_approved": False})
     approved_count = await db.food_items.count_documents({"is_approved": True})
     total_count = await db.food_items.count_documents({})
@@ -4324,11 +4133,8 @@ async def get_food_items_stats(user: dict = Depends(get_current_user)) -> dict:
     }
 
 @router.post("/food-items/{item_id}/approve")
-async def approve_food_item(item_id: str, user: dict = Depends(get_current_user)) -> dict:
+async def approve_food_item(item_id: str, user: dict = Depends(require_admin_user)) -> dict:
     """الموافقة على طبق جديد"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     item = await db.food_items.find_one({"id": item_id})
     if not item:
         raise HTTPException(status_code=404, detail="الطبق غير موجود")
@@ -4363,12 +4169,9 @@ async def approve_food_item(item_id: str, user: dict = Depends(get_current_user)
 async def reject_food_item(
     item_id: str, 
     data: dict = None, 
-    user: dict = Depends(get_current_user)
+    user: dict = Depends(require_admin_user)
 ) -> dict:
     """رفض طبق مع سبب الرفض (اختياري)"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     item = await db.food_items.find_one({"id": item_id})
     if not item:
         raise HTTPException(status_code=404, detail="الطبق غير موجود")
@@ -4400,11 +4203,8 @@ async def reject_food_item(
 # ============== إدارة الترويجات ==============
 
 @router.get("/promotions/settings")
-async def get_promotion_settings(user: dict = Depends(get_current_user)) -> dict:
+async def get_promotion_settings(user: dict = Depends(require_main_admin)) -> dict:
     """جلب إعدادات الترويج"""
-    if user["user_type"] != "admin":
-        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
-    
     settings = await db.platform_settings.find_one({"id": "promotions"}, {"_id": 0})
     
     if not settings:
@@ -4439,11 +4239,8 @@ async def get_promotion_settings(user: dict = Depends(get_current_user)) -> dict
     return settings
 
 @router.put("/promotions/settings")
-async def update_promotion_settings(data: dict, user: dict = Depends(get_current_user)) -> dict:
+async def update_promotion_settings(data: dict, user: dict = Depends(require_main_admin)) -> dict:
     """تحديث إعدادات الترويج"""
-    if user["user_type"] != "admin":
-        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
-    
     update = {"updated_at": get_now()}
     
     if "cost_per_product" in data:
@@ -4481,11 +4278,8 @@ async def update_promotion_settings(data: dict, user: dict = Depends(get_current
     return {"message": "تم تحديث إعدادات الترويج بنجاح", "settings": update}
 
 @router.get("/promotions/all")
-async def get_all_promotions(user: dict = Depends(get_current_user)) -> dict:
+async def get_all_promotions(user: dict = Depends(require_main_admin)) -> dict:
     """جلب جميع الترويجات النشطة والمنتهية"""
-    if user["user_type"] != "admin":
-        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
-    
     now = get_now()
     
     # الترويجات النشطة
@@ -4514,11 +4308,8 @@ async def get_all_promotions(user: dict = Depends(get_current_user)) -> dict:
     }
 
 @router.delete("/promotions/{promotion_id}")
-async def cancel_promotion(promotion_id: str, user: dict = Depends(get_current_user)) -> dict:
+async def cancel_promotion(promotion_id: str, user: dict = Depends(require_main_admin)) -> dict:
     """إلغاء ترويج (بدون استرداد)"""
-    if user["user_type"] != "admin":
-        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
-    
     promotion = await db.product_promotions.find_one({"id": promotion_id})
     if not promotion:
         raise HTTPException(status_code=404, detail="الترويج غير موجود")
@@ -4544,12 +4335,8 @@ async def cancel_promotion(promotion_id: str, user: dict = Depends(get_current_u
 # ============== Database Reset (للأدمن الرئيسي فقط) ==============
 
 @router.post("/reset-database")
-async def reset_database(data: dict, user: dict = Depends(get_current_user)) -> dict:
+async def reset_database(data: dict, user: dict = Depends(require_main_admin)) -> dict:
     """مسح قاعدة البيانات - للأدمن الرئيسي فقط"""
-    
-    # التحقق من أن المستخدم هو الأدمن الرئيسي فقط (ليس sub_admin)
-    if user["user_type"] != "admin":
-        raise HTTPException(status_code=403, detail="هذه العملية متاحة للأدمن الرئيسي فقط")
     
     # التحقق من كلمة التأكيد
     confirmation = data.get("confirmation", "")
