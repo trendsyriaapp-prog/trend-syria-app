@@ -377,12 +377,9 @@ async def verify_topup_payment(
 @router.get("/admin/topup-requests")
 async def get_all_topup_requests(
     status: Optional[str] = None,
-    user: dict = Depends(get_current_user)
+    user: dict = Depends(require_admin_user)
 ) -> dict:
     """جلب جميع طلبات الشحن - للإدارة"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للإدارة فقط")
-    
     query = {}
     if status:
         query["status"] = status
@@ -395,11 +392,8 @@ async def get_all_topup_requests(
     return topups
 
 @router.post("/admin/topup/{topup_id}/approve")
-async def approve_topup(topup_id: str, user: dict = Depends(get_current_user)) -> dict:
+async def approve_topup(topup_id: str, user: dict = Depends(require_admin_user)) -> dict:
     """الموافقة على طلب شحن - للإدارة"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للإدارة فقط")
-    
     topup = await db.topup_requests.find_one({"id": topup_id})
     if not topup:
         raise HTTPException(status_code=404, detail="طلب الشحن غير موجود")

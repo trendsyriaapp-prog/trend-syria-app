@@ -19,6 +19,12 @@ async def require_admin_user(user: dict = Depends(get_current_user)) -> dict:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
     return user
 
+async def require_delivery_user(user: dict = Depends(get_current_user)) -> dict:
+    """التحقق من أن المستخدم موظف توصيل"""
+    if user["user_type"] != "delivery":
+        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
+    return user
+
 
 
 # ============== Delivery Fee Calculation ==============
@@ -468,11 +474,8 @@ async def pay_with_wallet(
     }
 
 @router.post("/confirm-delivery/{order_id}")
-async def confirm_order_delivery(order_id: str, user: dict = Depends(get_current_user)) -> dict:
+async def confirm_order_delivery(order_id: str, user: dict = Depends(require_delivery_user)) -> dict:
     """تأكيد تسليم الطلب - ينقل الأرباح من معلق إلى متاح"""
-    
-    if user["user_type"] != "delivery":
-        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
     
     order = await db.orders.find_one({"id": order_id})
     if not order:
@@ -533,7 +536,7 @@ async def confirm_order_delivery(order_id: str, user: dict = Depends(get_current
 async def get_all_withdrawals(
     status: str = Query(default=None),
     user: dict = Depends(get_current_user)
-) -> dict:
+) -> list:
     """
     جميع طلبات السحب (للمدير)
     

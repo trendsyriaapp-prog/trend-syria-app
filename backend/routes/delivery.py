@@ -20,6 +20,17 @@ async def require_admin_user(user: dict = Depends(get_current_user)) -> dict:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
     return user
 
+async def require_main_admin(user: dict = Depends(get_current_user)) -> dict:
+    """التحقق من أن المستخدم هو المدير الرئيسي فقط"""
+    if user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
+    return user
+
+async def require_delivery_user(user: dict = Depends(get_current_user)) -> dict:
+    """التحقق من أن المستخدم موظف توصيل"""
+    if user["user_type"] != "delivery":
+        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
+    return user
 
 
 # ============== دالة استخراج الاسم الأول ==============
@@ -103,11 +114,8 @@ class LocationUpdate(BaseModel):
     order_id: Optional[str] = None  # معرف الطلب الحالي
 
 @router.put("/location")
-async def update_driver_location(data: LocationUpdate, user: dict = Depends(get_current_user)) -> dict:
+async def update_driver_location(data: LocationUpdate, user: dict = Depends(require_delivery_user)) -> dict:
     """تحديث موقع السائق - يُستدعى تلقائياً كل 10 ثواني"""
-    if user["user_type"] != "delivery":
-        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
-    
     now = get_now()
     
     # تحديث موقع السائق في جدول المواقع
@@ -401,11 +409,8 @@ class AvailabilityUpdate(BaseModel):
 
 
 @router.get("/delivery-hours")
-async def get_delivery_hours_for_driver(user: dict = Depends(get_current_user)) -> dict:
+async def get_delivery_hours_for_driver(user: dict = Depends(require_delivery_user)) -> dict:
     """جلب ساعات التوصيل المسموحة للسائق"""
-    if user["user_type"] != "delivery":
-        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
-    
     settings = await db.settings.find_one({"type": "product_delivery_hours"}, {"_id": 0})
     
     if not settings:
@@ -438,11 +443,8 @@ async def get_delivery_hours_for_driver(user: dict = Depends(get_current_user)) 
 
 
 @router.get("/availability")
-async def get_availability(user: dict = Depends(get_current_user)) -> dict:
+async def get_availability(user: dict = Depends(require_delivery_user)) -> dict:
     """الحصول على حالة توفر السائق"""
-    if user["user_type"] != "delivery":
-        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
-    
     driver_doc = await db.delivery_documents.find_one(
         {"$or": [{"driver_id": user["id"]}, {"delivery_id": user["id"]}]},
         {"_id": 0, "is_available": 1}
@@ -469,11 +471,8 @@ async def get_availability(user: dict = Depends(get_current_user)) -> dict:
     return {"is_available": is_available}
 
 @router.put("/availability")
-async def update_availability(data: AvailabilityUpdate, user: dict = Depends(get_current_user)) -> dict:
+async def update_availability(data: AvailabilityUpdate, user: dict = Depends(require_delivery_user)) -> dict:
     """تحديث حالة توفر السائق"""
-    if user["user_type"] != "delivery":
-        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
-    
     # التحقق من وجود وثائق السائق أولاً
     driver_doc = await db.delivery_documents.find_one(
         {"$or": [{"driver_id": user["id"]}, {"delivery_id": user["id"]}]}
@@ -546,11 +545,8 @@ async def update_availability(data: AvailabilityUpdate, user: dict = Depends(get
 # ===== نهاية حالة التوفر =====
 
 @router.get("/orders")
-async def get_delivery_orders(user: dict = Depends(get_current_user)) -> dict:
+async def get_delivery_orders(user: dict = Depends(require_delivery_user)) -> dict:
     """الطلبات المتاحة للتوصيل - في نفس مدينة السائق"""
-    if user["user_type"] != "delivery":
-        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
-    
     # Check if approved
     doc = await db.delivery_documents.find_one(
         {"$or": [{"driver_id": user["id"]}, {"delivery_id": user["id"]}]},
@@ -575,11 +571,8 @@ async def get_delivery_orders(user: dict = Depends(get_current_user)) -> dict:
     return orders
 
 @router.get("/orders/all")
-async def get_all_available_orders(user: dict = Depends(get_current_user)) -> dict:
+async def get_all_available_orders(user: dict = Depends(require_delivery_user)) -> dict:
     """جميع الطلبات المتاحة للتوصيل - في نفس مدينة السائق"""
-    if user["user_type"] != "delivery":
-        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
-    
     doc = await db.delivery_documents.find_one(
         {"$or": [{"driver_id": user["id"]}, {"delivery_id": user["id"]}]},
         {"_id": 0}
@@ -603,11 +596,8 @@ async def get_all_available_orders(user: dict = Depends(get_current_user)) -> di
 
 # Alias for frontend compatibility
 @router.get("/available-orders")
-async def get_available_orders_alias(user: dict = Depends(get_current_user)) -> dict:
+async def get_available_orders_alias(user: dict = Depends(require_delivery_user)) -> dict:
     """جميع الطلبات المتاحة للتوصيل (طلبات المتجر + طلبات الطعام) - في نفس مدينة السائق فقط"""
-    if user["user_type"] != "delivery":
-        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
-    
     doc = await db.delivery_documents.find_one(
         {"$or": [{"driver_id": user["id"]}, {"delivery_id": user["id"]}]},
         {"_id": 0}
@@ -765,11 +755,8 @@ async def get_available_orders_alias(user: dict = Depends(get_current_user)) -> 
     return all_orders
 
 @router.get("/my-orders")
-async def get_my_delivery_orders(user: dict = Depends(get_current_user)) -> dict:
+async def get_my_delivery_orders(user: dict = Depends(require_delivery_user)) -> dict:
     """الطلبات التي استلمها موظف التوصيل"""
-    if user["user_type"] != "delivery":
-        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
-    
     orders = await db.orders.find(
         {"delivery_driver_id": user["id"]},
         {"_id": 0}
@@ -799,11 +786,8 @@ async def get_my_delivery_orders(user: dict = Depends(get_current_user)) -> dict
     return orders
 
 @router.get("/my-product-orders")
-async def get_my_product_orders(user: dict = Depends(get_current_user)) -> dict:
+async def get_my_product_orders(user: dict = Depends(require_delivery_user)) -> dict:
     """طلبات المنتجات النشطة للسائق"""
-    if user["user_type"] != "delivery":
-        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
-    
     # التحقق من وجود طلبات طعام ساخنة/طازجة نشطة فقط
     # الطلبات الباردة/الجافة (ماركت، خضار) لا تقفل المنتجات
     hot_fresh_count = await count_hot_fresh_food_orders(user["id"])
@@ -874,11 +858,8 @@ async def get_my_product_orders(user: dict = Depends(get_current_user)) -> dict:
     }
 
 @router.get("/available-food-orders")
-async def get_available_food_orders(user: dict = Depends(get_current_user)) -> dict:
+async def get_available_food_orders(user: dict = Depends(require_delivery_user)) -> dict:
     """طلبات الطعام المتاحة للتوصيل"""
-    if user["user_type"] != "delivery":
-        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
-    
     doc = await db.delivery_documents.find_one(
         {"$or": [{"driver_id": user["id"]}, {"delivery_id": user["id"]}]},
         {"_id": 0}
@@ -938,11 +919,8 @@ async def get_available_food_orders(user: dict = Depends(get_current_user)) -> d
     return food_orders
 
 @router.get("/my-food-orders")
-async def get_my_food_orders(user: dict = Depends(get_current_user)) -> dict:
+async def get_my_food_orders(user: dict = Depends(require_delivery_user)) -> dict:
     """طلبات الطعام النشطة التي استلمها السائق (غير المسلّمة)"""
-    if user["user_type"] != "delivery":
-        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
-    
     # جلب فقط الطلبات النشطة (غير المسلّمة وغير الملغاة)
     active_statuses = ["accepted", "picked_up", "on_the_way", "out_for_delivery", "arriving", "driver_assigned", "ready_for_pickup", "driver_accepted", "ready"]
     
@@ -978,11 +956,8 @@ async def get_my_food_orders(user: dict = Depends(get_current_user)) -> dict:
     return food_orders
 
 @router.post("/orders/{order_id}/accept")
-async def accept_delivery_order(order_id: str, user: dict = Depends(get_current_user)) -> dict:
+async def accept_delivery_order(order_id: str, user: dict = Depends(require_delivery_user)) -> dict:
     """قبول طلب للتوصيل - المنتجات تسمح بقبول عدة طلبات"""
-    if user["user_type"] != "delivery":
-        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
-    
     doc = await db.delivery_documents.find_one(
         {"$or": [{"driver_id": user["id"]}, {"delivery_id": user["id"]}]},
         {"_id": 0}
@@ -1056,11 +1031,8 @@ async def accept_delivery_order(order_id: str, user: dict = Depends(get_current_
     }
 
 @router.post("/orders/{order_id}/deliver")
-async def mark_order_delivered(order_id: str, user: dict = Depends(get_current_user)) -> dict:
+async def mark_order_delivered(order_id: str, user: dict = Depends(require_delivery_user)) -> dict:
     """تأكيد تسليم الطلب"""
-    if user["user_type"] != "delivery":
-        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
-    
     order = await db.orders.find_one({"id": order_id})
     if not order:
         raise HTTPException(status_code=404, detail="الطلب غير موجود")
@@ -1146,11 +1118,8 @@ async def check_delivery_milestone_bonus(driver_id: str) -> None:
         )
 
 @router.get("/stats")
-async def get_delivery_stats(user: dict = Depends(get_current_user)) -> dict:
+async def get_delivery_stats(user: dict = Depends(require_delivery_user)) -> dict:
     """إحصائيات موظف التوصيل"""
-    if user["user_type"] != "delivery":
-        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
-    
     total_delivered = await db.orders.count_documents({
         "delivery_driver_id": user["id"],
         "delivery_status": "delivered"
@@ -1534,11 +1503,8 @@ async def get_earnings_history(
     }
 
 @router.get("/performance")
-async def get_driver_performance(user: dict = Depends(get_current_user)) -> dict:
+async def get_driver_performance(user: dict = Depends(require_delivery_user)) -> dict:
     """تقرير أداء موظف التوصيل الشامل مع بيانات الرسوم البيانية"""
-    if user["user_type"] != "delivery":
-        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
-    
     from datetime import timedelta
     
     # الأسماء العربية للأشهر
@@ -1764,12 +1730,8 @@ def get_performance_tips(avg_rating: float, month_orders: int) -> list:
 # ============== Leaderboard ==============
 
 @router.get("/leaderboard")
-async def get_driver_leaderboard(user: dict = Depends(get_current_user)) -> dict:
+async def get_driver_leaderboard(user: dict = Depends(require_delivery_user)) -> dict:
     """لوحة صدارة السائقين - أفضل 10 سائقين هذا الشهر"""
-    if user["user_type"] != "delivery":
-        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
-    
-    
     now = datetime.now(timezone.utc)
     month_start = datetime(now.year, now.month, 1, tzinfo=timezone.utc)
     
@@ -2256,11 +2218,8 @@ async def report_driver(data: DriverReport, user: dict = Depends(get_current_use
     }
 
 @router.get("/my-suspension-status")
-async def get_suspension_status(user: dict = Depends(get_current_user)) -> dict:
+async def get_suspension_status(user: dict = Depends(require_delivery_user)) -> dict:
     """التحقق من حالة التعليق (لموظف التوصيل)"""
-    if user["user_type"] != "delivery":
-        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
-    
     driver = await db.users.find_one({"id": user["id"]}, {"_id": 0, "is_suspended": 1, "suspended_at": 1, "suspension_reason": 1})
     
     return {
@@ -2271,11 +2230,8 @@ async def get_suspension_status(user: dict = Depends(get_current_user)) -> dict:
 
 
 @router.get("/my-penalty-points")
-async def get_my_penalty_points(user: dict = Depends(get_current_user)) -> dict:
+async def get_my_penalty_points(user: dict = Depends(require_delivery_user)) -> dict:
     """جلب نقاط الموظف الحالية"""
-    if user["user_type"] != "delivery":
-        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
-    
     driver = await db.users.find_one(
         {"id": user["id"]}, 
         {"_id": 0, "penalty_points": 1, "penalty_history": 1}
@@ -2301,11 +2257,8 @@ class LocationUpdate(BaseModel):
     speed: Optional[float] = None    # السرعة بالكم/ساعة
 
 @router.post("/location/update")
-async def update_driver_location_v2(location: LocationUpdate, user: dict = Depends(get_current_user)) -> dict:
+async def update_driver_location_v2(location: LocationUpdate, user: dict = Depends(require_delivery_user)) -> dict:
     """تحديث موقع السائق الحالي"""
-    if user["user_type"] != "delivery":
-        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
-    
     now = get_now()
     
     # حفظ الموقع في collection منفصل للأداء
@@ -2381,12 +2334,9 @@ async def get_driver_location(driver_id: str, user: dict = Depends(get_current_u
 async def get_all_drivers_locations(
     city: Optional[str] = None,
     available_only: bool = False,
-    user: dict = Depends(get_current_user)
+    user: dict = Depends(require_admin_user)
 ) -> dict:
     """جلب مواقع جميع السائقين - للمدير فقط"""
-    
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدير فقط")
     
     from datetime import timedelta
     
@@ -2655,11 +2605,8 @@ def calculate_eta(driver_location: dict, order: dict) -> dict:
 
 
 @router.delete("/location")
-async def clear_driver_location(user: dict = Depends(get_current_user)) -> dict:
+async def clear_driver_location(user: dict = Depends(require_delivery_user)) -> dict:
     """حذف موقع السائق (عند انتهاء العمل)"""
-    if user["user_type"] != "delivery":
-        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
-    
     await db.driver_locations.delete_one({"driver_id": user["id"]})
     
     return {"message": "تم حذف الموقع"}
@@ -2698,11 +2645,8 @@ class ViolationCreate(BaseModel):
     reason: str
 
 @router.get("/violations")
-async def get_driver_violations(user: dict = Depends(get_current_user)) -> dict:
+async def get_driver_violations(user: dict = Depends(require_delivery_user)) -> dict:
     """الحصول على مخالفات السائق"""
-    if user["user_type"] != "delivery":
-        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
-    
     violations = await db.driver_violations.find(
         {"driver_id": user["id"]},
         {"_id": 0}
@@ -2802,11 +2746,8 @@ async def check_undelivered_product_orders(user: dict = Depends(get_current_user
     }
 
 @router.post("/violations/{violation_id}/apply")
-async def apply_violation(violation_id: str, user: dict = Depends(get_current_user)) -> dict:
+async def apply_violation(violation_id: str, user: dict = Depends(require_main_admin)) -> dict:
     """تطبيق المخالفة (خصم من رصيد السائق)"""
-    if user["user_type"] != "admin":
-        raise HTTPException(status_code=403, detail="للمدير فقط")
-    
     violation = await db.driver_violations.find_one({"id": violation_id})
     if not violation:
         raise HTTPException(status_code=404, detail="المخالفة غير موجودة")
@@ -2855,11 +2796,8 @@ async def apply_violation(violation_id: str, user: dict = Depends(get_current_us
     return {"message": "تم تطبيق المخالفة وخصم المبلغ من رصيد السائق"}
 
 @router.post("/violations/{violation_id}/cancel")
-async def cancel_violation(violation_id: str, reason: str = "", user: dict = Depends(get_current_user)) -> dict:
+async def cancel_violation(violation_id: str, reason: str = "", user: dict = Depends(require_main_admin)) -> dict:
     """إلغاء المخالفة"""
-    if user["user_type"] != "admin":
-        raise HTTPException(status_code=403, detail="للمدير فقط")
-    
     violation = await db.driver_violations.find_one({"id": violation_id})
     if not violation:
         raise HTTPException(status_code=404, detail="المخالفة غير موجودة")
@@ -2896,12 +2834,9 @@ async def cancel_violation(violation_id: str, reason: str = "", user: dict = Dep
 @router.get("/admin/violations")
 async def get_all_violations(
     status: str = None,
-    user: dict = Depends(get_current_user)
+    user: dict = Depends(require_main_admin)
 ) -> dict:
     """الحصول على جميع المخالفات (للمدير)"""
-    if user["user_type"] != "admin":
-        raise HTTPException(status_code=403, detail="للمدير فقط")
-    
     query = {}
     if status:
         query["status"] = status

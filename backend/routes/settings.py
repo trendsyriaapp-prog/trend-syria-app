@@ -130,12 +130,9 @@ async def get_public_settings() -> dict:
 async def update_withdrawal_limits(
     min_seller: int,
     min_delivery: int,
-    user: dict = Depends(get_current_user)
+    user: dict = Depends(require_main_admin)
 ) -> dict:
     """تحديث الحد الأدنى للسحب"""
-    if user["user_type"] != "admin":
-        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
-    
     await db.platform_settings.update_one(
         {"id": "main"},
         {
@@ -158,12 +155,9 @@ async def update_withdrawal_limits(
 @router.put("/delivery-fees")
 async def update_delivery_fees(
     fees: dict,
-    user: dict = Depends(get_current_user)
+    user: dict = Depends(require_main_admin)
 ) -> dict:
     """تحديث أسعار التوصيل"""
-    if user["user_type"] != "admin":
-        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
-    
     update_data = {
         "delivery_fees": {
             "same_city": fees.get("same_city", 3000),
@@ -193,12 +187,9 @@ async def update_delivery_fees(
 @router.put("/delivery-system")
 async def update_delivery_system(
     data: dict,
-    user: dict = Depends(get_current_user)
+    user: dict = Depends(require_main_admin)
 ) -> dict:
     """تحديث حالة أنظمة التوصيل (تفعيل/إيقاف)"""
-    if user["user_type"] != "admin":
-        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
-    
     update_data = {
         "updated_at": get_now(),
         "updated_by": user["id"]
@@ -230,12 +221,9 @@ async def update_delivery_system(
 @router.put("/free-shipping")
 async def update_free_shipping_threshold(
     threshold: int,
-    user: dict = Depends(get_current_user)
+    user: dict = Depends(require_main_admin)
 ) -> dict:
     """تحديث حد الشحن المجاني"""
-    if user["user_type"] != "admin":
-        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
-    
     await db.platform_settings.update_one(
         {"id": "main"},
         {
@@ -287,12 +275,9 @@ async def get_homepage_sections() -> dict:
 @router.put("/homepage-sections")
 async def update_homepage_sections(
     sections: HomepageSectionsSettings,
-    user: dict = Depends(get_current_user)
+    user: dict = Depends(require_main_admin)
 ) -> dict:
     """تحديث إعدادات أقسام الصفحة الرئيسية"""
-    if user["user_type"] != "admin":
-        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
-    
     await db.platform_settings.update_one(
         {"id": "main"},
         {
@@ -342,12 +327,9 @@ async def get_featured_stores_settings(user: dict = Depends(require_admin_user))
 @router.put("/featured-stores")
 async def update_featured_stores_settings(
     settings: FeaturedStoresSettings,
-    user: dict = Depends(get_current_user)
+    user: dict = Depends(require_main_admin)
 ) -> dict:
     """تحديث إعدادات المتاجر المميزة"""
-    if user["user_type"] != "admin":
-        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
-    
     await db.platform_settings.update_one(
         {"id": "main"},
         {
@@ -403,12 +385,9 @@ async def get_featured_stores_public() -> dict:
     }
 async def update_food_free_delivery_threshold(
     threshold: int,
-    user: dict = Depends(get_current_user)
+    user: dict = Depends(require_main_admin)
 ) -> dict:
     """تحديث حد التوصيل المجاني للطعام"""
-    if user["user_type"] != "admin":
-        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
-    
     await db.platform_settings.update_one(
         {"id": "main"},
         {
@@ -489,12 +468,9 @@ async def get_product_badge_settings() -> dict:
 @router.put("/product-badges")
 async def update_product_badge_settings(
     settings: dict,
-    user: dict = Depends(get_current_user)
+    user: dict = Depends(require_main_admin)
 ) -> dict:
     """تحديث إعدادات شارات المنتجات"""
-    if user["user_type"] != "admin":
-        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
-    
     update_data = {
         "enabled": settings.get("enabled", True),
         "badge_types": settings.get("badge_types", {}),
@@ -563,12 +539,9 @@ async def get_global_free_shipping() -> dict:
 @router.put("/global-free-shipping")
 async def update_global_free_shipping(
     promo: GlobalFreeShippingPromo,
-    user: dict = Depends(get_current_user)
+    user: dict = Depends(require_main_admin)
 ) -> dict:
     """تحديث عرض الشحن المجاني الشامل"""
-    if user["user_type"] != "admin":
-        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
-    
     update_data = {
         "key": "global_free_shipping",
         "is_active": promo.is_active,
@@ -618,12 +591,9 @@ async def get_distance_delivery_settings() -> dict:
 @router.put("/distance-delivery")
 async def update_distance_delivery_settings(
     settings: DistanceDeliverySettings,
-    user: dict = Depends(get_current_user)
+    user: dict = Depends(require_main_admin)
 ) -> dict:
     """تحديث إعدادات أجور التوصيل بالمسافة"""
-    if user["user_type"] != "admin":
-        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
-    
     await db.platform_settings.update_one(
         {"id": "main"},
         {
@@ -667,11 +637,8 @@ class DriverKmSettings(BaseModel):
     min_fee: int = 1500  # الحد الأدنى للأجرة
 
 @router.get("/driver-km-settings")
-async def get_driver_km_settings(user: dict = Depends(get_current_user)) -> dict:
+async def get_driver_km_settings(user: dict = Depends(require_admin_user)) -> dict:
     """جلب إعدادات نظام الكيلومتر للسائقين"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="غير مصرح")
-    
     settings = await db.platform_settings.find_one({"id": "main"}, {"_id": 0})
     
     default_settings = {
@@ -689,12 +656,9 @@ async def get_driver_km_settings(user: dict = Depends(get_current_user)) -> dict
 @router.put("/driver-km-settings")
 async def update_driver_km_settings(
     settings: DriverKmSettings,
-    user: dict = Depends(get_current_user)
+    user: dict = Depends(require_main_admin)
 ) -> dict:
     """تحديث إعدادات نظام الكيلومتر للسائقين"""
-    if user["user_type"] != "admin":
-        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
-    
     await db.platform_settings.update_one(
         {"id": "main"},
         {
@@ -739,12 +703,9 @@ async def get_driver_earnings_settings() -> dict:
 @router.put("/driver-earnings")
 async def update_driver_earnings_settings(
     settings: DriverEarningsSettings,
-    user: dict = Depends(get_current_user)
+    user: dict = Depends(require_main_admin)
 ) -> dict:
     """تحديث إعدادات أرباح السائق"""
-    if user["user_type"] != "admin":
-        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
-    
     await db.platform_settings.update_one(
         {"id": "main"},
         {
@@ -783,12 +744,9 @@ async def get_delivery_wait_time() -> dict:
 @router.put("/delivery-wait-time")
 async def update_delivery_wait_time(
     wait_time_minutes: int,
-    user: dict = Depends(get_current_user)
+    user: dict = Depends(require_main_admin)
 ) -> dict:
     """تحديث وقت انتظار التوصيل"""
-    if user["user_type"] != "admin":
-        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
-    
     if wait_time_minutes < 1 or wait_time_minutes > 60:
         raise HTTPException(status_code=400, detail="الوقت يجب أن يكون بين 1 و 60 دقيقة")
     
@@ -863,12 +821,9 @@ async def get_smart_order_limits() -> dict:
 @router.put("/smart-order-limits")
 async def update_smart_order_limits(
     limits: SmartOrderLimits,
-    user: dict = Depends(get_current_user)
+    user: dict = Depends(require_main_admin)
 ) -> dict:
     """تحديث إعدادات حدود الطلبات الذكية"""
-    if user["user_type"] != "admin":
-        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
-    
     await db.platform_settings.update_one(
         {"id": "main"},
         {
@@ -899,12 +854,9 @@ async def update_smart_order_limits(
 @router.put("/low-stock-threshold")
 async def update_low_stock_threshold(
     threshold: int,
-    user: dict = Depends(get_current_user)
+    user: dict = Depends(require_main_admin)
 ) -> dict:
     """تحديث حد تنبيه المخزون المنخفض"""
-    if user["user_type"] != "admin":
-        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
-    
     if threshold < 1:
         raise HTTPException(status_code=400, detail="الحد الأدنى يجب أن يكون 1 على الأقل")
     
@@ -1001,12 +953,9 @@ async def get_delivery_settings() -> dict:
 @router.put("/performance-levels")
 async def update_performance_levels(
     levels: PerformanceLevels,
-    user: dict = Depends(get_current_user)
+    user: dict = Depends(require_main_admin)
 ) -> dict:
     """تحديث حدود مستويات الأداء"""
-    if user["user_type"] != "admin":
-        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
-    
     # التحقق من صحة القيم
     if not (levels.beginner_max < levels.bronze_max < levels.silver_max < levels.gold_max):
         raise HTTPException(status_code=400, detail="يجب أن تكون الحدود تصاعدية")
@@ -1041,12 +990,9 @@ async def update_performance_levels(
 @router.put("/working-hours")
 async def update_working_hours(
     hours: DeliveryWorkingHours,
-    user: dict = Depends(get_current_user)
+    user: dict = Depends(require_main_admin)
 ) -> dict:
     """تحديث ساعات عمل التوصيل"""
-    if user["user_type"] != "admin":
-        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
-    
     # التحقق من صحة الساعات
     if hours.start_hour < 0 or hours.start_hour > 23:
         raise HTTPException(status_code=400, detail="ساعة البدء غير صحيحة (0-23)")
@@ -1091,12 +1037,9 @@ class LeaderboardRewards(BaseModel):
 @router.put("/leaderboard-rewards")
 async def update_leaderboard_rewards(
     rewards: LeaderboardRewards,
-    user: dict = Depends(get_current_user)
+    user: dict = Depends(require_main_admin)
 ) -> dict:
     """تحديث جوائز لوحة الصدارة"""
-    if user["user_type"] != "admin":
-        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
-    
     # التحقق من صحة القيم
     if rewards.first < 0 or rewards.second < 0 or rewards.third < 0:
         raise HTTPException(status_code=400, detail="الجوائز يجب أن تكون قيم موجبة")
@@ -1136,12 +1079,9 @@ class OrderLimits(BaseModel):
 @router.put("/order-limits")
 async def update_order_limits(
     limits: OrderLimits,
-    user: dict = Depends(get_current_user)
+    user: dict = Depends(require_main_admin)
 ) -> dict:
     """تحديث إعدادات قبول طلبات الطعام"""
-    if user["user_type"] != "admin":
-        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
-    
     # التحقق من صحة القيم
     if limits.max_food_orders_per_driver < 1 or limits.max_food_orders_per_driver > 10:
         raise HTTPException(status_code=400, detail="الحد الأقصى للطلبات يجب أن يكون بين 1 و 10")
@@ -1205,12 +1145,9 @@ async def get_food_delivery_limits(user: dict = Depends(require_main_admin)) -> 
 @router.put("/food-delivery-limits")
 async def update_food_delivery_limits(
     limits: FoodDeliveryLimits,
-    user: dict = Depends(get_current_user)
+    user: dict = Depends(require_main_admin)
 ) -> dict:
     """تحديث إعدادات حدود توصيل الطعام (ساخن/طازج vs بارد/جاف)"""
-    if user["user_type"] != "admin":
-        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
-    
     # التحقق من صحة القيم
     if limits.hot_fresh_limit < 1 or limits.hot_fresh_limit > 5:
         raise HTTPException(status_code=400, detail="حد الطلبات الساخنة يجب أن يكون بين 1 و 5")
@@ -1262,12 +1199,9 @@ async def get_food_delivery_fee(user: dict = Depends(get_current_user)) -> dict:
 @router.put("/food-delivery-fee")
 async def update_food_delivery_fee(
     fee: FoodDeliveryFee,
-    user: dict = Depends(get_current_user)
+    user: dict = Depends(require_main_admin)
 ) -> dict:
     """تحديث رسوم توصيل الطعام الموحدة"""
-    if user["user_type"] != "admin":
-        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
-    
     if fee.delivery_fee < 0 or fee.delivery_fee > 50000:
         raise HTTPException(status_code=400, detail="رسوم التوصيل يجب أن تكون بين 0 و 50,000 ل.س")
     
@@ -1308,12 +1242,9 @@ async def get_store_customer_distance(user: dict = Depends(require_main_admin)) 
 @router.put("/store-customer-distance")
 async def update_store_customer_distance(
     distance: StoreCustomerDistance,
-    user: dict = Depends(get_current_user)
+    user: dict = Depends(require_main_admin)
 ) -> dict:
     """تحديث المسافة القصوى بين المطعم والعميل"""
-    if user["user_type"] != "admin":
-        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
-    
     if distance.max_distance_km < 1 or distance.max_distance_km > 30:
         raise HTTPException(status_code=400, detail="المسافة يجب أن تكون بين 1 و 30 كم")
     
@@ -1360,12 +1291,9 @@ async def get_weather_surcharge(user: dict = Depends(get_current_user)) -> dict:
 @router.put("/weather-surcharge")
 async def update_weather_surcharge(
     surcharge: WeatherSurcharge,
-    user: dict = Depends(get_current_user)
+    user: dict = Depends(require_main_admin)
 ) -> dict:
     """تفعيل/إيقاف رسوم الطقس الصعب مع إرسال إشعارات للسائقين"""
-    if user["user_type"] != "admin":
-        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
-    
     if surcharge.amount < 0 or surcharge.amount > 50000:
         raise HTTPException(status_code=400, detail="المبلغ يجب أن يكون بين 0 و 50,000 ل.س")
     
@@ -1463,12 +1391,9 @@ async def get_weather_api_settings(user: dict = Depends(require_admin_user)) -> 
 @router.put("/weather-api")
 async def update_weather_api_settings(
     data: AutoWeatherSettings,
-    user: dict = Depends(get_current_user)
+    user: dict = Depends(require_main_admin)
 ) -> dict:
     """تحديث إعدادات API الطقس"""
-    if user["user_type"] != "admin":
-        raise HTTPException(status_code=403, detail="للمدير فقط")
-    
     update_data = {
         "auto_weather_surcharge": {
             "enabled": data.enabled,
@@ -1493,12 +1418,9 @@ async def update_weather_api_settings(
 @router.get("/weather-current")
 async def get_current_weather(
     city: str = "دمشق",
-    user: dict = Depends(get_current_user)
+    user: dict = Depends(require_admin_user)
 ) -> dict:
     """جلب الطقس الحالي لمدينة"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     from services.weather_service import fetch_current_weather, check_bad_weather
     
     weather = await fetch_current_weather(city)
@@ -1527,11 +1449,8 @@ async def get_weather_all_cities(user: dict = Depends(require_admin_user)) -> di
     }
 
 @router.post("/weather-check-now")
-async def trigger_weather_check(user: dict = Depends(get_current_user)) -> dict:
+async def trigger_weather_check(user: dict = Depends(require_main_admin)) -> dict:
     """تشغيل فحص الطقس يدوياً"""
-    if user["user_type"] != "admin":
-        raise HTTPException(status_code=403, detail="للمدير فقط")
-    
     from services.weather_service import update_weather_surcharge_automatically
     
     result = await update_weather_surcharge_automatically()
@@ -1583,7 +1502,7 @@ async def get_surge_pricing() -> dict:
 @router.put("/surge-pricing")
 async def update_surge_pricing(
     data: SurgePricingSettings,
-    user: dict = Depends(get_current_user)
+    user: dict = Depends(require_main_admin)
 ) -> dict:
     """
     تحديث إعدادات التسعير الديناميكي (للمدير فقط)
@@ -1596,9 +1515,6 @@ async def update_surge_pricing(
     - min_order_value: الحد الأدنى للطلب لتطبيق الزيادة
     - max_surge_amount: الحد الأقصى للزيادة
     """
-    if user["user_type"] != "admin":
-        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
-    
     # التحقق من صحة القيم
     if data.multiplier < 1.0:
         raise HTTPException(status_code=400, detail="المضاعف يجب أن يكون 1.0 أو أكثر")
@@ -1773,14 +1689,11 @@ async def get_driver_cancel_settings(user: dict = Depends(require_admin_user)) -
 @router.put("/driver-cancel")
 async def update_driver_cancel_settings(
     data: DriverCancelSettings,
-    user: dict = Depends(get_current_user)
+    user: dict = Depends(require_admin_user)
 ) -> dict:
     """
     تحديث إعدادات إلغاء الطلب للسائق (للمدير فقط)
     """
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     await db.platform_settings.update_one(
         {"id": "main"},
         {
@@ -1889,12 +1802,9 @@ async def get_driver_shortage_alert_settings(user: dict = Depends(require_admin_
 @router.put("/driver-shortage-alert")
 async def update_driver_shortage_alert_settings(
     data: DriverShortageAlertSettings,
-    user: dict = Depends(get_current_user)
+    user: dict = Depends(require_main_admin)
 ) -> dict:
     """تحديث إعدادات إشعارات نقص السائقين"""
-    if user["user_type"] != "admin":
-        raise HTTPException(status_code=403, detail="للمدير فقط")
-    
     await db.platform_settings.update_one(
         {"id": "main"},
         {
@@ -2109,12 +2019,9 @@ async def get_image_settings(user: dict = Depends(require_admin_user)) -> dict:
 @router.post("/images")
 async def update_image_settings(
     settings: ImageSettings,
-    user: dict = Depends(get_current_user)
+    user: dict = Depends(require_main_admin)
 ) -> dict:
     """تحديث إعدادات صور المنتجات"""
-    if user["user_type"] != "admin":
-        raise HTTPException(status_code=403, detail="للمدير فقط")
-    
     await db.image_settings.update_one(
         {"id": "main"},
         {"$set": {
@@ -2198,12 +2105,9 @@ async def get_customer_protection_settings() -> dict:
 @router.put("/customer-protection")
 async def update_customer_protection_settings(
     data: CustomerProtectionSettings,
-    user: dict = Depends(get_current_user)
+    user: dict = Depends(require_admin_user)
 ) -> dict:
     """تحديث إعدادات حماية العميل"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     settings_data = data.dict()
     settings_data["id"] = "main"
     settings_data["updated_at"] = get_now()
@@ -2564,7 +2468,7 @@ async def get_allowed_regions_admin(user: dict = Depends(require_admin_user)) ->
 @router.put("/allowed-regions")
 async def update_allowed_regions(
     data: dict,
-    user: dict = Depends(get_current_user)
+    user: dict = Depends(require_main_admin)
 ) -> dict:
     """
     تحديث المناطق المسموحة (للمدير فقط)
@@ -2575,9 +2479,6 @@ async def update_allowed_regions(
     - تفعيل/تعطيل النظام بالكامل
     - تعديل رسالة الحظر
     """
-    if user["user_type"] != "admin":
-        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
-    
     now = get_now()
     
     update_data = {
@@ -2650,14 +2551,11 @@ async def add_allowed_city(
 async def add_region_to_city(
     city_name: str,
     region_name: str,
-    user: dict = Depends(get_current_user)
+    user: dict = Depends(require_main_admin)
 ) -> dict:
     """
     إضافة منطقة جديدة لمحافظة موجودة
     """
-    if user["user_type"] != "admin":
-        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
-    
     settings = await db.settings.find_one({"key": "allowed_regions"})
     cities = settings.get("cities", []) if settings else []
     
@@ -2695,14 +2593,11 @@ async def add_region_to_city(
 @router.delete("/allowed-regions/remove-city/{city_name}")
 async def remove_allowed_city(
     city_name: str,
-    user: dict = Depends(get_current_user)
+    user: dict = Depends(require_main_admin)
 ) -> dict:
     """
     إزالة محافظة من المناطق المسموحة
     """
-    if user["user_type"] != "admin":
-        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
-    
     settings = await db.settings.find_one({"key": "allowed_regions"})
     cities = settings.get("cities", []) if settings else []
     
@@ -2734,14 +2629,11 @@ async def remove_allowed_city(
 async def remove_region_from_city(
     city_name: str,
     region_name: str,
-    user: dict = Depends(get_current_user)
+    user: dict = Depends(require_main_admin)
 ) -> dict:
     """
     إزالة منطقة من محافظة
     """
-    if user["user_type"] != "admin":
-        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
-    
     settings = await db.settings.find_one({"key": "allowed_regions"})
     cities = settings.get("cities", []) if settings else []
     
@@ -2778,15 +2670,12 @@ async def remove_region_from_city(
 @router.put("/allowed-regions/toggle")
 async def toggle_region_restriction(
     enabled: bool,
-    user: dict = Depends(get_current_user)
+    user: dict = Depends(require_main_admin)
 ) -> dict:
     """
     تفعيل/تعطيل نظام التقييد الجغرافي
     عند التعطيل، يمكن لأي شخص استخدام التطبيق بدون اختيار المنطقة
     """
-    if user["user_type"] != "admin":
-        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
-    
     now = get_now()
     
     await db.settings.update_one(

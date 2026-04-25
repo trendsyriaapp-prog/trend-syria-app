@@ -45,12 +45,9 @@ COUPON_SCOPES = {
 @router.get("/admin/list")
 async def get_all_coupons(
     status: str = "all",  # all, active, expired, disabled
-    user: dict = Depends(get_current_user)
+    user: dict = Depends(require_admin_user)
 ) -> dict:
     """جلب جميع الكوبونات للمدير"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     now = get_now()
     query = {}
     

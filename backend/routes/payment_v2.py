@@ -76,12 +76,9 @@ async def get_payment_system_status() -> dict:
 @router.get("/provider/{provider}/balance")
 async def get_provider_balance(
     provider: str,
-    user: dict = Depends(get_current_user)
+    user: dict = Depends(require_admin_user)
 ) -> dict:
     """جلب رصيد حساب التاجر لمزود معين (للمدير فقط)"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     try:
         if provider == "shamcash":
             result = await payment_manager.shamcash.get_balance()

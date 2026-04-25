@@ -18,6 +18,13 @@ async def require_admin_user(user: dict = Depends(get_current_user)) -> dict:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
     return user
 
+async def require_main_admin(user: dict = Depends(get_current_user)) -> dict:
+    """التحقق من أن المستخدم هو المدير الرئيسي فقط"""
+    if user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
+    return user
+
+
 
 
 
@@ -389,11 +396,8 @@ async def get_referral_settings(user: dict = Depends(require_admin_user)) -> dic
 
 
 @router.put("/admin/settings")
-async def update_referral_settings(data: dict, user: dict = Depends(get_current_user)) -> dict:
+async def update_referral_settings(data: dict, user: dict = Depends(require_main_admin)) -> dict:
     """تحديث إعدادات نظام الإحالات"""
-    if user["user_type"] != "admin":
-        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
-    
     allowed_fields = [
         "referrer_reward", "referee_discount", "max_referee_discount",
         "min_order_for_reward", "is_active"
@@ -438,13 +442,10 @@ async def get_referral_status() -> dict:
 
 
 @router.post("/admin/send-reminder")
-async def send_referral_reminder(user: dict = Depends(get_current_user)) -> dict:
+async def send_referral_reminder(user: dict = Depends(require_main_admin)) -> dict:
     """
     إرسال إشعار تذكير ببرنامج الإحالات لجميع المستخدمين
     """
-    if user["user_type"] != "admin":
-        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
-    
     # جلب إعدادات الإحالات
     settings = await db.platform_settings.find_one({"id": "referral"}, {"_id": 0})
     referrer_reward = settings.get("referrer_reward", 10000) if settings else 10000
@@ -493,14 +494,11 @@ async def send_referral_reminder(user: dict = Depends(get_current_user)) -> dict
 
 
 @router.post("/admin/send-to-inactive")
-async def send_referral_to_inactive_users(user: dict = Depends(get_current_user)) -> dict:
+async def send_referral_to_inactive_users(user: dict = Depends(require_main_admin)) -> dict:
     """
     إرسال إشعار للمستخدمين غير النشطين (لم يطلبوا منذ أسبوع)
     لتشجيعهم على العودة ودعوة أصدقائهم
     """
-    if user["user_type"] != "admin":
-        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
-    
     from datetime import timedelta
     
     # جلب إعدادات الإحالات

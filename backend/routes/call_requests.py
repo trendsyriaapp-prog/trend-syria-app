@@ -19,6 +19,12 @@ async def require_admin_user(user: dict = Depends(get_current_user)) -> dict:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
     return user
 
+async def require_delivery_user(user: dict = Depends(get_current_user)) -> dict:
+    """التحقق من أن المستخدم موظف توصيل"""
+    if user["user_type"] != "delivery":
+        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
+    return user
+
 
 
 class CallRequestCreate(BaseModel):
@@ -31,11 +37,8 @@ class CallRequestUpdate(BaseModel):
     notes: Optional[str] = None
 
 @router.post("")
-async def create_call_request(data: CallRequestCreate, user: dict = Depends(get_current_user)) -> dict:
+async def create_call_request(data: CallRequestCreate, user: dict = Depends(require_delivery_user)) -> dict:
     """إنشاء طلب اتصال جديد - للسائق عندما لا يرد العميل"""
-    if user["user_type"] != "delivery":
-        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
-    
     # جلب معلومات الطلب
     if data.order_type == "food":
         order = await db.food_orders.find_one({"id": data.order_id}, {"_id": 0})
@@ -114,12 +117,9 @@ async def create_call_request(data: CallRequestCreate, user: dict = Depends(get_
 async def get_call_requests(
     status: Optional[str] = None,
     limit: int = 50,
-    user: dict = Depends(get_current_user)
-) -> dict:
+    user: dict = Depends(require_admin_user)
+) -> list:
     """جلب طلبات الاتصال - للموظفين"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للموظفين فقط")
-    
     query = {}
     if status:
         query["status"] = status
@@ -132,11 +132,8 @@ async def get_call_requests(
     return requests
 
 @router.get("/pending")
-async def get_pending_call_requests(user: dict = Depends(get_current_user)) -> dict:
+async def get_pending_call_requests(user: dict = Depends(require_admin_user)) -> dict:
     """جلب طلبات الاتصال المعلقة - للموظفين"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للموظفين فقط")
-    
     requests = await db.call_requests.find(
         {"status": {"$in": ["pending", "in_progress"]}},
         {"_id": 0}
@@ -145,11 +142,8 @@ async def get_pending_call_requests(user: dict = Depends(get_current_user)) -> d
     return {"count": len(requests), "requests": requests}
 
 @router.get("/my-requests")
-async def get_my_call_requests(user: dict = Depends(get_current_user)) -> dict:
+async def get_my_call_requests(user: dict = Depends(require_delivery_user)) -> dict:
     """جلب طلبات الاتصال الخاصة بالسائق"""
-    if user["user_type"] != "delivery":
-        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
-    
     requests = await db.call_requests.find(
         {"driver_id": user["id"]},
         {"_id": 0}
@@ -161,12 +155,9 @@ async def get_my_call_requests(user: dict = Depends(get_current_user)) -> dict:
 async def update_call_request(
     request_id: str,
     data: CallRequestUpdate,
-    user: dict = Depends(get_current_user)
+    user: dict = Depends(require_admin_user)
 ) -> dict:
     """تحديث حالة طلب الاتصال - للموظفين"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للموظفين فقط")
-    
     request = await db.call_requests.find_one({"id": request_id})
     if not request:
         raise HTTPException(status_code=404, detail="طلب الاتصال غير موجود")
@@ -208,11 +199,8 @@ async def update_call_request(
     return {"message": "تم تحديث طلب الاتصال"}
 
 @router.post("/{request_id}/take")
-async def take_call_request(request_id: str, user: dict = Depends(get_current_user)) -> dict:
+async def take_call_request(request_id: str, user: dict = Depends(require_admin_user)) -> dict:
     """استلام طلب اتصال - للموظف"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للموظفين فقط")
-    
     request = await db.call_requests.find_one({"id": request_id})
     if not request:
         raise HTTPException(status_code=404, detail="طلب الاتصال غير موجود")

@@ -12,6 +12,16 @@ from helpers.datetime_helpers import get_now
 
 router = APIRouter(prefix="/feedback", tags=["Feedback"])
 
+# ============== Authorization Dependencies ==============
+
+async def require_main_admin(user: dict = Depends(get_current_user)) -> dict:
+    """التحقق من أن المستخدم هو المدير الرئيسي فقط"""
+    if user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
+    return user
+
+# ============== Models ==============
+
 class FeedbackCreate(BaseModel):
     type: str  # suggestion, complaint, question
     message: str
@@ -85,12 +95,9 @@ async def create_feedback(data: FeedbackCreate, user: dict = Depends(get_optiona
 async def get_all_feedback(
     status: Optional[str] = None,
     type: Optional[str] = None,
-    user: dict = Depends(get_current_user)
+    user: dict = Depends(require_main_admin)
 ) -> dict:
     """جلب جميع الملاحظات والاقتراحات - للمدير فقط"""
-    
-    if user["user_type"] != "admin":
-        raise HTTPException(status_code=403, detail="للمدير فقط")
     
     query = {}
     if status:
@@ -119,12 +126,9 @@ async def get_all_feedback(
 async def respond_to_feedback(
     feedback_id: str,
     data: FeedbackResponse,
-    user: dict = Depends(get_current_user)
+    user: dict = Depends(require_main_admin)
 ) -> dict:
     """الرد على ملاحظة - للمدير فقط"""
-    
-    if user["user_type"] != "admin":
-        raise HTTPException(status_code=403, detail="للمدير فقط")
     
     feedback = await db.feedback.find_one({"id": feedback_id})
     if not feedback:
@@ -171,11 +175,8 @@ async def respond_to_feedback(
 # ============== حذف ملاحظة (للمدير) ==============
 
 @router.delete("/{feedback_id}")
-async def delete_feedback(feedback_id: str, user: dict = Depends(get_current_user)) -> dict:
+async def delete_feedback(feedback_id: str, user: dict = Depends(require_main_admin)) -> dict:
     """حذف ملاحظة - للمدير فقط"""
-    
-    if user["user_type"] != "admin":
-        raise HTTPException(status_code=403, detail="للمدير فقط")
     
     result = await db.feedback.delete_one({"id": feedback_id})
     
