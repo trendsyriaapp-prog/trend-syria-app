@@ -14,6 +14,15 @@ from services.payment_providers import (
 from routes.wallet import add_pending_to_wallet
 
 router = APIRouter(prefix="/payment/v2", tags=["Payment V2"])
+# ============== Authorization Dependencies ==============
+
+async def require_admin_user(user: dict = Depends(get_current_user)) -> dict:
+    """التحقق من أن المستخدم admin أو sub_admin"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    return user
+
+
 
 
 # ============== حالة نظام الدفع ==============
@@ -382,11 +391,8 @@ async def get_payment_instructions(
 # ============== إعدادات الدفع للمدير ==============
 
 @router.get("/admin/settings")
-async def get_payment_settings(user: dict = Depends(get_current_user)) -> dict:
+async def get_payment_settings(user: dict = Depends(require_admin_user)) -> dict:
     """جلب إعدادات الدفع (للمدير)"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     settings = await db.platform_settings.find_one({"id": "main"}, {"_id": 0})
     payment_settings = settings.get("payment_settings", {}) if settings else {}
     

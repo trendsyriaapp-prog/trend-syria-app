@@ -12,6 +12,15 @@ from core.database import db, get_current_user, create_notification_for_user
 from helpers.datetime_helpers import get_now
 
 router = APIRouter(prefix="/delivery", tags=["Delivery"])
+# ============== Authorization Dependencies ==============
+
+async def require_admin_user(user: dict = Depends(get_current_user)) -> dict:
+    """التحقق من أن المستخدم admin أو sub_admin"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    return user
+
+
 
 # ============== دالة استخراج الاسم الأول ==============
 
@@ -2657,11 +2666,8 @@ async def clear_driver_location(user: dict = Depends(get_current_user)) -> dict:
 
 
 @router.get("/penalty-info/{driver_id}")
-async def get_driver_penalty_info(driver_id: str, user: dict = Depends(get_current_user)) -> dict:
+async def get_driver_penalty_info(driver_id: str, user: dict = Depends(require_admin_user)) -> dict:
     """جلب نقاط موظف معين (للمدير)"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     driver = await db.users.find_one(
         {"id": driver_id, "user_type": "delivery"}, 
         {"_id": 0, "penalty_points": 1, "penalty_history": 1, "full_name": 1, "name": 1}

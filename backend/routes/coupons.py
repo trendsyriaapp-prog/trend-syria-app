@@ -10,6 +10,15 @@ from core.database import db, get_current_user
 from helpers.datetime_helpers import get_now
 
 router = APIRouter(prefix="/coupons", tags=["Coupons"])
+# ============== Authorization Dependencies ==============
+
+async def require_admin_user(user: dict = Depends(get_current_user)) -> dict:
+    """التحقق من أن المستخدم admin أو sub_admin"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    return user
+
+
 
 # أنواع الكوبونات
 COUPON_TYPES = {
@@ -73,11 +82,8 @@ async def get_all_coupons(
 
 
 @router.post("/admin/create")
-async def create_coupon(coupon_data: dict, user: dict = Depends(get_current_user)) -> dict:
+async def create_coupon(coupon_data: dict, user: dict = Depends(require_admin_user)) -> dict:
     """إنشاء كوبون جديد"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     code = coupon_data.get("code", "").strip().upper()
     if not code:
         raise HTTPException(status_code=400, detail="كود الكوبون مطلوب")
@@ -138,11 +144,8 @@ async def create_coupon(coupon_data: dict, user: dict = Depends(get_current_user
 
 
 @router.put("/admin/{coupon_id}")
-async def update_coupon(coupon_id: str, coupon_data: dict, user: dict = Depends(get_current_user)) -> dict:
+async def update_coupon(coupon_id: str, coupon_data: dict, user: dict = Depends(require_admin_user)) -> dict:
     """تحديث كوبون"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     coupon = await db.coupons.find_one({"id": coupon_id})
     if not coupon:
         raise HTTPException(status_code=404, detail="الكوبون غير موجود")
@@ -164,11 +167,8 @@ async def update_coupon(coupon_id: str, coupon_data: dict, user: dict = Depends(
 
 
 @router.delete("/admin/{coupon_id}")
-async def delete_coupon(coupon_id: str, user: dict = Depends(get_current_user)) -> dict:
+async def delete_coupon(coupon_id: str, user: dict = Depends(require_admin_user)) -> dict:
     """حذف كوبون"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     result = await db.coupons.delete_one({"id": coupon_id})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="الكوبون غير موجود")
@@ -177,11 +177,8 @@ async def delete_coupon(coupon_id: str, user: dict = Depends(get_current_user)) 
 
 
 @router.get("/admin/{coupon_id}/usage")
-async def get_coupon_usage(coupon_id: str, user: dict = Depends(get_current_user)) -> dict:
+async def get_coupon_usage(coupon_id: str, user: dict = Depends(require_admin_user)) -> dict:
     """جلب سجل استخدام كوبون"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     usage = await db.coupon_usage.find(
         {"coupon_id": coupon_id},
         {"_id": 0}

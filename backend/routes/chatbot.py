@@ -15,6 +15,15 @@ import jwt
 import os
 
 router = APIRouter(prefix="/chatbot", tags=["Chatbot"])
+# ============== Authorization Dependencies ==============
+
+async def require_admin_user(user: dict = Depends(get_current_user)) -> dict:
+    """التحقق من أن المستخدم admin أو sub_admin"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    return user
+
+
 
 # دالة للحصول على المستخدم (اختياري - للزوار)
 security = HTTPBearer(auto_error=False)
@@ -466,11 +475,8 @@ async def get_quick_questions() -> dict:
 # ============== Admin Endpoints ==============
 
 @router.get("/admin/support-requests")
-async def get_support_requests(user: dict = Depends(get_current_user)) -> dict:
+async def get_support_requests(user: dict = Depends(require_admin_user)) -> dict:
     """جلب طلبات الدعم للمدير"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     requests = await db.support_requests.find(
         {},
         {"_id": 0}
@@ -485,11 +491,8 @@ async def get_support_requests(user: dict = Depends(get_current_user)) -> dict:
     return {"requests": requests, "stats": stats}
 
 @router.put("/admin/support-requests/{request_id}")
-async def update_support_request(request_id: str, status: str, user: dict = Depends(get_current_user)) -> dict:
+async def update_support_request(request_id: str, status: str, user: dict = Depends(require_admin_user)) -> dict:
     """تحديث حالة طلب الدعم"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     if status not in ["pending", "assigned", "resolved"]:
         raise HTTPException(status_code=400, detail="حالة غير صحيحة")
     
@@ -511,11 +514,8 @@ async def update_support_request(request_id: str, status: str, user: dict = Depe
 
 
 @router.delete("/admin/support-requests/{request_id}")
-async def delete_support_request(request_id: str, user: dict = Depends(get_current_user)) -> dict:
+async def delete_support_request(request_id: str, user: dict = Depends(require_admin_user)) -> dict:
     """حذف طلب دعم (للمدراء)"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     result = await db.support_requests.delete_one({"id": request_id})
     
     if result.deleted_count == 0:
@@ -530,11 +530,8 @@ class AdminReply(BaseModel):
     message: str
 
 @router.post("/admin/reply")
-async def send_admin_reply(data: AdminReply, user: dict = Depends(get_current_user)) -> dict:
+async def send_admin_reply(data: AdminReply, user: dict = Depends(require_admin_user)) -> dict:
     """إرسال رد من المدير للعميل كإشعار ورسالة في الدردشة"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     now = get_now()
     
     # جلب بيانات التذكرة للحصول على session_id
@@ -644,11 +641,8 @@ async def get_pending_rating(user: dict = Depends(get_current_user)) -> dict:
     return {"ticket": ticket}
 
 @router.get("/admin/rating-stats")
-async def get_rating_stats(user: dict = Depends(get_current_user)) -> dict:
+async def get_rating_stats(user: dict = Depends(require_admin_user)) -> dict:
     """إحصائيات تقييمات الدعم للمدير"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     # جلب جميع التذاكر المقيمة
     rated_tickets = await db.support_requests.find(
         {"rating": {"$exists": True}},
@@ -732,11 +726,8 @@ async def check_and_send_rating_reminder(user: dict = Depends(get_current_user))
 
 
 @router.get("/admin/analytics")
-async def get_support_analytics(user: dict = Depends(get_current_user)) -> dict:
+async def get_support_analytics(user: dict = Depends(require_admin_user)) -> dict:
     """تحليلات متقدمة للدعم الفني"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     from collections import defaultdict
     
     # جلب جميع التذاكر

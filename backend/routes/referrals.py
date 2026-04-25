@@ -10,6 +10,15 @@ from core.database import db, get_current_user
 from helpers.datetime_helpers import get_now
 
 router = APIRouter(prefix="/referrals", tags=["Referrals"])
+# ============== Authorization Dependencies ==============
+
+async def require_admin_user(user: dict = Depends(get_current_user)) -> dict:
+    """التحقق من أن المستخدم admin أو sub_admin"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    return user
+
+
 
 
 # ===============================
@@ -327,11 +336,8 @@ async def process_referral_reward(user_id: str, order_total: float) -> None:
 # ===============================
 
 @router.get("/admin/stats")
-async def get_referral_stats(user: dict = Depends(get_current_user)) -> dict:
+async def get_referral_stats(user: dict = Depends(require_admin_user)) -> dict:
     """إحصائيات نظام الإحالات للمدير"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     total_codes = await db.referral_codes.count_documents({})
     total_referrals = await db.referrals.count_documents({})
     completed_referrals = await db.referrals.count_documents({"status": "completed"})
@@ -365,11 +371,8 @@ async def get_referral_stats(user: dict = Depends(get_current_user)) -> dict:
 
 
 @router.get("/admin/settings")
-async def get_referral_settings(user: dict = Depends(get_current_user)) -> dict:
+async def get_referral_settings(user: dict = Depends(require_admin_user)) -> dict:
     """جلب إعدادات نظام الإحالات"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     settings = await db.platform_settings.find_one({"id": "referral"}, {"_id": 0})
     
     if not settings:

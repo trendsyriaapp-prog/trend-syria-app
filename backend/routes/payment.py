@@ -11,6 +11,15 @@ from helpers.datetime_helpers import get_now
 from routes.wallet import add_pending_to_wallet, confirm_pending_earnings
 
 router = APIRouter(prefix="/payment", tags=["Payment"])
+# ============== Authorization Dependencies ==============
+
+async def require_admin_user(user: dict = Depends(get_current_user)) -> dict:
+    """التحقق من أن المستخدم admin أو sub_admin"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    return user
+
+
 
 # ============== Delivery Fee Calculation ==============
 
@@ -548,7 +557,7 @@ async def get_all_withdrawals(
     return withdrawals
 
 @router.post("/admin/withdrawals/{withdrawal_id}/mark-transferred")
-async def mark_withdrawal_transferred(withdrawal_id: str, user: dict = Depends(get_current_user)) -> dict:
+async def mark_withdrawal_transferred(withdrawal_id: str, user: dict = Depends(require_admin_user)) -> dict:
     """
     تأكيد أن التحويل تم فعلياً (للأدمن)
     
@@ -557,9 +566,6 @@ async def mark_withdrawal_transferred(withdrawal_id: str, user: dict = Depends(g
     - ثم يضغط هذا الزر لتأكيد أن التحويل تم
     - المبلغ مخصوم مسبقاً من محفظة المستخدم
     """
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     withdrawal = await db.withdrawal_requests.find_one({"id": withdrawal_id})
     if not withdrawal:
         raise HTTPException(status_code=404, detail="طلب السحب غير موجود")
@@ -596,15 +602,12 @@ async def mark_withdrawal_transferred(withdrawal_id: str, user: dict = Depends(g
 
 
 @router.post("/admin/withdrawals/{withdrawal_id}/approve")
-async def approve_withdrawal(withdrawal_id: str, user: dict = Depends(get_current_user)) -> dict:
+async def approve_withdrawal(withdrawal_id: str, user: dict = Depends(require_admin_user)) -> dict:
     """
     [للتوافق الخلفي] الموافقة على طلب سحب قديم (pending)
     
     ⚠️ هذا الـ API للطلبات القديمة فقط. الطلبات الجديدة تأتي بحالة ready_for_transfer
     """
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     withdrawal = await db.withdrawal_requests.find_one({"id": withdrawal_id})
     if not withdrawal:
         raise HTTPException(status_code=404, detail="طلب السحب غير موجود")

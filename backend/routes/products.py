@@ -14,6 +14,15 @@ from core.performance import cache
 from models.schemas import ProductCreate, ProductUpdate, ProductQuestion, ProductAnswer
 
 router = APIRouter(prefix="/products", tags=["Products"])
+# ============== Authorization Dependencies ==============
+
+async def require_admin_user(user: dict = Depends(get_current_user)) -> dict:
+    """التحقق من أن المستخدم admin أو sub_admin"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    return user
+
+
 
 # الفئات المتاحة
 CATEGORIES = [

@@ -18,6 +18,15 @@ except ImportError:
     PAYMENT_PROVIDERS_AVAILABLE = False
 
 router = APIRouter(prefix="/wallet", tags=["Wallet"])
+# ============== Authorization Dependencies ==============
+
+async def require_admin_user(user: dict = Depends(get_current_user)) -> dict:
+    """التحقق من أن المستخدم admin أو sub_admin"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    return user
+
+
 
 # ============== Wallet Balance ==============
 

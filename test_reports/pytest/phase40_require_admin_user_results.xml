@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="32" skipped="1" tests="44" time="7.338" timestamp="2026-04-25T01:03:59.482489+00:00" hostname="agent-env-dd4689e7-6442-4ec7-826a-e05c9c7363c3"><testcase classname="backend.tests.test_phase40_require_admin_user_refactoring.TestAuthorizationRefactoring" name="test_settings_get_admin_only" time="0.570" /><testcase classname="backend.tests.test_phase40_require_admin_user_refactoring.TestAuthorizationRefactoring" name="test_settings_public_no_auth" time="0.135" /><testcase classname="backend.tests.test_phase40_require_admin_user_refactoring.TestAuthorizationRefactoring" name="test_settings_featured_stores_admin_only" time="0.447" /><testcase classname="backend.tests.test_phase40_require_admin_user_refactoring.TestAuthorizationRefactoring" name="test_daily_deals_active_no_auth" time="0.155" /><testcase classname="backend.tests.test_phase40_require_admin_user_refactoring.TestAuthorizationRefactoring" name="test_daily_deals_admin_all_requires_auth" time="0.450" /><testcase classname="backend.tests.test_phase40_require_admin_user_refactoring.TestAuthorizationRefactoring" name="test_categories_get_no_auth" time="0.127" /><testcase classname="backend.tests.test_phase40_require_admin_user_refactoring.TestAuthorizationRefactoring" name="test_categories_shopping_no_auth" time="0.119" /><testcase classname="backend.tests.test_phase40_require_admin_user_refactoring.TestAuthorizationRefactoring" name="test_categories_food_no_auth" time="0.108" /><testcase classname="backend.tests.test_phase40_require_admin_user_refactoring.TestAuthorizationRefactoring" name="test_categories_create_requires_admin" time="0.159" /><testcase classname="backend.tests.test_phase40_require_admin_user_refactoring.TestAuthorizationRefactoring" name="test_wallet_balance_requires_auth" time="0.442" /><testcase classname="backend.tests.test_phase40_require_admin_user_refactoring.TestAuthorizationRefactoring" name="test_wallet_transactions_requires_auth" time="0.569"><failure message="AssertionError: Expected 200 with auth, got 500&#10;assert 500 == 200&#10; +  where 500 = &lt;Response [500]&gt;.status_code">backend/tests/test_phase40_require_admin_user_refactoring.py:216: in test_wallet_transactions_requires_auth
+    assert response.status_code == 200, f"Expected 200 with auth, got {response.status_code}"
+E   AssertionError: Expected 200 with auth, got 500
+E   assert 500 == 200
+E    +  where 500 = &lt;Response [500]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_phase40_require_admin_user_refactoring.TestAuthorizationRefactoring" name="test_products_get_no_auth" time="0.117" /><testcase classname="backend.tests.test_phase40_require_admin_user_refactoring.TestAuthorizationRefactoring" name="test_admin_orders_requires_admin" time="0.166"><skipped type="pytest.skip" message="Rate limited - skipping auth tests">/app/backend/tests/test_phase40_require_admin_user_refactoring.py:49: Rate limited - skipping auth tests</skipped></testcase><testcase classname="backend.tests.test_phase40_require_admin_user_refactoring.TestAuthorizationRefactoring" name="test_coupons_admin_list_requires_admin" time="0.110"><failure message="AssertionError: Expected 401/403 without auth, got 429&#10;assert 429 in [401, 403]&#10; +  where 429 = &lt;Response [429]&gt;.status_code">backend/tests/test_phase40_require_admin_user_refactoring.py:263: in test_coupons_admin_list_requires_admin
+    assert response.status_code in [401, 403], f"Expected 401/403 without auth, got {response.status_code}"
+E   AssertionError: Expected 401/403 without auth, got 429
+E   assert 429 in [401, 403]
+E    +  where 429 = &lt;Response [429]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_phase40_require_admin_user_refactoring.TestAuthorizationRefactoring" name="test_coupons_create_requires_admin" time="0.123"><failure message="AssertionError: Expected 401/403 without auth, got 429&#10;assert 429 in [401, 403]&#10; +  where 429 = &lt;Response [429]&gt;.status_code">backend/tests/test_phase40_require_admin_user_refactoring.py:288: in test_coupons_create_requires_admin
+    assert response.status_code in [401, 403], f"Expected 401/403 without auth, got {response.status_code}"
+E   AssertionError: Expected 401/403 without auth, got 429
+E   assert 429 in [401, 403]
+E    +  where 429 = &lt;Response [429]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_phase40_require_admin_user_refactoring.TestPublicEndpoints" name="test_settings_public" time="0.109"><failure message="assert 429 == 200&#10; +  where 429 = &lt;Response [429]&gt;.status_code">backend/tests/test_phase40_require_admin_user_refactoring.py:304: in test_settings_public
+    assert response.status_code == 200
+E   assert 429 == 200
+E    +  where 429 = &lt;Response [429]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_phase40_require_admin_user_refactoring.TestPublicEndpoints" name="test_settings_homepage_sections" time="0.104"><failure message="assert 429 == 200&#10; +  where 429 = &lt;Response [429]&gt;.status_code">backend/tests/test_phase40_require_admin_user_refactoring.py:310: in test_settings_homepage_sections
+    assert response.status_code == 200
+E   assert 429 == 200
+E    +  where 429 = &lt;Response [429]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_phase40_require_admin_user_refactoring.TestPublicEndpoints" name="test_settings_product_badges" time="0.113"><failure message="assert 429 == 200&#10; +  where 429 = &lt;Response [429]&gt;.status_code">backend/tests/test_phase40_require_admin_user_refactoring.py:316: in test_settings_product_badges
+    assert response.status_code == 200
+E   assert 429 == 200
+E    +  where 429 = &lt;Response [429]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_phase40_require_admin_user_refactoring.TestPublicEndpoints" name="test_settings_global_free_shipping" time="0.125"><failure message="assert 429 == 200&#10; +  where 429 = &lt;Response [429]&gt;.status_code">backend/tests/test_phase40_require_admin_user_refactoring.py:322: in test_settings_global_free_shipping
+    assert response.status_code == 200
+E   assert 429 == 200
+E    +  where 429 = &lt;Response [429]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_phase40_require_admin_user_refactoring.TestPublicEndpoints" name="test_settings_distance_delivery" time="0.104"><failure message="assert 429 == 200&#10; +  where 429 = &lt;Response [429]&gt;.status_code">backend/tests/test_phase40_require_admin_user_refactoring.py:328: in test_settings_distance_delivery
+    assert response.status_code == 200
+E   assert 429 == 200
+E    +  where 429 = &lt;Response [429]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_phase40_require_admin_user_refactoring.TestPublicEndpoints" name="test_settings_driver_earnings" time="0.102"><failure message="assert 429 == 200&#10; +  where 429 = &lt;Response [429]&gt;.status_code">backend/tests/test_phase40_require_admin_user_refactoring.py:334: in test_settings_driver_earnings
+    assert response.status_code == 200
+E   assert 429 == 200
+E    +  where 429 = &lt;Response [429]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_phase40_require_admin_user_refactoring.TestPublicEndpoints" name="test_settings_delivery_wait_time" time="0.123"><failure message="assert 429 == 200&#10; +  where 429 = &lt;Response [429]&gt;.status_code">backend/tests/test_phase40_require_admin_user_refactoring.py:340: in test_settings_delivery_wait_time
+    assert response.status_code == 200
+E   assert 429 == 200
+E    +  where 429 = &lt;Response [429]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_phase40_require_admin_user_refactoring.TestPublicEndpoints" name="test_settings_delivery_wait_compensation" time="0.106"><failure message="assert 429 == 200&#10; +  where 429 = &lt;Response [429]&gt;.status_code">backend/tests/test_phase40_require_admin_user_refactoring.py:346: in test_settings_delivery_wait_compensation
+    assert response.status_code == 200
+E   assert 429 == 200
+E    +  where 429 = &lt;Response [429]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_phase40_require_admin_user_refactoring.TestPublicEndpoints" name="test_settings_smart_order_limits" time="0.111"><failure message="assert 429 == 200&#10; +  where 429 = &lt;Response [429]&gt;.status_code">backend/tests/test_phase40_require_admin_user_refactoring.py:352: in test_settings_smart_order_limits
+    assert response.status_code == 200
+E   assert 429 == 200
+E    +  where 429 = &lt;Response [429]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_phase40_require_admin_user_refactoring.TestPublicEndpoints" name="test_settings_low_stock_threshold" time="0.115"><failure message="assert 429 == 200&#10; +  where 429 = &lt;Response [429]&gt;.status_code">backend/tests/test_phase40_require_admin_user_refactoring.py:358: in test_settings_low_stock_threshold
+    assert response.status_code == 200
+E   assert 429 == 200
+E    +  where 429 = &lt;Response [429]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_phase40_require_admin_user_refactoring.TestPublicEndpoints" name="test_settings_wallet" time="0.129"><failure message="assert 429 == 200&#10; +  where 429 = &lt;Response [429]&gt;.status_code">backend/tests/test_phase40_require_admin_user_refactoring.py:364: in test_settings_wallet
+    assert response.status_code == 200
+E   assert 429 == 200
+E    +  where 429 = &lt;Response [429]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_phase40_require_admin_user_refactoring.TestPublicEndpoints" name="test_settings_delivery_settings" time="0.103"><failure message="assert 429 == 200&#10; +  where 429 = &lt;Response [429]&gt;.status_code">backend/tests/test_phase40_require_admin_user_refactoring.py:370: in test_settings_delivery_settings
+    assert response.status_code == 200
+E   assert 429 == 200
+E    +  where 429 = &lt;Response [429]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_phase40_require_admin_user_refactoring.TestPublicEndpoints" name="test_settings_surge_pricing" time="0.117"><failure message="assert 429 == 200&#10; +  where 429 = &lt;Response [429]&gt;.status_code">backend/tests/test_phase40_require_admin_user_refactoring.py:376: in test_settings_surge_pricing
+    assert response.status_code == 200
+E   assert 429 == 200
+E    +  where 429 = &lt;Response [429]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_phase40_require_admin_user_refactoring.TestPublicEndpoints" name="test_daily_deals_active" time="0.109"><failure message="assert 429 == 200&#10; +  where 429 = &lt;Response [429]&gt;.status_code">backend/tests/test_phase40_require_admin_user_refactoring.py:382: in test_daily_deals_active
+    assert response.status_code == 200
+E   assert 429 == 200
+E    +  where 429 = &lt;Response [429]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_phase40_require_admin_user_refactoring.TestPublicEndpoints" name="test_daily_deals_upcoming" time="0.116"><failure message="assert 429 == 200&#10; +  where 429 = &lt;Response [429]&gt;.status_code">backend/tests/test_phase40_require_admin_user_refactoring.py:388: in test_daily_deals_upcoming
+    assert response.status_code == 200
+E   assert 429 == 200
+E    +  where 429 = &lt;Response [429]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_phase40_require_admin_user_refactoring.TestPublicEndpoints" name="test_categories" time="0.115"><failure message="assert 429 == 200&#10; +  where 429 = &lt;Response [429]&gt;.status_code">backend/tests/test_phase40_require_admin_user_refactoring.py:394: in test_categories
+    assert response.status_code == 200
+E   assert 429 == 200
+E    +  where 429 = &lt;Response [429]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_phase40_require_admin_user_refactoring.TestPublicEndpoints" name="test_products" time="0.098"><failure message="assert 429 == 200&#10; +  where 429 = &lt;Response [429]&gt;.status_code">backend/tests/test_phase40_require_admin_user_refactoring.py:400: in test_products
+    assert response.status_code == 200
+E   assert 429 == 200
+E    +  where 429 = &lt;Response [429]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_phase40_require_admin_user_refactoring.TestAdminOnlyEndpoints" name="test_settings_main_requires_admin" time="0.106"><failure message="assert 429 in [401, 403]&#10; +  where 429 = &lt;Response [429]&gt;.status_code">backend/tests/test_phase40_require_admin_user_refactoring.py:435: in test_settings_main_requires_admin
+    assert response.status_code in [401, 403]
+E   assert 429 in [401, 403]
+E    +  where 429 = &lt;Response [429]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_phase40_require_admin_user_refactoring.TestAdminOnlyEndpoints" name="test_settings_featured_stores_requires_admin" time="0.110"><failure message="assert 429 in [401, 403]&#10; +  where 429 = &lt;Response [429]&gt;.status_code">backend/tests/test_phase40_require_admin_user_refactoring.py:441: in test_settings_featured_stores_requires_admin
+    assert response.status_code in [401, 403]
+E   assert 429 in [401, 403]
+E    +  where 429 = &lt;Response [429]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_phase40_require_admin_user_refactoring.TestAdminOnlyEndpoints" name="test_settings_weather_api_requires_admin" time="0.106"><failure message="assert 429 in [401, 403]&#10; +  where 429 = &lt;Response [429]&gt;.status_code">backend/tests/test_phase40_require_admin_user_refactoring.py:447: in test_settings_weather_api_requires_admin
+    assert response.status_code in [401, 403]
+E   assert 429 in [401, 403]
+E    +  where 429 = &lt;Response [429]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_phase40_require_admin_user_refactoring.TestAdminOnlyEndpoints" name="test_settings_driver_km_settings_requires_admin" time="0.104"><failure message="assert 429 in [401, 403]&#10; +  where 429 = &lt;Response [429]&gt;.status_code">backend/tests/test_phase40_require_admin_user_refactoring.py:453: in test_settings_driver_km_settings_requires_admin
+    assert response.status_code in [401, 403]
+E   assert 429 in [401, 403]
+E    +  where 429 = &lt;Response [429]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_phase40_require_admin_user_refactoring.TestAdminOnlyEndpoints" name="test_settings_food_delivery_limits_requires_admin" time="0.114"><failure message="assert 429 in [401, 403]&#10; +  where 429 = &lt;Response [429]&gt;.status_code">backend/tests/test_phase40_require_admin_user_refactoring.py:459: in test_settings_food_delivery_limits_requires_admin
+    assert response.status_code in [401, 403]
+E   assert 429 in [401, 403]
+E    +  where 429 = &lt;Response [429]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_phase40_require_admin_user_refactoring.TestAdminOnlyEndpoints" name="test_settings_store_customer_distance_requires_admin" time="0.116"><failure message="assert 429 in [401, 403]&#10; +  where 429 = &lt;Response [429]&gt;.status_code">backend/tests/test_phase40_require_admin_user_refactoring.py:465: in test_settings_store_customer_distance_requires_admin
+    assert response.status_code in [401, 403]
+E   assert 429 in [401, 403]
+E    +  where 429 = &lt;Response [429]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_phase40_require_admin_user_refactoring.TestAdminOnlyEndpoints" name="test_settings_driver_cancel_requires_admin" time="0.105"><failure message="assert 429 in [401, 403]&#10; +  where 429 = &lt;Response [429]&gt;.status_code">backend/tests/test_phase40_require_admin_user_refactoring.py:471: in test_settings_driver_cancel_requires_admin
+    assert response.status_code in [401, 403]
+E   assert 429 in [401, 403]
+E    +  where 429 = &lt;Response [429]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_phase40_require_admin_user_refactoring.TestAdminOnlyEndpoints" name="test_daily_deals_admin_all_requires_admin" time="0.111"><failure message="assert 429 in [401, 403]&#10; +  where 429 = &lt;Response [429]&gt;.status_code">backend/tests/test_phase40_require_admin_user_refactoring.py:477: in test_daily_deals_admin_all_requires_admin
+    assert response.status_code in [401, 403]
+E   assert 429 in [401, 403]
+E    +  where 429 = &lt;Response [429]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_phase40_require_admin_user_refactoring.TestAdminOnlyEndpoints" name="test_daily_deals_requests_requires_admin" time="0.125"><failure message="assert 429 in [401, 403]&#10; +  where 429 = &lt;Response [429]&gt;.status_code">backend/tests/test_phase40_require_admin_user_refactoring.py:483: in test_daily_deals_requests_requires_admin
+    assert response.status_code in [401, 403]
+E   assert 429 in [401, 403]
+E    +  where 429 = &lt;Response [429]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_phase40_require_admin_user_refactoring.TestAdminOnlyEndpoints" name="test_admin_orders_requires_admin" time="0.106"><failure message="assert 429 in [401, 403]&#10; +  where 429 = &lt;Response [429]&gt;.status_code">backend/tests/test_phase40_require_admin_user_refactoring.py:489: in test_admin_orders_requires_admin
+    assert response.status_code in [401, 403]
+E   assert 429 in [401, 403]
+E    +  where 429 = &lt;Response [429]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_phase40_require_admin_user_refactoring.TestAdminOnlyEndpoints" name="test_coupons_admin_list_requires_admin" time="0.120"><failure message="assert 429 in [401, 403]&#10; +  where 429 = &lt;Response [429]&gt;.status_code">backend/tests/test_phase40_require_admin_user_refactoring.py:495: in test_coupons_admin_list_requires_admin
+    assert response.status_code in [401, 403]
+E   assert 429 in [401, 403]
+E    +  where 429 = &lt;Response [429]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_phase40_require_admin_user_refactoring.TestAdminOnlyEndpoints" name="test_wallet_admin_topup_requests_requires_admin" time="0.106"><failure message="assert 429 in [401, 403]&#10; +  where 429 = &lt;Response [429]&gt;.status_code">backend/tests/test_phase40_require_admin_user_refactoring.py:501: in test_wallet_admin_topup_requests_requires_admin
+    assert response.status_code in [401, 403]
+E   assert 429 in [401, 403]
+E    +  where 429 = &lt;Response [429]&gt;.status_code</failure></testcase></testsuite></testsuites>

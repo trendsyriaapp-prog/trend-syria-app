@@ -12,6 +12,22 @@ from helpers.datetime_helpers import get_now
 
 router = APIRouter(prefix="/settings", tags=["Settings"])
 
+# ============== Authorization Dependencies ==============
+
+async def require_admin_user(user: dict = Depends(get_current_user)) -> dict:
+    """التحقق من أن المستخدم admin أو sub_admin"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    return user
+
+async def require_main_admin(user: dict = Depends(get_current_user)) -> dict:
+    """التحقق من أن المستخدم هو المدير الرئيسي فقط"""
+    if user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
+    return user
+
+# ============== Models ==============
+
 class PlatformSettings(BaseModel):
     min_seller_withdrawal: Optional[int] = 50000
     min_delivery_withdrawal: Optional[int] = 25000
@@ -26,11 +42,8 @@ class DeliveryFees(BaseModel):
 # ============== Get Settings ==============
 
 @router.get("")
-async def get_platform_settings(user: dict = Depends(get_current_user)) -> dict:
+async def get_platform_settings(user: dict = Depends(require_admin_user)) -> dict:
     """جلب إعدادات المنصة"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     settings = await db.platform_settings.find_one({"id": "main"}, {"_id": 0})
     
     if not settings:
@@ -317,11 +330,8 @@ class FeaturedStoresSettings(BaseModel):
             self.store_ids = []
 
 @router.get("/featured-stores")
-async def get_featured_stores_settings(user: dict = Depends(get_current_user)) -> dict:
+async def get_featured_stores_settings(user: dict = Depends(require_admin_user)) -> dict:
     """جلب إعدادات المتاجر المميزة"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     settings = await db.platform_settings.find_one({"id": "main"}, {"_id": 0})
     
     return {
@@ -1167,11 +1177,8 @@ class FoodDeliveryLimits(BaseModel):
     max_distance_km: float = 5.0  # المسافة القصوى بين الطلبات
 
 @router.get("/food-delivery-limits")
-async def get_food_delivery_limits(user: dict = Depends(get_current_user)) -> dict:
+async def get_food_delivery_limits(user: dict = Depends(require_main_admin)) -> dict:
     """جلب إعدادات حدود توصيل الطعام"""
-    if user["user_type"] != "admin":
-        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
-    
     settings = await db.platform_settings.find_one({"id": "main"})
     limits = settings.get("food_delivery_limits", {}) if settings else {}
     
@@ -1290,11 +1297,8 @@ class StoreCustomerDistance(BaseModel):
     max_distance_km: float = 5.0  # المسافة القصوى بين المطعم والعميل
 
 @router.get("/store-customer-distance")
-async def get_store_customer_distance(user: dict = Depends(get_current_user)) -> dict:
+async def get_store_customer_distance(user: dict = Depends(require_main_admin)) -> dict:
     """جلب إعداد المسافة القصوى بين المطعم والعميل"""
-    if user["user_type"] != "admin":
-        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
-    
     settings = await db.platform_settings.find_one({"id": "main"})
     
     return {
@@ -1440,11 +1444,8 @@ class AutoWeatherSettings(BaseModel):
     check_interval_minutes: int = 30  # فترة الفحص
 
 @router.get("/weather-api")
-async def get_weather_api_settings(user: dict = Depends(get_current_user)) -> dict:
+async def get_weather_api_settings(user: dict = Depends(require_admin_user)) -> dict:
     """جلب إعدادات API الطقس"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     settings = await db.platform_settings.find_one({"id": "main"}, {"_id": 0})
     
     weather_api = settings.get("weather_api", {}) if settings else {}
@@ -1514,11 +1515,8 @@ async def get_current_weather(
     }
 
 @router.get("/weather-all-cities")
-async def get_weather_all_cities(user: dict = Depends(get_current_user)) -> dict:
+async def get_weather_all_cities(user: dict = Depends(require_admin_user)) -> dict:
     """جلب الطقس لجميع المدن"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     from services.weather_service import get_weather_for_all_cities, SYRIAN_CITIES_COORDS
     
     weather_data = await get_weather_for_all_cities()
@@ -1752,13 +1750,10 @@ class DriverCancelSettings(BaseModel):
     suspension_threshold: int = 15  # إيقاف عند 15%
 
 @router.get("/driver-cancel")
-async def get_driver_cancel_settings(user: dict = Depends(get_current_user)) -> dict:
+async def get_driver_cancel_settings(user: dict = Depends(require_admin_user)) -> dict:
     """
     جلب إعدادات إلغاء الطلب للسائق (للمدير)
     """
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     settings = await db.platform_settings.find_one({"id": "main"}, {"_id": 0})
     
     default_settings = {
@@ -1811,13 +1806,10 @@ async def update_driver_cancel_settings(
     }
 
 @router.get("/driver-cancel/stats")
-async def get_driver_cancel_stats(user: dict = Depends(get_current_user)) -> dict:
+async def get_driver_cancel_stats(user: dict = Depends(require_admin_user)) -> dict:
     """
     إحصائيات إلغاءات السائقين (للمدير)
     """
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     # إجمالي الإلغاءات
     total_cancellations = await db.driver_cancellations.count_documents({})
     
@@ -1878,11 +1870,8 @@ class DriverShortageAlertSettings(BaseModel):
             self.monitored_cities = []
 
 @router.get("/driver-shortage-alert")
-async def get_driver_shortage_alert_settings(user: dict = Depends(get_current_user)) -> dict:
+async def get_driver_shortage_alert_settings(user: dict = Depends(require_admin_user)) -> dict:
     """جلب إعدادات إشعارات نقص السائقين"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     settings = await db.platform_settings.find_one({"id": "main"}, {"_id": 0})
     
     default_settings = {
@@ -1924,11 +1913,8 @@ async def update_driver_shortage_alert_settings(
     return {"success": True, "message": "تم تحديث إعدادات إشعارات نقص السائقين"}
 
 @router.get("/driver-shortage-alert/cities")
-async def get_available_cities_for_monitoring(user: dict = Depends(get_current_user)) -> dict:
+async def get_available_cities_for_monitoring(user: dict = Depends(require_admin_user)) -> dict:
     """جلب قائمة المدن المتاحة للمراقبة"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     # جلب المدن التي يوجد بها سائقين معتمدين
     cities = await db.delivery_documents.distinct("city", {"status": "approved"})
     
@@ -1991,11 +1977,8 @@ async def get_ticker_messages() -> dict:
     }
 
 @router.get("/ticker-messages/admin")
-async def get_ticker_messages_admin(user: dict = Depends(get_current_user)) -> dict:
+async def get_ticker_messages_admin(user: dict = Depends(require_admin_user)) -> dict:
     """جلب جميع رسائل الشريط (للمدراء)"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     ticker = await db.ticker_messages.find_one({"id": "main"}, {"_id": 0})
     
     if not ticker:
@@ -2004,11 +1987,8 @@ async def get_ticker_messages_admin(user: dict = Depends(get_current_user)) -> d
     return ticker
 
 @router.put("/ticker-messages")
-async def update_ticker_messages(data: dict, user: dict = Depends(get_current_user)) -> dict:
+async def update_ticker_messages(data: dict, user: dict = Depends(require_admin_user)) -> dict:
     """تحديث رسائل الشريط المتحرك"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     messages = data.get("messages", [])
     is_enabled = data.get("is_enabled", True)
     
@@ -2032,11 +2012,8 @@ async def update_ticker_messages(data: dict, user: dict = Depends(get_current_us
     return {"success": True, "message": "تم تحديث رسائل الشريط بنجاح"}
 
 @router.post("/ticker-messages/add")
-async def add_ticker_message(data: dict, user: dict = Depends(get_current_user)) -> dict:
+async def add_ticker_message(data: dict, user: dict = Depends(require_admin_user)) -> dict:
     """إضافة رسالة جديدة للشريط"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     new_message = {
         "id": str(uuid.uuid4()),
         "text": data.get("text", ""),
@@ -2053,11 +2030,8 @@ async def add_ticker_message(data: dict, user: dict = Depends(get_current_user))
     return {"success": True, "message": new_message}
 
 @router.delete("/ticker-messages/{message_id}")
-async def delete_ticker_message(message_id: str, user: dict = Depends(get_current_user)) -> dict:
+async def delete_ticker_message(message_id: str, user: dict = Depends(require_admin_user)) -> dict:
     """حذف رسالة من الشريط"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     await db.ticker_messages.update_one(
         {"id": "main"},
         {"$pull": {"messages": {"id": message_id}}}
@@ -2066,11 +2040,8 @@ async def delete_ticker_message(message_id: str, user: dict = Depends(get_curren
     return {"success": True, "message": "تم حذف الرسالة بنجاح"}
 
 @router.put("/ticker-messages/toggle")
-async def toggle_ticker(data: dict, user: dict = Depends(get_current_user)) -> dict:
+async def toggle_ticker(data: dict, user: dict = Depends(require_admin_user)) -> dict:
     """تفعيل/تعطيل الشريط"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     is_enabled = data.get("is_enabled", True)
     
     await db.ticker_messages.update_one(
@@ -2091,11 +2062,8 @@ class ImageSettings(BaseModel):
     enable_food_enhancement: bool = True
 
 @router.get("/images")
-async def get_image_settings(user: dict = Depends(get_current_user)) -> dict:
+async def get_image_settings(user: dict = Depends(require_admin_user)) -> dict:
     """جلب إعدادات صور المنتجات"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     settings = await db.image_settings.find_one({"id": "main"}, {"_id": 0})
     
     if not settings:
@@ -2270,11 +2238,8 @@ class BusinessCategoryUpdate(BaseModel):
 
 
 @router.get("/business-categories")
-async def get_all_business_categories(user: dict = Depends(get_current_user)) -> dict:
+async def get_all_business_categories(user: dict = Depends(require_admin_user)) -> dict:
     """جلب جميع أصناف الأنشطة التجارية (للمدير)"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     categories = await db.business_categories.find(
         {}, {"_id": 0}
     ).sort("order", 1).to_list(None)
@@ -2333,11 +2298,8 @@ async def get_public_business_categories(seller_type: str = None) -> dict:
 
 
 @router.post("/business-categories")
-async def create_business_category(category: BusinessCategoryCreate, user: dict = Depends(get_current_user)) -> dict:
+async def create_business_category(category: BusinessCategoryCreate, user: dict = Depends(require_admin_user)) -> dict:
     """إنشاء صنف نشاط تجاري جديد"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     # التحقق من عدم وجود صنف بنفس الاسم والنوع
     existing = await db.business_categories.find_one({
         "name": category.name,
@@ -2366,11 +2328,8 @@ async def create_business_category(category: BusinessCategoryCreate, user: dict 
 
 
 @router.put("/business-categories/{category_id}")
-async def update_business_category(category_id: str, update_data: BusinessCategoryUpdate, user: dict = Depends(get_current_user)) -> dict:
+async def update_business_category(category_id: str, update_data: BusinessCategoryUpdate, user: dict = Depends(require_admin_user)) -> dict:
     """تحديث صنف نشاط تجاري"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     existing = await db.business_categories.find_one({"id": category_id})
     if not existing:
         raise HTTPException(status_code=404, detail="الصنف غير موجود")
@@ -2391,11 +2350,8 @@ async def update_business_category(category_id: str, update_data: BusinessCatego
 
 
 @router.delete("/business-categories/{category_id}")
-async def delete_business_category(category_id: str, user: dict = Depends(get_current_user)) -> dict:
+async def delete_business_category(category_id: str, user: dict = Depends(require_admin_user)) -> dict:
     """حذف صنف نشاط تجاري"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     existing = await db.business_categories.find_one({"id": category_id})
     if not existing:
         raise HTTPException(status_code=404, detail="الصنف غير موجود")
@@ -2406,11 +2362,8 @@ async def delete_business_category(category_id: str, user: dict = Depends(get_cu
 
 
 @router.post("/business-categories/update-defaults")
-async def update_default_business_categories(user: dict = Depends(get_current_user)) -> dict:
+async def update_default_business_categories(user: dict = Depends(require_admin_user)) -> dict:
     """تحديث الأصناف الافتراضية - يحذف القديمة ويضيف الجديدة"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     # حذف الأصناف القديمة
     await db.business_categories.delete_many({})
     
@@ -2471,11 +2424,8 @@ async def update_default_business_categories(user: dict = Depends(get_current_us
 
 
 @router.post("/business-categories/init-defaults")
-async def init_default_business_categories(user: dict = Depends(get_current_user)) -> dict:
+async def init_default_business_categories(user: dict = Depends(require_admin_user)) -> dict:
     """تهيئة الأصناف الافتراضية"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     # التحقق من وجود أصناف مسبقاً
     existing_count = await db.business_categories.count_documents({})
     if existing_count > 0:
@@ -2583,13 +2533,10 @@ async def get_allowed_regions() -> dict:
     }
 
 @router.get("/allowed-regions/admin")
-async def get_allowed_regions_admin(user: dict = Depends(get_current_user)) -> dict:
+async def get_allowed_regions_admin(user: dict = Depends(require_admin_user)) -> dict:
     """
     جلب المناطق المسموحة (للمدير فقط - مع تفاصيل إضافية)
     """
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     settings = await db.settings.find_one({"key": "allowed_regions"}, {"_id": 0})
     
     if not settings:

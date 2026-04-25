@@ -9,6 +9,16 @@ from helpers.datetime_helpers import get_now
 
 router = APIRouter(prefix="/daily-deals", tags=["Daily Deals"])
 
+# ============== Authorization Dependencies ==============
+
+async def require_admin_user(user: dict = Depends(get_current_user)) -> dict:
+    """التحقق من أن المستخدم admin أو sub_admin"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    return user
+
+# ============== Endpoints ==============
+
 
 @router.get("/active")
 async def get_active_daily_deal() -> dict:
@@ -78,21 +88,15 @@ async def get_upcoming_deals() -> dict:
 # ============ Admin Endpoints ============
 
 @router.get("/admin/all")
-async def get_all_daily_deals(user: dict = Depends(get_current_user)) -> dict:
+async def get_all_daily_deals(user: dict = Depends(require_admin_user)) -> dict:
     """جلب جميع صفقات اليوم (للمدير)"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     deals = await db.daily_deals.find({}, {"_id": 0}).sort("created_at", -1).to_list(50)
     return {"deals": deals}
 
 
 @router.post("/admin/create")
-async def create_daily_deal(data: dict, user: dict = Depends(get_current_user)) -> dict:
+async def create_daily_deal(data: dict, user: dict = Depends(require_admin_user)) -> dict:
     """إنشاء صفقة يوم جديدة"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     required = ["title", "discount_percentage", "start_time", "end_time"]
     for field in required:
         if not data.get(field):
@@ -165,11 +169,8 @@ async def send_deal_notification(deal: dict) -> dict:
 
 
 @router.put("/admin/{deal_id}")
-async def update_daily_deal(deal_id: str, data: dict, user: dict = Depends(get_current_user)) -> dict:
+async def update_daily_deal(deal_id: str, data: dict, user: dict = Depends(require_admin_user)) -> dict:
     """تحديث صفقة اليوم"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     existing = await db.daily_deals.find_one({"id": deal_id})
     if not existing:
         raise HTTPException(status_code=404, detail="الصفقة غير موجودة")
@@ -192,11 +193,8 @@ async def update_daily_deal(deal_id: str, data: dict, user: dict = Depends(get_c
 
 
 @router.delete("/admin/{deal_id}")
-async def delete_daily_deal(deal_id: str, user: dict = Depends(get_current_user)) -> dict:
+async def delete_daily_deal(deal_id: str, user: dict = Depends(require_admin_user)) -> dict:
     """حذف صفقة اليوم"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     result = await db.daily_deals.delete_one({"id": deal_id})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="الصفقة غير موجودة")
@@ -205,11 +203,8 @@ async def delete_daily_deal(deal_id: str, user: dict = Depends(get_current_user)
 
 
 @router.post("/admin/quick-create")
-async def quick_create_daily_deal(data: dict, user: dict = Depends(get_current_user)) -> dict:
+async def quick_create_daily_deal(data: dict, user: dict = Depends(require_admin_user)) -> dict:
     """إنشاء سريع لصفقة اليوم (24 ساعة من الآن)"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     if not data.get("title"):
         raise HTTPException(status_code=400, detail="العنوان مطلوب")
     if not data.get("discount_percentage"):
@@ -248,11 +243,8 @@ async def quick_create_daily_deal(data: dict, user: dict = Depends(get_current_u
 # ============ طلبات البائعين ============
 
 @router.get("/requests")
-async def get_deal_requests(user: dict = Depends(get_current_user)) -> dict:
+async def get_deal_requests(user: dict = Depends(require_admin_user)) -> dict:
     """جلب طلبات البائعين للمشاركة في صفقات اليوم (للمدير)"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     requests = await db.deal_requests.find({}, {"_id": 0}).sort("created_at", -1).to_list(100)
     return {"requests": requests}
 
@@ -343,11 +335,8 @@ async def create_deal_request(data: dict, user: dict = Depends(get_current_user)
 
 
 @router.post("/requests/{request_id}/approve")
-async def approve_deal_request(request_id: str, user: dict = Depends(get_current_user)) -> dict:
+async def approve_deal_request(request_id: str, user: dict = Depends(require_admin_user)) -> dict:
     """قبول طلب بائع (للمدير)"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     request = await db.deal_requests.find_one({"id": request_id})
     if not request:
         raise HTTPException(status_code=404, detail="الطلب غير موجود")
@@ -400,11 +389,8 @@ async def approve_deal_request(request_id: str, user: dict = Depends(get_current
 
 
 @router.post("/requests/{request_id}/reject")
-async def reject_deal_request(request_id: str, data: dict, user: dict = Depends(get_current_user)) -> dict:
+async def reject_deal_request(request_id: str, data: dict, user: dict = Depends(require_admin_user)) -> dict:
     """رفض طلب بائع (للمدير)"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     request = await db.deal_requests.find_one({"id": request_id})
     if not request:
         raise HTTPException(status_code=404, detail="الطلب غير موجود")
@@ -443,11 +429,8 @@ async def reject_deal_request(request_id: str, data: dict, user: dict = Depends(
 
 
 @router.delete("/requests/{request_id}")
-async def delete_deal_request(request_id: str, user: dict = Depends(get_current_user)) -> dict:
+async def delete_deal_request(request_id: str, user: dict = Depends(require_admin_user)) -> dict:
     """حذف طلب صفقة (للمدير)"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     result = await db.deal_requests.delete_one({"id": request_id})
     
     if result.deleted_count == 0:

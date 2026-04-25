@@ -52,8 +52,31 @@
 ### helpers/datetime_helpers.py ✅ NEW (Phase 39)
 - ✅ Created centralized datetime helpers file
 - ✅ Contains `get_now()` and `get_today()` functions
-- ✅ All route files now import from this central location
+- ✅ **42 route files** now import from this central location
+- ✅ **381 total get_now() usages** across all files
 - **All local `get_now()` definitions removed**
+
+### auth.py ✅ COMPLETE (Phase 39)
+- ✅ Replaced 55 `datetime.now(timezone.utc).isoformat()` calls
+
+### settings.py ✅ COMPLETE (Phase 39)
+- ✅ Replaced 47 `datetime.now(timezone.utc).isoformat()` calls
+
+### delivery.py ✅ COMPLETE (Phase 39)
+- ✅ Replaced 38 `datetime.now(timezone.utc).isoformat()` calls
+
+### wallet.py ✅ COMPLETE (Phase 39)
+- ✅ Replaced 18 `datetime.now(timezone.utc).isoformat()` calls
+
+### Other files ✅ COMPLETE (Phase 39)
+- ✅ products.py, price_reports.py, gifts.py, driver_security.py
+- ✅ daily_deals.py, challenges.py, voip.py, error_logs.py
+- ✅ categories.py, call_requests.py, referrals.py, payment.py
+- ✅ chatbot.py, support.py, coupons.py, admin_settings.py
+- ✅ notifications.py, delivery_boxes.py, achievements.py, user.py
+- ✅ recommendations.py, push_notifications.py, payment_v2.py
+- ✅ activity_log.py, reviews.py, rate_limits.py, image_templates.py
+- ✅ feedback.py, chat.py, ai_chatbot.py, messages.py, image_search.py, cart.py
 
 ### Frontend ✅ COMPLETE
 - `OrdersMap.js`: 2273 → 1902 lines (-371)
@@ -125,7 +148,7 @@
 ---
 
 ## Test Reports
-- Latest: `/app/test_reports/iteration_207.json` (13/13 passed - 100% success)
-- Previous: `/app/test_reports/iteration_206.json` (22/22 passed)
+- Latest: `/app/test_reports/iteration_208.json` (8/8 passed - 100% success)
+- Previous: `/app/test_reports/iteration_207.json` (13/13 passed)
 
-*Last Updated: December 2025 - Phase 39 Complete (Centralized datetime_helpers)*
+*Last Updated: December 2025 - Phase 39 Complete (42 files refactored with centralized datetime_helpers)*
