@@ -5,7 +5,7 @@
 
 ## Architecture
 - **Frontend**: React.js
-- **Backend**: FastAPI (Python)
+- **Backend**: FastAPI (Python)  
 - **Database**: MongoDB
 - **Authentication**: JWT + OTP
 
@@ -22,17 +22,16 @@
 - Created `require_delivery_user` dependency
 - **Size**: 4435 → 4248 lines (-187)
 
-### admin.py (IN PROGRESS)
+### admin.py (IN PROGRESS - 60% Complete)
 - ✅ Added `get_now()` helper function
 - ✅ Added `insert_notification()` helper (replaced 20 usages)
-- ✅ Added `require_admin_user` dependency
-- ✅ Added `require_main_admin` dependency
-- ✅ Replaced 16 permission checks with dependencies
-- **Remaining**: 59 manual permission checks
-- **Size**: 4751 → 4662 lines (-89)
+- ✅ Added `require_admin_user` dependency (26 endpoints)
+- ✅ Added `require_main_admin` dependency (2 endpoints)
+- **Remaining**: 49 manual permission checks
+- **Size**: 4751 → 4632 lines (-119)
 
 ### Frontend ✅ COMPLETE
-- `OrdersMap.js`: 2273 → 1902 lines
+- `OrdersMap.js`: 2273 → 1902 lines (-371)
 - Fixed GPS button position in map (top-20)
 
 ---
@@ -41,9 +40,9 @@
 1. ✅ Phone number hidden behind icon
 2. ✅ Image upload X button + red/green colors
 3. ✅ Address text change
-4. ✅ Location button position (inside map - top-20)
+4. ✅ Location button position (inside map)
 5. ✅ Sham Cash character limit removed
-6. ✅ Password eye icon issue (z-10, pl-12)
+6. ✅ Password eye icon issue
 7. ✅ Admin API errors (return types fixed)
 
 ---
@@ -52,9 +51,18 @@
 | File | Original | Current | Saved |
 |------|----------|---------|-------|
 | `food_orders.py` | 4435 | 4248 | -187 |
-| `admin.py` | 4751 | 4662 | -89 |
+| `admin.py` | 4751 | 4632 | -119 |
 | `OrdersMap.js` | 2273 | 1902 | -371 |
-| **Total** | | | **-647** |
+| **Total** | | | **-677** |
+
+---
+
+## Dependencies Created
+| Dependency | File | Usage Count |
+|------------|------|-------------|
+| `require_admin_user` | admin.py | 26 |
+| `require_main_admin` | admin.py | 2 |
+| `require_delivery_user` | food_orders.py | 23 |
 
 ---
 
@@ -62,12 +70,11 @@
 
 ### P0 - Critical
 - [x] Add admin dependencies
-- [ ] Replace remaining 59 permission checks with dependencies
+- [ ] Replace remaining 49 permission checks
 
 ### P1 - High Priority
 - [ ] Activate real SMS OTP for Syrian numbers (mocked to `123456`)
 - [ ] Activate Sham Cash payment gateway (mocked)
-- [ ] Add granular permissions for sub-admins
 
 ### P5 - Future Tasks
 - [ ] Agent/Remittance Office top-up system
@@ -86,6 +93,6 @@
 ---
 
 ## Test Reports
-- Latest: `/app/test_reports/iteration_204.json` (24/24 passed)
+- Latest: `/app/test_reports/iteration_205.json` (24/24 passed)
 
 *Last Updated: December 2025*
