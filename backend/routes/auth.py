@@ -43,6 +43,20 @@ auth_logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
+# ============== Authorization Dependencies ==============
+
+async def require_seller_user(user: dict = Depends(get_current_user)) -> dict:
+    """التحقق من أن المستخدم بائع"""
+    if user["user_type"] != "seller":
+        raise HTTPException(status_code=403, detail="للبائعين فقط")
+    return user
+
+async def require_any_seller_user(user: dict = Depends(get_current_user)) -> dict:
+    """التحقق من أن المستخدم بائع عادي أو بائع طعام"""
+    if user["user_type"] not in ["seller", "food_seller"]:
+        raise HTTPException(status_code=403, detail="للبائعين فقط")
+    return user
+
 
 # ============== دوال مساعدة للأجهزة ==============
 
@@ -1250,10 +1264,7 @@ async def lookup_user_by_phone(phone: str, user: dict = Depends(get_current_user
 seller_router = APIRouter(prefix="/seller", tags=["Seller"])
 
 @seller_router.post("/documents")
-async def upload_seller_documents(docs: SellerDocuments, user: dict = Depends(get_current_user)) -> dict:
-    if user["user_type"] not in ["seller", "food_seller"]:
-        raise HTTPException(status_code=403, detail="للبائعين فقط")
-    
+async def upload_seller_documents(docs: SellerDocuments, user: dict = Depends(require_any_seller_user)) -> dict:
     # التحقق من وجود مستندات سابقة
     existing = await db.seller_documents.find_one({"seller_id": user["id"]})
     if existing:
@@ -1613,11 +1624,8 @@ class PaymentAccountUpdate(BaseModel):
     is_default: bool = False
 
 @router.get("/seller/store-settings")
-async def get_store_settings(user: dict = Depends(get_current_user)) -> dict:
+async def get_store_settings(user: dict = Depends(require_seller_user)) -> dict:
     """جلب إعدادات المتجر للبائع"""
-    if user["user_type"] != "seller":
-        raise HTTPException(status_code=403, detail="للبائعين فقط")
-    
     seller = await db.users.find_one(
         {"id": user["id"]},
         {"_id": 0, "store_name": 1, "store_description": 1, "store_address": 1, "store_city": 1, "store_phone": 1, "city": 1, "phone": 1, "store_logo": 1, "store_latitude": 1, "store_longitude": 1}
@@ -1635,11 +1643,8 @@ async def get_store_settings(user: dict = Depends(get_current_user)) -> dict:
     }
 
 @router.put("/seller/store-settings")
-async def update_store_settings(settings: StoreSettingsUpdate, user: dict = Depends(get_current_user)) -> dict:
+async def update_store_settings(settings: StoreSettingsUpdate, user: dict = Depends(require_seller_user)) -> dict:
     """تحديث إعدادات المتجر للبائع"""
-    if user["user_type"] != "seller":
-        raise HTTPException(status_code=403, detail="للبائعين فقط")
-    
     update_data = {}
     if settings.store_name is not None:
         update_data["store_name"] = sanitize_input(settings.store_name)
@@ -1669,11 +1674,8 @@ async def update_store_settings(settings: StoreSettingsUpdate, user: dict = Depe
 # ============================================
 
 @router.get("/seller/payment-accounts")
-async def get_seller_payment_accounts(user: dict = Depends(get_current_user)) -> dict:
+async def get_seller_payment_accounts(user: dict = Depends(require_seller_user)) -> dict:
     """جلب حسابات الاستلام المالي للبائع"""
-    if user["user_type"] != "seller":
-        raise HTTPException(status_code=403, detail="للبائعين فقط")
-    
     accounts = await db.seller_payment_accounts.find(
         {"seller_id": user["id"]},
         {"_id": 0}
@@ -1682,11 +1684,8 @@ async def get_seller_payment_accounts(user: dict = Depends(get_current_user)) ->
     return accounts
 
 @router.post("/seller/payment-accounts")
-async def add_seller_payment_account(account: PaymentAccountUpdate, user: dict = Depends(get_current_user)) -> dict:
+async def add_seller_payment_account(account: PaymentAccountUpdate, user: dict = Depends(require_seller_user)) -> dict:
     """إضافة حساب استلام مالي جديد للبائع"""
-    if user["user_type"] != "seller":
-        raise HTTPException(status_code=403, detail="للبائعين فقط")
-    
     # التحقق من نوع الحساب
     valid_types = ["shamcash", "bank_account"]
     if account.type not in valid_types:
@@ -1725,11 +1724,8 @@ async def add_seller_payment_account(account: PaymentAccountUpdate, user: dict =
     return new_account
 
 @router.put("/seller/payment-accounts/{account_id}")
-async def update_seller_payment_account(account_id: str, account: PaymentAccountUpdate, user: dict = Depends(get_current_user)) -> dict:
+async def update_seller_payment_account(account_id: str, account: PaymentAccountUpdate, user: dict = Depends(require_seller_user)) -> dict:
     """تحديث حساب استلام مالي للبائع"""
-    if user["user_type"] != "seller":
-        raise HTTPException(status_code=403, detail="للبائعين فقط")
-    
     existing = await db.seller_payment_accounts.find_one({
         "id": account_id,
         "seller_id": user["id"]
@@ -1761,11 +1757,8 @@ async def update_seller_payment_account(account_id: str, account: PaymentAccount
     return {"message": "تم تحديث الحساب بنجاح"}
 
 @router.delete("/seller/payment-accounts/{account_id}")
-async def delete_seller_payment_account(account_id: str, user: dict = Depends(get_current_user)) -> dict:
+async def delete_seller_payment_account(account_id: str, user: dict = Depends(require_seller_user)) -> dict:
     """حذف حساب استلام مالي للبائع"""
-    if user["user_type"] != "seller":
-        raise HTTPException(status_code=403, detail="للبائعين فقط")
-    
     result = await db.seller_payment_accounts.delete_one({
         "id": account_id,
         "seller_id": user["id"]
@@ -1777,11 +1770,8 @@ async def delete_seller_payment_account(account_id: str, user: dict = Depends(ge
     return {"message": "تم حذف الحساب بنجاح"}
 
 @router.post("/seller/payment-accounts/{account_id}/default")
-async def set_default_payment_account(account_id: str, user: dict = Depends(get_current_user)) -> dict:
+async def set_default_payment_account(account_id: str, user: dict = Depends(require_seller_user)) -> dict:
     """تعيين حساب كافتراضي"""
-    if user["user_type"] != "seller":
-        raise HTTPException(status_code=403, detail="للبائعين فقط")
-    
     existing = await db.seller_payment_accounts.find_one({
         "id": account_id,
         "seller_id": user["id"]

@@ -24,6 +24,12 @@ async def require_main_admin(user: dict = Depends(get_current_user)) -> dict:
         raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
     return user
 
+async def require_any_seller_user(user: dict = Depends(get_current_user)) -> dict:
+    """التحقق من أن المستخدم بائع عادي أو بائع طعام"""
+    if user["user_type"] not in ["seller", "food_seller"]:
+        raise HTTPException(status_code=403, detail="للبائعين فقط")
+    return user
+
 
 
 

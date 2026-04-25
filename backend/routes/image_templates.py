@@ -17,6 +17,16 @@ load_dotenv()
 from helpers.datetime_helpers import get_now
 router = APIRouter(prefix="/templates", tags=["Image Templates"])
 
+
+# ============== Authorization Dependencies ==============
+
+async def require_any_seller_user(user: dict = Depends(get_current_user)) -> dict:
+    """التحقق من أن المستخدم بائع عادي أو بائع طعام"""
+    if user["user_type"] not in ["seller", "food_seller"]:
+        raise HTTPException(status_code=403, detail="للبائعين فقط")
+    return user
+
+
 MONGO_URL = os.environ.get("MONGO_URL", "mongodb://localhost:27017")
 DB_NAME = os.environ.get("DB_NAME", "trend_syria")
 EMERGENT_LLM_KEY = os.environ.get("EMERGENT_LLM_KEY")
@@ -528,11 +538,8 @@ async def apply_ai_template(
 
 
 @router.get("/check-balance")
-async def check_ai_balance(user: dict = Depends(get_current_user)) -> dict:
+async def check_ai_balance(user: dict = Depends(require_any_seller_user)) -> dict:
     """التحقق من رصيد البائع للصور AI"""
-    if user["user_type"] not in ["seller", "food_seller"]:
-        raise HTTPException(status_code=403, detail="للبائعين فقط")
-    
     seller = await db.users.find_one({"phone": user["phone"]}, {"_id": 0, "wallet_balance": 1})
     
     balance = seller.get("wallet_balance", 0) if seller else 0

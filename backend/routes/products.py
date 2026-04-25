@@ -22,6 +22,12 @@ async def require_admin_user(user: dict = Depends(get_current_user)) -> dict:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
     return user
 
+async def require_seller_user(user: dict = Depends(get_current_user)) -> dict:
+    """التحقق من أن المستخدم بائع"""
+    if user["user_type"] != "seller":
+        raise HTTPException(status_code=403, detail="للبائعين فقط")
+    return user
+
 
 
 # الفئات المتاحة
@@ -98,9 +104,7 @@ async def get_categories() -> dict:
     return categories_from_db
 
 @router.post("")
-async def create_product(product: ProductCreate, user: dict = Depends(get_current_user)) -> dict:
-    if user["user_type"] != "seller":
-        raise HTTPException(status_code=403, detail="للبائعين فقط")
+async def create_product(product: ProductCreate, user: dict = Depends(require_seller_user)) -> dict:
     if not user.get("is_approved"):
         raise HTTPException(status_code=403, detail="حسابك غير مفعل بعد")
     
@@ -988,10 +992,7 @@ async def answer_question(product_id: str, question_id: str, a: ProductAnswer, u
 # ============== Seller Products ==============
 
 @router.get("/seller/my-products")
-async def get_seller_products(user: dict = Depends(get_current_user)) -> dict:
-    if user["user_type"] != "seller":
-        raise HTTPException(status_code=403, detail="للبائعين فقط")
-    
+async def get_seller_products(user: dict = Depends(require_seller_user)) -> dict:
     # ترتيب من الأحدث للأقدم وإزالة الحد الأقصى
     products = await db.products.find(
         {"seller_id": user["id"]}, 

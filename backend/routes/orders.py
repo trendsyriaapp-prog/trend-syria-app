@@ -16,6 +16,15 @@ from helpers.datetime_helpers import get_now
 
 router = APIRouter(tags=["Orders"])
 
+# ============== Authorization Dependencies ==============
+
+async def require_seller_user(user: dict = Depends(get_current_user)) -> dict:
+    """التحقق من أن المستخدم بائع"""
+    if user["user_type"] != "seller":
+        raise HTTPException(status_code=403, detail="للبائعين فقط")
+    return user
+
+
 # ============== دالة استخراج الاسم الأول ==============
 
 def get_first_name(full_name: str) -> str:
@@ -749,11 +758,8 @@ async def update_delivery_note(order_id: str, note: CustomerNoteUpdate, user: di
 # ============== Seller Order Management ==============
 
 @router.get("/orders/seller/my-orders")
-async def get_seller_orders(user: dict = Depends(get_current_user)) -> dict:
+async def get_seller_orders(user: dict = Depends(require_seller_user)) -> dict:
     """جلب جميع طلبات البائع"""
-    if user["user_type"] != "seller":
-        raise HTTPException(status_code=403, detail="للبائعين فقط")
-    
     seller_id = user["id"]
     
     # البحث عن الطلبات حيث seller_id مطابق أو في items
@@ -770,11 +776,8 @@ async def get_seller_orders(user: dict = Depends(get_current_user)) -> dict:
     return orders
 
 @router.post("/orders/{order_id}/seller/confirm")
-async def seller_confirm_order(order_id: str, user: dict = Depends(get_current_user)) -> dict:
+async def seller_confirm_order(order_id: str, user: dict = Depends(require_seller_user)) -> dict:
     """البائع يؤكد استلام الطلب"""
-    if user["user_type"] != "seller":
-        raise HTTPException(status_code=403, detail="للبائعين فقط")
-    
     order = await db.orders.find_one({"id": order_id})
     if not order:
         raise HTTPException(status_code=404, detail="الطلب غير موجود")
@@ -822,11 +825,8 @@ async def seller_confirm_order(order_id: str, user: dict = Depends(get_current_u
     return {"message": "تم تأكيد الطلب"}
 
 @router.post("/orders/{order_id}/seller/preparing")
-async def seller_preparing_order(order_id: str, user: dict = Depends(get_current_user)) -> dict:
+async def seller_preparing_order(order_id: str, user: dict = Depends(require_seller_user)) -> dict:
     """البائع يبدأ تحضير الطلب"""
-    if user["user_type"] != "seller":
-        raise HTTPException(status_code=403, detail="للبائعين فقط")
-    
     order = await db.orders.find_one({"id": order_id})
     if not order:
         raise HTTPException(status_code=404, detail="الطلب غير موجود")
@@ -1034,11 +1034,8 @@ async def verify_product_pickup_code(order_id: str, data: VerifyProductPickupCod
     }
 
 @router.get("/orders/{order_id}/seller/pickup-code")
-async def get_seller_pickup_code(order_id: str, user: dict = Depends(get_current_user)) -> dict:
+async def get_seller_pickup_code(order_id: str, user: dict = Depends(require_seller_user)) -> dict:
     """البائع يحصل على كود الاستلام لإعطائه للسائق"""
-    if user["user_type"] != "seller":
-        raise HTTPException(status_code=403, detail="للبائعين فقط")
-    
     order = await db.orders.find_one({"id": order_id})
     if not order:
         raise HTTPException(status_code=404, detail="الطلب غير موجود")
@@ -1773,11 +1770,8 @@ async def delivery_complete(order_id: str, delivery_photo: Optional[str] = None,
 # ============== Seller Commission Info ==============
 
 @router.get("/seller/commission")
-async def get_seller_commission_info(user: dict = Depends(get_current_user)) -> dict:
+async def get_seller_commission_info(user: dict = Depends(require_seller_user)) -> dict:
     """جلب معلومات العمولة للبائع"""
-    if user["user_type"] != "seller":
-        raise HTTPException(status_code=403, detail="للبائعين فقط")
-    
     # جلب منتجات البائع لتحديد الفئات
     products = await db.products.find(
         {"seller_id": user["id"]},
