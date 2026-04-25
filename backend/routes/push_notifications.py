@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 import uuid
 
 from core.database import db, get_current_user
+from helpers.datetime_helpers import get_now
 from services.firebase_push import (
     send_push_to_multiple,
     send_push_to_topic,
@@ -51,7 +52,7 @@ async def register_push_token(
             # تحديث آخر استخدام
             await db.push_tokens.update_one(
                 {"_id": existing["_id"]},
-                {"$set": {"last_used": datetime.now(timezone.utc).isoformat()}}
+                {"$set": {"last_used": get_now()}}
             )
             return {"success": True, "message": "Token already registered"}
         
@@ -71,8 +72,8 @@ async def register_push_token(
             "user_type": user.get("user_type", "customer"),
             "token": data.token,
             "device_type": data.device_type,
-            "created_at": datetime.now(timezone.utc).isoformat(),
-            "last_used": datetime.now(timezone.utc).isoformat(),
+            "created_at": get_now(),
+            "last_used": get_now(),
             "is_active": True
         }
         

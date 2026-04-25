@@ -7,6 +7,7 @@ import uuid
 from typing import Optional
 
 from core.database import db, get_current_user
+from helpers.datetime_helpers import get_now
 
 router = APIRouter(prefix="/notifications", tags=["Notifications"])
 
@@ -149,7 +150,7 @@ async def mark_notification_read(notification_id: str, user: dict = Depends(get_
         {"$set": {
             "user_id": user["id"],
             "notification_id": notification_id,
-            "read_at": datetime.now(timezone.utc).isoformat()
+            "read_at": get_now()
         }},
         upsert=True
     )
@@ -192,7 +193,7 @@ async def mark_all_notifications_read(
     
     # إنشاء جميع سجلات القراءة دفعة واحدة
     if notifications:
-        now = datetime.now(timezone.utc).isoformat()
+        now = get_now()
         # استخدام bulk_write للتحديث الدفعي
         from pymongo import UpdateOne
         operations = []
@@ -227,7 +228,7 @@ async def save_fcm_token(data: FCMTokenRequest, user: dict = Depends(get_current
         {"$set": {
             "user_id": user["id"],
             "fcm_token": data.fcm_token,
-            "updated_at": datetime.now(timezone.utc).isoformat()
+            "updated_at": get_now()
         }},
         upsert=True
     )
@@ -325,7 +326,7 @@ async def send_push_notification_admin(data: PushNotificationRequest, user: dict
             "body": data.body,
             "target": data.target,
             "results": results,
-            "created_at": datetime.now(timezone.utc).isoformat()
+            "created_at": get_now()
         })
         
         return {"message": "تم إرسال الإشعارات", **results}

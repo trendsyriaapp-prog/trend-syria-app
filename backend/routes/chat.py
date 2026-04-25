@@ -7,6 +7,7 @@ from pydantic import BaseModel
 import uuid
 
 from core.database import db, get_current_user, create_notification_for_user
+from helpers.datetime_helpers import get_now
 from services.websocket_manager import manager
 
 router = APIRouter(prefix="/chat", tags=["Chat"])
@@ -187,7 +188,7 @@ async def mark_messages_read(req: MarkReadRequest, user: dict = Depends(get_curr
             "recipient_id": user["id"],
             "is_read": False
         },
-        {"$set": {"is_read": True, "read_at": datetime.now(timezone.utc).isoformat()}}
+        {"$set": {"is_read": True, "read_at": get_now()}}
     )
     
     return {"status": "ok"}

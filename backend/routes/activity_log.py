@@ -7,6 +7,7 @@ from typing import Optional
 import uuid
 
 from core.database import db, get_current_user
+from helpers.datetime_helpers import get_now
 
 router = APIRouter(prefix="/activity-log", tags=["Activity Log"])
 
@@ -36,7 +37,7 @@ async def log_admin_activity(
         "target_name": target_name,
         "details": details,
         "ip_address": ip_address,
-        "created_at": datetime.now(timezone.utc).isoformat()
+        "created_at": get_now()
     }
     
     await db.admin_activity_logs.insert_one(log_entry)

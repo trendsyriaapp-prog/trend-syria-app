@@ -8,6 +8,7 @@ from typing import Optional
 import uuid
 
 from core.database import db, get_current_user
+from helpers.datetime_helpers import get_now
 
 router = APIRouter(prefix="/settings", tags=["Settings"])
 
@@ -46,7 +47,7 @@ async def get_platform_settings(user: dict = Depends(get_current_user)) -> dict:
             },
             "free_shipping_threshold": 150000,
             "low_stock_threshold": 5,
-            "created_at": datetime.now(timezone.utc).isoformat()
+            "created_at": get_now()
         }
         await db.platform_settings.insert_one(settings)
         settings.pop("_id", None)
@@ -128,7 +129,7 @@ async def update_withdrawal_limits(
             "$set": {
                 "min_seller_withdrawal": min_seller,
                 "min_delivery_withdrawal": min_delivery,
-                "updated_at": datetime.now(timezone.utc).isoformat(),
+                "updated_at": get_now(),
                 "updated_by": user["id"]
             }
         },
@@ -157,7 +158,7 @@ async def update_delivery_fees(
             "medium": fees.get("medium", 8000),
             "far": fees.get("far", 12000)
         },
-        "updated_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": get_now(),
         "updated_by": user["id"]
     }
     
@@ -186,7 +187,7 @@ async def update_delivery_system(
         raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
     
     update_data = {
-        "updated_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": get_now(),
         "updated_by": user["id"]
     }
     
@@ -227,7 +228,7 @@ async def update_free_shipping_threshold(
         {
             "$set": {
                 "free_shipping_threshold": threshold,
-                "updated_at": datetime.now(timezone.utc).isoformat(),
+                "updated_at": get_now(),
                 "updated_by": user["id"]
             }
         },
@@ -288,7 +289,7 @@ async def update_homepage_sections(
                 "free_shipping_enabled": sections.free_shipping_enabled,
                 "best_sellers_enabled": sections.best_sellers_enabled,
                 "new_arrivals_enabled": sections.new_arrivals_enabled,
-                "updated_at": datetime.now(timezone.utc).isoformat(),
+                "updated_at": get_now(),
                 "updated_by": user["id"]
             }
         },
@@ -343,7 +344,7 @@ async def update_featured_stores_settings(
             "$set": {
                 "featured_stores_enabled": settings.enabled,
                 "featured_store_ids": settings.store_ids,
-                "updated_at": datetime.now(timezone.utc).isoformat(),
+                "updated_at": get_now(),
                 "updated_by": user["id"]
             }
         },
@@ -403,7 +404,7 @@ async def update_food_free_delivery_threshold(
         {
             "$set": {
                 "food_free_delivery_threshold": threshold,
-                "updated_at": datetime.now(timezone.utc).isoformat(),
+                "updated_at": get_now(),
                 "updated_by": user["id"]
             }
         },
@@ -489,7 +490,7 @@ async def update_product_badge_settings(
         "badge_types": settings.get("badge_types", {}),
         "rotation_speed": settings.get("rotation_speed", 3000),
         "colors": settings.get("colors", ["#3B82F6", "#10B981", "#8B5CF6", "#991B1B"]),
-        "updated_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": get_now(),
         "updated_by": user["id"]
     }
     
@@ -564,7 +565,7 @@ async def update_global_free_shipping(
         "applies_to": promo.applies_to,
         "end_date": promo.end_date,
         "message": promo.message,
-        "updated_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": get_now(),
         "updated_by": user["id"]
     }
     
@@ -624,7 +625,7 @@ async def update_distance_delivery_settings(
                     "enabled_for_food": settings.enabled_for_food,
                     "enabled_for_products": settings.enabled_for_products
                 },
-                "updated_at": datetime.now(timezone.utc).isoformat(),
+                "updated_at": get_now(),
                 "updated_by": user["id"]
             }
         },
@@ -694,7 +695,7 @@ async def update_driver_km_settings(
                     "price_per_km": settings.price_per_km,
                     "min_fee": settings.min_fee
                 },
-                "updated_at": datetime.now(timezone.utc).isoformat(),
+                "updated_at": get_now(),
                 "updated_by": user["id"]
             }
         },
@@ -743,7 +744,7 @@ async def update_driver_earnings_settings(
                     "price_per_km": settings.price_per_km,
                     "min_fee": settings.min_fee
                 },
-                "updated_at": datetime.now(timezone.utc).isoformat(),
+                "updated_at": get_now(),
                 "updated_by": user["id"]
             }
         },
@@ -786,7 +787,7 @@ async def update_delivery_wait_time(
         {
             "$set": {
                 "delivery_wait_time_minutes": wait_time_minutes,
-                "updated_at": datetime.now(timezone.utc).isoformat(),
+                "updated_at": get_now(),
                 "updated_by": user["id"]
             }
         },
@@ -868,7 +869,7 @@ async def update_smart_order_limits(
                     "priority_timeout_seconds": limits.priority_timeout_seconds,
                     "enable_smart_priority": limits.enable_smart_priority
                 },
-                "updated_at": datetime.now(timezone.utc).isoformat(),
+                "updated_at": get_now(),
                 "updated_by": user["id"]
             }
         },
@@ -902,7 +903,7 @@ async def update_low_stock_threshold(
         {
             "$set": {
                 "low_stock_threshold": threshold,
-                "updated_at": datetime.now(timezone.utc).isoformat(),
+                "updated_at": get_now(),
                 "updated_by": user["id"]
             }
         },
@@ -1010,7 +1011,7 @@ async def update_performance_levels(
                     "silver_max": levels.silver_max,
                     "gold_max": levels.gold_max
                 },
-                "updated_at": datetime.now(timezone.utc).isoformat(),
+                "updated_at": get_now(),
                 "updated_by": user["id"]
             }
         },
@@ -1053,7 +1054,7 @@ async def update_working_hours(
                     "end_hour": hours.end_hour,
                     "is_enabled": hours.is_enabled
                 },
-                "updated_at": datetime.now(timezone.utc).isoformat(),
+                "updated_at": get_now(),
                 "updated_by": user["id"]
             }
         },
@@ -1099,7 +1100,7 @@ async def update_leaderboard_rewards(
                     "second": rewards.second,
                     "third": rewards.third
                 },
-                "updated_at": datetime.now(timezone.utc).isoformat(),
+                "updated_at": get_now(),
                 "updated_by": user["id"]
             }
         },
@@ -1144,7 +1145,7 @@ async def update_order_limits(
             "$set": {
                 "max_food_orders_per_driver": limits.max_food_orders_per_driver,
                 "food_orders_max_distance_km": limits.food_orders_max_distance_km,
-                "updated_at": datetime.now(timezone.utc).isoformat(),
+                "updated_at": get_now(),
                 "updated_by": user["id"]
             }
         },
@@ -1222,7 +1223,7 @@ async def update_food_delivery_limits(
                     "cold_dry_limit": limits.cold_dry_limit
                 },
                 "food_orders_max_distance_km": limits.max_distance_km,
-                "updated_at": datetime.now(timezone.utc).isoformat(),
+                "updated_at": get_now(),
                 "updated_by": user["id"]
             }
         },
@@ -1268,7 +1269,7 @@ async def update_food_delivery_fee(
         {
             "$set": {
                 "food_delivery_fee": fee.delivery_fee,
-                "updated_at": datetime.now(timezone.utc).isoformat(),
+                "updated_at": get_now(),
                 "updated_by": user["id"]
             }
         },
@@ -1317,7 +1318,7 @@ async def update_store_customer_distance(
         {
             "$set": {
                 "max_store_customer_distance_km": distance.max_distance_km,
-                "updated_at": datetime.now(timezone.utc).isoformat(),
+                "updated_at": get_now(),
                 "updated_by": user["id"]
             }
         },
@@ -1364,7 +1365,7 @@ async def update_weather_surcharge(
     if surcharge.amount < 0 or surcharge.amount > 50000:
         raise HTTPException(status_code=400, detail="المبلغ يجب أن يكون بين 0 و 50,000 ل.س")
     
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     # تحديث الإعدادات
     await db.platform_settings.update_one(
@@ -1607,7 +1608,7 @@ async def update_surge_pricing(
     if data.multiplier > 5.0:
         raise HTTPException(status_code=400, detail="المضاعف لا يمكن أن يتجاوز 5.0 (500%)")
     
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     await db.platform_settings.update_one(
         {"id": "surge_pricing"},
@@ -1796,7 +1797,7 @@ async def update_driver_cancel_settings(
                     "lookback_orders": data.lookback_orders,
                     "warning_threshold": data.warning_threshold,
                     "suspension_threshold": data.suspension_threshold,
-                    "updated_at": datetime.now(timezone.utc).isoformat(),
+                    "updated_at": get_now(),
                     "updated_by": user["id"]
                 }
             }
@@ -1977,7 +1978,7 @@ async def get_ticker_messages() -> dict:
             "id": "main",
             "messages": [],
             "is_enabled": True,
-            "created_at": datetime.now(timezone.utc).isoformat()
+            "created_at": get_now()
         }
         await db.ticker_messages.insert_one(ticker)
         ticker.pop("_id", None)
@@ -2022,7 +2023,7 @@ async def update_ticker_messages(data: dict, user: dict = Depends(get_current_us
             "$set": {
                 "messages": messages,
                 "is_enabled": is_enabled,
-                "updated_at": datetime.now(timezone.utc).isoformat()
+                "updated_at": get_now()
             }
         },
         upsert=True
@@ -2105,7 +2106,7 @@ async def get_image_settings(user: dict = Depends(get_current_user)) -> dict:
             "enable_food_enhancement": True,
             "pro_image_cost": 0,  # مجاني حالياً
             "monthly_free_limit": 50,  # حد Remove.bg المجاني
-            "created_at": datetime.now(timezone.utc).isoformat()
+            "created_at": get_now()
         }
         await db.image_settings.insert_one(settings)
     
@@ -2152,7 +2153,7 @@ async def update_image_settings(
             "max_images_per_product": settings.max_images_per_product,
             "enable_pro_processing": settings.enable_pro_processing,
             "enable_food_enhancement": settings.enable_food_enhancement,
-            "updated_at": datetime.now(timezone.utc).isoformat()
+            "updated_at": get_now()
         }},
         upsert=True
     )
@@ -2189,7 +2190,7 @@ async def track_image_usage(image_type: str = "pro") -> None:
         {"month": current_month},
         {
             "$inc": {update_field: 1, "total_images": 1},
-            "$setOnInsert": {"created_at": datetime.now(timezone.utc).isoformat()}
+            "$setOnInsert": {"created_at": get_now()}
         },
         upsert=True
     )
@@ -2237,7 +2238,7 @@ async def update_customer_protection_settings(
     
     settings_data = data.dict()
     settings_data["id"] = "main"
-    settings_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+    settings_data["updated_at"] = get_now()
     settings_data["updated_by"] = user["id"]
     
     await db.customer_protection_settings.update_one(
@@ -2354,7 +2355,7 @@ async def create_business_category(category: BusinessCategoryCreate, user: dict 
         "description": category.description,
         "is_active": category.is_active,
         "order": category.order or 0,
-        "created_at": datetime.now(timezone.utc).isoformat(),
+        "created_at": get_now(),
         "created_by": user["id"]
     }
     
@@ -2378,7 +2379,7 @@ async def update_business_category(category_id: str, update_data: BusinessCatego
     if not update_dict:
         raise HTTPException(status_code=400, detail="لا توجد بيانات للتحديث")
     
-    update_dict["updated_at"] = datetime.now(timezone.utc).isoformat()
+    update_dict["updated_at"] = get_now()
     update_dict["updated_by"] = user["id"]
     
     await db.business_categories.update_one(
@@ -2455,7 +2456,7 @@ async def update_default_business_categories(user: dict = Depends(get_current_us
         {"id": "dairy", "name": "ألبان وأجبان", "icon": "🧀", "type": "food_seller", "order": 8, "requires_license": False},
     ]
     
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     all_categories = []
     
     for cat in seller_categories + food_categories:
@@ -2522,7 +2523,7 @@ async def init_default_business_categories(user: dict = Depends(get_current_user
         {"id": "dairy", "name": "ألبان وأجبان", "icon": "🧀", "type": "food_seller", "order": 8, "requires_license": False},
     ]
     
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     all_categories = []
     
     for cat in seller_categories + food_categories:
@@ -2630,7 +2631,7 @@ async def update_allowed_regions(
     if user["user_type"] != "admin":
         raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
     
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     update_data = {
         "key": "allowed_regions",
@@ -2679,7 +2680,7 @@ async def add_allowed_city(
         "regions": regions
     })
     
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     await db.settings.update_one(
         {"key": "allowed_regions"},
@@ -2726,7 +2727,7 @@ async def add_region_to_city(
     if not city_found:
         raise HTTPException(status_code=404, detail="المحافظة غير موجودة")
     
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     await db.settings.update_one(
         {"key": "allowed_regions"},
@@ -2764,7 +2765,7 @@ async def remove_allowed_city(
     if len(new_cities) == len(cities):
         raise HTTPException(status_code=404, detail="المحافظة غير موجودة")
     
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     await db.settings.update_one(
         {"key": "allowed_regions"},
@@ -2809,7 +2810,7 @@ async def remove_region_from_city(
     if not region_found:
         raise HTTPException(status_code=404, detail="المنطقة غير موجودة")
     
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     await db.settings.update_one(
         {"key": "allowed_regions"},
@@ -2839,7 +2840,7 @@ async def toggle_region_restriction(
     if user["user_type"] != "admin":
         raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
     
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     await db.settings.update_one(
         {"key": "allowed_regions"},

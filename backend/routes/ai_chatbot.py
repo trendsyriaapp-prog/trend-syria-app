@@ -13,6 +13,7 @@ from dotenv import load_dotenv
 from emergentintegrations.llm.chat import LlmChat, UserMessage
 
 from core.database import db, get_current_user, get_optional_user
+from helpers.datetime_helpers import get_now
 
 load_dotenv()
 
@@ -139,7 +140,7 @@ async def send_ai_message(data: ChatMessage, user: dict = Depends(get_optional_u
         raise HTTPException(status_code=500, detail="مفتاح API غير متوفر")
     
     session_id = data.session_id or str(uuid.uuid4())
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     user_id = user["id"] if user else "guest_" + session_id[:8]
     
     # حفظ رسالة المستخدم في قاعدة البيانات
@@ -292,7 +293,7 @@ async def get_ai_chat_history(session_id: Optional[str] = None, user: dict = Dep
 async def request_human_support_from_ai(data: SupportRequest, user: dict = Depends(get_current_user)) -> dict:
     """طلب التحويل لموظف دعم بشري من الشات بوت الذكي"""
     
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     # جلب آخر رسائل المحادثة للسياق
     recent_messages = await db.ai_chat_messages.find(

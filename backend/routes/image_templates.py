@@ -14,6 +14,7 @@ from dotenv import load_dotenv
 # تحميل المتغيرات البيئية
 load_dotenv()
 
+from helpers.datetime_helpers import get_now
 router = APIRouter(prefix="/templates", tags=["Image Templates"])
 
 MONGO_URL = os.environ.get("MONGO_URL", "mongodb://localhost:27017")
@@ -493,7 +494,7 @@ async def apply_ai_template(
                         "type": "ai_image",
                         "amount": -AI_IMAGE_PRICE,
                         "description": f"صورة احترافية AI - قالب {template['name']}",
-                        "date": datetime.now(timezone.utc).isoformat()
+                        "date": get_now()
                     }
                 }
             }
@@ -505,7 +506,7 @@ async def apply_ai_template(
             "template_id": template_id,
             "cost": AI_IMAGE_PRICE,
             "method": method,
-            "created_at": datetime.now(timezone.utc).isoformat()
+            "created_at": get_now()
         })
         
         new_balance = wallet_balance - AI_IMAGE_PRICE

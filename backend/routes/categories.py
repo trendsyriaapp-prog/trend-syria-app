@@ -7,6 +7,7 @@ from typing import Optional, List
 from datetime import datetime, timezone
 import uuid
 from core.database import db, get_current_user
+from helpers.datetime_helpers import get_now
 
 router = APIRouter(prefix="/categories", tags=["Categories"])
 
@@ -76,7 +77,7 @@ async def init_default_categories() -> None:
     if count == 0:
         for cat in DEFAULT_CATEGORIES:
             cat["is_active"] = True
-            cat["created_at"] = datetime.now(timezone.utc).isoformat()
+            cat["created_at"] = get_now()
             # إضافة الحقول الجديدة إذا لم تكن موجودة
             if "parent_id" not in cat:
                 cat["parent_id"] = None
@@ -147,7 +148,7 @@ async def force_reset_categories_endpoint() -> dict:
     """إعادة ضبط الفئات"""
     try:
         await db.categories.delete_many({})
-        now = datetime.now(timezone.utc).isoformat()
+        now = get_now()
         cats = []
         for cat in DEFAULT_CATEGORIES:
             c = cat.copy()
@@ -192,7 +193,7 @@ async def create_category(category: CategoryCreate, user: dict = Depends(get_cur
         "color": category.color,
         "order": category.order,
         "is_active": category.is_active,
-        "created_at": datetime.now(timezone.utc).isoformat(),
+        "created_at": get_now(),
         "created_by": user["id"]
     }
     
@@ -213,7 +214,7 @@ async def update_category(category_id: str, category: CategoryUpdate, user: dict
         raise HTTPException(status_code=404, detail="الفئة غير موجودة")
     
     update_data = {k: v for k, v in category.dict().items() if v is not None}
-    update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+    update_data["updated_at"] = get_now()
     update_data["updated_by"] = user["id"]
     
     await db.categories.update_one({"id": category_id}, {"$set": update_data})
@@ -257,7 +258,7 @@ async def toggle_category(category_id: str, user: dict = Depends(get_current_use
     new_status = not existing.get("is_active", True)
     await db.categories.update_one(
         {"id": category_id}, 
-        {"$set": {"is_active": new_status, "updated_at": datetime.now(timezone.utc).isoformat()}}
+        {"$set": {"is_active": new_status, "updated_at": get_now()}}
     )
     
     # حذف الكاش
@@ -315,7 +316,7 @@ async def suggest_category(suggestion: CategorySuggestion, user: dict = Depends(
     if pending:
         raise HTTPException(status_code=400, detail="يوجد اقتراح مشابه قيد المراجعة")
     
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     new_suggestion = {
         "id": str(uuid.uuid4()),
@@ -394,7 +395,7 @@ async def approve_suggestion(suggestion_id: str, user: dict = Depends(get_curren
     if suggestion["status"] != "pending":
         raise HTTPException(status_code=400, detail="هذا الاقتراح تمت معالجته مسبقاً")
     
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     # إنشاء التصنيف الجديد
     category_id = suggestion.get("name_en", "").lower().replace(" ", "_") or str(uuid.uuid4())[:8]
@@ -464,7 +465,7 @@ async def reject_suggestion(suggestion_id: str, reason: Optional[str] = None, us
     if suggestion["status"] != "pending":
         raise HTTPException(status_code=400, detail="هذا الاقتراح تمت معالجته مسبقاً")
     
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     # تحديث حالة الاقتراح
     await db.category_suggestions.update_one(

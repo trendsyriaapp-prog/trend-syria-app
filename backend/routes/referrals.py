@@ -7,6 +7,7 @@ import uuid
 import secrets
 
 from core.database import db, get_current_user
+from helpers.datetime_helpers import get_now
 
 router = APIRouter(prefix="/referrals", tags=["Referrals"])
 
@@ -35,7 +36,7 @@ async def get_or_create_referral_code(user_id: str, user_name: str) -> str:
         if not await db.referral_codes.find_one({"code": code}):
             break
     
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     referral_doc = {
         "id": str(uuid.uuid4()),
@@ -160,7 +161,7 @@ async def apply_referral(data: dict, user: dict = Depends(get_current_user)) -> 
     if referral_code["user_id"] == user["id"]:
         raise HTTPException(status_code=400, detail="لا يمكنك استخدام كود الإحالة الخاص بك")
     
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     # جلب إعدادات المكافآت
     settings = await db.platform_settings.find_one({"id": "referral"}, {"_id": 0})
@@ -262,7 +263,7 @@ async def process_referral_reward(user_id: str, order_total: float) -> None:
     if order_total < min_order:
         return None
     
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     # تحديث حالة الإحالة
     await db.referrals.update_one(
@@ -396,7 +397,7 @@ async def update_referral_settings(data: dict, user: dict = Depends(get_current_
     ]
     
     update = {k: v for k, v in data.items() if k in allowed_fields}
-    update["updated_at"] = datetime.now(timezone.utc).isoformat()
+    update["updated_at"] = get_now()
     update["updated_by"] = user["id"]
     
     await db.platform_settings.update_one(
@@ -451,7 +452,7 @@ async def send_referral_reminder(user: dict = Depends(get_current_user)) -> dict
         {"_id": 0, "id": 1}
     ).to_list(length=10000)
     
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     # إنشاء الإشعارات
     notifications = []
@@ -540,7 +541,7 @@ async def send_referral_to_inactive_users(user: dict = Depends(get_current_user)
     
     inactive_users = await db.users.aggregate(pipeline).to_list(length=5000)
     
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     # إنشاء الإشعارات
     notifications = []

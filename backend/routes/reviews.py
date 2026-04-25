@@ -7,6 +7,7 @@ from pydantic import BaseModel
 import uuid
 
 from core.database import db, get_current_user
+from helpers.datetime_helpers import get_now
 from models.schemas import ReviewCreate
 
 router = APIRouter(prefix="/reviews", tags=["Reviews"])
@@ -41,7 +42,7 @@ async def create_review(review: ReviewCreate, user: dict = Depends(get_current_u
         "rating": review.rating,
         "comment": review.comment,
         "images": review.images or [],
-        "created_at": datetime.now(timezone.utc).isoformat()
+        "created_at": get_now()
     }
     await db.reviews.insert_one(review_doc)
     
@@ -86,7 +87,7 @@ async def add_seller_reply(review_id: str, data: SellerReplyCreate, user: dict =
         {"id": review_id},
         {"$set": {
             "seller_reply": data.reply,
-            "seller_reply_at": datetime.now(timezone.utc).isoformat(),
+            "seller_reply_at": get_now(),
             "seller_name": user.get("store_name", user.get("full_name", "البائع"))
         }}
     )

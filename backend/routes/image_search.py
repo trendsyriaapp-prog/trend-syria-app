@@ -14,6 +14,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from core.database import db, get_current_user
+from helpers.datetime_helpers import get_now
 
 router = APIRouter(prefix="/image-search", tags=["Image Search"])
 logger = logging.getLogger(__name__)
@@ -316,7 +317,7 @@ async def save_image_search(
         "id": str(uuid.uuid4()),
         "user_id": user["id"],
         "image_preview": data.image_base64[:100] + "...",  # حفظ جزء من الصورة فقط
-        "created_at": datetime.now(timezone.utc).isoformat()
+        "created_at": get_now()
     }
     
     await db.image_searches.insert_one(search_record)

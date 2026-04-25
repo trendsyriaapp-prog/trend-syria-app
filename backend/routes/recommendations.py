@@ -6,6 +6,7 @@ from datetime import datetime, timezone, timedelta
 import secrets
 
 from core.database import db, get_current_user
+from helpers.datetime_helpers import get_now
 
 router = APIRouter(prefix="/recommendations", tags=["Recommendations"])
 
@@ -256,7 +257,7 @@ async def track_product_view(product_id: str, user: dict = Depends(get_current_u
     await db.product_views.insert_one({
         "user_id": user["id"],
         "product_id": product_id,
-        "viewed_at": datetime.now(timezone.utc).isoformat()
+        "viewed_at": get_now()
     })
     
     return {"message": "تم التسجيل"}

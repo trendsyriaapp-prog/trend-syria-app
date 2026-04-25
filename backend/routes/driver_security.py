@@ -8,6 +8,7 @@ from typing import Optional
 import uuid
 
 from core.database import db, get_current_user, create_notification_for_user
+from helpers.datetime_helpers import get_now
 
 router = APIRouter(prefix="/driver/security", tags=["Driver Security Deposit"])
 
@@ -58,7 +59,7 @@ async def get_driver_security_deposit(driver_id: str) -> dict:
             "required_amount": 0,
             "status": "pending",  # pending, partial, complete, refunded
             "transactions": [],
-            "created_at": datetime.now(timezone.utc).isoformat()
+            "created_at": get_now()
         }
         await db.driver_security_deposits.insert_one(deposit)
         deposit.pop("_id", None)
@@ -92,7 +93,7 @@ async def process_auto_deduction(driver_id: str) -> dict:
     if deduct_amount <= 0:
         return None
     
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     # خصم من المحفظة
     await db.wallets.update_one(
@@ -238,7 +239,7 @@ async def submit_deposit(data: DepositRequest, user: dict = Depends(get_current_
             detail=f"المبلغ المتبقي هو {remaining:,} ل.س فقط"
         )
     
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     # إنشاء طلب إيداع (ينتظر موافقة الأدمن إذا لم يكن نقداً)
     deposit_request = {
@@ -334,7 +335,7 @@ async def request_resignation(data: ResignationRequest, user: dict = Depends(get
     else:
         refund_note = "سيتم استرداد التأمين بعد موافقة الإدارة"
     
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     # إنشاء طلب استقالة
     resignation_request = {
@@ -439,7 +440,7 @@ async def approve_deposit(request_id: str, user: dict = Depends(get_current_user
     if request["status"] != "pending":
         raise HTTPException(status_code=400, detail="تمت معالجة هذا الطلب مسبقاً")
     
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     driver_id = request["driver_id"]
     amount = request["amount"]
     
@@ -526,7 +527,7 @@ async def reject_deposit(request_id: str, reason: str = "", user: dict = Depends
     if request["status"] != "pending":
         raise HTTPException(status_code=400, detail="تمت معالجة هذا الطلب مسبقاً")
     
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     await db.security_deposit_requests.update_one(
         {"id": request_id},
@@ -581,7 +582,7 @@ async def approve_resignation(request_id: str, user: dict = Depends(get_current_
     if request["status"] != "pending":
         raise HTTPException(status_code=400, detail="تمت معالجة هذا الطلب مسبقاً")
     
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     driver_id = request["driver_id"]
     refund_amount = request["refund_amount"]
     
@@ -667,7 +668,7 @@ async def update_security_settings(
                 "is_enabled": is_enabled,
                 "auto_deduct_from_earnings": auto_deduct,
                 "min_behavior_points_for_refund": min_behavior_points,
-                "updated_at": datetime.now(timezone.utc).isoformat(),
+                "updated_at": get_now(),
                 "updated_by": user["id"]
             }
         },
@@ -723,7 +724,7 @@ async def suspend_driver(driver_id: str, reason: str = "", user: dict = Depends(
     if not driver:
         raise HTTPException(status_code=404, detail="السائق غير موجود")
     
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     await db.users.update_one(
         {"id": driver_id},
@@ -810,7 +811,7 @@ async def delete_driver(driver_id: str, user: dict = Depends(get_current_user)) 
             detail=f"لا يمكن حذف السائق - لديه {active_orders + active_food_orders} طلب نشط"
         )
     
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     # حفظ بيانات السائق في سجل الحذف
     await db.deleted_drivers.insert_one({

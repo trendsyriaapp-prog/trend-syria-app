@@ -7,6 +7,7 @@ import uuid
 import secrets
 
 from core.database import db, get_current_user, create_notification_for_user
+from helpers.datetime_helpers import get_now
 from routes.wallet import add_pending_to_wallet, confirm_pending_earnings
 
 router = APIRouter(prefix="/payment", tags=["Payment"])
@@ -239,7 +240,7 @@ async def checkout_order(
         "shamcash_phone": shamcash_phone,
         "status": "pending_payment",
         "delivery_status": "pending",
-        "created_at": datetime.now(timezone.utc).isoformat()
+        "created_at": get_now()
     }
     
     await db.orders.insert_one(order)
@@ -251,7 +252,7 @@ async def checkout_order(
             "order_id": order_id,
             "phone": shamcash_phone,
             "otp": otp,
-            "expires_at": datetime.now(timezone.utc).isoformat(),
+            "expires_at": get_now(),
             "used": False
         })
         
@@ -311,7 +312,7 @@ async def verify_payment_otp(
         {
             "$set": {
                 "status": "paid",
-                "paid_at": datetime.now(timezone.utc).isoformat()
+                "paid_at": get_now()
             }
         }
     )
@@ -481,7 +482,7 @@ async def confirm_order_delivery(order_id: str, user: dict = Depends(get_current
             "$set": {
                 "delivery_status": "delivered",
                 "status": "completed",
-                "delivered_at": datetime.now(timezone.utc).isoformat()
+                "delivered_at": get_now()
             }
         }
     )

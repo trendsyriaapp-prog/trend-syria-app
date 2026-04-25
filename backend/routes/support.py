@@ -8,6 +8,7 @@ from pydantic import BaseModel
 import uuid
 
 from core.database import db, get_current_user, create_notification_for_user
+from helpers.datetime_helpers import get_now
 
 router = APIRouter(prefix="/support", tags=["Support Tickets"])
 
@@ -333,7 +334,7 @@ async def assign_ticket(
         {
             "$set": {
                 "assigned_to": assigned_id,
-                "updated_at": datetime.now(timezone.utc).isoformat()
+                "updated_at": get_now()
             }
         }
     )

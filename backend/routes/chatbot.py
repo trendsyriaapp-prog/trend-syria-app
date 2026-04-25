@@ -9,6 +9,7 @@ import uuid
 import re
 
 from core.database import db, get_current_user, create_notification_for_user
+from helpers.datetime_helpers import get_now
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 import jwt
 import os
@@ -342,7 +343,7 @@ async def send_message(data: ChatMessage, user: dict = Depends(get_optional_user
     """إرسال رسالة للشات بوت - متاح للجميع"""
     
     session_id = data.session_id or str(uuid.uuid4())
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     user_id = user["id"] if user else "guest_" + session_id[:8]
     
     # حفظ رسالة المستخدم
@@ -379,7 +380,7 @@ async def send_message(data: ChatMessage, user: dict = Depends(get_optional_user
 async def request_human_support(data: SupportRequest, user: dict = Depends(get_current_user)) -> dict:
     """طلب التحويل لموظف دعم بشري"""
     
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     # إنشاء طلب دعم
     support_request = {
@@ -497,7 +498,7 @@ async def update_support_request(request_id: str, status: str, user: dict = Depe
         {
             "$set": {
                 "status": status,
-                "updated_at": datetime.now(timezone.utc).isoformat(),
+                "updated_at": get_now(),
                 "updated_by": user["id"]
             }
         }
@@ -534,7 +535,7 @@ async def send_admin_reply(data: AdminReply, user: dict = Depends(get_current_us
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
     
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     # جلب بيانات التذكرة للحصول على session_id
     ticket = await db.support_requests.find_one({"id": data.ticket_id})
@@ -611,7 +612,7 @@ async def rate_support_experience(data: SupportRating, user: dict = Depends(get_
     if ticket.get("rating"):
         raise HTTPException(status_code=400, detail="تم تقييم هذه التذكرة مسبقاً")
     
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     # حفظ التقييم في التذكرة
     await db.support_requests.update_one(

@@ -8,6 +8,7 @@ from pydantic import BaseModel
 from typing import Optional
 
 from core.database import db, get_current_user
+from helpers.datetime_helpers import get_now
 
 router = APIRouter(prefix="/gifts", tags=["Gifts"])
 
@@ -63,7 +64,7 @@ async def send_gift(gift: GiftRequest, user: dict = Depends(get_current_user)) -
         "is_surprise": gift.is_surprise,  # هل الهدية مفاجأة؟
         "shipping_paid_by_sender": gift.pay_shipping,  # جديد: هل المرسل يدفع الشحن
         "status": "pending",  # pending, pending_address, completed, rejected
-        "created_at": datetime.now(timezone.utc).isoformat()
+        "created_at": get_now()
     }
     
     await db.gifts.insert_one(gift_doc)
@@ -78,7 +79,7 @@ async def send_gift(gift: GiftRequest, user: dict = Depends(get_current_user)) -
             "type": "gift_received",
             "data": {"gift_id": gift_id},
             "read": False,
-            "created_at": datetime.now(timezone.utc).isoformat()
+            "created_at": get_now()
         }
         await db.notifications.insert_one(notification)
     
@@ -169,7 +170,7 @@ async def accept_gift(gift_id: str, user: dict = Depends(get_current_user)) -> d
         {"$set": {
             "status": "pending_address",
             "recipient_id": user["id"],
-            "accepted_at": datetime.now(timezone.utc).isoformat()
+            "accepted_at": get_now()
         }}
     )
     
@@ -253,8 +254,8 @@ async def submit_gift_address(gift_id: str, address: GiftShippingAddress, user: 
         "gift_sender_id": gift["sender_id"],
         "gift_sender_name": gift.get("sender_name", "صديق"),  # اسم المرسل
         "gift_message": gift.get("message", ""),
-        "created_at": datetime.now(timezone.utc).isoformat(),
-        "updated_at": datetime.now(timezone.utc).isoformat()
+        "created_at": get_now(),
+        "updated_at": get_now()
     }
     
     await db.orders.insert_one(order)
@@ -266,7 +267,7 @@ async def submit_gift_address(gift_id: str, address: GiftShippingAddress, user: 
             "status": "completed",
             "shipping_address": shipping_address,
             "order_id": order_id,
-            "completed_at": datetime.now(timezone.utc).isoformat()
+            "completed_at": get_now()
         }}
     )
     
@@ -279,7 +280,7 @@ async def submit_gift_address(gift_id: str, address: GiftShippingAddress, user: 
         "type": "gift_completed",
         "data": {"gift_id": gift_id, "order_id": order_id},
         "read": False,
-        "created_at": datetime.now(timezone.utc).isoformat()
+        "created_at": get_now()
     }
     await db.notifications.insert_one(sender_notification)
     
@@ -292,7 +293,7 @@ async def submit_gift_address(gift_id: str, address: GiftShippingAddress, user: 
         "type": "gift_order_created",
         "data": {"gift_id": gift_id, "order_id": order_id},
         "read": False,
-        "created_at": datetime.now(timezone.utc).isoformat()
+        "created_at": get_now()
     }
     await db.notifications.insert_one(recipient_notification)
     
@@ -355,7 +356,7 @@ async def reject_gift(gift_id: str, user: dict = Depends(get_current_user)) -> d
         {"id": gift_id},
         {"$set": {
             "status": "rejected",
-            "rejected_at": datetime.now(timezone.utc).isoformat()
+            "rejected_at": get_now()
         }}
     )
     
@@ -368,7 +369,7 @@ async def reject_gift(gift_id: str, user: dict = Depends(get_current_user)) -> d
         "type": "gift_rejected",
         "data": {"gift_id": gift_id},
         "read": False,
-        "created_at": datetime.now(timezone.utc).isoformat()
+        "created_at": get_now()
     }
     await db.notifications.insert_one(sender_notification)
     

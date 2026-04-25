@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from core.database import db, get_current_user, create_notification_for_user
+from helpers.datetime_helpers import get_now
 from services.payment_providers import (
     payment_manager,
     PaymentProviderError
@@ -140,9 +141,9 @@ async def verify_payment(
                 "$set": {
                     "status": "paid",
                     "payment_status": "paid",
-                    "paid_at": datetime.now(timezone.utc).isoformat(),
+                    "paid_at": get_now(),
                     "payment_transaction_id": transaction_id,
-                    "payment_verified_at": datetime.now(timezone.utc).isoformat(),
+                    "payment_verified_at": get_now(),
                     "payment_sandbox": result.get("sandbox", False)
                 }
             }
@@ -283,7 +284,7 @@ async def verify_card_payment(
                     "$set": {
                         "status": "paid",
                         "payment_status": "paid",
-                        "paid_at": datetime.now(timezone.utc).isoformat(),
+                        "paid_at": get_now(),
                         "payment_session_id": session_id,
                         "payment_method": "bank_card"
                     }

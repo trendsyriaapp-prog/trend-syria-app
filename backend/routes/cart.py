@@ -5,6 +5,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from datetime import datetime, timezone
 
 from core.database import db, get_current_user
+from helpers.datetime_helpers import get_now
 from models.schemas import CartItem
 
 router = APIRouter(prefix="/cart", tags=["Cart"])
@@ -133,7 +134,7 @@ async def add_to_cart(item: CartItem, user: dict = Depends(get_current_user)) ->
                 "selected_size": item.selected_size,
                 "selected_weight": item.selected_weight
             }],
-            "created_at": datetime.now(timezone.utc).isoformat()
+            "created_at": get_now()
         })
     
     return {"message": "تمت الإضافة للسلة"}

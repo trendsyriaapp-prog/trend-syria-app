@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 import uuid
 
 from core.database import db, get_current_user
+from helpers.datetime_helpers import get_now
 from models.schemas import MessageCreate
 
 router = APIRouter(prefix="/messages", tags=["Messages"])
@@ -20,7 +21,7 @@ async def send_message(message: MessageCreate, user: dict = Depends(get_current_
         "content": message.content,
         "product_id": message.product_id,
         "is_read": False,
-        "created_at": datetime.now(timezone.utc).isoformat()
+        "created_at": get_now()
     }
     await db.messages.insert_one(msg_doc)
     return {"message": "تم إرسال الرسالة"}

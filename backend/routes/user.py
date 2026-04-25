@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 import uuid
 
 from core.database import db, get_current_user
+from helpers.datetime_helpers import get_now
 from models.schemas import AddressCreate, PaymentMethodCreate
 
 router = APIRouter(prefix="/user", tags=["User"])
@@ -48,7 +49,7 @@ async def create_address(address: AddressCreate, user: dict = Depends(get_curren
         "longitude": address.longitude,
         "address_details": address.address_details,
         "landmark": address.landmark,
-        "created_at": datetime.now(timezone.utc).isoformat()
+        "created_at": get_now()
     }
     await db.addresses.insert_one(address_doc)
     return {"id": address_id, "message": "تم إضافة العنوان بنجاح"}
@@ -137,7 +138,7 @@ async def create_payment_method(payment: PaymentMethodCreate, user: dict = Depen
         "phone": payment.phone,
         "holder_name": payment.holder_name,
         "is_default": is_default,
-        "created_at": datetime.now(timezone.utc).isoformat()
+        "created_at": get_now()
     }
     await db.payment_methods.insert_one(payment_doc)
     return {"id": payment_id, "message": "تم إضافة طريقة الدفع بنجاح"}
@@ -198,7 +199,7 @@ async def delete_my_account(user: dict = Depends(get_current_user)) -> dict:
     
     user_type = user.get("user_type")
     user_id = user["id"]
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     # التحقق من نوع المستخدم
     if user_type == "seller":

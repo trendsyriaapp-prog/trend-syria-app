@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
 from core.database import get_current_admin
+from helpers.datetime_helpers import get_now
 from core.rate_limiter import rate_limiter, RATE_LIMITS, SECURITY_ALERT_CONFIG
 
 router = APIRouter(prefix="/rate-limits", tags=["Rate Limits"])
@@ -167,7 +168,7 @@ async def test_security_alert(admin: dict = Depends(get_current_admin)) -> dict:
                 "severity": "🧪 تجريبي"
             },
             "user_id": admin["id"],
-            "created_at": datetime.now(timezone.utc).isoformat(),
+            "created_at": get_now(),
             "is_read": False
         }
         

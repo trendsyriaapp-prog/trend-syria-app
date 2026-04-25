@@ -8,6 +8,7 @@ from typing import Optional
 import uuid
 
 from core.database import db, get_current_user, create_notification_for_user
+from helpers.datetime_helpers import get_now
 
 # استيراد مزودي الدفع
 try:
@@ -37,7 +38,7 @@ async def get_wallet_balance(user: dict = Depends(get_current_user)) -> dict:
             "total_earned": 0,
             "total_withdrawn": 0,
             "total_topped_up": 0,  # إجمالي الشحن (للعملاء)
-            "created_at": datetime.now(timezone.utc).isoformat()
+            "created_at": get_now()
         }
         await db.wallets.insert_one(wallet)
         wallet.pop("_id", None)
@@ -151,7 +152,7 @@ async def request_topup(
         "bank_name": data.bank_name,
         "sender_name": data.sender_name,
         "status": "pending",  # pending, approved, failed, cancelled
-        "created_at": datetime.now(timezone.utc).isoformat()
+        "created_at": get_now()
     }
     
     await db.topup_requests.insert_one(topup_request)
@@ -192,7 +193,7 @@ async def cancel_topup(topup_id: str, user: dict = Depends(get_current_user)) ->
     
     await db.topup_requests.update_one(
         {"id": topup_id},
-        {"$set": {"status": "cancelled", "cancelled_at": datetime.now(timezone.utc).isoformat()}}
+        {"$set": {"status": "cancelled", "cancelled_at": get_now()}}
     )
     
     return {"message": "تم إلغاء طلب الشحن"}
@@ -272,7 +273,7 @@ async def verify_topup_payment(
             {
                 "$set": {
                     "status": "failed",
-                    "failed_at": datetime.now(timezone.utc).isoformat(),
+                    "failed_at": get_now(),
                     "failure_reason": failure_reason,
                     "attempted_transaction_id": data.transaction_id
                 }
@@ -298,7 +299,7 @@ async def verify_topup_payment(
             "total_earned": 0,
             "total_withdrawn": 0,
             "total_topped_up": 0,
-            "created_at": datetime.now(timezone.utc).isoformat()
+            "created_at": get_now()
         }
         await db.wallets.insert_one(wallet)
     
@@ -322,7 +323,7 @@ async def verify_topup_payment(
         {
             "$set": {
                 "status": "approved",
-                "approved_at": datetime.now(timezone.utc).isoformat(),
+                "approved_at": get_now(),
                 "transaction_id": data.transaction_id,
                 "payment_method": data.payment_method,
                 "verified_automatically": True,
@@ -341,7 +342,7 @@ async def verify_topup_payment(
         "description": f"شحن محفظة - {data.payment_method}",
         "reference_id": data.topup_id,
         "transaction_id": data.transaction_id,
-        "created_at": datetime.now(timezone.utc).isoformat()
+        "created_at": get_now()
     }
     await db.wallet_transactions.insert_one(transaction)
     
@@ -466,7 +467,7 @@ async def reject_topup(
         {
             "$set": {
                 "status": "rejected",
-                "rejected_at": datetime.now(timezone.utc).isoformat(),
+                "rejected_at": get_now(),
                 "rejected_by": user["id"],
                 "reject_reason": reason
             }
@@ -717,7 +718,7 @@ async def add_to_wallet(user_id: str, user_type: str, amount: float,
             "pending_balance": 0,
             "total_earned": 0,
             "total_withdrawn": 0,
-            "created_at": datetime.now(timezone.utc).isoformat()
+            "created_at": get_now()
         }
         await db.wallets.insert_one(wallet)
     
@@ -741,7 +742,7 @@ async def add_to_wallet(user_id: str, user_type: str, amount: float,
         "description": description,
         "order_id": order_id,
         "balance_after": wallet["balance"] + amount,
-        "created_at": datetime.now(timezone.utc).isoformat()
+        "created_at": get_now()
     }
     await db.wallet_transactions.insert_one(transaction)
     
@@ -760,7 +761,7 @@ async def add_pending_to_wallet(user_id: str, user_type: str, amount: float, ord
             "pending_balance": 0,
             "total_earned": 0,
             "total_withdrawn": 0,
-            "created_at": datetime.now(timezone.utc).isoformat()
+            "created_at": get_now()
         }
         await db.wallets.insert_one(wallet)
     
@@ -777,7 +778,7 @@ async def add_pending_to_wallet(user_id: str, user_type: str, amount: float, ord
         "amount": amount,
         "order_id": order_id,
         "status": "pending",
-        "created_at": datetime.now(timezone.utc).isoformat()
+        "created_at": get_now()
     })
 
 async def confirm_pending_earnings(order_id: str) -> dict:
@@ -798,7 +799,7 @@ async def confirm_pending_earnings(order_id: str) -> dict:
     pending_updates = []
     notifications = []
     
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     for record in pending_records:
         user_id = record["user_id"]

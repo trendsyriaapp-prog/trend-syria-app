@@ -9,6 +9,7 @@ import jwt
 import logging
 
 from core.database import db, get_current_user, JWT_SECRET, ALGORITHM
+from helpers.datetime_helpers import get_now
 from core.performance import cache
 from models.schemas import ProductCreate, ProductUpdate, ProductQuestion, ProductAnswer
 
@@ -149,7 +150,7 @@ async def create_product(product: ProductCreate, user: dict = Depends(get_curren
         "is_approved": False,
         "approval_status": "pending",
         "rejection_reason": None,
-        "created_at": datetime.now(timezone.utc).isoformat()
+        "created_at": get_now()
     }
     await db.products.insert_one(product_doc)
     
@@ -195,7 +196,7 @@ async def get_products(
                     "query": search.strip(),
                     "user_id": user_id,
                     "category": category,
-                    "created_at": datetime.now(timezone.utc).isoformat()
+                    "created_at": get_now()
                 })
         except Exception:
             pass  # لا نوقف البحث إذا فشل التسجيل
@@ -238,7 +239,7 @@ async def get_products(
         ]
     elif sort == "flash":
         # جلب منتجات الفلاش من جدول flash_sales النشط
-        now = datetime.now(timezone.utc).isoformat()
+        now = get_now()
         flash_sales = await db.flash_sales.find({
             "is_active": True,
             "start_time": {"$lte": now},
@@ -323,7 +324,7 @@ async def get_featured_products(limit: int = Query(default=8, le=20)) -> dict:
 @router.get("/flash-products")
 async def get_flash_products(limit: int = Query(default=10, le=20)) -> dict:
     """جلب منتجات المتجر المشمولة بعروض الفلاش"""
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     # جلب عروض الفلاش النشطة التي تشمل منتجات المتجر
     flash_sales = await db.flash_sales.find({
@@ -396,7 +397,7 @@ async def get_flash_products(limit: int = Query(default=10, le=20)) -> dict:
 @router.get("/sponsored")
 async def get_sponsored_products(limit: int = Query(default=10, le=20)) -> dict:
     """جلب المنتجات المُعلن عنها (Sponsored)"""
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     # أولاً: البحث عن منتجات مميزة (is_sponsored = true)
     sponsored_products = await db.products.find(
@@ -939,7 +940,7 @@ async def add_question(product_id: str, q: ProductQuestion, user: dict = Depends
         "question": q.question,
         "answer": None,
         "answered_at": None,
-        "created_at": datetime.now(timezone.utc).isoformat()
+        "created_at": get_now()
     }
     await db.product_questions.insert_one(question_doc)
     return {"id": question_id, "message": "تم إضافة السؤال"}
@@ -966,7 +967,7 @@ async def answer_question(product_id: str, question_id: str, a: ProductAnswer, u
         {"$set": {
             "answer": a.answer,
             "answered_by": user.get("full_name", user.get("name", "")),
-            "answered_at": datetime.now(timezone.utc).isoformat()
+            "answered_at": get_now()
         }}
     )
     

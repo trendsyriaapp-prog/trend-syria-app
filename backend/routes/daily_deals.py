@@ -5,6 +5,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from datetime import datetime, timezone, timedelta
 import uuid
 from core.database import db, get_current_user
+from helpers.datetime_helpers import get_now
 
 router = APIRouter(prefix="/daily-deals", tags=["Daily Deals"])
 
@@ -12,7 +13,7 @@ router = APIRouter(prefix="/daily-deals", tags=["Daily Deals"])
 @router.get("/active")
 async def get_active_daily_deal() -> dict:
     """جلب صفقة اليوم النشطة"""
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     deal = await db.daily_deals.find_one(
         {
@@ -61,7 +62,7 @@ async def get_active_daily_deal() -> dict:
 @router.get("/upcoming")
 async def get_upcoming_deals() -> dict:
     """جلب الصفقات القادمة"""
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     deals = await db.daily_deals.find(
         {
@@ -102,7 +103,7 @@ async def create_daily_deal(data: dict, user: dict = Depends(get_current_user)) 
     if discount < 5 or discount > 90:
         raise HTTPException(status_code=400, detail="نسبة الخصم يجب أن تكون بين 5% و 90%")
     
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     deal = {
         "id": str(uuid.uuid4()),
@@ -133,7 +134,7 @@ async def create_daily_deal(data: dict, user: dict = Depends(get_current_user)) 
 
 async def send_deal_notification(deal: dict) -> dict:
     """إرسال إشعار صفقة اليوم لجميع المستخدمين"""
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     # جلب جميع المستخدمين النشطين
     users = await db.users.find(
@@ -174,7 +175,7 @@ async def update_daily_deal(deal_id: str, data: dict, user: dict = Depends(get_c
         raise HTTPException(status_code=404, detail="الصفقة غير موجودة")
     
     update = {
-        "updated_at": datetime.now(timezone.utc).isoformat()
+        "updated_at": get_now()
     }
     
     allowed_fields = ["title", "description", "discount_percentage", "start_time", 
@@ -303,7 +304,7 @@ async def create_deal_request(data: dict, user: dict = Depends(get_current_user)
     if existing:
         raise HTTPException(status_code=400, detail="يوجد طلب معلق بالفعل لهذا المنتج")
     
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     original_price = product.get("discount_price") or product.get("price", 0)
     discounted_price = int(original_price * (1 - discount / 100))
     
@@ -411,7 +412,7 @@ async def reject_deal_request(request_id: str, data: dict, user: dict = Depends(
     if request["status"] != "pending":
         raise HTTPException(status_code=400, detail="هذا الطلب تم معالجته مسبقاً")
     
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     reason = data.get("reason", "")
     
     # تحديث حالة الطلب

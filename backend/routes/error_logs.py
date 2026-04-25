@@ -8,6 +8,7 @@ from datetime import datetime, timezone, timedelta
 import uuid
 
 from core.database import db, get_current_user
+from helpers.datetime_helpers import get_now
 
 router = APIRouter(prefix="/errors", tags=["Error Logs"])
 
@@ -84,7 +85,7 @@ async def log_error_to_db(
             {"id": existing_error["id"]},
             {
                 "$inc": {"occurrence_count": 1},
-                "$set": {"last_occurrence": datetime.now(timezone.utc).isoformat()}
+                "$set": {"last_occurrence": get_now()}
             }
         )
         return existing_error["id"]
@@ -103,8 +104,8 @@ async def log_error_to_db(
         "user_phone": user_phone,
         "ip_address": ip_address,
         "additional_data": additional_data,
-        "created_at": datetime.now(timezone.utc).isoformat(),
-        "last_occurrence": datetime.now(timezone.utc).isoformat(),
+        "created_at": get_now(),
+        "last_occurrence": get_now(),
         "is_resolved": False,
         "resolved_at": None,
         "resolved_by": None,
@@ -250,7 +251,7 @@ async def resolve_error(
         {
             "$set": {
                 "is_resolved": True,
-                "resolved_at": datetime.now(timezone.utc).isoformat(),
+                "resolved_at": get_now(),
                 "resolved_by": user.get("id")
             }
         }

@@ -8,6 +8,7 @@ from datetime import datetime, timezone, timedelta
 import uuid
 
 from core.database import db, get_current_user, get_current_admin, create_notification_for_user
+from helpers.datetime_helpers import get_now
 
 router = APIRouter(prefix="/challenges", tags=["Challenges"])
 
@@ -150,7 +151,7 @@ async def get_active_challenges(user: dict = Depends(get_current_user)) -> dict:
     if user["user_type"] != "delivery":
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
     
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     # التحديات النشطة التي لم تنتهِ بعد
     challenges = await db.challenges.find(
@@ -227,7 +228,7 @@ async def claim_challenge_reward(challenge_id: str, user: dict = Depends(get_cur
             detail=f"لم تكمل التحدي بعد. أكملت {driver_orders} من {challenge['target_orders']} طلب"
         )
     
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     # إضافة المكافأة للمحفظة
     await db.wallet_transactions.insert_one({

@@ -7,6 +7,7 @@ from typing import Optional
 from datetime import datetime, timezone
 
 from core.database import db, get_current_user
+from helpers.datetime_helpers import get_now
 from services.violation_system import (
     get_delivery_settings,
     save_delivery_settings
@@ -335,7 +336,7 @@ async def update_product_delivery_hours(
         "start_minute": data.start_minute,
         "end_hour": data.end_hour,
         "end_minute": data.end_minute,
-        "updated_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": get_now(),
         "updated_by": user.get("id")
     }
     

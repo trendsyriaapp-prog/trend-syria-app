@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 import uuid
 
 from core.database import db, get_current_user
+from helpers.datetime_helpers import get_now
 
 router = APIRouter(prefix="/call-requests", tags=["Call Requests"])
 
@@ -69,8 +70,8 @@ async def create_call_request(data: CallRequestCreate, user: dict = Depends(get_
         "attempts": 0,
         "notes": None,
         "handled_by": None,
-        "created_at": datetime.now(timezone.utc).isoformat(),
-        "updated_at": datetime.now(timezone.utc).isoformat()
+        "created_at": get_now(),
+        "updated_at": get_now()
     }
     
     await db.call_requests.insert_one(call_request)
@@ -91,7 +92,7 @@ async def create_call_request(data: CallRequestCreate, user: dict = Depends(get_
             "data": {"call_request_id": call_request["id"], "order_id": data.order_id},
             "is_read": False,
             "play_sound": True,
-            "created_at": datetime.now(timezone.utc).isoformat()
+            "created_at": get_now()
         }
         await db.notifications.insert_one(notification)
     
@@ -163,7 +164,7 @@ async def update_call_request(
     
     update_data = {
         "status": data.status,
-        "updated_at": datetime.now(timezone.utc).isoformat()
+        "updated_at": get_now()
     }
     
     if data.notes:
@@ -174,7 +175,7 @@ async def update_call_request(
         update_data["handled_by_name"] = user.get("full_name") or user.get("name", "")
     
     if data.status == "completed":
-        update_data["completed_at"] = datetime.now(timezone.utc).isoformat()
+        update_data["completed_at"] = get_now()
     
     await db.call_requests.update_one(
         {"id": request_id},
@@ -191,7 +192,7 @@ async def update_call_request(
             "type": "call_request_completed",
             "data": {"call_request_id": request_id, "order_id": request["order_id"]},
             "is_read": False,
-            "created_at": datetime.now(timezone.utc).isoformat()
+            "created_at": get_now()
         }
         await db.notifications.insert_one(notification)
     
@@ -217,7 +218,7 @@ async def take_call_request(request_id: str, user: dict = Depends(get_current_us
                 "status": "in_progress",
                 "handled_by": user["id"],
                 "handled_by_name": user.get("full_name") or user.get("name", ""),
-                "updated_at": datetime.now(timezone.utc).isoformat()
+                "updated_at": get_now()
             }
         }
     )
@@ -231,7 +232,7 @@ async def take_call_request(request_id: str, user: dict = Depends(get_current_us
         "type": "call_request_in_progress",
         "data": {"call_request_id": request_id},
         "is_read": False,
-        "created_at": datetime.now(timezone.utc).isoformat()
+        "created_at": get_now()
     }
     await db.notifications.insert_one(notification)
     

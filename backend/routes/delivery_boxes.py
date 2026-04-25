@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 import uuid
 
 from core.database import db, get_current_user, get_current_admin
+from helpers.datetime_helpers import get_now
 
 router = APIRouter(prefix="/delivery-boxes", tags=["Delivery Boxes"])
 
@@ -65,7 +66,7 @@ async def add_new_box(box_serial: str, admin: dict = Depends(get_current_admin))
         "total_paid": 0,
         "assigned_date": None,
         "ownership_date": None,
-        "created_at": datetime.now(timezone.utc).isoformat(),
+        "created_at": get_now(),
         "history": []
     }
     
@@ -99,7 +100,7 @@ async def assign_box_to_driver(data: BoxAssignment, admin: dict = Depends(get_cu
             raise HTTPException(status_code=404, detail="لا توجد صناديق متاحة")
     
     # تحديث الصندوق
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     history_entry = {
         "action": "assigned",
         "date": now,
@@ -155,7 +156,7 @@ async def record_box_payment(driver_id: str, payment: BoxPayment, admin: dict = 
     if not record:
         raise HTTPException(status_code=404, detail="لا يوجد سجل صندوق نشط لهذا الموظف")
     
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     payment_entry = {
         "date": now,
@@ -216,7 +217,7 @@ async def return_box(driver_id: str, condition: str = "good", admin: dict = Depe
     if not record:
         raise HTTPException(status_code=404, detail="لا يوجد سجل صندوق نشط")
     
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     # حساب المبلغ المسترد
     refund_amount = record["deposit_paid"] if condition == "good" else 0

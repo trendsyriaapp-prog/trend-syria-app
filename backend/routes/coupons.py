@@ -7,6 +7,7 @@ from typing import Optional
 import uuid
 
 from core.database import db, get_current_user
+from helpers.datetime_helpers import get_now
 
 router = APIRouter(prefix="/coupons", tags=["Coupons"])
 
@@ -41,7 +42,7 @@ async def get_all_coupons(
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
     
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     query = {}
     
     if status == "active":
@@ -90,7 +91,7 @@ async def create_coupon(coupon_data: dict, user: dict = Depends(get_current_user
     if coupon_type not in COUPON_TYPES:
         raise HTTPException(status_code=400, detail="نوع كوبون غير صالح")
     
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     coupon = {
         "id": str(uuid.uuid4()),
@@ -155,7 +156,7 @@ async def update_coupon(coupon_id: str, coupon_data: dict, user: dict = Depends(
     ]
     
     update = {k: v for k, v in coupon_data.items() if k in allowed_fields}
-    update["updated_at"] = datetime.now(timezone.utc).isoformat()
+    update["updated_at"] = get_now()
     
     await db.coupons.update_one({"id": coupon_id}, {"$set": update})
     
@@ -213,7 +214,7 @@ async def validate_coupon(
     if not coupon:
         raise HTTPException(status_code=404, detail="كود الكوبون غير صحيح")
     
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     # التحقق من الحالة
     if not coupon.get("is_active"):
@@ -321,7 +322,7 @@ async def apply_coupon_to_order(
     if not coupon:
         raise HTTPException(status_code=404, detail="الكوبون غير موجود")
     
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     # تسجيل الاستخدام
     usage = {
@@ -364,7 +365,7 @@ async def get_welcome_coupon_for_user(user_id: str) -> Optional[dict]:
     if food_orders > 0 or shop_orders > 0:
         return None
     
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     # البحث عن كوبون ترحيبي نشط
     welcome_coupon = await db.coupons.find_one({

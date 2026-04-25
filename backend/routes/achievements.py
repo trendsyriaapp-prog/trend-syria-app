@@ -5,6 +5,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from datetime import datetime, timezone, timedelta
 
 from core.database import db, get_current_user, create_notification_for_user
+from helpers.datetime_helpers import get_now
 
 router = APIRouter(prefix="/achievements", tags=["Achievements"])
 
@@ -282,7 +283,7 @@ async def check_and_unlock_achievements(user: dict = Depends(get_current_user)) 
     
     # فحص الإنجازات الجديدة
     new_unlocked = []
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     for ach_id, ach_data in ACHIEVEMENTS.items():
         if ach_id in unlocked_ids:

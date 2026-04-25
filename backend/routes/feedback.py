@@ -8,6 +8,7 @@ from typing import Optional
 import uuid
 
 from core.database import db, get_current_user, get_optional_user, create_notification_for_role
+from helpers.datetime_helpers import get_now
 
 router = APIRouter(prefix="/feedback", tags=["Feedback"])
 
@@ -29,7 +30,7 @@ async def create_feedback(data: FeedbackCreate, user: dict = Depends(get_optiona
         raise HTTPException(status_code=400, detail="الرسالة قصيرة جداً")
     
     feedback_id = str(uuid.uuid4())
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     # تحديد نوع الرسالة بالعربي
     type_labels = {
@@ -129,7 +130,7 @@ async def respond_to_feedback(
     if not feedback:
         raise HTTPException(status_code=404, detail="الملاحظة غير موجودة")
     
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     await db.feedback.update_one(
         {"id": feedback_id},

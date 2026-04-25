@@ -30,6 +30,7 @@ from models.schemas import (
     ForgotPasswordRequest, VerifyIdentityRequest, ResetPasswordRequest,
     DeviceOTPVerify
 )
+from helpers.datetime_helpers import get_now
 import secrets
 import string
 import os
@@ -66,7 +67,7 @@ async def check_new_device(user_id: str, device_id: str, user_type: str) -> bool
         # تحديث آخر استخدام
         await db.trusted_devices.update_one(
             {"_id": trusted_device["_id"]},
-            {"$set": {"last_used_at": datetime.now(timezone.utc).isoformat()}}
+            {"$set": {"last_used_at": get_now()}}
         )
         return False  # جهاز معروف
     
@@ -85,8 +86,8 @@ async def add_trusted_device(user_id: str, device_id: str, device_name: str = No
             "device_name": device_name or "جهاز غير معروف",
             "ip_address": ip_address,
             "is_active": True,
-            "added_at": datetime.now(timezone.utc).isoformat(),
-            "last_used_at": datetime.now(timezone.utc).isoformat()
+            "added_at": get_now(),
+            "last_used_at": get_now()
         }},
         upsert=True
     )
@@ -134,7 +135,7 @@ async def register(request: Request, user: UserRegister, response: Response) -> 
     initial_role_status = {
         user.user_type: {
             "status": "active" if user.user_type == "buyer" else "not_submitted",
-            "added_at": datetime.now(timezone.utc).isoformat()
+            "added_at": get_now()
         }
     }
     
@@ -152,7 +153,7 @@ async def register(request: Request, user: UserRegister, response: Response) -> 
         "emergency_phone": user.emergency_phone,  # رقم الطوارئ
         "is_verified": user.user_type == "buyer",
         "is_approved": user.user_type == "buyer",
-        "created_at": datetime.now(timezone.utc).isoformat()
+        "created_at": get_now()
     }
     await db.users.insert_one(user_doc)
     
@@ -169,7 +170,7 @@ async def register(request: Request, user: UserRegister, response: Response) -> 
                 "message": f"شارك تطبيقنا مع أصدقائك واكسب {reward:,} ل.س عن كل صديق يسجل ويطلب. افتح 'ادعُ صديقاً' من حسابك!",
                 "action_url": "/referrals",
                 "is_read": False,
-                "created_at": datetime.now(timezone.utc).isoformat()
+                "created_at": get_now()
             })
     
     # 🔒 إنشاء توكنات آمنة
@@ -180,7 +181,7 @@ async def register(request: Request, user: UserRegister, response: Response) -> 
     await db.refresh_tokens.insert_one({
         "user_id": user_id,
         "token": refresh_token,
-        "created_at": datetime.now(timezone.utc).isoformat()
+        "created_at": get_now()
     })
     
     # 🔒 تعيين Token في httpOnly Cookie
@@ -232,7 +233,7 @@ async def send_registration_otp(request: Request, data: dict) -> dict:
         "phone": phone,
         "full_name": sanitize_input(full_name),
         "otp": otp_code,
-        "created_at": datetime.now(timezone.utc).isoformat(),
+        "created_at": get_now(),
         "expires_at": (datetime.now(timezone.utc) + timedelta(minutes=10)).isoformat(),
         "verified": False
     })
@@ -298,7 +299,7 @@ async def verify_otp_only(request: Request, data: dict) -> dict:
         {
             "$set": {
                 "verified": True,
-                "verified_at": datetime.now(timezone.utc).isoformat(),
+                "verified_at": get_now(),
                 "expires_at": (datetime.now(timezone.utc) + timedelta(minutes=30)).isoformat()
             }
         }
@@ -376,7 +377,7 @@ async def complete_registration(request: Request, data: dict, response: Response
     initial_role_status = {
         user_type: {
             "status": "active" if user_type == "buyer" else "pending",
-            "added_at": datetime.now(timezone.utc).isoformat()
+            "added_at": get_now()
         }
     }
     
@@ -393,7 +394,7 @@ async def complete_registration(request: Request, data: dict, response: Response
         "role_status": initial_role_status,
         "is_verified": True,
         "is_approved": user_type == "buyer",
-        "created_at": datetime.now(timezone.utc).isoformat()
+        "created_at": get_now()
     }
     
     # إضافة بيانات البائع إذا كان بائع منتجات
@@ -403,7 +404,7 @@ async def complete_registration(request: Request, data: dict, response: Response
             "national_id": seller_data.get("national_id", ""),
             "commercial_reg": seller_data.get("commercial_reg", ""),
             "responsibility_accepted": seller_data.get("responsibility_accepted", False),
-            "submitted_at": datetime.now(timezone.utc).isoformat()
+            "submitted_at": get_now()
         }
         user_doc["role_status"]["seller"]["status"] = "pending"
     
@@ -416,11 +417,11 @@ async def complete_registration(request: Request, data: dict, response: Response
             "storefront_image": food_seller_data.get("storefront_image", ""),
             "health_license": food_seller_data.get("health_license", ""),
             "national_id": food_seller_data.get("national_id", ""),
-            "submitted_at": datetime.now(timezone.utc).isoformat()
+            "submitted_at": get_now()
         }
         user_doc["role_status"]["food_seller"] = {
             "status": "pending",
-            "added_at": datetime.now(timezone.utc).isoformat()
+            "added_at": get_now()
         }
     
     # إضافة بيانات موظف التوصيل
@@ -431,11 +432,11 @@ async def complete_registration(request: Request, data: dict, response: Response
             "driving_license": delivery_data.get("driving_license", ""),
             "vehicle_photo": delivery_data.get("vehicle_photo", ""),
             "vehicle_type": delivery_data.get("vehicle_type", ""),
-            "submitted_at": datetime.now(timezone.utc).isoformat()
+            "submitted_at": get_now()
         }
         user_doc["role_status"]["delivery"] = {
             "status": "pending",
-            "added_at": datetime.now(timezone.utc).isoformat()
+            "added_at": get_now()
         }
     
     # حفظ المستخدم في قاعدة البيانات
@@ -457,7 +458,7 @@ async def complete_registration(request: Request, data: dict, response: Response
                 "message": f"شارك تطبيقنا مع أصدقائك واكسب {reward:,} ل.س عن كل صديق يسجل ويطلب!",
                 "action_url": "/referrals",
                 "is_read": False,
-                "created_at": datetime.now(timezone.utc).isoformat()
+                "created_at": get_now()
             })
     
     # إنشاء التوكنات
@@ -468,7 +469,7 @@ async def complete_registration(request: Request, data: dict, response: Response
     await db.refresh_tokens.insert_one({
         "user_id": user_id,
         "token": refresh_token,
-        "created_at": datetime.now(timezone.utc).isoformat()
+        "created_at": get_now()
     })
     
     # تعيين الكوكيز
@@ -561,7 +562,7 @@ async def verify_registration_otp(request: Request, data: dict, response: Respon
     initial_role_status = {
         user_type: {
             "status": "active" if user_type == "buyer" else "pending",
-            "added_at": datetime.now(timezone.utc).isoformat()
+            "added_at": get_now()
         }
     }
     
@@ -578,7 +579,7 @@ async def verify_registration_otp(request: Request, data: dict, response: Respon
         "role_status": initial_role_status,
         "is_verified": True,  # تم التحقق من الرقم
         "is_approved": user_type == "buyer",
-        "created_at": datetime.now(timezone.utc).isoformat()
+        "created_at": get_now()
     }
     
     # إضافة بيانات البائع إذا كان بائع منتجات
@@ -588,7 +589,7 @@ async def verify_registration_otp(request: Request, data: dict, response: Respon
             "national_id": seller_data.get("national_id", ""),
             "commercial_reg": seller_data.get("commercial_reg", ""),
             "responsibility_accepted": seller_data.get("responsibility_accepted", False),
-            "submitted_at": datetime.now(timezone.utc).isoformat()
+            "submitted_at": get_now()
         }
         user_doc["role_status"]["seller"]["status"] = "pending"
     
@@ -601,11 +602,11 @@ async def verify_registration_otp(request: Request, data: dict, response: Respon
             "storefront_image": food_seller_data.get("storefront_image", ""),
             "health_license": food_seller_data.get("health_license", ""),
             "national_id": food_seller_data.get("national_id", ""),
-            "submitted_at": datetime.now(timezone.utc).isoformat()
+            "submitted_at": get_now()
         }
         user_doc["role_status"]["food_seller"] = {
             "status": "pending",
-            "added_at": datetime.now(timezone.utc).isoformat()
+            "added_at": get_now()
         }
     
     # إضافة بيانات موظف التوصيل
@@ -616,11 +617,11 @@ async def verify_registration_otp(request: Request, data: dict, response: Respon
             "driving_license": delivery_data.get("driving_license", ""),
             "vehicle_photo": delivery_data.get("vehicle_photo", ""),
             "vehicle_type": delivery_data.get("vehicle_type", ""),
-            "submitted_at": datetime.now(timezone.utc).isoformat()
+            "submitted_at": get_now()
         }
         user_doc["role_status"]["delivery"] = {
             "status": "pending",
-            "added_at": datetime.now(timezone.utc).isoformat()
+            "added_at": get_now()
         }
     
     # حفظ المستخدم في قاعدة البيانات
@@ -642,7 +643,7 @@ async def verify_registration_otp(request: Request, data: dict, response: Respon
                 "message": f"شارك تطبيقنا مع أصدقائك واكسب {reward:,} ل.س عن كل صديق يسجل ويطلب!",
                 "action_url": "/referrals",
                 "is_read": False,
-                "created_at": datetime.now(timezone.utc).isoformat()
+                "created_at": get_now()
             })
     
     # إنشاء التوكنات
@@ -653,7 +654,7 @@ async def verify_registration_otp(request: Request, data: dict, response: Respon
     await db.refresh_tokens.insert_one({
         "user_id": user_id,
         "token": refresh_token,
-        "created_at": datetime.now(timezone.utc).isoformat()
+        "created_at": get_now()
     })
     
     # تعيين الكوكيز
@@ -836,7 +837,7 @@ async def login(request: Request, credentials: UserLogin, response: Response) ->
                             "device_id": device_id,
                             "otp": otp_code,
                             "user_type": user["user_type"],
-                            "created_at": datetime.now(timezone.utc).isoformat(),
+                            "created_at": get_now(),
                             "expires_at": (datetime.now(timezone.utc) + timedelta(minutes=10)).isoformat(),
                             "verified": False,
                             "attempts": 0
@@ -868,7 +869,7 @@ async def login(request: Request, credentials: UserLogin, response: Response) ->
                 {"user_id": user["id"]},
                 {"$set": {
                     "token": refresh_token,
-                    "created_at": datetime.now(timezone.utc).isoformat()
+                    "created_at": get_now()
                 }},
                 upsert=True
             )
@@ -1025,7 +1026,7 @@ async def verify_device_otp(request: Request, response: Response, data: DeviceOT
         {"_id": otp_record["_id"]},
         {"$set": {
             "verified": True,
-            "verified_at": datetime.now(timezone.utc).isoformat()
+            "verified_at": get_now()
         }}
     )
     
@@ -1043,7 +1044,7 @@ async def verify_device_otp(request: Request, response: Response, data: DeviceOT
         {"user_id": user_id},
         {"$set": {
             "token": refresh_token_str,
-            "created_at": datetime.now(timezone.utc).isoformat()
+            "created_at": get_now()
         }},
         upsert=True
     )
@@ -1113,7 +1114,7 @@ async def resend_device_otp(request: Request, phone: str, device_id: str) -> dic
         {"_id": existing["_id"]},
         {"$set": {
             "otp": otp_code,
-            "created_at": datetime.now(timezone.utc).isoformat(),
+            "created_at": get_now(),
             "expires_at": (datetime.now(timezone.utc) + timedelta(minutes=10)).isoformat(),
             "attempts": 0
         }}
@@ -1192,7 +1193,7 @@ async def refresh_token(request: Request) -> dict:
     # تحديث refresh token
     await db.refresh_tokens.update_one(
         {"user_id": user_id},
-        {"$set": {"token": new_refresh, "created_at": datetime.now(timezone.utc).isoformat()}}
+        {"$set": {"token": new_refresh, "created_at": get_now()}}
     )
     
     return {
@@ -1318,7 +1319,7 @@ async def upload_seller_documents(docs: SellerDocuments, user: dict = Depends(ge
         "store_longitude": docs.store_longitude,
         "store_city": docs.store_city,
         "status": "pending",
-        "created_at": datetime.now(timezone.utc).isoformat()
+        "created_at": get_now()
     }
     await db.seller_documents.insert_one(doc)
     
@@ -1333,7 +1334,7 @@ async def upload_seller_documents(docs: SellerDocuments, user: dict = Depends(ge
             "holder_name": docs.payment_account.holder_name,
             "bank_name": docs.payment_account.bank_name,
             "is_default": True,
-            "created_at": datetime.now(timezone.utc).isoformat()
+            "created_at": get_now()
         }
         await db.seller_payment_accounts.insert_one(payment_acc)
     
@@ -1455,7 +1456,7 @@ async def upload_delivery_documents(docs: DeliveryDocuments, user: dict = Depend
         "home_longitude": docs.home_longitude,
         "home_city": docs.home_city,
         "status": "pending",
-        "created_at": datetime.now(timezone.utc).isoformat()
+        "created_at": get_now()
     }
     await db.delivery_documents.insert_one(doc)
     
@@ -1470,7 +1471,7 @@ async def upload_delivery_documents(docs: DeliveryDocuments, user: dict = Depend
             "holder_name": docs.payment_account.holder_name,
             "bank_name": docs.payment_account.bank_name,
             "is_default": True,
-            "created_at": datetime.now(timezone.utc).isoformat()
+            "created_at": get_now()
         }
         await db.delivery_payment_accounts.insert_one(payment_acc)
     
@@ -1658,7 +1659,7 @@ async def update_store_settings(settings: StoreSettingsUpdate, user: dict = Depe
         update_data["store_longitude"] = settings.store_longitude
     
     if update_data:
-        update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+        update_data["updated_at"] = get_now()
         await db.users.update_one({"id": user["id"]}, {"$set": update_data})
     
     return {"message": "تم تحديث إعدادات المتجر بنجاح"}
@@ -1715,7 +1716,7 @@ async def add_seller_payment_account(account: PaymentAccountUpdate, user: dict =
         "holder_name": sanitize_input(account.holder_name),
         "bank_name": sanitize_input(account.bank_name) if account.bank_name else None,
         "is_default": account.is_default,
-        "created_at": datetime.now(timezone.utc).isoformat()
+        "created_at": get_now()
     }
     
     await db.seller_payment_accounts.insert_one(new_account)
@@ -1749,7 +1750,7 @@ async def update_seller_payment_account(account_id: str, account: PaymentAccount
         "holder_name": sanitize_input(account.holder_name),
         "bank_name": sanitize_input(account.bank_name) if account.bank_name else None,
         "is_default": account.is_default,
-        "updated_at": datetime.now(timezone.utc).isoformat()
+        "updated_at": get_now()
     }
     
     await db.seller_payment_accounts.update_one(
@@ -1864,7 +1865,7 @@ async def update_delivery_settings(settings: DeliverySettingsUpdate, user: dict 
         update_data["home_longitude"] = settings.home_longitude
     
     if update_data:
-        update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+        update_data["updated_at"] = get_now()
         await db.users.update_one({"id": user["id"]}, {"$set": update_data})
     
     return {"message": "تم تحديث الإعدادات بنجاح"}
@@ -1918,7 +1919,7 @@ async def add_delivery_payment_account(account: PaymentAccountUpdate, user: dict
         "holder_name": sanitize_input(account.holder_name),
         "bank_name": sanitize_input(account.bank_name) if account.bank_name else None,
         "is_default": account.is_default,
-        "created_at": datetime.now(timezone.utc).isoformat()
+        "created_at": get_now()
     }
     
     await db.delivery_payment_accounts.insert_one(new_account)
@@ -1951,7 +1952,7 @@ async def update_delivery_payment_account(account_id: str, account: PaymentAccou
         "holder_name": sanitize_input(account.holder_name),
         "bank_name": sanitize_input(account.bank_name) if account.bank_name else None,
         "is_default": account.is_default,
-        "updated_at": datetime.now(timezone.utc).isoformat()
+        "updated_at": get_now()
     }
     
     await db.delivery_payment_accounts.update_one(
@@ -2076,7 +2077,7 @@ async def send_sms_code(request: Request, data: ForgotPasswordRequest) -> dict:
                 "phone": data.phone,
                 "code": sms_code,
                 "user_id": user["id"],
-                "created_at": datetime.now(timezone.utc).isoformat(),
+                "created_at": get_now(),
                 "attempts": 0,
                 "verified": False
             }
@@ -2156,7 +2157,7 @@ async def verify_sms_code(request: Request) -> dict:
                 "phone": phone,
                 "user_id": sms_record["user_id"],
                 "token": reset_token,
-                "created_at": datetime.now(timezone.utc).isoformat(),
+                "created_at": get_now(),
                 "used": False
             }
         },
@@ -2273,7 +2274,7 @@ async def verify_identity(request: Request, data: VerifyIdentityRequest) -> dict
                     "phone": data.phone,
                     "user_id": user["id"],
                     "token": reset_token,
-                    "created_at": datetime.now(timezone.utc).isoformat(),
+                    "created_at": get_now(),
                     "used": False
                 }
             },
@@ -2320,7 +2321,7 @@ async def reset_password(request: Request, data: ResetPasswordRequest) -> dict:
     new_password_hash = hash_password_secure(data.new_password)
     await db.users.update_one(
         {"phone": data.phone},
-        {"$set": {"password": new_password_hash, "updated_at": datetime.now(timezone.utc).isoformat()}}
+        {"$set": {"password": new_password_hash, "updated_at": get_now()}}
     )
     
     # تحديد الرمز كمستخدم
@@ -2386,8 +2387,8 @@ async def change_password(request: Request, data: ChangePasswordRequest, user: d
             "$set": {
                 "password": new_password_hash,
                 "force_password_change": False,  # إزالة إجبار التغيير
-                "password_changed_at": datetime.now(timezone.utc).isoformat(),
-                "updated_at": datetime.now(timezone.utc).isoformat()
+                "password_changed_at": get_now(),
+                "updated_at": get_now()
             }
         }
     )
@@ -2410,7 +2411,7 @@ async def update_emergency_phone(request: Request, user: dict = Depends(get_curr
     
     await db.users.update_one(
         {"id": user["id"]},
-        {"$set": {"emergency_phone": emergency_phone, "updated_at": datetime.now(timezone.utc).isoformat()}}
+        {"$set": {"emergency_phone": emergency_phone, "updated_at": get_now()}}
     )
     
     return {"message": "تم تحديث رقم الطوارئ بنجاح"}
@@ -2522,7 +2523,7 @@ async def admin_reset_user_password(phone: str, admin: dict = Depends(get_curren
         {"$set": {
             "password": new_hash,
             "force_password_change": True,  # إجبار تغيير كلمة المرور
-            "password_changed_at": datetime.now(timezone.utc).isoformat()
+            "password_changed_at": get_now()
         }}
     )
     
@@ -2575,7 +2576,7 @@ async def send_whatsapp_otp(request: Request, data: ForgotPasswordRequest) -> di
                 "phone": data.phone,
                 "user_id": user["id"],
                 "otp": otp_code,
-                "created_at": datetime.now(timezone.utc).isoformat(),
+                "created_at": get_now(),
                 "expires_at": (datetime.now(timezone.utc) + timedelta(minutes=10)).isoformat(),
                 "used": False,
                 "attempts": 0
@@ -2626,7 +2627,7 @@ async def verify_whatsapp_otp(request: Request, phone: str, otp: str) -> dict:
                     "phone": phone,
                     "user_id": user["id"],
                     "token": reset_token,
-                    "created_at": datetime.now(timezone.utc).isoformat(),
+                    "created_at": get_now(),
                     "used": False
                 }
             },
@@ -2683,7 +2684,7 @@ async def verify_whatsapp_otp(request: Request, phone: str, otp: str) -> dict:
                 "phone": phone,
                 "user_id": otp_record["user_id"],
                 "token": reset_token,
-                "created_at": datetime.now(timezone.utc).isoformat(),
+                "created_at": get_now(),
                 "used": False
             }
         },
@@ -2859,7 +2860,7 @@ async def add_role_to_user(data: AddRoleRequest, user: dict = Depends(get_curren
     
     # تحديث role_status
     role_status = full_user.get("role_status", {})
-    role_status[new_role] = {"status": "not_submitted", "added_at": datetime.now(timezone.utc).isoformat()}
+    role_status[new_role] = {"status": "not_submitted", "added_at": get_now()}
     
     # تحديث قاعدة البيانات
     await db.users.update_one(

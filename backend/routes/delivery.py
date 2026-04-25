@@ -9,6 +9,7 @@ import uuid
 import base64
 
 from core.database import db, get_current_user, create_notification_for_user
+from helpers.datetime_helpers import get_now
 
 router = APIRouter(prefix="/delivery", tags=["Delivery"])
 
@@ -80,7 +81,7 @@ async def update_driver_image(image: UploadFile = File(...), user: dict = Depend
     # تحديث صورة السائق في قاعدة البيانات
     await db.users.update_one(
         {"id": user["id"]},
-        {"$set": {"image": image_url, "updated_at": datetime.now(timezone.utc).isoformat()}}
+        {"$set": {"image": image_url, "updated_at": get_now()}}
     )
     
     return {"success": True, "message": "تم تحديث الصورة بنجاح", "image_url": image_url}
@@ -98,7 +99,7 @@ async def update_driver_location(data: LocationUpdate, user: dict = Depends(get_
     if user["user_type"] != "delivery":
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
     
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     # تحديث موقع السائق في جدول المواقع
     await db.driver_locations.update_one(
@@ -206,7 +207,7 @@ async def check_proximity_and_notify(order: dict, driver_lat: float, driver_lon:
                                 "order_id": order_id,
                                 "is_read": False,
                                 "play_sound": True,
-                                "created_at": datetime.now(timezone.utc).isoformat()
+                                "created_at": get_now()
                             }
                             await db.notifications.insert_one(notification)
                             
@@ -241,7 +242,7 @@ async def check_proximity_and_notify(order: dict, driver_lat: float, driver_lon:
                         "order_id": order_id,
                         "is_read": False,
                         "play_sound": True,
-                        "created_at": datetime.now(timezone.utc).isoformat()
+                        "created_at": get_now()
                     }
                     await db.notifications.insert_one(notification)
                     
@@ -266,7 +267,7 @@ async def check_proximity_and_notify(order: dict, driver_lat: float, driver_lon:
                         "order_id": order_id,
                         "is_read": False,
                         "play_sound": True,
-                        "created_at": datetime.now(timezone.utc).isoformat()
+                        "created_at": get_now()
                     }
                     await db.notifications.insert_one(notification)
                     
@@ -292,7 +293,7 @@ async def check_proximity_and_notify(order: dict, driver_lat: float, driver_lon:
                         "is_read": False,
                         "play_sound": True,
                         "vibrate": True,
-                        "created_at": datetime.now(timezone.utc).isoformat()
+                        "created_at": get_now()
                     }
                     await db.notifications.insert_one(notification)
                     
@@ -448,7 +449,7 @@ async def get_availability(user: dict = Depends(get_current_user)) -> dict:
             "delivery_id": user["id"],
             "status": doc_status,
             "is_available": False,
-            "created_at": datetime.now(timezone.utc).isoformat()
+            "created_at": get_now()
         }
         await db.delivery_documents.insert_one(new_doc)
         return {"is_available": False}
@@ -479,8 +480,8 @@ async def update_availability(data: AvailabilityUpdate, user: dict = Depends(get
             "delivery_id": user["id"],
             "status": doc_status,
             "is_available": data.is_available,
-            "availability_updated_at": datetime.now(timezone.utc).isoformat(),
-            "created_at": datetime.now(timezone.utc).isoformat()
+            "availability_updated_at": get_now(),
+            "created_at": get_now()
         }
         await db.delivery_documents.insert_one(new_doc)
         status_text = "متاح" if data.is_available else "غير متاح"
@@ -518,7 +519,7 @@ async def update_availability(data: AvailabilityUpdate, user: dict = Depends(get
         {
             "$set": {
                 "is_available": data.is_available,
-                "availability_updated_at": datetime.now(timezone.utc).isoformat()
+                "availability_updated_at": get_now()
             }
         }
     )
@@ -1024,7 +1025,7 @@ async def accept_delivery_order(order_id: str, user: dict = Depends(get_current_
                 "delivery_driver_name": get_first_name(user.get("full_name", user.get("name", ""))),
                 "delivery_driver_phone": user.get("phone", ""),
                 "delivery_status": "out_for_delivery",
-                "accepted_at": datetime.now(timezone.utc).isoformat()
+                "accepted_at": get_now()
             }
         }
     )
@@ -1086,7 +1087,7 @@ async def mark_order_delivered(order_id: str, user: dict = Depends(get_current_u
             "$set": {
                 "delivery_status": "delivered",
                 "status": "completed",
-                "delivered_at": datetime.now(timezone.utc).isoformat()
+                "delivered_at": get_now()
             }
         }
     )
@@ -1970,7 +1971,7 @@ async def rate_delivery_driver(order_id: str, rating_data: DriverRating, user: d
         "customer_name": user.get("full_name", user.get("name", "")),
         "rating": rating_data.rating,
         "comment": rating_data.comment,
-        "created_at": datetime.now(timezone.utc).isoformat()
+        "created_at": get_now()
     }
     
     await db.driver_ratings.insert_one(rating_doc)
@@ -2117,7 +2118,7 @@ MAX_PENALTY_POINTS = 100
 async def add_bonus_points(driver_id: str, bonus_type: str, reason: str) -> dict:
     """إضافة نقاط مكافأة للموظف"""
     bonus = BONUS_POINTS.get(bonus_type, 5)
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     # جلب النقاط الحالية
     driver = await db.users.find_one({"id": driver_id}, {"_id": 0, "penalty_points": 1})
@@ -2198,7 +2199,7 @@ async def report_driver(data: DriverReport, user: dict = Depends(get_current_use
     if existing_report:
         raise HTTPException(status_code=400, detail="لقد قدمت بلاغاً على هذا الطلب مسبقاً")
     
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     # إنشاء البلاغ
     report = {
@@ -2296,7 +2297,7 @@ async def update_driver_location_v2(location: LocationUpdate, user: dict = Depen
     if user["user_type"] != "delivery":
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
     
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     # حفظ الموقع في collection منفصل للأداء
     await db.driver_locations.update_one(
@@ -2827,7 +2828,7 @@ async def apply_violation(violation_id: str, user: dict = Depends(get_current_us
                         "balance_after": new_balance,
                         "description": f"خصم مخالفة: {violation.get('reason')}",
                         "violation_id": violation_id,
-                        "created_at": datetime.now(timezone.utc).isoformat()
+                        "created_at": get_now()
                     }
                 }
             }
@@ -2839,7 +2840,7 @@ async def apply_violation(violation_id: str, user: dict = Depends(get_current_us
         {
             "$set": {
                 "status": "applied",
-                "applied_at": datetime.now(timezone.utc).isoformat(),
+                "applied_at": get_now(),
                 "applied_by": user["id"]
             }
         }
@@ -2865,7 +2866,7 @@ async def cancel_violation(violation_id: str, reason: str = "", user: dict = Dep
         {
             "$set": {
                 "status": "cancelled",
-                "cancelled_at": datetime.now(timezone.utc).isoformat(),
+                "cancelled_at": get_now(),
                 "cancelled_by": user["id"],
                 "cancellation_reason": reason
             }
@@ -2880,7 +2881,7 @@ async def cancel_violation(violation_id: str, reason: str = "", user: dict = Dep
         "message": f"تم إلغاء المخالفة للطلب #{violation.get('order_number')}",
         "type": "violation_cancelled",
         "is_read": False,
-        "created_at": datetime.now(timezone.utc).isoformat()
+        "created_at": get_now()
     })
     
     return {"message": "تم إلغاء المخالفة"}

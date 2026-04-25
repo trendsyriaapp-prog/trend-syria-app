@@ -11,6 +11,7 @@ import os
 import asyncio
 
 from core.database import db, get_current_user
+from helpers.datetime_helpers import get_now
 
 # مجلد حفظ التسجيلات
 RECORDINGS_DIR = "/app/backend/uploads/recordings"
@@ -92,7 +93,7 @@ async def initiate_call(data: CallRequest, user: dict = Depends(get_current_user
         "callee_name": callee_name,
         "callee_type": "customer" if data.caller_type == "driver" else "driver",
         "status": "ringing",  # ringing, connected, ended, missed, rejected
-        "started_at": datetime.now(timezone.utc).isoformat(),
+        "started_at": get_now(),
         "connected_at": None,
         "ended_at": None,
         "duration_seconds": 0,
@@ -117,7 +118,7 @@ async def initiate_call(data: CallRequest, user: dict = Depends(get_current_user
         "is_read": False,
         "play_sound": True,
         "priority": "high",
-        "created_at": datetime.now(timezone.utc).isoformat()
+        "created_at": get_now()
     }
     await db.notifications.insert_one(notification)
     
@@ -153,7 +154,7 @@ async def handle_signal(data: CallSignal, user: dict = Depends(get_current_user)
         "signal_type": data.signal_type,
         "signal_data": data.signal_data,
         "processed": False,
-        "created_at": datetime.now(timezone.utc).isoformat()
+        "created_at": get_now()
     }
     await db.voip_signals.insert_one(signal_doc)
     
@@ -200,7 +201,7 @@ async def call_action(data: CallAction, user: dict = Depends(get_current_user)) 
     if user["id"] not in [call["caller_id"], call["callee_id"]]:
         raise HTTPException(status_code=403, detail="غير مصرح")
     
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     update_data = {"updated_at": now}
     
     if data.action == "accept":
@@ -370,7 +371,7 @@ async def upload_recording(
         "uploader_id": user["id"],
         "uploader_type": "caller" if user["id"] == call["caller_id"] else "callee",
         "size_bytes": len(content),
-        "uploaded_at": datetime.now(timezone.utc).isoformat(),
+        "uploaded_at": get_now(),
         "expires_at": (datetime.now(timezone.utc) + timedelta(days=RECORDING_RETENTION_DAYS)).isoformat()
     }
     
@@ -481,7 +482,7 @@ async def get_recorded_calls(
 # حذف التسجيلات المنتهية (مهمة خلفية)
 async def cleanup_expired_recordings() -> None:
     """حذف التسجيلات التي انتهت صلاحيتها"""
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     # البحث عن المكالمات مع تسجيلات منتهية
     calls = await db.voip_calls.find(
