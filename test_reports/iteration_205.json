@@ -1,0 +1,65 @@
+{
+  "summary": "Phase 36 - Verified 10 additional admin endpoints now use require_admin_user dependency. All 24 tests passed (100% success rate). Fixed return type bug in get_all_sellers_with_status endpoint.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_phase36_admin_require_admin_user.py",
+    "/app/test_reports/pytest/phase36_require_admin_user_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "10 additional endpoints now use require_admin_user dependency (lines 899, 932, 1007, 1058, 1092, 1133, 1162, 1197, 1226, 1258)",
+    "Fixed return type bug: get_all_sellers_with_status was returning list but declared -> dict (line 1007)",
+    "All refactored endpoints return correct 401 for unauthenticated requests",
+    "All refactored endpoints return correct 403 for non-admin users",
+    "All refactored endpoints return correct 404 for non-existent resources"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_phase36_admin_require_admin_user.py",
+    "/app/backend/routes/admin.py"
+  ],
+  "success_rate": {
+    "backend": "100%",
+    "frontend": "N/A - backend only testing"
+  },
+  "test_credentials": {
+    "super_admin": "0945570365 / TrendSyria@2026"
+  },
+  "seed_data_creation": "",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Phase 36 refactoring verified: 26 endpoints now use require_admin_user dependency (16 from Phase 35 + 10 new), 2 use require_main_admin. Remaining manual permission checks still exist in other endpoints. Fixed return type bug in get_all_sellers_with_status (was -> dict, now -> list).",
+  "mocked_apis": {
+    "has_mocked_apis": true,
+    "mocked_apis_list": ["SMS OTP (123456)", "Sham Cash Payment Gateway"]
+  },
+  "verification_details": {
+    "new_endpoints_using_require_admin_user_phase36": [
+      "POST /api/admin/sellers/{seller_id}/suspend (line 899)",
+      "POST /api/admin/sellers/{seller_id}/activate (line 932)",
+      "GET /api/admin/sellers/with-status (line 1007)",
+      "GET /api/admin/products/pending (line 1058)",
+      "GET /api/admin/products/all (line 1092)",
+      "POST /api/admin/products/{product_id}/approve (line 1133)",
+      "POST /api/admin/products/{product_id}/reject (line 1162)",
+      "GET /api/admin/food-products/pending (line 1197)",
+      "POST /api/admin/food-products/{product_id}/approve (line 1226)",
+      "POST /api/admin/food-products/{product_id}/reject (line 1258)"
+    ],
+    "total_endpoints_with_require_admin_user": 26,
+    "total_endpoints_with_require_main_admin": 2,
+    "bug_fixed": "get_all_sellers_with_status return type changed from dict to list"
+  },
+  "tests_executed": {
+    "passed": 24,
+    "skipped": 0,
+    "failed": 0
+  }
+}

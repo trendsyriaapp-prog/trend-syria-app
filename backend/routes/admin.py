@@ -896,11 +896,8 @@ async def reject_seller(seller_id: str, data: dict = Body(default={}), user: dic
 
 
 @router.post("/sellers/{seller_id}/suspend")
-async def suspend_seller(seller_id: str, data: dict = None, user: dict = Depends(get_current_user)) -> dict:
+async def suspend_seller(seller_id: str, data: dict = None, user: dict = Depends(require_admin_user)) -> dict:
     """إيقاف حساب بائع"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     seller = await db.users.find_one({"id": seller_id, "user_type": "seller"})
     if not seller:
         raise HTTPException(status_code=404, detail="البائع غير موجود")
@@ -932,11 +929,8 @@ async def suspend_seller(seller_id: str, data: dict = None, user: dict = Depends
 
 
 @router.post("/sellers/{seller_id}/activate")
-async def activate_seller(seller_id: str, user: dict = Depends(get_current_user)) -> dict:
+async def activate_seller(seller_id: str, user: dict = Depends(require_admin_user)) -> dict:
     """إعادة تفعيل حساب بائع"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     seller = await db.users.find_one({"id": seller_id, "user_type": "seller"})
     if not seller:
         raise HTTPException(status_code=404, detail="البائع غير موجود")
@@ -1010,11 +1004,8 @@ async def delete_seller(seller_id: str, user: dict = Depends(get_current_user)) 
 
 
 @router.get("/sellers/with-status")
-async def get_all_sellers_with_status(user: dict = Depends(get_current_user)) -> dict:
+async def get_all_sellers_with_status(user: dict = Depends(require_admin_user)) -> list:
     """جلب جميع البائعين مع حالاتهم"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     sellers = await db.users.find(
         {"user_type": "seller"},
         {
@@ -1064,10 +1055,7 @@ async def get_all_sellers_with_status(user: dict = Depends(get_current_user)) ->
 # ============== Products Management ==============
 
 @router.get("/products/pending")
-async def get_pending_products(user: dict = Depends(get_current_user)) -> list:
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
+async def get_pending_products(user: dict = Depends(require_admin_user)) -> list:
     products = await db.products.find(
         {"approval_status": "pending"},
         {"_id": 0}
@@ -1101,12 +1089,9 @@ async def get_all_products(
     search: str = Query(None, description="البحث بالاسم"),
     category: str = Query(None, description="الفئة"),
     status: str = Query(None, description="حالة المنتج: approved, pending, rejected"),
-    user: dict = Depends(get_current_user)
+    user: dict = Depends(require_admin_user)
 ) -> dict:
     """جلب جميع المنتجات مع Pagination"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     # بناء الاستعلام
     query = {}
     
@@ -1145,10 +1130,7 @@ async def get_all_products(
     }
 
 @router.post("/products/{product_id}/approve")
-async def approve_product(product_id: str, user: dict = Depends(get_current_user)) -> dict:
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
+async def approve_product(product_id: str, user: dict = Depends(require_admin_user)) -> dict:
     # جلب المنتج أولاً
     product = await db.products.find_one({"id": product_id})
     if not product:
@@ -1177,10 +1159,7 @@ async def approve_product(product_id: str, user: dict = Depends(get_current_user
     return {"message": "تم الموافقة على المنتج"}
 
 @router.post("/products/{product_id}/reject")
-async def reject_product(product_id: str, data: dict = None, user: dict = Depends(get_current_user)) -> dict:
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
+async def reject_product(product_id: str, data: dict = None, user: dict = Depends(require_admin_user)) -> dict:
     # سبب الرفض
     reason = data.get("reason", "").strip() if data else ""
     
@@ -1215,11 +1194,8 @@ async def reject_product(product_id: str, data: dict = None, user: dict = Depend
 # ============== موافقة منتجات الطعام ==============
 
 @router.get("/food-products/pending")
-async def get_pending_food_products(user: dict = Depends(get_current_user)) -> list:
+async def get_pending_food_products(user: dict = Depends(require_admin_user)) -> list:
     """جلب منتجات الطعام بانتظار الموافقة"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     products = await db.food_products.find(
         {"approval_status": "pending"},
         {"_id": 0}
@@ -1247,11 +1223,8 @@ async def get_pending_food_products(user: dict = Depends(get_current_user)) -> l
     return products
 
 @router.post("/food-products/{product_id}/approve")
-async def approve_food_product(product_id: str, user: dict = Depends(get_current_user)) -> dict:
+async def approve_food_product(product_id: str, user: dict = Depends(require_admin_user)) -> dict:
     """الموافقة على منتج طعام"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     # البحث عن المنتج
     product = await db.food_products.find_one({"id": product_id})
     if not product:
@@ -1282,11 +1255,8 @@ async def approve_food_product(product_id: str, user: dict = Depends(get_current
     return {"message": "تم الموافقة على المنتج"}
 
 @router.post("/food-products/{product_id}/reject")
-async def reject_food_product(product_id: str, data: dict = None, user: dict = Depends(get_current_user)) -> dict:
+async def reject_food_product(product_id: str, data: dict = None, user: dict = Depends(require_admin_user)) -> dict:
     """رفض منتج طعام"""
-    if user["user_type"] not in ["admin", "sub_admin"]:
-        raise HTTPException(status_code=403, detail="للمدراء فقط")
-    
     # سبب الرفض
     reason = data.get("reason", "").strip() if data else ""
     
