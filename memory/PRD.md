@@ -31,6 +31,24 @@
 - ✅ Fixed return type bug in `get_all_flash_sales` (dict → list)
 - **Size**: 4751 → 4419 lines (-332)
 
+### orders.py ✅ COMPLETE (Phase 38)
+- ✅ Added `get_now()` helper function
+- ✅ Replaced 37 `datetime.now(timezone.utc).isoformat()` calls
+- ✅ Fixed `get_orders` return type (dict → list)
+- ✅ Fixed `get_promoted_products` return type (dict → list)
+- ✅ Added admin case to `get_orders`
+- **Size**: 2651 → 2661 lines (+10 for get_now + admin case)
+
+### food.py ✅ COMPLETE (Phase 38)
+- ✅ Added `get_now()` helper function
+- ✅ Replaced 16 `datetime.now(timezone.utc).isoformat()` calls
+- **Size**: 1550 → 1554 lines (+4 for get_now)
+
+### stores.py ✅ COMPLETE (Phase 38)
+- ✅ Added `get_now()` helper function
+- ✅ Replaced 2 `datetime.now(timezone.utc).isoformat()` calls
+- **Size**: 248 → 252 lines (+4 for get_now)
+
 ### Frontend ✅ COMPLETE
 - `OrdersMap.js`: 2273 → 1902 lines (-371)
 - Fixed GPS button position in map (top-20)
@@ -53,8 +71,11 @@
 |------|----------|---------|-------|
 | `food_orders.py` | 4435 | 4248 | -187 |
 | `admin.py` | 4751 | 4419 | -332 |
+| `orders.py` | 2651 | 2661 | +10 |
+| `food.py` | 1550 | 1554 | +4 |
+| `stores.py` | 248 | 252 | +4 |
 | `OrdersMap.js` | 2273 | 1902 | -371 |
-| **Total** | | | **-890** |
+| **Total** | | | **-872** |
 
 ---
 
@@ -72,6 +93,7 @@
 ### P0 - Critical
 - [x] Add admin dependencies
 - [x] Replace ALL 70 permission checks in admin.py ✅
+- [x] Add get_now() helper to orders.py, food.py, stores.py ✅
 
 ### P1 - High Priority
 - [ ] Activate real SMS OTP for Syrian numbers (mocked to `123456`)
@@ -94,7 +116,7 @@
 ---
 
 ## Test Reports
-- Latest: `/app/test_reports/iteration_206.json` (22/22 passed - 100% success)
-- Previous: `/app/test_reports/iteration_205.json`
+- Latest: `/app/test_reports/iteration_207.json` (13/13 passed - 100% success)
+- Previous: `/app/test_reports/iteration_206.json` (22/22 passed)
 
-*Last Updated: December 2025 - Phase 37 Complete*
+*Last Updated: December 2025 - Phase 38 Complete*
