@@ -8,12 +8,9 @@ import uuid
 import jwt
 
 from core.database import db, get_current_user, JWT_SECRET, ALGORITHM
+from helpers.datetime_helpers import get_now
 
 router = APIRouter(tags=["Stores"])
-
-def get_now() -> str:
-    """إرجاع الوقت الحالي بصيغة ISO"""
-    return datetime.now(timezone.utc).isoformat()
 
 # ============== Store Page ==============
 

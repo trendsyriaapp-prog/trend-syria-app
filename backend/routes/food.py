@@ -8,12 +8,9 @@ from pydantic import BaseModel
 import uuid
 
 from core.database import db, get_current_user
+from helpers.datetime_helpers import get_now
 
 router = APIRouter(prefix="/food", tags=["Food Delivery"])
-
-def get_now() -> str:
-    """إرجاع الوقت الحالي بصيغة ISO"""
-    return datetime.now(timezone.utc).isoformat()
 
 # ============== الأقسام الرئيسية ==============
 MAIN_CATEGORIES = {

@@ -7,11 +7,7 @@ from fastapi import HTTPException, Depends
 import math
 
 from core.database import db, get_current_user
-
-
-def get_now() -> str:
-    """الحصول على الوقت الحالي بتنسيق ISO"""
-    return datetime.now(timezone.utc).isoformat()
+from helpers.datetime_helpers import get_now
 
 
 def generate_id() -> str:

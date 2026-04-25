@@ -9,6 +9,7 @@ import logging
 
 from core.database import db, get_current_user
 from models.schemas import SubAdminCreate, NotificationCreate
+from helpers.datetime_helpers import get_now
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
 
@@ -17,10 +18,6 @@ admin_logger = logging.getLogger("admin")
 
 def hash_password(password: str) -> str:
     return hashlib.sha256(password.encode()).hexdigest()
-
-def get_now() -> str:
-    """إرجاع الوقت الحالي بصيغة ISO"""
-    return datetime.now(timezone.utc).isoformat()
 
 async def require_admin_user(user: dict = Depends(get_current_user)) -> dict:
     """التحقق من صلاحيات المدير أو المشرف الفرعي"""

@@ -47,7 +47,13 @@
 ### stores.py ✅ COMPLETE (Phase 38)
 - ✅ Added `get_now()` helper function
 - ✅ Replaced 2 `datetime.now(timezone.utc).isoformat()` calls
-- **Size**: 248 → 252 lines (+4 for get_now)
+- **Size**: 248 → 249 lines
+
+### helpers/datetime_helpers.py ✅ NEW (Phase 39)
+- ✅ Created centralized datetime helpers file
+- ✅ Contains `get_now()` and `get_today()` functions
+- ✅ All route files now import from this central location
+- **All local `get_now()` definitions removed**
 
 ### Frontend ✅ COMPLETE
 - `OrdersMap.js`: 2273 → 1902 lines (-371)
@@ -70,12 +76,14 @@
 | File | Original | Current | Saved |
 |------|----------|---------|-------|
 | `food_orders.py` | 4435 | 4248 | -187 |
-| `admin.py` | 4751 | 4419 | -332 |
-| `orders.py` | 2651 | 2661 | +10 |
-| `food.py` | 1550 | 1554 | +4 |
-| `stores.py` | 248 | 252 | +4 |
+| `admin.py` | 4751 | 4416 | -335 |
+| `orders.py` | 2651 | 2659 | +8 |
+| `food.py` | 1550 | 1551 | +1 |
+| `stores.py` | 248 | 249 | +1 |
+| `food_order_helpers.py` | 1258 | 1253 | -5 |
 | `OrdersMap.js` | 2273 | 1902 | -371 |
-| **Total** | | | **-872** |
+| `helpers/datetime_helpers.py` | 0 | 14 | +14 |
+| **Total** | | | **-874** |
 
 ---
 
@@ -94,6 +102,7 @@
 - [x] Add admin dependencies
 - [x] Replace ALL 70 permission checks in admin.py ✅
 - [x] Add get_now() helper to orders.py, food.py, stores.py ✅
+- [x] Create centralized datetime_helpers.py ✅
 
 ### P1 - High Priority
 - [ ] Activate real SMS OTP for Syrian numbers (mocked to `123456`)
@@ -119,4 +128,4 @@
 - Latest: `/app/test_reports/iteration_207.json` (13/13 passed - 100% success)
 - Previous: `/app/test_reports/iteration_206.json` (22/22 passed)
 
-*Last Updated: December 2025 - Phase 38 Complete*
+*Last Updated: December 2025 - Phase 39 Complete (Centralized datetime_helpers)*

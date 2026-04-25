@@ -12,11 +12,9 @@ from core.database import db, get_current_user, create_notification_for_user, cr
 from models.schemas import OrderCreate, ShamCashPayment
 from routes.loyalty import add_loyalty_points
 
-router = APIRouter(tags=["Orders"])
+from helpers.datetime_helpers import get_now
 
-def get_now() -> str:
-    """إرجاع الوقت الحالي بصيغة ISO"""
-    return datetime.now(timezone.utc).isoformat()
+router = APIRouter(tags=["Orders"])
 
 # ============== دالة استخراج الاسم الأول ==============
 
