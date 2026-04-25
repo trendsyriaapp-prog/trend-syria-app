@@ -11,6 +11,10 @@ from core.database import db, get_current_user, JWT_SECRET, ALGORITHM
 
 router = APIRouter(tags=["Stores"])
 
+def get_now() -> str:
+    """إرجاع الوقت الحالي بصيغة ISO"""
+    return datetime.now(timezone.utc).isoformat()
+
 # ============== Store Page ==============
 
 @router.get("/stores/{seller_id}")
@@ -64,7 +68,7 @@ async def follow_store(seller_id: str, user: dict = Depends(get_current_user)) -
         "id": str(uuid.uuid4()),
         "user_id": user["id"],
         "seller_id": seller_id,
-        "created_at": datetime.now(timezone.utc).isoformat()
+        "created_at": get_now()
     }
     await db.follows.insert_one(follow_doc)
     
@@ -159,7 +163,7 @@ async def add_to_favorites(product_id: str, user: dict = Depends(get_current_use
         "id": str(uuid.uuid4()),
         "user_id": user["id"],
         "product_id": product_id,
-        "created_at": datetime.now(timezone.utc).isoformat()
+        "created_at": get_now()
     }
     await db.favorites.insert_one(favorite_doc)
     

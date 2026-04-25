@@ -14,6 +14,10 @@ from routes.loyalty import add_loyalty_points
 
 router = APIRouter(tags=["Orders"])
 
+def get_now() -> str:
+    """إرجاع الوقت الحالي بصيغة ISO"""
+    return datetime.now(timezone.utc).isoformat()
+
 # ============== دالة استخراج الاسم الأول ==============
 
 def get_first_name(full_name: str) -> str:
@@ -102,8 +106,8 @@ async def get_or_create_platform_wallet() -> dict:
             "total_commission_products": 0,  # عمولات المنتجات
             "total_commission_food": 0,       # عمولات الطعام
             "total_withdrawn": 0,
-            "created_at": datetime.now(timezone.utc).isoformat(),
-            "updated_at": datetime.now(timezone.utc).isoformat()
+            "created_at": get_now(),
+            "updated_at": get_now()
         }
         await db.platform_wallet.insert_one(wallet)
     return wallet
@@ -114,7 +118,7 @@ async def add_commission_to_platform_wallet(order_id: str, commission_amount: fl
         return
     
     commission_field = f"total_commission_{order_type}"
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     # تحديث رصيد المحفظة
     await db.platform_wallet.update_one(
@@ -464,8 +468,8 @@ async def cancel_product_order(order_id: str, user: dict = Depends(get_current_u
 
 
 @router.get("/orders")
-async def get_orders(user: dict = Depends(get_current_user)) -> dict:
-    now = datetime.now(timezone.utc).isoformat()
+async def get_orders(user: dict = Depends(get_current_user)) -> list:
+    now = get_now()
     
     if user["user_type"] == "seller":
         # البائع يرى فقط الطلبات التي انتهت مهلة إلغائها
@@ -489,6 +493,12 @@ async def get_orders(user: dict = Depends(get_current_user)) -> dict:
                     {"can_process_after": {"$exists": False}}
                 ]
             },
+            {"_id": 0}
+        ).sort("created_at", -1).to_list(100)
+    elif user["user_type"] in ["admin", "sub_admin"]:
+        # الأدمن يرى جميع الطلبات
+        orders = await db.orders.find(
+            {},
             {"_id": 0}
         ).sort("created_at", -1).to_list(100)
     else:
@@ -521,7 +531,7 @@ async def update_order_status(order_id: str, status: str = Query(...), user: dic
     
     await db.orders.update_one(
         {"id": order_id},
-        {"$set": {"delivery_status": status, "updated_at": datetime.now(timezone.utc).isoformat()}}
+        {"$set": {"delivery_status": status, "updated_at": get_now()}}
     )
     
     # Send notifications based on status
@@ -583,7 +593,7 @@ async def verify_shamcash_payment(payment: ShamCashPayment, user: dict = Depends
     if len(payment.otp) == 6 and payment.otp.isdigit():
         await db.orders.update_one(
             {"id": payment.order_id},
-            {"$set": {"status": "paid", "payment_verified_at": datetime.now(timezone.utc).isoformat()}}
+            {"$set": {"status": "paid", "payment_verified_at": get_now()}}
         )
         
         # إضافة نقاط الولاء للعميل
@@ -722,7 +732,7 @@ async def update_delivery_note(order_id: str, note: CustomerNoteUpdate, user: di
         {"id": order_id},
         {"$set": {
             "delivery_note": note.delivery_note,
-            "delivery_note_updated_at": datetime.now(timezone.utc).isoformat()
+            "delivery_note_updated_at": get_now()
         }}
     )
     
@@ -786,13 +796,13 @@ async def seller_confirm_order(order_id: str, user: dict = Depends(get_current_u
             "$set": {
                 "status": "confirmed",
                 "delivery_status": "confirmed",
-                "confirmed_at": datetime.now(timezone.utc).isoformat(),
+                "confirmed_at": get_now(),
                 "confirmed_by": user["id"]
             },
             "$push": {
                 "tracking_history": {
                     "status": "confirmed",
-                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "timestamp": get_now(),
                     "actor": user.get("full_name", user.get("name", "")),
                     "actor_type": "seller"
                 }
@@ -835,12 +845,12 @@ async def seller_preparing_order(order_id: str, user: dict = Depends(get_current
             "$set": {
                 "status": "preparing",
                 "delivery_status": "preparing",
-                "preparing_at": datetime.now(timezone.utc).isoformat()
+                "preparing_at": get_now()
             },
             "$push": {
                 "tracking_history": {
                     "status": "preparing",
-                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "timestamp": get_now(),
                     "actor": user.get("full_name", user.get("name", "")),
                     "actor_type": "seller"
                 }
@@ -895,7 +905,7 @@ async def seller_ship_order(order_id: str, tracking_number: Optional[str] = None
     update_data = {
         "status": "shipped",
         "delivery_status": "shipped",
-        "shipped_at": datetime.now(timezone.utc).isoformat(),
+        "shipped_at": get_now(),
         "pickup_code": pickup_code,
         "pickup_code_verified": False,
         "expected_delivery": "today",
@@ -911,7 +921,7 @@ async def seller_ship_order(order_id: str, tracking_number: Optional[str] = None
             "$push": {
                 "tracking_history": {
                     "status": "shipped",
-                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "timestamp": get_now(),
                     "actor": user.get("full_name", user.get("name", "")),
                     "actor_type": "seller",
                     "tracking_number": tracking_number
@@ -979,18 +989,18 @@ async def verify_product_pickup_code(order_id: str, data: VerifyProductPickupCod
         {
             "$set": {
                 "pickup_code_verified": True,
-                "pickup_code_verified_at": datetime.now(timezone.utc).isoformat(),
+                "pickup_code_verified_at": get_now(),
                 "delivery_driver_id": user["id"],
                 "delivery_driver_name": get_first_name(user.get("full_name", user.get("name", ""))),
                 "delivery_driver_phone": user.get("phone", ""),
                 "delivery_driver_photo": user.get("photo", ""),
                 "delivery_status": "picked_up",
-                "picked_up_at": datetime.now(timezone.utc).isoformat()
+                "picked_up_at": get_now()
             },
             "$push": {
                 "tracking_history": {
                     "status": "picked_up",
-                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "timestamp": get_now(),
                     "actor": user.get("full_name", user.get("name", "")),
                     "actor_type": "delivery",
                     "note": "تم التحقق من كود الاستلام"
@@ -1074,7 +1084,7 @@ async def delivery_accept_order(order_id: str, user: dict = Depends(get_current_
     if order.get("delivery_driver_id") and order.get("delivery_driver_id") != user["id"]:
         raise HTTPException(status_code=400, detail="هذا الطلب مسند لموظف آخر")
     
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     await db.orders.update_one(
         {"id": order_id},
@@ -1201,7 +1211,7 @@ async def delivery_arrived_at_store(
         else:
             print(f"⚠️ البائع ليس له موقع GPS - تخطي فحص المسافة للطلب {order_id}")
     
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     update_data = {
         "driver_arrived_at": now,
@@ -1281,12 +1291,12 @@ async def delivery_pickup_order(order_id: str, user: dict = Depends(get_current_
                 "delivery_driver_phone": user.get("phone", ""),
                 "delivery_driver_photo": user.get("photo", ""),
                 "delivery_status": "picked_up",
-                "picked_up_at": datetime.now(timezone.utc).isoformat()
+                "picked_up_at": get_now()
             },
             "$push": {
                 "tracking_history": {
                     "status": "picked_up",
-                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "timestamp": get_now(),
                     "actor": user.get("full_name", user.get("name", "")),
                     "actor_type": "delivery",
                     "actor_phone": user.get("phone", "")
@@ -1355,13 +1365,13 @@ async def delivery_on_the_way(order_id: str, body: dict = None, user: dict = Dep
         {
             "$set": {
                 "delivery_status": "on_the_way",
-                "on_the_way_at": datetime.now(timezone.utc).isoformat(),
+                "on_the_way_at": get_now(),
                 "estimated_arrival_minutes": estimated_minutes
             },
             "$push": {
                 "tracking_history": {
                     "status": "on_the_way",
-                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "timestamp": get_now(),
                     "actor": user.get("full_name", user.get("name", "")),
                     "actor_type": "delivery",
                     "estimated_minutes": estimated_minutes
@@ -1474,7 +1484,7 @@ async def delivery_arrived_at_customer(
         else:
             print(f"⚠️ العميل ليس له موقع GPS - تخطي فحص المسافة للطلب {order_id}")
     
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     update_data = {
         "driver_arrived_at_customer": now,
@@ -1684,7 +1694,7 @@ async def delivery_complete(order_id: str, delivery_photo: Optional[str] = None,
     update_data = {
         "delivery_status": "delivered",
         "status": "completed",
-        "delivered_at": datetime.now(timezone.utc).isoformat()
+        "delivered_at": get_now()
     }
     if delivery_photo:
         update_data["delivery_proof_photo"] = delivery_photo
@@ -1696,7 +1706,7 @@ async def delivery_complete(order_id: str, delivery_photo: Optional[str] = None,
             "$push": {
                 "tracking_history": {
                     "status": "delivered",
-                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "timestamp": get_now(),
                     "actor": user.get("full_name", user.get("name", "")),
                     "actor_type": "delivery",
                     "proof_photo": delivery_photo
@@ -1742,7 +1752,7 @@ async def delivery_complete(order_id: str, delivery_photo: Optional[str] = None,
                     "type": "delivery_earning",
                     "amount": delivery_fee,
                     "order_id": order_id,
-                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "timestamp": get_now(),
                     "description": f"أجرة توصيل طلب #{order_id[:8]}"
                 }
             }
@@ -1993,7 +2003,7 @@ async def report_seller_not_found(data: SellerNotFoundRequest, user: dict = Depe
     if user.get("user_type") != "delivery":
         raise HTTPException(status_code=403, detail="فقط موظفي التوصيل يمكنهم استخدام هذه الميزة")
     
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     # تحديد المجموعة حسب نوع الطلب
     if data.order_type == 'food':
@@ -2062,7 +2072,7 @@ async def get_available_flash_sales_for_seller(user: dict = Depends(get_current_
     if user.get("user_type") not in ["seller", "food_seller"]:
         raise HTTPException(status_code=403, detail="غير مصرح")
     
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     # جلب عروض الفلاش النشطة التي لم تنتهي
     sales = await db.flash_sales.find({
@@ -2188,7 +2198,7 @@ async def request_flash_sale_join_for_seller(request_data: dict, user: dict = De
     
     # إنشاء طلب الانضمام
     request_id = str(uuid.uuid4())
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     flash_request = {
         "id": request_id,
@@ -2255,7 +2265,7 @@ async def get_my_promotions(user: dict = Depends(get_current_user)) -> dict:
     if user.get("user_type") not in ["seller", "food_seller"]:
         raise HTTPException(status_code=403, detail="غير مصرح")
     
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     promotions = await db.product_promotions.find(
         {"seller_id": user["id"]},
@@ -2422,9 +2432,9 @@ async def promote_product(request_data: dict, user: dict = Depends(get_current_u
     }
 
 @router.get("/promoted-products")
-async def get_promoted_products(product_type: str = "all") -> dict:
+async def get_promoted_products(product_type: str = "all") -> list:
     """جلب المنتجات المروّجة للصفحة الرئيسية - فقط التي بدأت (Flash نشط)"""
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     # جلب إعدادات Flash للتحقق من الحالة
     settings = await db.platform_settings.find_one({"id": "promotions"})

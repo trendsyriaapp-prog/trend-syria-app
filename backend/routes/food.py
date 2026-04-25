@@ -11,6 +11,10 @@ from core.database import db, get_current_user
 
 router = APIRouter(prefix="/food", tags=["Food Delivery"])
 
+def get_now() -> str:
+    """إرجاع الوقت الحالي بصيغة ISO"""
+    return datetime.now(timezone.utc).isoformat()
+
 # ============== الأقسام الرئيسية ==============
 MAIN_CATEGORIES = {
     "food": "طعام",
@@ -119,7 +123,7 @@ class FoodOfferCreate(BaseModel):
 @router.get("/flash-sales/active")
 async def get_active_flash_sales() -> List[dict]:
     """جلب عروض الفلاش النشطة حالياً - للعملاء"""
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     sales = await db.flash_sales.find({
         "is_active": True,
@@ -132,7 +136,7 @@ async def get_active_flash_sales() -> List[dict]:
 @router.get("/banners")
 async def get_food_banners() -> List[dict]:
     """جلب البانرات الخاصة بقسم الطعام"""
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     banners = await db.food_banners.find({
         "is_active": True,
@@ -469,7 +473,7 @@ async def create_food_store(store: FoodStoreCreate, user: dict = Depends(get_cur
         "orders_count": 0,
         "is_active": True,
         "is_approved": False,  # يحتاج موافقة الإدارة
-        "created_at": datetime.now(timezone.utc).isoformat()
+        "created_at": get_now()
     }
     
     await db.food_stores.insert_one(store_doc)
@@ -485,7 +489,7 @@ async def create_food_store(store: FoodStoreCreate, user: dict = Depends(get_cur
             "holder_name": store.payment_account.holder_name,
             "bank_name": store.payment_account.bank_name,
             "is_default": True,
-            "created_at": datetime.now(timezone.utc).isoformat()
+            "created_at": get_now()
         }
         await db.seller_payment_accounts.insert_one(payment_acc)
     
@@ -531,7 +535,7 @@ async def toggle_store_status(
     update_data = {
         "manual_close": request.is_closed,
         "manual_close_reason": request.close_reason if request.is_closed else None,
-        "manual_close_at": datetime.now(timezone.utc).isoformat() if request.is_closed else None
+        "manual_close_at": get_now() if request.is_closed else None
     }
     
     await db.food_stores.update_one(
@@ -729,7 +733,7 @@ async def create_food_product(product: FoodProductCreate, user: dict = Depends(g
         "sales_count": 0,
         "is_approved": False,
         "approval_status": "pending",
-        "created_at": datetime.now(timezone.utc).isoformat()
+        "created_at": get_now()
     }
     
     await db.food_products.insert_one(product_doc)
@@ -806,7 +810,7 @@ async def create_food_item(item_data: dict, user: dict = Depends(get_current_use
         "admin_video": item_data.get("admin_video"),  # فيديو التحقق للأدمن
         "is_available": True,
         "is_approved": False,  # يحتاج موافقة المدير
-        "created_at": datetime.now(timezone.utc).isoformat()
+        "created_at": get_now()
     }
     
     await db.food_items.insert_one(new_item)
@@ -925,7 +929,7 @@ async def update_my_store(update_data: dict, user: dict = Depends(get_current_us
     # الحقول المسموح بتعديلها
     allowed_fields = ["name", "description", "phone", "address", "city", "latitude", "longitude", "delivery_time", "minimum_order", "free_delivery_minimum", "delivery_fee", "logo", "cover_image", "working_hours"]
     update_dict = {k: v for k, v in update_data.items() if k in allowed_fields}
-    update_dict["updated_at"] = datetime.now(timezone.utc).isoformat()
+    update_dict["updated_at"] = get_now()
     
     await db.food_stores.update_one(
         {"id": store["id"]},
@@ -949,7 +953,7 @@ async def update_food_product(product_id: str, update_data: dict, user: dict = D
     # الحقول المسموح بتعديلها
     allowed_fields = ["name", "description", "price", "original_price", "category", "images", "is_available", "preparation_time", "weight_variants", "stock"]
     update_dict = {k: v for k, v in update_data.items() if k in allowed_fields}
-    update_dict["updated_at"] = datetime.now(timezone.utc).isoformat()
+    update_dict["updated_at"] = get_now()
     
     await db.food_products.update_one(
         {"id": product_id},
@@ -1080,7 +1084,7 @@ async def reset_sold_out_products() -> dict:
             "$set": {
                 "availability_status": "available",
                 "is_available": True,
-                "availability_updated_at": datetime.now(timezone.utc).isoformat()
+                "availability_updated_at": get_now()
             },
             "$unset": {"sold_out_date": ""}
         }
@@ -1145,7 +1149,7 @@ async def create_food_offer(offer: FoodOfferCreate, user: dict = Depends(get_cur
         "start_date": offer.start_date,
         "end_date": offer.end_date,
         "usage_count": 0,
-        "created_at": datetime.now(timezone.utc).isoformat()
+        "created_at": get_now()
     }
     
     await db.food_offers.insert_one(offer_doc)
@@ -1170,7 +1174,7 @@ async def get_my_offers(user: dict = Depends(get_current_user)) -> List[dict]:
 @router.get("/stores/{store_id}/offers")
 async def get_store_offers(store_id: str) -> List[dict]:
     """جلب العروض النشطة لمتجر معين"""
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     offers = await db.food_offers.find({
         "store_id": store_id,
@@ -1226,7 +1230,7 @@ async def calculate_offer_discount(store_id: str, items: list, subtotal: float) 
     حساب الخصم بناءً على العروض النشطة
     Returns: {"discount": float, "offer_applied": dict or None, "free_items": list}
     """
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     # جلب العروض النشطة للمتجر
     offers = await db.food_offers.find({
@@ -1321,7 +1325,7 @@ async def calculate_offer_discount(store_id: str, items: list, subtotal: float) 
 @router.get("/flash-sales/available")
 async def get_available_flash_sales(user: dict = Depends(get_current_user)) -> List[dict]:
     """جلب عروض الفلاش المتاحة للانضمام"""
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     # جلب عروض الفلاش النشطة التي لم تنتهي
     sales = await db.flash_sales.find({
@@ -1419,7 +1423,7 @@ async def request_flash_sale_join(request_data: dict, user: dict = Depends(get_c
     if not flash_sale:
         raise HTTPException(status_code=404, detail="عرض الفلاش غير موجود")
     
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     if flash_sale["end_time"] < now:
         raise HTTPException(status_code=400, detail="عرض الفلاش منتهي")
     
@@ -1517,7 +1521,7 @@ async def cancel_flash_sale_request(request_id: str, user: dict = Depends(get_cu
     if req["status"] != "pending":
         raise HTTPException(status_code=400, detail="لا يمكن إلغاء طلب تمت معالجته")
     
-    now = datetime.now(timezone.utc).isoformat()
+    now = get_now()
     
     # استرداد الرسوم
     fee_paid = req.get("fee_paid", 0)
