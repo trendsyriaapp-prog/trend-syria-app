@@ -14,77 +14,41 @@
 
 ---
 
-## Completed Refactoring Work
+## ✅ COMPLETED - Backend Refactoring Phase (December 2025)
 
-### food_orders.py ✅ COMPLETE
-- Replaced ALL `datetime.now().isoformat()` with `get_now()`
-- Replaced duplicate MongoDB queries with helpers
-- Created `require_delivery_user` dependency
-- **Size**: 4435 → 4248 lines (-187)
+### Phase 41 COMPLETE - Authorization Dependencies
 
-### admin.py ✅ COMPLETE (Phase 37)
-- ✅ Added `get_now()` helper function
-- ✅ Added `insert_notification()` helper (replaced 20 usages)
-- ✅ Added `require_admin_user` dependency (~50 endpoints)
-- ✅ Added `require_main_admin` dependency (~20 endpoints)
-- ✅ Replaced ALL ~70 manual permission checks with dependencies
-- ✅ Fixed return type bug in `get_all_flash_sales` (dict → list)
-- **Size**: 4751 → 4419 lines (-332)
-
-### orders.py ✅ COMPLETE (Phase 38)
-- ✅ Added `get_now()` helper function
-- ✅ Replaced 37 `datetime.now(timezone.utc).isoformat()` calls
-- ✅ Fixed `get_orders` return type (dict → list)
-- ✅ Fixed `get_promoted_products` return type (dict → list)
-- ✅ Added admin case to `get_orders`
-- **Size**: 2651 → 2661 lines (+10 for get_now + admin case)
-
-### food.py ✅ COMPLETE (Phase 38)
-- ✅ Added `get_now()` helper function
-- ✅ Replaced 16 `datetime.now(timezone.utc).isoformat()` calls
-- **Size**: 1550 → 1554 lines (+4 for get_now)
-
-### stores.py ✅ COMPLETE (Phase 38)
-- ✅ Added `get_now()` helper function
-- ✅ Replaced 2 `datetime.now(timezone.utc).isoformat()` calls
-- **Size**: 248 → 249 lines
-
-### helpers/datetime_helpers.py ✅ NEW (Phase 39)
-- ✅ Created centralized datetime helpers file
+#### Centralized datetime_helpers.py
+- ✅ Created `/app/backend/helpers/datetime_helpers.py`
 - ✅ Contains `get_now()` and `get_today()` functions
 - ✅ **42 route files** now import from this central location
 - ✅ **381 total get_now() usages** across all files
 - **All local `get_now()` definitions removed**
 
-### auth.py ✅ COMPLETE (Phase 39)
-- ✅ Replaced 55 `datetime.now(timezone.utc).isoformat()` calls
+#### Authorization Dependencies Summary
+| Dependency | Usage Count | Files |
+|------------|-------------|-------|
+| `require_admin_user` | 146+ endpoints | admin.py, categories.py, settings.py, etc. |
+| `require_main_admin` | 70+ endpoints | admin.py, categories.py |
+| `require_delivery_user` | 47+ endpoints | food_orders.py, delivery.py |
+| `require_seller_user` | Multiple endpoints | auth.py |
+| `require_any_seller_user` | Multiple endpoints | auth.py, categories.py, image_templates.py |
+| **Total** | **263+ endpoints** | Centralized authorization |
 
-### settings.py ✅ COMPLETE (Phase 39)
-- ✅ Replaced 47 `datetime.now(timezone.utc).isoformat()` calls
+### Files Refactored
+- ✅ admin.py: 4751 → 4416 lines (-335)
+- ✅ food_orders.py: 4435 → 4248 lines (-187)
+- ✅ orders.py: Fixed return types
+- ✅ food.py, stores.py: datetime helpers
+- ✅ auth.py: seller dependencies + 55 datetime fixes
+- ✅ settings.py: 47 datetime fixes
+- ✅ delivery.py: 38 datetime fixes
+- ✅ wallet.py: 18 datetime fixes
+- ✅ categories.py: admin + seller dependencies
+- ✅ image_templates.py: seller dependencies
+- ✅ 30+ other route files
 
-### delivery.py ✅ COMPLETE (Phase 39)
-- ✅ Replaced 38 `datetime.now(timezone.utc).isoformat()` calls
-
-### wallet.py ✅ COMPLETE (Phase 39)
-- ✅ Replaced 18 `datetime.now(timezone.utc).isoformat()` calls
-
-### Other files ✅ COMPLETE (Phase 39)
-- ✅ products.py, price_reports.py, gifts.py, driver_security.py
-- ✅ daily_deals.py, challenges.py, voip.py, error_logs.py
-- ✅ categories.py, call_requests.py, referrals.py, payment.py
-- ✅ chatbot.py, support.py, coupons.py, admin_settings.py
-- ✅ notifications.py, delivery_boxes.py, achievements.py, user.py
-- ✅ recommendations.py, push_notifications.py, payment_v2.py
-- ✅ activity_log.py, reviews.py, rate_limits.py, image_templates.py
-- ✅ feedback.py, chat.py, ai_chatbot.py, messages.py, image_search.py, cart.py
-
-### Frontend ✅ COMPLETE
-- `OrdersMap.js`: 2273 → 1902 lines (-371)
-- Fixed GPS button position in map (top-20)
-
----
-
-## Bug Fixes (Dec 2025)
+### Bug Fixes
 1. ✅ Phone number hidden behind icon
 2. ✅ Image upload X button + red/green colors
 3. ✅ Address text change
@@ -95,41 +59,20 @@
 
 ---
 
-## Current File Sizes
-| File | Original | Current | Saved |
-|------|----------|---------|-------|
-| `food_orders.py` | 4435 | 4248 | -187 |
-| `admin.py` | 4751 | 4416 | -335 |
-| `orders.py` | 2651 | 2659 | +8 |
-| `food.py` | 1550 | 1551 | +1 |
-| `stores.py` | 248 | 249 | +1 |
-| `food_order_helpers.py` | 1258 | 1253 | -5 |
-| `OrdersMap.js` | 2273 | 1902 | -371 |
-| `helpers/datetime_helpers.py` | 0 | 14 | +14 |
-| **Total** | | | **-874** |
-
----
-
-## Dependencies Created
-| Dependency | File | Usage Count |
-|------------|------|-------------|
-| `require_admin_user` | admin.py | ~50 |
-| `require_main_admin` | admin.py | ~20 |
-| `require_delivery_user` | food_orders.py | 23 |
+## Test Reports
+- **Latest**: `/app/test_reports/iteration_211.json` (16/16 passed - 100% success)
+- Previous iterations: 206-210 (all 100% success)
 
 ---
 
 ## Prioritized Backlog
 
-### P0 - Critical
-- [x] Add admin dependencies
-- [x] Replace ALL 70 permission checks in admin.py ✅
-- [x] Add get_now() helper to orders.py, food.py, stores.py ✅
-- [x] Create centralized datetime_helpers.py ✅
+### P1 - High Priority (Next Tasks)
+- [ ] **Activate real SMS OTP** for Syrian numbers (currently mocked to `123456`)
+- [ ] **Activate Sham Cash payment gateway** (currently mocked)
 
-### P1 - High Priority
-- [ ] Activate real SMS OTP for Syrian numbers (mocked to `123456`)
-- [ ] Activate Sham Cash payment gateway (mocked)
+### P2 - Medium Priority
+- [ ] Add granular permissions for Sub-admins
 
 ### P5 - Future Tasks
 - [ ] Agent/Remittance Office top-up system
@@ -147,15 +90,4 @@
 
 ---
 
-## Test Reports
-- Latest: `/app/test_reports/iteration_210.json` (15/15 passed - 100% success)
-- Previous: `/app/test_reports/iteration_209.json` (7/7 passed)
-
-### Phase 41 - Authorization Dependencies Refactoring:
-- ✅ require_admin_user: 146 endpoints
-- ✅ require_main_admin: 70 endpoints
-- ✅ require_delivery_user: 47 endpoints
-- ✅ **Total: 263 endpoints with centralized authorization**
-- ✅ Fixed 2 return type bugs (payment.py, call_requests.py)
-
-*Last Updated: December 2025 - Phase 41 Complete*
+*Last Updated: December 2025 - Phase 41 Complete (Backend Refactoring DONE)*
